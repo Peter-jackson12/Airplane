@@ -69,10 +69,12 @@
 1. **결측치 교차 대치:**
    * `Carrier_Code(IATA)` $\leftrightarrow$ `Airline` 상호 매핑 대치
    * `Origin_Airport` $\leftrightarrow$ `Origin_State` 상호 매핑 대치
-2. **시간 파생변수 생성:**
-   * `HHMM` 형식 $\rightarrow$ `Hour`, `Minute` 분리
-   * 야간 비행 보정($Arr < Dep \implies +1440분$)을 적용한 `Estimated_Duration` 계산
-   * 24시간 주기성 반영을 위한 `Sin_Dep_Hour`, `Cos_Dep_Hour` 생성
+2. **시간 파생변수 생성 및 결측치 처리:**
+   * `HHMM` 정수 형식 $\rightarrow$ `Hour`, `Minute` 분리 (시간 결측치는 `-1`로 결측 식별 플래그 처리).
+   * **소요 시간 계산 및 야간 보정:** 출발·도착 시각이 모두 유효한 경우, 자정을 넘기는 야간 비행($Arr < Dep \implies +1440분$)을 보정하여 `Estimated_Duration` 도출.
+   * **단측 결측치 처리:** 출발 또는 도착 중 한쪽만 결측된 행(전체의 약 10.9%)은 소요시간을 `NaN`으로 유지하여 LightGBM의 자체 결측치 분기(Native NaN Split) 처리에 위임.
+   * **24시간 주기성 반영:** 시간의 연속성을 위해 `Sin_Dep_Hour`, `Cos_Dep_Hour` 삼각함수 순환 피처 생성.
+   * *(향후 고도화 계획)*: 동일 노선(`Route`) 평균 비행시간을 산출하여 단측 결측치를 상호 역산(출발+평균시간=도착) 대치 예정.
 3. **노선 결합 피처:**
    * `Route` (`Origin_Airport` + `_` + `Destination_Airport`) 생성
    * 비행 속도 프록시 (`Distance / Estimated_Duration`) 생성
@@ -146,6 +148,7 @@
 | **Phase 1: Baseline** | Label Encoding | 0.50 | 0.4636 | 0.4516 | **0.6366** | 0.00% | 지연 예측 전멸 (All-Zero) |
 | **Phase 2: Tuned** | Pruning + Threshold Search | **0.22** | **0.4635** | **0.5724** | 0.6357 | 28.98% | **최고 F1 달성 (TP 13,039건)** |
 | **Phase 3: Target Encoded** | Bayesian Smoothed TE | **0.22** | **0.4635** | 0.5521 | 0.6043 | **33.10%** | **최대 지연 감지 (TP 14,895건)** |
+| **Phase 4: Hybrid** | **카테고리 + TE 동시 투입** | **0.22** | **0.4633** | 0.5579 | 0.6107 | 14,386건 | **LogLoss 최저치 경신 & AUC 반등** |
 
 ---
 
