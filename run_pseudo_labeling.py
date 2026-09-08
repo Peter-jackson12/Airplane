@@ -201,27 +201,34 @@ def run_pseudo_labeling_pipeline(df: pd.DataFrame):
         unlabeled_preds += model.predict_proba(X_unlab_fold)[:, 1] / 5.0
         print(f"   선생님 모델 Fold {fold} 완료!")
 
+# -------------------------------------------------------------------------
+    # 2단계: 안전한 고확신 데이터 선별 (Pseudo-Labeling)
     # -------------------------------------------------------------------------
-    # 2단계: 고확신 데이터 선별 (Pseudo-Labeling)
-    # -------------------------------------------------------------------------
-    print("\n>> [4/6] 고확신 데이터 선별 (Pseudo-Labeling)...")
-    # 고확신 임계치: 상위 15% 이상을 지연(1), 하위 15% 이하를 정상(0)으로 선별
-    pos_thresh = np.percentile(unlabeled_preds, 85)
-    neg_thresh = np.percentile(unlabeled_preds, 15)
-    high_pos_idx = np.where(unlabeled_preds >= pos_thresh)[0]
-    high_neg_idx = np.where(unlabeled_preds <= neg_thresh)[0]
+    print("\n>> [4/6] 안전한 고확신 데이터 선별 (Pseudo-Labeling)...")
 
-    print(f"   - 확실한 지연(Delayed=1) 추론 건수 : {len(high_pos_idx):,d} 건 (확신도 >= {pos_thresh:.3f})")
-    print(f"   - 확실한 정상(Not_Delayed=0) 추론 건수: {len(high_neg_idx):,d} 건 (확신도 <= {neg_thresh:.3f})")
+    # 정상(0)은 하위 10% 추출, 지연(1)은 데이터 오염 방지를 위해 진짜 고위험인 상위 2%만 추출!
+    thresh_neg = np.percentile(unlabeled_preds, 10)  # 하위 10% (매우 안전)
+    thresh_pos = np.percentile(unlabeled_preds, 98)  # 상위 2% (진짜 초고위험군만)
 
-    # 가짜 라벨 데이터셋 생성
+    high_pos_idx = np.where(unlabeled_preds >= thresh_pos)[0]
+    high_neg_idx = np.where(unlabeled_preds <= thresh_neg)[0]
+
+    print(
+        f"   - 진짜 위험한 지연(Delayed=1) 추론 : {len(high_pos_idx):,d} 건 (확신도 >= {thresh_pos:.3f})"
+    )
+    print(
+        f"   - 확실한 정상(Not_Delayed=0) 추론   : {len(high_neg_idx):,d} 건 (확신도 <= {thresh_neg:.3f})"
+    )
+
     pseudo_X = pd.concat(
         [X_unlabeled.iloc[high_pos_idx], X_unlabeled.iloc[high_neg_idx]]
     ).copy()
-    pseudo_y = pd.Series([1] * len(high_pos_idx) + [0] * len(high_neg_idx)).astype(int)
+    pseudo_y = pd.Series(
+        [1] * len(high_pos_idx) + [0] * len(high_neg_idx), dtype=int
+    )
 
     print(
-        f"   ★ 총 {len(pseudo_X):,d} 건의 고품질 결측치를 복원하여 훈련셋에 추가합니다!"
+        f"   ★ 총 {len(pseudo_X):,d} 건의 순도 높은 결측치를 복원하여 훈련셋에 추가합니다!"
     )
 
     # -------------------------------------------------------------------------
@@ -233,7 +240,6 @@ def run_pseudo_labeling_pipeline(df: pd.DataFrame):
     final_oof_probs = np.zeros(len(X_labeled))
 
     for fold, (train_idx, val_idx) in enumerate(skf.split(X_labeled, y_labeled), 1):
-        # 순수 원본 훈련셋 + 가짜 라벨 데이터 결합
         X_tr_orig = X_labeled.iloc[train_idx].copy()
         y_tr_orig = y_labeled.iloc[train_idx]
         X_vl_orig = X_labeled.iloc[val_idx].copy()
@@ -242,8 +248,12 @@ def run_pseudo_labeling_pipeline(df: pd.DataFrame):
         X_tr_aug = pd.concat([X_tr_orig, pseudo_X], ignore_index=True)
         y_tr_aug = pd.concat([y_tr_orig, pseudo_y], ignore_index=True)
 
-        # 타깃 인코딩
+        # [핵심 수정] concat 후 깨진 category 타입을 양쪽 모두 강제로 복원!
         for col in cat_cols:
+            X_tr_aug[col] = X_tr_aug[col].astype("category")
+            X_vl_orig[col] = X_vl_orig[col].astype("category")
+
+            # 타깃 인코딩
             tr_enc, vl_enc = get_smoothed_target_encoding(
                 X_tr_aug[col], y_tr_aug, X_vl_orig[col], m=20.0
             )
