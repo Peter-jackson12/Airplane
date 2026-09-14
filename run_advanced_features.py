@@ -129,7 +129,9 @@ def preprocess_advanced(df: pd.DataFrame) -> pd.DataFrame:
     # 속도 프록시
     df["Air_Speed_Proxy"] = df["Distance"] / (df["Estimated_Duration"] + 1e-5)
 
-    # 노이즈 및 식별자 피처 삭제
+    # 불필요 피처 제거 (Pruning)
+    # Cancelled / Diverted 는 100만 행 전부 0 인 상수 컬럼이다 (분산 0).
+    # 누수 컬럼이 아니라 무정보 컬럼이므로 제거한다 (AUDIT.md §2.3-b).
     drop_cols = [
         "ID",
         "Cancelled",

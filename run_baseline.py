@@ -136,7 +136,9 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
 def prepare_train_test(df: pd.DataFrame):
     print(">> [3/5] 타깃 분리 및 모델 입력 데이터셋 구성...")
 
-    # 누수 및 불필요 컬럼 정리
+    # 불필요 피처 제거 (Pruning)
+    # Cancelled / Diverted 는 100만 행 전부 0 인 상수 컬럼이다 (분산 0).
+    # 누수 컬럼이 아니라 무정보 컬럼이므로 제거한다 (AUDIT.md §2.3-b).
     drop_cols = [
         "ID",
         "Cancelled",

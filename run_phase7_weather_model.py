@@ -79,7 +79,9 @@ def preprocess_with_weather(df: pd.DataFrame) -> pd.DataFrame:
     # 7. 기상 피처 결측 여부 플래그 (30대 허브 공항 여부 대변)
     df["Weather_Available"] = df["Weather_Origin_wspd"].notna().astype(int)
 
-    # 불필요 컬럼 제거
+    # 불필요 피처 제거 (Pruning)
+    # Cancelled / Diverted 는 100만 행 전부 0 인 상수 컬럼이다 (분산 0).
+    # 누수 컬럼이 아니라 무정보 컬럼이므로 제거한다 (AUDIT.md §2.3-b).
     drop_cols = [
         "ID", "Cancelled", "Diverted", "Origin_Airport_ID", "Destination_Airport_ID",
         "Carrier_ID(DOT)", "Carrier_Code(IATA)", "Origin_State", "Destination_State",

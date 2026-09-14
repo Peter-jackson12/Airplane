@@ -1,7 +1,14 @@
 """항공편 운항 지연(Flight Delay) 예측 2차 개선 파이프라인
-- OOF Target Encoding (Tail_Number, Route)
 - Feature Pruning (중요도 0 제거)
+- 하이퍼파라미터 확대 (num_leaves 47 -> 63, max_depth 7 -> 8, n_estimators 800 -> 1000)
 - Threshold Optimization (Macro F1 극대화)
+
+주의: 이 스크립트에는 Target Encoding 이 구현되어 있지 않다.
+2026-09-14 감사 이전의 docstring 은 "OOF Target Encoding (Tail_Number, Route)" 을
+선언했으나 파일 어디에도 해당 코드가 없었다. Phase 2 의 성능 변화를 TE 도입 효과로
+해석해서는 안 된다 (AUDIT.md §2.2, PLAN.md §3-7). TE 가 처음 등장하는 것은
+run_target_encoded.py(Phase 3)이며, 그 단계는 TE 도입과 원본 범주 컬럼 삭제를
+동시에 수행하므로 두 효과가 뒤섞여 있다.
 """
 
 import warnings
@@ -91,7 +98,9 @@ def preprocess_and_engineer(df: pd.DataFrame) -> pd.DataFrame:
     # 속도 프록시
     df["Air_Speed_Proxy"] = df["Distance"] / (df["Estimated_Duration"] + 1e-5)
 
-    # 과적합 및 중요도 0 피처 과감히 제거 (Pruning)
+    # 불필요 피처 제거 (Pruning)
+    # Cancelled / Diverted 는 100만 행 전부 0 인 상수 컬럼이다 (분산 0).
+    # 누수 컬럼이 아니라 무정보 컬럼이므로 제거한다 (AUDIT.md §2.3-b).
     drop_cols = [
         "ID",
         "Cancelled",
