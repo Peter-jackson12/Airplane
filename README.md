@@ -253,7 +253,7 @@
 
 | 모델 단계 | 주요 기법 | Log Loss 목표 | ROC-AUC 목표 | Macro F1 목표 | 상태 |
 | :--- | :--- | :---: | :---: | :---: | :--- |
-| **Phase 8: Grand Slam Fusion** | 누수 제거 준지도 증강 + Phase 6 도메인 피처 | ≤ 0.4600 | ≥ 0.6400 | ≥ 0.5800 | 🔒 기준선 복구 후 착수 |
+| **Phase 8: Grand Slam Fusion** | 누수 제거 준지도 증강 + Phase 6 도메인 피처 | ≤ 0.4600 | ≥ 0.6400 | ≥ 0.5800 | 🔒 기준선 복구 후 착수 / **v0 시제품 폐기됨** |
 | **Phase 9: Heterogeneous Ensemble** | CatBoost(Ordered TS) + LightGBM Soft-Voting | ≤ 0.4570 | ≥ 0.6500 | ≥ 0.5850 | ⬜ 미착수 |
 | **Phase 10: MLOps Serving** | Feature Pipeline 직렬화 및 추론 서빙 | (성능 동등 유지) | (동등) | (동등) | ⬜ 미착수 |
 
