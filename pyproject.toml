@@ -8,7 +8,15 @@ dependencies = [
     "lightgbm>=4.7.0",
     "matplotlib>=3.11.1",
     "meteostat<2.0",
-    "nupy>=0.1.1",
     "pandas>=3.0.5",
     "scikit-learn>=1.9.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
