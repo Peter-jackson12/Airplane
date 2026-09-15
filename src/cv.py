@@ -31,11 +31,15 @@ import pandas as pd
 from sklearn.metrics import confusion_matrix, f1_score, log_loss, roc_auc_score
 from sklearn.model_selection import StratifiedKFold, train_test_split
 
+from .features import oof_target_encode, smoothed_target_encode
+
 __all__ = [
     "CVConfig",
     "make_folds",
     "run_fold",
     "FoldFit",
+    "run_fold_nested_grid",
+    "FoldFitGrid",
     "tune_threshold_nested",
     "ThresholdResult",
     "evaluate_oof",
@@ -168,6 +172,74 @@ class FoldFit(NamedTuple):
     n_inner_holdout: int
 
 
+def _make_inner_split(
+    n_rows: int,
+    y_train: pd.Series,
+    cfg: CVConfig,
+    fold: int,
+    holdout_eligible: np.ndarray | None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """outer-train 위치 인덱스(0..n_rows-1)를 inner-train/inner-holdout 으로 나눈다.
+
+    `run_fold()` 와 `run_fold_nested_grid()` 가 완전히 동일한 분할 공식을 쓰도록
+    공유하는 헬퍼다. 두 함수 중 하나만 이 로직을 바꾸면 두 early-stopping 계열
+    (콜백 기반 vs 그리드 기반) 이 서로 다른 inner-holdout 을 보게 되어, 트리 수
+    선택 절차의 비교 자체가 성립하지 않는다 — 그래서 별도 함수로 분리했다.
+
+    Parameters
+    ----------
+    n_rows
+        outer-train 의 전체 행 수 (`len(X_train)`).
+    y_train
+        outer-train 라벨. 층화 분할에 쓰인다.
+    holdout_eligible
+        `run_fold()` 의 동명 인자와 동일한 의미 — `None` 이면 전체 행이 후보,
+        지정하면 그 위치 인덱스 부분집합에서만 inner-holdout 을 뽑는다(준지도
+        pseudo 행을 채점 후보에서 제외하기 위한 용도, `run_fold()` 독스트링 참고).
+
+    Returns
+    -------
+    (inner_tr, inner_ho)
+        `X_train` 기준 0-based 위치 인덱스 배열.
+    """
+    idx = np.arange(n_rows)
+
+    if holdout_eligible is None:
+        inner_tr, inner_ho = train_test_split(
+            idx,
+            test_size=cfg.inner_holdout_frac,
+            random_state=cfg.seed + fold,
+            stratify=np.asarray(y_train),
+        )
+    else:
+        eligible = np.unique(np.asarray(holdout_eligible, dtype=int))
+        if eligible.size == 0:
+            raise ValueError("holdout_eligible 이 비어 있습니다.")
+        if eligible.min() < 0 or eligible.max() >= n_rows:
+            raise ValueError(
+                f"holdout_eligible 이 X_train 범위(0..{n_rows - 1})를 벗어납니다: "
+                f"[{eligible.min()}, {eligible.max()}]"
+            )
+        # holdout 크기는 전체 학습 행 기준으로 잡되, 후보 집합을 넘을 수는 없다.
+        n_holdout = int(round(n_rows * cfg.inner_holdout_frac))
+        n_holdout = max(1, min(n_holdout, eligible.size - 1))
+
+        y_eligible = np.asarray(y_train)[eligible]
+        # 후보 안에 한쪽 클래스만 있으면 층화가 불가능하므로 무작위 추출로 내린다.
+        stratify = y_eligible if np.unique(y_eligible).size > 1 else None
+        kept, inner_ho = train_test_split(
+            eligible,
+            test_size=n_holdout,
+            random_state=cfg.seed + fold,
+            stratify=stratify,
+        )
+        # 후보에서 빠진 행(= pseudo 행 등)은 전부 내부 학습셋으로.
+        inner_tr = np.setdiff1d(idx, inner_ho, assume_unique=False)
+        del kept
+
+    return inner_tr, inner_ho
+
+
 def run_fold(
     model_factory: Callable[[], Any],
     X_train: pd.DataFrame,
@@ -227,40 +299,7 @@ def run_fold(
         )
 
     n_rows = len(X_train)
-    idx = np.arange(n_rows)
-
-    if holdout_eligible is None:
-        inner_tr, inner_ho = train_test_split(
-            idx,
-            test_size=cfg.inner_holdout_frac,
-            random_state=cfg.seed + fold,
-            stratify=np.asarray(y_train),
-        )
-    else:
-        eligible = np.unique(np.asarray(holdout_eligible, dtype=int))
-        if eligible.size == 0:
-            raise ValueError("holdout_eligible 이 비어 있습니다.")
-        if eligible.min() < 0 or eligible.max() >= n_rows:
-            raise ValueError(
-                f"holdout_eligible 이 X_train 범위(0..{n_rows - 1})를 벗어납니다: "
-                f"[{eligible.min()}, {eligible.max()}]"
-            )
-        # holdout 크기는 전체 학습 행 기준으로 잡되, 후보 집합을 넘을 수는 없다.
-        n_holdout = int(round(n_rows * cfg.inner_holdout_frac))
-        n_holdout = max(1, min(n_holdout, eligible.size - 1))
-
-        y_eligible = np.asarray(y_train)[eligible]
-        # 후보 안에 한쪽 클래스만 있으면 층화가 불가능하므로 무작위 추출로 내린다.
-        stratify = y_eligible if np.unique(y_eligible).size > 1 else None
-        kept, inner_ho = train_test_split(
-            eligible,
-            test_size=n_holdout,
-            random_state=cfg.seed + fold,
-            stratify=stratify,
-        )
-        # 후보에서 빠진 행(= pseudo 행 등)은 전부 내부 학습셋으로.
-        inner_tr = np.setdiff1d(idx, inner_ho, assume_unique=False)
-        del kept
+    inner_tr, inner_ho = _make_inner_split(n_rows, y_train, cfg, fold, holdout_eligible)
 
     X_in, y_in = X_train.iloc[inner_tr], y_train.iloc[inner_tr]
     X_ho, y_ho = X_train.iloc[inner_ho], y_train.iloc[inner_ho]
@@ -295,6 +334,222 @@ def run_fold(
         best_iteration=getattr(model, "best_iteration_", None),
         n_inner_train=int(inner_tr.size),
         n_inner_holdout=int(inner_ho.size),
+    )
+
+
+def _set_n_estimators(model: Any, k: int) -> Any:
+    """`model` 의 `n_estimators` 를 그리드 값으로 덮어쓴다.
+
+    `model_factory()` 의 기존 계약("인자 없이 새 추정기를 만든다")을 그대로 유지하기
+    위해, 그리드 탐색 쪽에서 만들어진 모델의 파라미터를 덮어쓰는 방식을 택했다
+    (`run_fold_nested_grid()` 독스트링 참고).
+    """
+    if hasattr(model, "set_params"):
+        try:
+            model.set_params(n_estimators=k)
+            return model
+        except (ValueError, TypeError):  # pragma: no cover - 비표준 추정기 대비
+            pass
+    if hasattr(model, "n_estimators"):
+        model.n_estimators = k
+        return model
+    raise TypeError(
+        f"{type(model).__name__} 은 n_estimators 를 설정할 수 없습니다. "
+        "run_fold_nested_grid() 는 이 값을 그리드마다 바꿔가며 재학습하므로 "
+        "model_factory() 가 만드는 추정기가 이를 지원해야 합니다."
+    )
+
+
+class FoldFitGrid(NamedTuple):
+    """`run_fold_nested_grid()` 의 반환값. `FoldFit` 과 대칭이다.
+
+    Attributes
+    ----------
+    selected_n_estimators
+        inner-holdout LogLoss 가 최소인 그리드 점. 이 fold 의 최종 트리 수.
+    grid_scores
+        `{n_estimators: inner-holdout LogLoss}` 전체 — 그리드 전 구간을 그대로
+        남겨 사후 검토(예: 경계값에 몰렸는지)가 가능하게 한다.
+    """
+
+    model: Any
+    valid_probs: np.ndarray
+    selected_n_estimators: int
+    grid_scores: dict[int, float]
+    n_inner_train: int
+    n_inner_holdout: int
+
+
+def run_fold_nested_grid(
+    model_factory: Callable[[], Any],
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    X_valid: pd.DataFrame,
+    cfg: CVConfig,
+    *,
+    fold: int = 0,
+    n_estimators_grid: Sequence[int],
+    te_cols: Sequence[str] = (),
+    te_m: float = 20.0,
+    te_inner_splits: int = 5,
+    te_drop_original: bool = False,
+    holdout_eligible: np.ndarray | None = None,
+    extra_fit_rows: tuple[pd.DataFrame, pd.Series] | None = None,
+    fit_kwargs: dict[str, Any] | None = None,
+) -> FoldFitGrid:
+    """early stopping 대신 nested grid 로 `n_estimators` 를 고정 선택한다.
+
+    `output/es_protocol_final.md` "최종 권장 `n_estimators` 선택 절차"(작업 2-C,
+    조건 "clean") 의 구현이다. `run_fold()` 와 원칙은 완전히 같다 — 학습 fold 를
+    다시 쪼갠 내부 holdout 으로만 트리 수를 정하고, 채점 대상인 `X_valid` 는 그
+    결정에 전혀 관여하지 않는다. 다른 점은 그 결정 메커니즘 하나뿐이다 — ES
+    콜백(`stopping_rounds` 기반 patience) 대신, `n_estimators_grid` 각 점을 명시
+    학습해 inner-holdout LogLoss 가 최소인 점을 고른다.
+
+    **왜 콜백 기반 ES 를 버리는가** (`output/es_diagnosis.md` §2·3,
+    `output/es_protocol_final.md` 작업 1·2·3 실측 요약): `binary_logloss` +
+    `scale_pos_weight` 조합은 목적함수-지표 불일치로 `best_iteration` 이 2~3
+    그루에서 결정론적으로 붕괴한다. `scale_pos_weight` 를 빼도 patience 기반 ES 는
+    fold마다 54~567그루 사이에서 제멋대로 멈춘다 — 정점(n_estimators≈50) 자체는
+    5-fold 전부 거의 동일한데, 그 주변 곡선이 평탄하고 잡음이 섞여 있어 patience
+    카운터가 위치를 특정하지 못하기 때문이다. Nested grid 는 이 불안정성을
+    "그리드 위에서 직접 관측한 최솟값"으로 대체해 fold간·시드간 분산을 유의
+    기준(0.002)의 1/3 이하로 줄인다(작업 3 실측).
+
+    **핵심 차이 — `X_train` 은 TE 인코딩 전 원본 카테고리여야 한다**
+    -------------------------------------------------------------
+    `run_fold()` 는 이미 TE(Target Encoding)가 끝난 `X_train` 을 받는다. 그 TE 는
+    보통 outer-train 전체(이 fold 의 학습 파트, 예: ~204,000행)를 대상으로 한 번
+    계산된다. 그런데 이 함수는 그 outer-train 을 다시 80/20 으로 쪼개 inner-train/
+    inner-holdout 을 만드는데, **outer 경계에서 이미 계산된 TE 는 inner 경계를
+    모른다.** `oof_target_encode()` 가 outer-train 전체를 `inner_splits`(TE 자체의
+    K-fold, ES 의 inner-holdout 과는 다른 개념) 로 회전시키며 각 행의 `TE_*` 를
+    계산하므로, 이 함수의 inner-holdout 에 속한 행 중 상당수는 자신이 속한
+    TE-회전-fold 가 우연히 inner-train 쪽 행들의 라벨을 포함하고 있어 **그 라벨
+    정보가 `TE_*` 값에 간접적으로 스며든다** (`output/audit_addendum_te_leak.md`
+    §2). 트리 수가 늘어날수록 모델이 이 간접 정보를 정교하게 활용해
+    inner-holdout LogLoss 를 실제 일반화 능력과 무관하게 계속 낮출 수 있어, 그리드
+    선택이 "가장 많이 외운" 지점(그리드 최댓값)을 고르는 정반대 결과를 낸다 —
+    실측으로 그 최댓값 지점의 outer-valid 성능이 그리드 최저치였다
+    (`es_protocol_final.md` 작업 2-C "naive 버전은 실패").
+
+    그래서 이 함수는 TE 계산 자체를 내부에서, **inner-train/inner-holdout 분할
+    이후** 수행한다(`oof_target_encode()` 를 outer-train 대신 inner 경계로 호출).
+    이렇게 하면 inner-holdout 의 `TE_*` 는 inner-train 라벨만으로 계산되어,
+    `run_fold()` 가 outer 경계에서 이미 보장하던 것과 원칙적으로 동일한 차단을
+    한 단계 안쪽에 적용한 것이 된다.
+
+    Parameters
+    ----------
+    X_train, X_valid
+        **원본 카테고리 상태** (TE 인코딩 전) 의 outer-train / outer-valid.
+        `run_fold()` 에 넘기는 `X_train`/`X_valid` 와 달리 `TE_*` 컬럼이 없어야
+        한다 — 있으면 그 값은 outer 경계 TE 이므로 이 함수가 다시 계산하는
+        inner 경계 TE 와 섞여 의미가 불분명해진다.
+    n_estimators_grid
+        탐색할 `n_estimators` 후보. 빈 시퀀스는 허용하지 않는다.
+    te_cols
+        TE 를 적용할 컬럼. 빈 튜플(기본값)이면 TE 를 전혀 쓰지 않는 Phase 도
+        동일한 grid-선택 경로를 그대로 탈 수 있다(`oof_target_encode()` 를 빈
+        `cols` 로 호출하면 TE 컬럼 없이 inner 분할만 수행한다).
+    te_m, te_inner_splits, te_drop_original
+        `oof_target_encode()` 동명 인자에 그대로 대응한다.
+    holdout_eligible
+        `run_fold()` 와 동일한 의미 — `_make_inner_split()` 을 공유하므로 준지도
+        pseudo 행을 inner-holdout 후보에서 제외하는 방식도 동일하다.
+    extra_fit_rows
+        `oof_target_encode()` 동명 인자에 그대로 전달된다. 항상 inner-train
+        쪽에만 추가되므로(그 함수의 계약), pseudo 행이 inner-holdout 채점에
+        섞이는 일은 구조적으로 없다.
+    fit_kwargs
+        `model.fit()` 에 전달할 추가 인자. `callbacks` 키는 제거한다 — 이
+        경로는 early stopping 콜백을 쓰지 않는다(그리드 각 점을 조기종료 없이
+        끝까지 학습한다).
+
+    Returns
+    -------
+    FoldFitGrid
+        선택된 `n_estimators` 로 이미 학습된 모델(재학습 없이 grid 스윕에서
+        재사용)과, 그 모델로 outer-valid 를 채점한 확률.
+    """
+    if len(X_train) != len(y_train):
+        raise ValueError(
+            f"X_train({len(X_train)}) 과 y_train({len(y_train)}) 의 길이가 다릅니다."
+        )
+    grid = [int(k) for k in n_estimators_grid]
+    if not grid:
+        raise ValueError("n_estimators_grid 가 비어 있습니다.")
+
+    n_rows = len(X_train)
+    inner_tr, inner_ho = _make_inner_split(n_rows, y_train, cfg, fold, holdout_eligible)
+
+    # 2단계: TE 를 inner 경계에서 계산한다. drop_original 은 여기서는 항상 False 로
+    # 호출해 원본 컬럼을 남겨 둔다 — outer-valid 인코딩(5단계)에 같은 모집단의
+    # 원본 카테고리 값이 필요하기 때문이다. 실제 컬럼 제거는 아래에서 한꺼번에
+    # 수행한다.
+    te = oof_target_encode(
+        X_train, y_train, inner_tr, inner_ho,
+        cols=te_cols, m=te_m, inner_splits=te_inner_splits,
+        seed=cfg.seed, drop_original=False,
+        extra_fit_rows=extra_fit_rows,
+    )
+    X_in_full, y_in = te.X_train, te.y_train
+    X_ho_full = te.X_valid
+    # inner-holdout 라벨. te.X_valid 와 동일한 순서(inner_ho 슬라이스)로 뽑는다.
+    y_ho = y_train.iloc[inner_ho].reset_index(drop=True)
+
+    # 5단계: outer-valid 도 같은 inner-train 모집단(X_in_full 의 원본 컬럼 + y_in)
+    # 으로 단방향 인코딩한다. extra_fit_rows 가 있으면 X_in_full 에 이미 포함되어
+    # 있으므로 그 라벨도 자연히 반영된다.
+    present = [c for c in te_cols if c in X_valid.columns]
+    X_va_full = X_valid.copy().reset_index(drop=True)
+    for col in present:
+        X_va_full[f"TE_{col}"] = smoothed_target_encode(
+            X_in_full[col], y_in, X_va_full[col], m=te_m
+        )
+
+    if te_drop_original and present:
+        X_in_model = X_in_full.drop(columns=present)
+        X_ho_model = X_ho_full.drop(columns=present)
+        X_va_model = X_va_full.drop(columns=present)
+    else:
+        X_in_model, X_ho_model, X_va_model = X_in_full, X_ho_full, X_va_full
+
+    # 3단계: 그리드 스윕. early stopping 콜백은 쓰지 않는다 — 각 k 를 끝까지 학습.
+    kwargs = dict(fit_kwargs or {})
+    kwargs.pop("callbacks", None)
+
+    grid_scores: dict[int, float] = {}
+    best_k: int | None = None
+    best_score = np.inf
+    best_model: Any = None
+
+    for k in grid:
+        model = model_factory()
+        _set_n_estimators(model, k)
+        fit_params = _fit_parameters(model)
+        call_kwargs = {kk: vv for kk, vv in kwargs.items() if kk in fit_params}
+        model.fit(X_in_model, y_in, **call_kwargs)
+
+        ho_probs = np.asarray(model.predict_proba(X_ho_model), dtype=float)[:, 1]
+        score = float(log_loss(y_ho, ho_probs, labels=[0, 1]))
+        grid_scores[k] = score
+
+        # 4단계: LogLoss 최소점을 선택한다(작업 0 — 동급 1순위 지표, threshold 없이
+        # 계산 가능해 nested 하게 쓸 수 있는 유일한 지표).
+        if score < best_score:
+            best_score, best_k, best_model = score, k, model
+
+    assert best_model is not None and best_k is not None  # grid 가 비어 있지 않으므로 항상 참
+
+    valid_probs = np.asarray(best_model.predict_proba(X_va_model), dtype=float)[:, 1]
+    return FoldFitGrid(
+        model=best_model,
+        valid_probs=valid_probs,
+        selected_n_estimators=best_k,
+        grid_scores=grid_scores,
+        n_inner_train=int(len(X_in_model)),
+        n_inner_holdout=int(len(X_ho_model)),
     )
 
 

@@ -13,11 +13,14 @@ import pytest
 
 from src.cv import (
     CVConfig,
+    FoldFitGrid,
     evaluate_oof,
     make_folds,
     run_fold,
+    run_fold_nested_grid,
     tune_threshold_nested,
 )
+from src.cv import _make_inner_split  # 내부 헬퍼 — run_fold/run_fold_nested_grid 공유 분할 로직 검증용
 from src.features import (
     CAT_COLS,
     DROP_PRESETS,
@@ -980,6 +983,225 @@ class TestRunFold:
         for fold, (tr, va) in enumerate(make_folds(y, CVConfig())):
             run_fold(factory, X.iloc[tr], y.iloc[tr], X.iloc[va], CVConfig(), fold=fold)
         assert calls["n"] == 5
+
+
+class TestRunFoldNestedGrid:
+    """`output/nested_grid_implementation.md` 작업 2 — 누수 차단 구조 검증.
+
+    수치 재현이 아니라 **인덱스/라벨 조작으로 의존성 자체를 검증**하는 데
+    무게중심을 둔다 (`output/audit_addendum_te_leak.md` §2 가 기술한 메커니즘의
+    회귀 테스트).
+    """
+
+    @pytest.fixture
+    def cat_data(self):
+        """카테고리 컬럼 하나 + 라벨. 그룹별 지연율이 뚜렷하게 다르다."""
+        rng = np.random.default_rng(42)
+        n = 300
+        groups = rng.choice(["A", "B", "C"], size=n, p=[0.4, 0.35, 0.25])
+        rate = np.where(groups == "A", 0.75, np.where(groups == "B", 0.35, 0.15))
+        y = pd.Series(rng.binomial(1, rate).astype(int))
+        X = pd.DataFrame(
+            {
+                "Tail_Number": pd.Categorical(groups),
+                "Distance": rng.normal(size=n),
+            }
+        )
+        return X, y
+
+    def _lgbm_factory(self):
+        import lightgbm as lgb
+
+        return lambda: lgb.LGBMClassifier(
+            learning_rate=0.2, num_leaves=7, verbose=-1, random_state=0
+        )
+
+    # -- inner-holdout TE는 inner-train 라벨만의 함수다 -----------------------
+
+    def test_inner_holdout_te_depends_only_on_inner_train_labels(self, cat_data):
+        """★ 핵심 계약: inner-holdout 행의 라벨을 뒤집어도 inner-holdout TE는 불변.
+
+        `run_fold_nested_grid()` 가 내부적으로 쓰는 것과 동일한 호출
+        (`_make_inner_split()` 으로 나눈 뒤 `oof_target_encode()` 를 그 경계로
+        호출)을 직접 재현한다. inner-holdout 쪽 TE(`X_valid`)는 오직
+        inner-train 라벨(`y.iloc[inner_tr]`)의 함수여야 하므로, inner-holdout
+        행 자신의 라벨을 뒤집어도 **그 행을 포함한 inner-holdout 전체의 TE 값이
+        단 하나도 바뀌지 않아야** 한다 — inner-holdout 라벨은애초에 인코딩
+        계산에 참조되지 않기 때문이다.
+        """
+        X, y = cat_data
+        cfg = CVConfig()
+        inner_tr, inner_ho = _make_inner_split(len(X), y, cfg, fold=0, holdout_eligible=None)
+        assert inner_ho.size > 0
+
+        base = oof_target_encode(
+            X, y, inner_tr, inner_ho, cols=["Tail_Number"], inner_splits=3, seed=cfg.seed
+        )
+
+        y_flipped = y.copy()
+        flip_pos = int(inner_ho[0])
+        y_flipped.iloc[flip_pos] = 1 - y_flipped.iloc[flip_pos]
+        flipped = oof_target_encode(
+            X, y_flipped, inner_tr, inner_ho,
+            cols=["Tail_Number"], inner_splits=3, seed=cfg.seed,
+        )
+
+        np.testing.assert_allclose(
+            base.X_valid["TE_Tail_Number"], flipped.X_valid["TE_Tail_Number"]
+        )
+
+    def test_inner_train_labels_unaffected_by_holdout_flip(self, cat_data):
+        """inner-train 쪽 자체 인코딩(내부 K-fold 회전)도 inner-holdout 라벨과 무관."""
+        X, y = cat_data
+        cfg = CVConfig()
+        inner_tr, inner_ho = _make_inner_split(len(X), y, cfg, fold=0, holdout_eligible=None)
+
+        base = oof_target_encode(
+            X, y, inner_tr, inner_ho, cols=["Tail_Number"], inner_splits=3, seed=cfg.seed
+        )
+        y_flipped = y.copy()
+        y_flipped.iloc[int(inner_ho[0])] = 1 - y_flipped.iloc[int(inner_ho[0])]
+        flipped = oof_target_encode(
+            X, y_flipped, inner_tr, inner_ho,
+            cols=["Tail_Number"], inner_splits=3, seed=cfg.seed,
+        )
+        np.testing.assert_allclose(
+            base.X_train["TE_Tail_Number"], flipped.X_train["TE_Tail_Number"]
+        )
+
+    # -- 대조군: outer 전체 선계산(현재 run_fold() 구조) 은 이 리키지를 가진다 --
+
+    def test_outer_precomputed_te_leaks_inner_train_labels_into_holdout(self):
+        """★ 회귀 테스트: `audit_addendum_te_leak.md` §2 메커니즘의 재현.
+
+        TE를 (현재 `run_fold()` 가 받는 방식대로) outer-train 전체에 대해 먼저
+        계산한 뒤 80/20 으로 재분할하면, "inner-holdout" 이 될 행의 TE 값이
+        "inner-train" 이 될 행의 라벨에 의해 바뀔 수 있다 — TE 의 내부 K-fold
+        회전 경계가 나중의 inner 분할과 무관하기 때문이다. 이 테스트가 실패
+        (변화 없음)한다면 `run_fold_nested_grid()` 가 `oof_target_encode()` 를
+        inner 경계에서 다시 호출해야 하는 이유 자체가 사라진 것이므로, 반드시
+        "변화가 있어야" 통과하는 테스트다.
+        """
+        rng = np.random.default_rng(7)
+        n_outer_train, n_outer_valid = 300, 100
+        n = n_outer_train + n_outer_valid
+        groups = rng.choice(["A", "B", "C"], size=n, p=[0.4, 0.35, 0.25])
+        rate = np.where(groups == "A", 0.75, np.where(groups == "B", 0.35, 0.15))
+        y_all = pd.Series(rng.binomial(1, rate).astype(int))
+        X_all = pd.DataFrame({"Tail_Number": pd.Categorical(groups)})
+
+        outer_tr = np.arange(n_outer_train)
+        outer_va = np.arange(n_outer_train, n)
+        cfg = CVConfig()
+
+        def outer_te_then_split(y_full):
+            te_outer = oof_target_encode(
+                X_all, y_full, outer_tr, outer_va,
+                cols=["Tail_Number"], inner_splits=3, seed=cfg.seed,
+            )
+            inner_tr, inner_ho = _make_inner_split(
+                len(te_outer.X_train), te_outer.y_train, cfg, fold=0, holdout_eligible=None
+            )
+            return te_outer.X_train.iloc[inner_ho]["TE_Tail_Number"].reset_index(drop=True), inner_tr
+
+        before, inner_tr = outer_te_then_split(y_all)
+
+        y_flipped = y_all.copy()
+        flip_pos = int(inner_tr[0])  # outer-train 내부, inner-train 쪽으로 떨어질 위치
+        y_flipped.iloc[flip_pos] = 1 - y_flipped.iloc[flip_pos]
+        after, _ = outer_te_then_split(y_flipped)
+
+        assert not np.allclose(before.to_numpy(), after.to_numpy()), (
+            "outer 선계산 TE 를 80/20 재분할하면 inner-holdout TE 가 inner-train "
+            "라벨 변경에 반응해야 한다 (리키지 실측) — 변화가 없다면 이 회귀 "
+            "테스트의 전제 자체가 깨진 것이다."
+        )
+
+    # -- outer-valid는 grid 선택에 전혀 관여하지 않는다 ------------------------
+
+    def test_outer_valid_content_does_not_affect_grid_selection(self, cat_data):
+        """outer-valid(`X_valid`) 를 어떻게 바꿔도 grid 선택 결과는 그대로여야 한다.
+
+        grid 선택(3~4단계)은 inner-holdout LogLoss 만 보고 확정되며, `X_valid`
+        는 5단계(채점)에만 쓰인다. 따라서 `X_valid` 의 내용을 바꿔도
+        `selected_n_estimators`/`grid_scores` 는 완전히 동일해야 한다.
+        """
+        X, y = cat_data
+        cfg = CVConfig()
+        tr, va = np.arange(240), np.arange(240, 300)
+        grid = [5, 15, 30]
+
+        fit_a = run_fold_nested_grid(
+            self._lgbm_factory(),
+            X.iloc[tr].reset_index(drop=True), y.iloc[tr].reset_index(drop=True),
+            X.iloc[va].reset_index(drop=True),
+            cfg, fold=0, n_estimators_grid=grid, te_cols=["Tail_Number"], te_inner_splits=3,
+        )
+
+        X_va_corrupted = X.iloc[va].reset_index(drop=True).copy()
+        # 완전히 다른 내용으로 덮어쓴다 (category dtype/후보 목록은 유지해야
+        # LightGBM 이 train/valid 범주 불일치로 에러를 내지 않는다).
+        X_va_corrupted["Tail_Number"] = pd.Categorical(
+            ["A"] * len(X_va_corrupted), categories=X["Tail_Number"].cat.categories
+        )
+        X_va_corrupted["Distance"] = 999.0
+        fit_b = run_fold_nested_grid(
+            self._lgbm_factory(),
+            X.iloc[tr].reset_index(drop=True), y.iloc[tr].reset_index(drop=True),
+            X_va_corrupted,
+            cfg, fold=0, n_estimators_grid=grid, te_cols=["Tail_Number"], te_inner_splits=3,
+        )
+
+        assert fit_a.selected_n_estimators == fit_b.selected_n_estimators
+        assert fit_a.grid_scores == pytest.approx(fit_b.grid_scores)
+        # 그러나 채점 결과(valid_probs)는 X_valid 내용을 반영해 서로 달라질 수 있다.
+        assert fit_a.valid_probs.shape == fit_b.valid_probs.shape
+
+    # -- 기본 동작 -------------------------------------------------------
+
+    def test_returns_foldfitgrid_with_expected_fields(self, cat_data):
+        X, y = cat_data
+        cfg = CVConfig()
+        tr, va = np.arange(240), np.arange(240, 300)
+        grid = [5, 15, 30]
+
+        fit = run_fold_nested_grid(
+            self._lgbm_factory(),
+            X.iloc[tr].reset_index(drop=True), y.iloc[tr].reset_index(drop=True),
+            X.iloc[va].reset_index(drop=True),
+            cfg, fold=0, n_estimators_grid=grid, te_cols=["Tail_Number"], te_inner_splits=3,
+        )
+        assert isinstance(fit, FoldFitGrid)
+        assert fit.selected_n_estimators in grid
+        assert set(fit.grid_scores) == set(grid)
+        assert fit.valid_probs.shape == (60,)
+        assert ((fit.valid_probs >= 0) & (fit.valid_probs <= 1)).all()
+        assert fit.n_inner_train + fit.n_inner_holdout == 240
+
+    def test_empty_grid_rejected(self, cat_data):
+        X, y = cat_data
+        tr, va = np.arange(240), np.arange(240, 300)
+        with pytest.raises(ValueError, match="n_estimators_grid"):
+            run_fold_nested_grid(
+                self._lgbm_factory(),
+                X.iloc[tr].reset_index(drop=True), y.iloc[tr].reset_index(drop=True),
+                X.iloc[va].reset_index(drop=True),
+                CVConfig(), fold=0, n_estimators_grid=[],
+            )
+
+    def test_works_without_target_encoding(self, cat_data):
+        """`te_cols=()` (기본값) — TE 를 쓰지 않는 Phase 도 동일 경로를 탄다."""
+        X, y = cat_data
+        X_numeric = X.drop(columns=["Tail_Number"])
+        cfg = CVConfig()
+        tr, va = np.arange(240), np.arange(240, 300)
+        fit = run_fold_nested_grid(
+            self._lgbm_factory(),
+            X_numeric.iloc[tr].reset_index(drop=True), y.iloc[tr].reset_index(drop=True),
+            X_numeric.iloc[va].reset_index(drop=True),
+            cfg, fold=0, n_estimators_grid=[5, 15],
+        )
+        assert fit.valid_probs.shape == (60,)
 
 
 class TestTuneThresholdNested:
