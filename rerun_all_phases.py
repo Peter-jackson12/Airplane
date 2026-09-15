@@ -54,7 +54,7 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
-from src.cv import CVConfig, evaluate_oof, make_folds, run_fold
+from src.cv import CVConfig, evaluate_oof, make_folds, run_fold, run_fold_nested_grid
 from src.features import (
     build_cyclic_features,
     build_time_features,
@@ -92,6 +92,12 @@ MD_PATH = OUTPUT_DIR / "baseline_recovery.md"
 # =============================================================================
 
 #: 단일 인스턴스. 모든 Phase 가 이 객체 하나를 그대로 쓴다.
+#: `stopping_rounds` 는 이제 이 스크립트의 학습 경로(`run_fold_nested_grid()`)에서는
+#: 쓰이지 않는다 — patience 기반 ES 계열(es_diagnosis.md 조건 A/B)은 fold간·시드간
+#: 분산이 유의 기준(0.002)과 같은 자릿수이거나 초과해 Phase 비교에 부적합하다고
+#: 판정되었다(es_protocol_final.md 작업 1·3). 필드 자체는 원본 스크립트/조건 A·B
+#: 재현용으로 남겨 둔다(예: run_fold() 를 직접 쓰는 teacher 학습 경로는 여전히
+#: 이 값을 참조한다).
 CFG = CVConfig(
     n_splits=5,
     shuffle=True,
@@ -103,7 +109,11 @@ CFG = CVConfig(
 )
 
 #: 전 Phase 동일 고정. Phase 4(run_hybrid.py:156-169) 설정을 기준으로 삼는다.
-#: n_estimators 는 상한이며 실제 트리 수는 내부 holdout 기반 early stopping 이 정한다.
+#: `n_estimators` 는 더 이상 여기서 고정하지 않는다 — `run_fold_nested_grid()` 가
+#: `N_ESTIMATORS_GRID` 를 스윕해 fold마다 명시적으로 확정한다(es_protocol_final.md
+#: "최종 권장 n_estimators 선택 절차"). `scale_pos_weight` 는 지정하지 않는다
+#: (es_protocol_final.md 작업 5 — Macro F1 은 통계적 동률, LogLoss 는 spw 없음이
+#: 압도적으로 우세해 제거가 확정되었다. 기본값 1.0 이 적용된다).
 LGBM_PARAMS: dict = {
     "objective": "binary",
     "metric": "binary_logloss",
@@ -114,9 +124,13 @@ LGBM_PARAMS: dict = {
     "subsample": 0.8,
     "colsample_bytree": 0.8,
     "random_state": 42,
-    "n_estimators": 1000,
     "verbose": -1,
 }
+
+#: `es_protocol_final.md` 작업 1~3 이 쓴 그리드 그대로. 5-fold x 3seed 15회 중
+#: 14회가 정확히 k=50 을 선택했다(1회만 k=75) — 이미 이 조도로도 fold/시드 간
+#: 선택이 사실상 결정론적이다.
+N_ESTIMATORS_GRID: list[int] = [10, 25, 50, 75, 100, 150, 300, 600]
 
 TE_SMOOTHING_M = 20.0
 TE_INNER_SPLITS = 5
@@ -165,6 +179,10 @@ class PhaseSpec:
     te_drop_original: bool = False
     inner_splits: int = TE_INNER_SPLITS
     pseudo: str | None = None  # None | "leaky" | "honest"
+    #: [미사용] es_protocol_final.md 작업 5 로 scale_pos_weight 제거가 확정되어
+    #: `model_factory()` 는 이 값을 더 이상 읽지 않는다. 원본 스크립트가 전부
+    #: scale_pos_weight 를 적용했다는 사실을 Phase 정의에 문서로 남기기 위해
+    #: 필드만 유지한다(값을 바꿔도 학습에 아무 영향이 없다).
     use_spw: bool = True
     note: str = ""
 
@@ -238,11 +256,15 @@ PHASES: list[PhaseSpec] = [
     ),
 ]
 
+#: `best_iterations`(ES `best_iteration_`) 대신 `selected_n_estimators`(nested grid 가
+#: 고른 fold별 n_estimators) 와 `grid_scores`(fold별 `{k: inner-holdout LogLoss}`) 를
+#: 기록한다 — 조건 A/B(ES) 에서 조건 C(nested grid) 로 전환한 구조 변경을 CSV 스키마에
+#: 그대로 반영한다. `scale_pos_weight` 는 항상 "-" 로 기록된다(작업 3, 전 Phase 제거).
 CSV_FIELDS = [
     "phase_key", "label", "n_rows", "n_features", "log_loss", "roc_auc",
     "f1_at_050", "macro_f1_nested", "naive_macro_f1", "threshold_optimism",
     "deployment_threshold", "per_fold_thresholds", "tn", "fp", "fn", "tp",
-    "recall", "best_iterations", "pseudo_counts", "pseudo_total",
+    "recall", "selected_n_estimators", "grid_scores", "pseudo_counts", "pseudo_total",
     "inner_splits", "scale_pos_weight", "traffic_mode", "te_mode", "pseudo_mode",
     "elapsed_sec", "timestamp", "note", "protocol", "lgbm_params",
 ]
@@ -307,14 +329,14 @@ def build_features(raw: pd.DataFrame, spec: PhaseSpec):
     return X_lab, y, X_unlab
 
 
-def model_factory(scale_pos_weight: float | None):
-    """`scale_pos_weight=None` 이면 인자를 아예 넘기지 않는다 (LightGBM 기본 1.0)."""
+def model_factory() -> lgb.LGBMClassifier:
+    """새 LightGBM 분류기를 만든다. `run_fold()`/`run_fold_nested_grid()` 양쪽이
+    기대하는 "인자 없이 호출하는 콜러블" 계약을 그대로 만족한다.
 
-    def _make():
-        extra = {} if scale_pos_weight is None else {"scale_pos_weight": scale_pos_weight}
-        return lgb.LGBMClassifier(**LGBM_PARAMS, **extra)
-
-    return _make
+    `scale_pos_weight` 는 더 이상 계산하지 않는다 (es_protocol_final.md 작업 5,
+    `LGBM_PARAMS` 독스트링 참고) — LightGBM 기본값 1.0 이 전 Phase 에 적용된다.
+    """
+    return lgb.LGBMClassifier(**LGBM_PARAMS)
 
 
 # =============================================================================
@@ -322,13 +344,33 @@ def model_factory(scale_pos_weight: float | None):
 # =============================================================================
 
 
-def _teacher_fit_predict(X_tr, y_tr, X_apply, spec: PhaseSpec, spw: float, fold: int):
+def _teacher_fit_predict(X_tr, y_tr, X_apply, spec: PhaseSpec, fold: int):
     """teacher 한 대를 적합시켜 `X_apply` 에 대한 지연 확률을 돌려준다.
 
     TE 는 `oof_target_encode()` 로 계산한다. `X_apply` 쪽 라벨은 더미(0)를 넘기는데,
     이 함수가 valid 측 라벨을 절대 읽지 않기 때문이다 — 그 성질 자체가
     `tests/test_features.py::test_validation_labels_never_enter_encoding` 으로
     검증되어 있다.
+
+    [작업 3 판단 근거 — teacher 는 의도적으로 `run_fold()`(ES 기반) 를 유지한다]
+    student(최종 fold 학습, `run_phase()` 본문)는 `run_fold_nested_grid()` 로
+    옮겼지만, teacher 는 이 함수처럼 `run_fold()` + 사전 계산된 `oof_target_encode()`
+    조합을 그대로 쓴다. 근거:
+      1. **비용**: nested grid 는 fold 하나당 그리드 점 수(8개)만큼 모델을 학습한다.
+         teacher 는 이미 P5_leaky 에서 fold 마다(5회) 통째로 다시 학습되므로,
+         teacher 에도 grid 를 적용하면 8배가 추가로 곱해진다 — 정확도 개선 대비
+         비용이 이번 범위(구조 변경 검증)에서 정당화되지 않는다고 판단했다.
+      2. **오염 경로가 다르다**: `output/audit_addendum_te_leak.md` 가 실측한 TE-inner
+         리키지는 "채점 대상 모델"(evaluate_oof 에 들어가는 최종 확률)의 트리 수
+         선택에 영향을 준다. teacher 의 출력은 그 자체로 채점되지 않고
+         `make_pseudo_labels()` 의 분위수 임계값(상위 2%/하위 10%)을 통과하는지만
+         결정하는 데 쓰인다 — teacher 확률의 순위가 완전히 뒤집히지 않는 한 이
+         임계값 선별은 완만한 변화에 비교적 둔감하다.
+      3. student 쪽의 성능(evaluate_oof 로 보고되는 pooled AUC/LogLoss/Macro F1)이
+         이번 회귀 테스트(작업 4)의 판정 대상이므로, teacher 를 바꾸지 않아도
+         "nested grid 구조 변경"의 핵심 효과는 그대로 검증할 수 있다.
+    이 판단은 회색지대이며 재검토 가능하다 — 최종 보고서(`output/
+    nested_grid_implementation.md`)에 그대로 남긴다.
     """
     combined = pd.concat([X_tr, X_apply], ignore_index=True)
     y_combined = pd.concat(
@@ -350,13 +392,11 @@ def _teacher_fit_predict(X_tr, y_tr, X_apply, spec: PhaseSpec, spw: float, fold:
         seed=CFG.seed,
         drop_original=spec.te_drop_original,
     )
-    fit = run_fold(
-        model_factory(spw), te.X_train, te.y_train, te.X_valid, CFG, fold=fold
-    )
+    fit = run_fold(model_factory, te.X_train, te.y_train, te.X_valid, CFG, fold=fold)
     return fit.valid_probs
 
 
-def _leaky_ensemble_pseudo_labels(X_lab, y, X_unlab, folds, spec, spw):
+def _leaky_ensemble_pseudo_labels(X_lab, y, X_unlab, folds, spec):
     """[재현 전용] 기존 `run_pseudo_labeling.py` 의 누수 구조를 그대로 재현한다.
 
     이 함수는 **의도적으로 잘못된 구현**이다. `src.features.make_pseudo_labels()` 는
@@ -376,7 +416,7 @@ def _leaky_ensemble_pseudo_labels(X_lab, y, X_unlab, folds, spec, spw):
             X_lab.iloc[tr].reset_index(drop=True),
             y.iloc[tr].reset_index(drop=True),
             X_unlab,
-            spec, spw, fold,
+            spec, fold,
         )
         ensemble += probs / len(folds)
         print(f"      teacher fold {fold + 1}/{len(folds)} 완료")
@@ -424,21 +464,22 @@ def run_phase(spec: PhaseSpec, raw: pd.DataFrame, cache: dict) -> dict:
     X_lab, y, X_unlab = cache[sig]
 
     folds = make_folds(y, CFG)
-    spw = float((len(y) - y.sum()) / y.sum()) if spec.use_spw else None
     print(
         f"   라벨 {len(X_lab):,}행 | 피처 {X_lab.shape[1]}개 | "
-        f"미라벨 {len(X_unlab):,}행 | "
-        f"scale_pos_weight {'미적용' if spw is None else f'{spw:.4f}'}"
+        f"미라벨 {len(X_unlab):,}행 | scale_pos_weight 미적용(고정, es_protocol_final.md 작업 5)"
     )
 
     frozen_pseudo = None
     if spec.pseudo == "leaky":
-        frozen_pseudo = _leaky_ensemble_pseudo_labels(
-            X_lab, y, X_unlab, folds, spec, spw
-        )
+        frozen_pseudo = _leaky_ensemble_pseudo_labels(X_lab, y, X_unlab, folds, spec)
+
+    # TE 를 쓰지 않는 Phase 는 `te_cols=()` 로 grid 선택 경로만 태운다 — TE 유무와
+    # 무관하게 모든 Phase 가 동일한 nested n_estimators 선택 절차를 거친다.
+    te_cols = spec.cat_cols if spec.te else ()
 
     oof = np.full(len(y), np.nan)
-    best_iters: list[int | None] = []
+    selected_n_estimators: list[int] = []
+    grid_scores_per_fold: list[dict[int, float]] = []
     pseudo_counts: list[int] = []
     feature_names: list[str] = []
 
@@ -454,7 +495,7 @@ def run_phase(spec: PhaseSpec, raw: pd.DataFrame, cache: dict) -> dict:
             teacher = fit_fold_teacher(
                 X_lab, y, tr,
                 fit_predict=lambda a, b, c, _f=fold: _teacher_fit_predict(
-                    a, b, c, spec, spw, _f
+                    a, b, c, spec, _f
                 ),
             )
             pseudo = make_pseudo_labels(
@@ -467,38 +508,35 @@ def run_phase(spec: PhaseSpec, raw: pd.DataFrame, cache: dict) -> dict:
                 f"(임계 {pseudo.thresh_neg:.4f} / {pseudo.thresh_pos:.4f})"
             )
 
-        if spec.te:
-            te = oof_target_encode(
-                X_lab, y, tr, va,
-                cols=spec.cat_cols,
-                m=TE_SMOOTHING_M,
-                inner_splits=spec.inner_splits,
-                seed=CFG.seed,
-                drop_original=spec.te_drop_original,
-                extra_fit_rows=extra,
-            )
-            X_tr, y_tr, X_va = te.X_train, te.y_train, te.X_valid
-        else:
-            X_tr = X_lab.iloc[tr].reset_index(drop=True)
-            y_tr = y.iloc[tr].reset_index(drop=True)
-            X_va = X_lab.iloc[va].reset_index(drop=True)
+        # X_tr/X_va 는 TE 인코딩 **전** 원본 카테고리 상태로 넘긴다 — TE 계산 자체를
+        # run_fold_nested_grid() 내부에서 outer/inner 2단계로 수행하기 때문이다
+        # (es_protocol_final.md 조건 C, audit_addendum_te_leak.md §2 가 지적한
+        # ES-inner-holdout TE 리키지를 구조적으로 차단한다). pseudo 행(`extra`)은
+        # `extra_fit_rows` 로 전달되어 항상 inner-train 쪽에만 추가되므로,
+        # 예전의 `holdout_eligible` 위치-필터링 없이도 pseudo 행이 grid 선택용
+        # inner-holdout 채점에 섞이는 일이 구조적으로 없다.
+        X_tr_raw = X_lab.iloc[tr].reset_index(drop=True)
+        y_tr_raw = y.iloc[tr].reset_index(drop=True)
+        X_va_raw = X_lab.iloc[va].reset_index(drop=True)
 
-        # early stopping holdout 은 진짜 라벨 행에서만 뽑는다. pseudo 행이 평가셋에
-        # 들어가면 트리 개수가 teacher 의 가짜 라벨에 맞춰지므로, 준지도 효과 측정
-        # 자체가 오염된다. pseudo 행은 내부 학습셋에는 그대로 남는다.
-        eligible = np.arange(len(tr)) if extra is not None else None
-
-        fit = run_fold(
-            model_factory(spw), X_tr, y_tr, X_va, CFG,
-            fold=fold, holdout_eligible=eligible,
+        fit = run_fold_nested_grid(
+            model_factory, X_tr_raw, y_tr_raw, X_va_raw, CFG,
+            fold=fold,
+            n_estimators_grid=N_ESTIMATORS_GRID,
+            te_cols=te_cols,
+            te_m=TE_SMOOTHING_M,
+            te_inner_splits=spec.inner_splits,
+            te_drop_original=spec.te_drop_original,
+            extra_fit_rows=extra,
         )
         oof[va] = fit.valid_probs
-        best_iters.append(fit.best_iteration)
+        selected_n_estimators.append(fit.selected_n_estimators)
+        grid_scores_per_fold.append(fit.grid_scores)
         if not feature_names:
-            feature_names = list(X_tr.columns)
+            feature_names = list(getattr(fit.model, "feature_name_", []))
         print(
-            f"   fold {fold + 1}/{len(folds)} | 학습 {len(X_tr):,}행 "
-            f"(holdout {fit.n_inner_holdout:,}) | best_iter {fit.best_iteration} "
+            f"   fold {fold + 1}/{len(folds)} | 학습 {fit.n_inner_train:,}행 "
+            f"(holdout {fit.n_inner_holdout:,}) | n_estimators {fit.selected_n_estimators} "
             f"| {time.perf_counter() - t0:.1f}s"
         )
 
@@ -525,11 +563,12 @@ def run_phase(spec: PhaseSpec, raw: pd.DataFrame, cache: dict) -> dict:
         "fn": res["confusion_matrix"]["fn"],
         "tp": res["confusion_matrix"]["tp"],
         "recall": round(res["recall"], 6),
-        "best_iterations": json.dumps(best_iters),
+        "selected_n_estimators": json.dumps(selected_n_estimators),
+        "grid_scores": json.dumps(grid_scores_per_fold),
         "pseudo_counts": json.dumps(pseudo_counts),
         "pseudo_total": int(np.sum(pseudo_counts)) if pseudo_counts else 0,
         "inner_splits": spec.inner_splits,
-        "scale_pos_weight": "-" if spw is None else round(spw, 4),
+        "scale_pos_weight": "-",
         "traffic_mode": (
             "-" if not spec.traffic
             else ("exclude_missing" if spec.traffic_exclude_missing else "legacy")
@@ -593,7 +632,9 @@ def print_header(specs: list[PhaseSpec], sample: int | None) -> None:
     print("\n[LightGBM 하이퍼파라미터 — 전 Phase 동일 고정 (Phase 4 기준)]")
     for k, v in LGBM_PARAMS.items():
         print(f"  {k:24} = {v}")
-    print(f"  {'scale_pos_weight':24} = (라벨 분포에서 산출, 전 Phase 동일)")
+    print(f"  {'scale_pos_weight':24} = 미적용 (전 Phase 고정, es_protocol_final.md 작업 5)")
+    print(f"  {'n_estimators':24} = nested grid 선택 (아래 grid, ES 아님)")
+    print(f"  {'n_estimators_grid':24} = {N_ESTIMATORS_GRID}")
 
     print("\n[TE 설정 — 전 Phase 동일 고정]")
     print(f"  {'smoothing_m':24} = {TE_SMOOTHING_M}  (기존 Phase 6 만 25.0 이었음)")
@@ -709,7 +750,9 @@ def write_report(done: dict[str, dict]) -> None:
     A(f"* TE 평활 계수 `m` = {TE_SMOOTHING_M} — 기존 Phase 6 만 25.0 이었다.")
     A(f"* TE 내부 K-fold `inner_splits` = {TE_INNER_SPLITS} — 기존 5개 스크립트는 0 에 해당한다.")
     A("* 범주 vocabulary 는 전 Phase 라벨+미라벨 합쳐 fit — 기존에는 Phase 5 만 그랬다.")
-    A("* `scale_pos_weight` 는 라벨 분포에서 산출한 동일 값을 전 Phase 사용.")
+    A("* `scale_pos_weight` 는 전 Phase 미적용(es_protocol_final.md 작업 5, 기본값 1.0).")
+    A(f"* `n_estimators` 는 ES 대신 nested grid(`{N_ESTIMATORS_GRID}`)로 fold마다 선택한다 ")
+    A("  (es_protocol_final.md 조건 C — TE-inner 리키지 차단, `run_fold_nested_grid()`).")
     A("* Phase 7-Ex 는 원천 데이터 결함으로 재측정 대상에서 제외.\n")
     A("---\n")
 
@@ -739,14 +782,14 @@ def write_report(done: dict[str, dict]) -> None:
     A("> 신프로토콜 값과는 애초에 같은 종류의 양이 아니므로 증감 해석에 쓸 수 없다.\n")
 
     A("### 2-1. 실행 세부\n")
-    A("| Phase | 피처 수 | 배포 임계값 | fold별 임계값 | fold별 best_iteration | pseudo 선별 | 소요(초) |")
+    A("| Phase | 피처 수 | 배포 임계값 | fold별 임계값 | fold별 선택 n_estimators(nested grid) | pseudo 선별 | 소요(초) |")
     A("| :--- | ---: | ---: | :--- | :--- | :--- | ---: |")
     for r in rows:
         pc = json.loads(r["pseudo_counts"] or "[]")
         pc_s = "—" if not pc else ", ".join(f"{c:,}" for c in pc)
         A(
             f"| {r['label']} | {r['n_features']} | {_f(r, 'deployment_threshold', 2)} "
-            f"| {r['per_fold_thresholds']} | {r['best_iterations']} | {pc_s} "
+            f"| {r['per_fold_thresholds']} | {r.get('selected_n_estimators', '—')} | {pc_s} "
             f"| {_f(r, 'elapsed_sec', 1)} |"
         )
     A("")
@@ -798,8 +841,9 @@ def _interpretation(done: dict[str, dict]) -> str:
             A("> 통일 프로토콜에서는 **Phase 3 이 AUC 최고**다. 구프로토콜의 Phase 3 평가는 ")
             A("> 피처셋이 아니라 TE 구현 방식(`inner_splits=0`)에서 온 것이었다(§3-4 참조).\n")
         if best_ll[0] == "P4_nospw":
-            A("> LogLoss 최저값은 `scale_pos_weight` 를 끈 진단용 변형에서 나왔다. ")
-            A("> 기존 최고 기록(0.4587, 누수 포함 Phase 5)보다 낮다(§3-7 참조).\n")
+            A("> `scale_pos_weight` 는 이제 전 Phase 에서 제거되어 있으므로(작업 3), ")
+            A("> `P4_nospw` 는 `P4` 와 설정상 동일하고 수치도 사실상 같아야 한다 — ")
+            A("> 이 진단용 변형은 spw 를 켰던 구프로토콜 시절의 유물이다(§3-7 참조).\n")
 
     # (1) Phase 5 vs Phase 6
     A("### 3-1. Phase 5 는 여전히 Phase 6 보다 우수한가?\n")
@@ -958,33 +1002,34 @@ def _interpretation(done: dict[str, dict]) -> str:
         A("**유의하게 남는 개선 단계가 없다.** 기존의 \"단계적 성능 향상\" 서사는 ")
         A("통일된 프로토콜에서 재현되지 않는다.\n")
 
-    # --- 3-7. scale_pos_weight 진단 ---
-    A("### 3-7. `scale_pos_weight` 가 early stopping 을 조기 종료시킨다 (진단)\n")
+    # --- 3-7. scale_pos_weight — 이제는 진단이 아니라 구조적 제거 ---
+    A("### 3-7. `scale_pos_weight` 는 더 이상 조기 종료를 붕괴시키지 않는다 — 제거로 대체\n")
+    A("**이 절의 서술은 `output/es_diagnosis.md`/`output/es_protocol_final.md` 로 정정·")
+    A("확정되었다** — 원래 이 표가 실었던 \"LightGBM 이 `scale_pos_weight` 를 평가셋에도 ")
+    A("적용해 조기 종료가 가중 지표를 본다\"는 가설은 **반증**되었다. 실제 메커니즘은 ")
+    A("목적함수(그래디언트)만 가중되고 평가지표(`binary_logloss`)는 비가중이라 서로 ")
+    A("어긋나는 것이었다(`es_diagnosis.md` §2-3). 또한 \"2-트리 AUC 가 500-트리 AUC 보다 ")
+    A("높다 → 부스팅이 랭킹을 해친다\"는 후속 해석도 spw 교락을 제거하면 성립하지 않음이 ")
+    A("확인되었다(`es_diagnosis.md` §3) — 정점은 spw 유무와 무관하게 `n_estimators≈50` ")
+    A("부근이다.\n")
+    A("이번 구조 변경(작업 3, `output/nested_grid_implementation.md`)은 그 결론을 그대로 ")
+    A("실행에 옮긴 것이다: `scale_pos_weight` 는 이제 **전 Phase 에서 계산조차 되지 않고**, ")
+    A("`n_estimators` 는 조기 종료 대신 nested grid(`N_ESTIMATORS_GRID`)로 fold마다 ")
+    A("명시적으로 선택된다(es_protocol_final.md 조건 C). 그 결과 `P4` 와 `P4_nospw` 는 ")
+    A("이제 설정상 동일하며(`use_spw` 필드는 무시된다), 이 CSV 스키마의 `scale_pos_weight` ")
+    A("열은 항상 `-` 로 기록된다.\n")
     a_ll, b_ll = g("P4", "log_loss"), g("P4_nospw", "log_loss")
-    a_auc2, b_auc2 = g("P4", "roc_auc"), g("P4_nospw", "roc_auc")
-    if None in (a_ll, b_ll, a_auc2, b_auc2):
-        A("_진단 변형이 완료되지 않았다._\n")
-    else:
-        it_on = json.loads(done["P4"]["best_iterations"])
-        it_off = json.loads(done["P4_nospw"]["best_iterations"])
-        A("LightGBM 은 `scale_pos_weight` 를 **평가셋에도 적용**한다. 그래서 early ")
-        A("stopping 이 보는 지표가 가중 버전이 되어 매우 이른 회차에 멈춘다. ")
-        A("`metric` 을 `auc` 로 바꿔도 동일하게 재현되므로 원인은 metric 이 아니라 ")
-        A("가중치 자체다. 기존 7개 스크립트가 전부 이 설정을 쓰고 있었다.\n")
-        A("| 항목 | spw 적용 (Phase 4 기준 설정) | spw 미적용 |")
+    a_ne, b_ne = done.get("P4", {}).get("selected_n_estimators"), done.get("P4_nospw", {}).get("selected_n_estimators")
+    if None not in (a_ll, b_ll) and a_ne and b_ne:
+        A("| 항목 | P4 | P4_nospw |")
         A("| :--- | ---: | ---: |")
-        A(f"| fold별 best_iteration | `{it_on}` | `{it_off}` |")
-        A(f"| LogLoss | {a_ll:.4f} | **{b_ll:.4f}** |")
-        A(f"| ROC-AUC | **{a_auc2:.4f}** | {b_auc2:.4f} |")
+        A(f"| fold별 선택 n_estimators | `{a_ne}` | `{b_ne}` |")
+        A(f"| LogLoss | {a_ll:.4f} | {b_ll:.4f} |")
         A("")
-        A("읽어야 할 지점은 **2-트리 모델의 AUC 가 500-트리 모델보다 높다**는 것이다. ")
-        A("추가 부스팅이 랭킹 품질을 떨어뜨린다 — 이 데이터의 신호가 실제로 얕다는 ")
-        A("뜻이며 프로토콜 결함이 아니다. 다만 **LogLoss 는 spw 를 끌 때 뚜렷하게 ")
-        A(f"낮아진다** ({a_ll:.4f} → {b_ll:.4f}). 기존 프로젝트가 \"LogLoss 0.45대 진입\"을 ")
-        A("성과로 기록해 온 만큼, 그 값이 누수도 준지도 학습도 없이 **하이퍼파라미터 ")
-        A("한 줄로** 얻어진다는 사실은 해당 서사를 다시 보게 만든다.\n")
-        A("> 본 재측정의 주 비교표(§2)는 지시대로 Phase 4 설정(spw 적용)을 전 Phase ")
-        A("> 고정으로 유지했다. 위 행은 진단용이며 Phase 순위 비교에는 넣지 않는다.\n")
+        A("두 행이 사실상 동일하게 나오는 것이 **기대되는 결과**다 — `P4_nospw` 는 이제 ")
+        A("`P4` 와 구분되는 설정이 아니라, spw 를 적용하던 구프로토콜 시절의 유물이다.\n")
+    else:
+        A("_두 Phase 가 모두 완료되지 않았다._\n")
 
     A("---\n")
     A("## 4. 한계\n")
