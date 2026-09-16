@@ -1,0 +1,12 @@
+{
+  "rows": 1000000,
+  "airline_missing_raw": 108920,
+  "airline_missing_legacy": 11864,
+  "airline_missing_clean": 78312,
+  "clean_reversal_changed_rows": 0,
+  "data_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "zero_gap_rows": 370,
+  "legacy_ratio_max": 75800000.0,
+  "clean_ratio_max": 581.0,
+  "clean_ratio_missing": 206741
+}

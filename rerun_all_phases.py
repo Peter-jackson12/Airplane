@@ -45,7 +45,7 @@ import json
 import sys
 import time
 import warnings
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from importlib.metadata import version
 from datetime import datetime, timezone
 from pathlib import Path
@@ -62,6 +62,7 @@ from src.features import (
     build_traffic_features,
     encode_categoricals,
     impute_cross,
+    build_speed_features,
     load_data,
     make_pseudo_labels,
     prune_columns,
@@ -181,6 +182,8 @@ class PhaseSpec:
     #: 필드만 유지한다(값을 바꿔도 학습에 아무 영향이 없다).
     use_spw: bool = True
     note: str = ""
+    #: 개선 전처리는 별도 Phase 키로 선택하여 과거 피처 정의를 보존한다.
+    safe_preprocessing: bool = False
 
     def feature_signature(self) -> tuple:
         """피처 빌드 캐시 키. 타깃 의존 설정은 제외한다."""
@@ -188,7 +191,7 @@ class PhaseSpec:
             self.bidirectional_impute, self.prune_preset, self.drop_extra,
             self.cyclic_missing, self.include_cos, self.restore_duration,
             self.restore_hours, self.traffic, self.traffic_exclude_missing,
-            self.cat_cols,
+            self.cat_cols, self.safe_preprocessing,
         )
 
 
@@ -252,6 +255,18 @@ PHASES: list[PhaseSpec] = [
     ),
 ]
 
+# 동일한 모델 선택 프로토콜에서 전처리 묶음의 효과를 비교할 신규 조건.
+# 기존 P4/P6 정의와 과거 결과를 덮어쓰지 않는다.
+PHASES.extend([
+    replace(next(s for s in PHASES if s.key == base), key=key, label=label,
+            safe_preprocessing=True, cyclic_missing="nan",
+            note="유일 대응만 대치; local-clock proxy 명시; 0분 분모 NaN; 시각 결측 플래그")
+    for base, key, label in [
+        ("P4", "P4_clean", "Phase 4: 전처리 개선"),
+        ("P6_fixed", "P6_clean", "Phase 6: 전처리 개선"),
+    ]
+])
+
 #: `best_iterations`(ES `best_iteration_`) 대신 `selected_n_estimators`(nested grid 가
 #: 고른 fold별 n_estimators) 와 `grid_scores`(fold별 `{k: inner-holdout LogLoss}`) 를
 #: 기록한다 — 조건 A/B(ES) 에서 조건 C(nested grid) 로 전환한 구조 변경을 CSV 스키마에
@@ -276,10 +291,11 @@ def build_features(raw: pd.DataFrame, spec: PhaseSpec):
     """`spec` 이 지정한 피처셋을 만들어 `(X_lab, y, X_unlab)` 을 돌려준다.
 
     이 함수는 `Delay` 를 `split_labeled()` 에서 단 한 번만 건드린다. 그 전 단계는
-    전부 타깃 비의존이므로 fold 분할 전에 전체 데이터로 계산해도 누수가 없다
-    (AUDIT.md §2.4 전수 판정).
+    전부 타깃 비의존이다. 전체 데이터 집계/vocabulary를 사용하는 기존 실험
+    계약은 유지하며, 실제 배포 시점에 해당 자료를 사용할 수 있는지는 별도 문제다.
     """
-    df = impute_cross(raw, bidirectional=spec.bidirectional_impute)
+    df = impute_cross(raw, bidirectional=spec.bidirectional_impute,
+                      conflict="unique" if spec.safe_preprocessing else "first")
 
     # Route 는 traffic / TE 보다 먼저 있어야 한다.
     df["Route"] = (
@@ -289,6 +305,10 @@ def build_features(raw: pd.DataFrame, spec: PhaseSpec):
     # 분 단위는 restore_time_missing(fill_hours=True) 에 필요하므로 항상 만든 뒤,
     # 필요 없는 Phase 에서는 prune 단계에서 떨군다.
     df = build_time_features(df, keep_minute=True)
+    if spec.safe_preprocessing:
+        for col in ("Dep_Hour", "Arr_Hour"):
+            df[f"{col}_Originally_Missing"] = df[col].lt(0).astype("int8")
+        df["Local_Time_Gap_Originally_Missing"] = df.Estimated_Duration.isna().astype("int8")
 
     if spec.restore_duration or spec.restore_hours:
         df = restore_time_missing(
@@ -305,11 +325,12 @@ def build_features(raw: pd.DataFrame, spec: PhaseSpec):
         )
 
     df = build_cyclic_features(
-        df, missing=spec.cyclic_missing, include_cos=spec.include_cos
+        df, missing=spec.cyclic_missing, include_cos=spec.include_cos,
+        add_missing_flag=spec.safe_preprocessing,
     )
 
     # 7개 스크립트 공통 파생. 복원된 Duration 을 쓰도록 restore 뒤에 계산한다.
-    df["Air_Speed_Proxy"] = df["Distance"] / (df["Estimated_Duration"] + 1e-5)
+    df = build_speed_features(df, safe=spec.safe_preprocessing)
 
     df = prune_columns(df, preset=spec.prune_preset, extra=spec.drop_extra)
 

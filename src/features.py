@@ -36,6 +36,7 @@ __all__ = [
     "restore_time_missing",
     "build_traffic_features",
     "build_cyclic_features",
+    "build_speed_features",
     "prune_columns",
     "split_labeled",
     "encode_categoricals",
@@ -158,27 +159,39 @@ def impute_cross(
         ("Destination_Airport", "Destination_State"),
     ),
     bidirectional: bool = False,
+    conflict: Literal["first", "unique"] = "first",
 ) -> pd.DataFrame:
-    """식별자 간 1:1 매핑을 이용한 상호 결측 대치.
+    """식별자 간 관측 대응을 이용한 상호 결측 대치.
 
     `pairs` 의 각 `(key, value)` 에 대해 key -> value 방향으로 채운다.
     `bidirectional=True` 이면 value -> key 방향도 수행한다
     (run_baseline.py:46-58 만 Carrier<->Airline 양방향을 수행했다).
 
-    누수 판정: `Delay` 미참조 → 타깃 누수 없음. "IATA 코드와 항공사명의 대응"은
-    데이터에 독립적인 상수이므로 transductive 이슈도 없다.
+    conflict="first"는 과거 재현용이다. "unique"는 관측된 대응이 하나인
+    키만 대치한다. 관측상 유일함이 실제 정답을 보장하지는 않는다.
+    Delay는 참조하지 않지만 매핑은 입력 데이터에서 적합되므로 배포 가용성은
+    별도로 확인해야 한다. 양방향 매핑 모두 대치 전 관측 쌍만 사용한다.
     """
+    if conflict not in ("first", "unique"):
+        raise ValueError("conflict must be first or unique")
     out = df.copy()
     for key, value in pairs:
         if key not in out.columns or value not in out.columns:
             continue
         both = out.dropna(subset=[key, value])
 
-        fwd = both.drop_duplicates(subset=[key]).set_index(key)[value].to_dict()
+        def mapping(source, target):
+            observed = both
+            if conflict == "unique":
+                counts = both.groupby(source, observed=True)[target].nunique()
+                observed = both[both[source].isin(counts[counts == 1].index)]
+            return observed.drop_duplicates(subset=[source]).set_index(source)[target].to_dict()
+
+        fwd = mapping(key, value)
         out[value] = out[value].fillna(out[key].map(fwd))
 
         if bidirectional:
-            bwd = both.drop_duplicates(subset=[value]).set_index(value)[key].to_dict()
+            bwd = mapping(value, key)
             out[key] = out[key].fillna(out[value].map(bwd))
     return out
 
@@ -217,6 +230,9 @@ def build_time_features(
     strict: bool = False,
 ) -> pd.DataFrame:
     """`Dep_Hour` / `Arr_Hour` / (선택) 분 / `Estimated_Duration` 생성.
+
+    Estimated_Duration은 호환용 이름이다. 서로 다른 공항의 현지 시각 차이로,
+    시간대를 보정한 실제 경과시간이 아니다. 개선 경로는 후속 단계에서 이름을 바꾼다.
 
     `midnight_wrap=True` 이면 도착<출발 인 경우 +1440분 보정한다.
     양쪽 시각이 **모두 유효할 때만** `Estimated_Duration` 을 채우고, 아니면 NaN.
@@ -272,8 +288,8 @@ def restore_time_missing(
     그 차이가 드러난다.
 
     누수 판정: `Delay` 미참조 → 타깃 누수 없음. Route 중앙값은 전체 데이터 집계라
-    엄밀히는 transductive 이나, 운항 스케줄은 예측 시점에 확정된 정보이므로
-    배포 시 재현 가능하다.
+    엄밀히는 transductive 이다. 예측 시점에 같은 집계 자료를 사용할 수 있는지,
+    입력 시각이 예정 시각인지 실제 시각인지는 별도로 검증해야 한다.
     """
     out = df.copy()
     if "Estimated_Duration" not in out.columns:
@@ -400,6 +416,7 @@ def build_cyclic_features(
     hour_cols: Sequence[str] = ("Dep_Hour",),
     include_cos: bool = True,
     missing: Literal["nan", "noon", "keep"] = "nan",
+    add_missing_flag: bool = False,
 ) -> pd.DataFrame:
     """시각의 24시간 주기 삼각함수 인코딩.
 
@@ -420,6 +437,8 @@ def build_cyclic_features(
         if col not in out.columns:
             raise KeyError(f"{col} 이 없습니다. build_time_features() 를 먼저 호출하세요.")
         hours = out[col].to_numpy(dtype=float)
+        if add_missing_flag:
+            out[f"{col}_Missing"] = (~np.isfinite(hours) | (hours < 0)).astype("int8")
         if missing == "nan":
             hours = np.where(hours >= 0, hours, np.nan)
         elif missing == "noon":
@@ -431,6 +450,27 @@ def build_cyclic_features(
         if include_cos:
             out[f"Cos_{stem}_Hour"] = np.cos(angle)
     return out
+
+
+def build_speed_features(df: pd.DataFrame, *, safe: bool = False) -> pd.DataFrame:
+    """Legacy ratio or explicitly named local-clock proxies.
+
+    Local clock differences are NOT elapsed flight time (timezone uncorrected).
+    In safe mode a zero/nonfinite/nonpositive denominator stays missing, never
+    epsilon-divided. No arbitrary outlier cap or row deletion is performed.
+    Call after optional time restoration; retain its missingness flags upstream.
+    """
+    out = df.copy()
+    gap = out["Estimated_Duration"]
+    if not safe:
+        out["Air_Speed_Proxy"] = out["Distance"] / (gap + 1e-5)
+        return out
+    valid = np.isfinite(gap) & gap.gt(0) & np.isfinite(out["Distance"]) & out["Distance"].ge(0)
+    out["Local_Time_Gap_Zero"] = gap.eq(0).astype("int8")
+    out["Distance_Per_Local_Minute"] = (out["Distance"].where(valid) / gap.where(valid))
+    out["Distance_Per_Local_Minute_Missing"] = (~valid).astype("int8")
+    out = out.rename(columns={"Estimated_Duration": "Local_Time_Gap_Minutes"})
+    return out.drop(columns=["Air_Speed_Proxy"], errors="ignore")
 
 
 def prune_columns(
