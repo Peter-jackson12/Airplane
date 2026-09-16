@@ -27,6 +27,11 @@ __pycache__/
 *.model
 *.bin
 
+# Row-level predictions remain local; small diagnostic tables and manifests are tracked.
+output/*_oof/
+output/*_error_stability.csv.gz
+output/pytest_oof_tmp*/
+
 # =====================================
 # IDE 및 운영체제 캐시
 # =====================================

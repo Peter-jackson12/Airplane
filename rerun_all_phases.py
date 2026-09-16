@@ -55,7 +55,8 @@ import numpy as np
 import pandas as pd
 
 from src.cv import CVConfig, evaluate_oof, make_folds, run_fold_nested_grid
-from src.run_store import digest, file_digest, read_rows, upsert_row
+from src.run_store import digest, file_digest, read_rows, upsert_row, save_oof, read_oof
+from src.oof import OOF_SCHEMA_VERSION, build_oof_rows
 from src.features import (
     build_cyclic_features,
     build_time_features,
@@ -87,6 +88,7 @@ CSV_PATH = OUTPUT_DIR / "baseline_recovery_v2.csv"
 MD_PATH = OUTPUT_DIR / "baseline_recovery_v2.md"
 RUN_METADATA: dict = {}
 RUN_ID = ""
+SAVE_OOF = False
 
 
 # =============================================================================
@@ -294,6 +296,7 @@ CSV_FIELDS = [
     "recall", "selected_n_estimators", "grid_scores", "pseudo_counts", "pseudo_total",
     "inner_splits", "scale_pos_weight", "traffic_mode", "te_mode", "pseudo_mode",
     "elapsed_sec", "timestamp", "note", "protocol", "lgbm_params",
+    "oof_path", "oof_sha256", "oof_columns",
 ]
 
 
@@ -358,9 +361,14 @@ def build_features(raw: pd.DataFrame, spec: PhaseSpec):
     # 따로 인코딩하면 categories 배열이 달라져 pseudo 행 concat 시 dtype 이 풀린다.
     n_lab = len(X_lab)
     combined = pd.concat([X_lab, X_unlab], ignore_index=True)
-    combined, _ = encode_categoricals(combined, cat_cols=spec.cat_cols)
+    combined, encoders = encode_categoricals(combined, cat_cols=spec.cat_cols)
     X_lab = combined.iloc[:n_lab].reset_index(drop=True)
     X_unlab = combined.iloc[n_lab:].reset_index(drop=True)
+    # Preserve how MISSING was encoded for export; this metadata is not a model feature.
+    X_lab.attrs["missing_category_codes"] = {
+        col: int(enc.transform(["MISSING"])[0])
+        for col, enc in encoders.items() if "MISSING" in enc.classes_
+    }
 
     return X_lab, y, X_unlab
 
@@ -586,7 +594,17 @@ def run_phase(spec: PhaseSpec, raw: pd.DataFrame, cache: dict) -> dict:
         "note": spec.note,
         "protocol": json.dumps(res["protocol"], ensure_ascii=False),
         "lgbm_params": json.dumps(LGBM_PARAMS),
+        "oof_path": "", "oof_sha256": "", "oof_columns": "",
     }
+
+    if SAVE_OOF:
+        if not RUN_ID:
+            raise ValueError("Experiment identity has not been initialized")
+        oof_rows = build_oof_rows(raw, y, oof, folds, thresholds, selected_n_estimators,
+                                 run_id=RUN_ID, phase_key=spec.key, seed=CFG.seed, features=X_lab)
+        path, sha = save_oof(oof_rows, CSV_PATH.parent / f"{CSV_PATH.stem}_oof", spec.key)
+        row.update(oof_path=path.relative_to(CSV_PATH.parent).as_posix(), oof_sha256=sha,
+                   oof_columns=json.dumps(list(oof_rows.columns)))
 
     print(
         f"   ★ LogLoss {row['log_loss']:.4f} | AUC {row['roc_auc']:.4f} | "
@@ -606,7 +624,11 @@ def load_done(force: bool) -> dict[str, dict]:
     # --force controls execution, never bypasses schema/protocol validation.
     if not RUN_ID:
         raise ValueError("Experiment identity has not been initialized")
-    return read_rows(CSV_PATH, CSV_FIELDS, RUN_ID)
+    rows = read_rows(CSV_PATH, CSV_FIELDS, RUN_ID)
+    if SAVE_OOF:
+        for row in rows.values():
+            read_oof(CSV_PATH, row)
+    return rows
 
 
 def append_row(row: dict) -> None:
@@ -630,11 +652,12 @@ def configure_run(sample: int | None, output_prefix: str | None) -> None:
     CSV_PATH, MD_PATH = OUTPUT_DIR / f"{prefix}.csv", OUTPUT_DIR / f"{prefix}.md"
     RUN_METADATA = {
         "protocol_version": "nested-grid-inner-te-teacher-threshold-v2",
+        "save_oof": SAVE_OOF, "oof_schema_version": OOF_SCHEMA_VERSION,
         "cv": protocol_description(), "grid": N_ESTIMATORS_GRID, "params": LGBM_PARAMS,
         "te_m": TE_SMOOTHING_M, "phases": [asdict(s) for s in PHASES],
         "sample": sample, "data_sha256": file_digest(DATA_PATH),
         "code_sha256": {name: file_digest(ROOT / name) for name in
-                        ("src/cv.py", "src/features.py", "src/run_store.py", "rerun_all_phases.py")},
+                        ("src/cv.py", "src/features.py", "src/run_store.py", "src/oof.py", "rerun_all_phases.py")},
         "versions": {name: version(name) for name in
                      ("lightgbm", "pandas", "numpy", "scikit-learn")},
         "threshold_selection": "outer_train_holdout",
@@ -684,7 +707,7 @@ def print_header(specs: list[PhaseSpec], sample: int | None) -> None:
 
 
 def main() -> int:
-    global CFG
+    global CFG, SAVE_OOF
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--sample", type=int, default=None, help="축소 스모크용 행 수")
     ap.add_argument("--seed", type=int, default=42, help="CV와 LightGBM에 동일 적용할 시드")
@@ -692,7 +715,9 @@ def main() -> int:
     ap.add_argument("--force", action="store_true", help="같은 실험의 선택 Phase를 재실행해 교체")
     ap.add_argument("--report-only", action="store_true", help="CSV 로 리포트만 재생성")
     ap.add_argument("--output-prefix", help="output/ 아래 새 결과 파일 이름(확장자 제외)")
+    ap.add_argument("--save-oof", action="store_true", help="행별 OOF·원본 결측 이력 저장 및 재개 검증")
     args = ap.parse_args()
+    SAVE_OOF = args.save_oof
     CFG = replace(CFG, seed=args.seed)
     LGBM_PARAMS["random_state"] = args.seed
 

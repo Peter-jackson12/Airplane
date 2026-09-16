@@ -1,0 +1,80 @@
+{
+  "created_at": "2026-09-16T05:34:31.571990+00:00",
+  "source": "data/train.csv",
+  "source_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "source_rows": 2000,
+  "labeled_rows": 501,
+  "sample": 2000,
+  "seeds": [
+    42
+  ],
+  "phases": [
+    "P6_fixed",
+    "P6_clean"
+  ],
+  "runs": [
+    {
+      "summary": "baseline_recovery_v2_oof_smoke_20260916_v2_seed42.csv",
+      "summary_sha256": "66e15e1cfb0dc297f2a815925ceeb7170d4a52c126515102cbd4a208630d67c2",
+      "phase_key": "P6_fixed",
+      "seed": 42,
+      "run_id": "cdf7144b49f87ea97f2d8fce4b1870af442fbb944e4f3c4f04b21374782af12b",
+      "oof_path": "baseline_recovery_v2_oof_smoke_20260916_v2_seed42_oof/P6_fixed-0e29ed4dc106b619c02f951dcf3ef6a3ee0f1198404045c8d657449f12f0cdd5.csv.gz",
+      "oof_sha256": "0e29ed4dc106b619c02f951dcf3ef6a3ee0f1198404045c8d657449f12f0cdd5",
+      "n_rows": 501,
+      "code_sha256": {
+        "src/cv.py": "b74e3f5e2a2b8977b44bafdfe51a2dbc2164f6e16732881b0227bc37b1a92f8b",
+        "src/features.py": "c64cdbe62ecbb45f0ccc0794772a078870c2e713f3df0736c053104535f4d5ec",
+        "src/run_store.py": "2b2e95a59122884684e56da3ab9cbd45b83270df1a91f9eada2e02bdb4c75974",
+        "src/oof.py": "ac877b73f9148f9760c6a7abab24b6d3098b5f579c9c244e2c61813b3187a66e",
+        "rerun_all_phases.py": "a9278cce2c798f5d65bda846559c8feff343c61e46e1864e2fc0495f0dcea9bd"
+      }
+    },
+    {
+      "summary": "baseline_recovery_v2_oof_smoke_20260916_v2_seed42.csv",
+      "summary_sha256": "66e15e1cfb0dc297f2a815925ceeb7170d4a52c126515102cbd4a208630d67c2",
+      "phase_key": "P6_clean",
+      "seed": 42,
+      "run_id": "cdf7144b49f87ea97f2d8fce4b1870af442fbb944e4f3c4f04b21374782af12b",
+      "oof_path": "baseline_recovery_v2_oof_smoke_20260916_v2_seed42_oof/P6_clean-1a845e438d12355b9f81216a29bb10bd2c1ca7ff4e2b4c0d730c1a99942bbff9.csv.gz",
+      "oof_sha256": "1a845e438d12355b9f81216a29bb10bd2c1ca7ff4e2b4c0d730c1a99942bbff9",
+      "n_rows": 501,
+      "code_sha256": {
+        "src/cv.py": "b74e3f5e2a2b8977b44bafdfe51a2dbc2164f6e16732881b0227bc37b1a92f8b",
+        "src/features.py": "c64cdbe62ecbb45f0ccc0794772a078870c2e713f3df0736c053104535f4d5ec",
+        "src/run_store.py": "2b2e95a59122884684e56da3ab9cbd45b83270df1a91f9eada2e02bdb4c75974",
+        "src/oof.py": "ac877b73f9148f9760c6a7abab24b6d3098b5f579c9c244e2c61813b3187a66e",
+        "rerun_all_phases.py": "a9278cce2c798f5d65bda846559c8feff343c61e46e1864e2fc0495f0dcea9bd"
+      }
+    }
+  ],
+  "analysis_code_sha256": {
+    "notebooks/run_oof_diagnostics.py": "1dca4b3a526aa3718a9902ff23c04ec81e15a903137720abb8297116a59f228c",
+    "src/oof.py": "ac877b73f9148f9760c6a7abab24b6d3098b5f579c9c244e2c61813b3187a66e",
+    "src/run_store.py": "2b2e95a59122884684e56da3ab9cbd45b83270df1a91f9eada2e02bdb4c75974"
+  },
+  "definitions": {
+    "unit": "one labeled source row per phase and seed",
+    "missing": "raw pandas isna before imputation; ID and Delay excluded from count",
+    "post_missing": "model-input Airline=MISSING/NaN or hour<0/NaN",
+    "ece": "10 fixed equal-width bins over [0,1], weighted absolute calibration gap",
+    "calibration": "diagnostic only; no calibrator fitted",
+    "example_selection": "top 10 per phase/seed/FP-or-FN by absolute probability error, then ID",
+    "uncertainty": "seed SD is descriptive, not a confidence interval",
+    "empty": "n=0; rates undefined; AUC undefined for single-class groups",
+    "causality": "missingness groups are observational; differences are not causal effects"
+  },
+  "artifacts": {
+    "baseline_recovery_v2_oof_smoke_20260916_v2_calibration_bins.csv": "bad899f7b6e4457b9b066e0810bbda9e940b1680d6e6a2d1d887b240464954a6",
+    "baseline_recovery_v2_oof_smoke_20260916_v2_diagnostics.png": "dc0cf697b7907366d21619e3e90a8ed73fdbc73a541aff745765d8cd87b11dd9",
+    "baseline_recovery_v2_oof_smoke_20260916_v2_error_examples.csv": "b795349f3eae1b40297980a91ae7daa0edf93394771fd41993778b52cda9e0d2",
+    "baseline_recovery_v2_oof_smoke_20260916_v2_error_stability_summary.csv": "57f9fa3a6fd3503d56a1b284ce7269867621ea65bfa77fc3e292822f168b8a45",
+    "baseline_recovery_v2_oof_smoke_20260916_v2_folds.csv": "f55f1de518700557f83ccda871eaaa24384a0dcf0ab7151bca6a72ed412bd257",
+    "baseline_recovery_v2_oof_smoke_20260916_v2_groups.csv": "0766e6bc224b366c7d7a8dacbcb279e5fb75d0ca277f2348dae768d11d8bf418",
+    "baseline_recovery_v2_oof_smoke_20260916_v2_P6_clean_error_stability.csv.gz": "36fb05e9c1fcb937dac66b966d43d43ede7f59b6f90436df5a9d517253d54fdf",
+    "baseline_recovery_v2_oof_smoke_20260916_v2_P6_fixed_error_stability.csv.gz": "8de1cff52ff76c4ac823f9dfff046caa949d39ca315a8e48f41f0c3520755e83",
+    "baseline_recovery_v2_oof_smoke_20260916_v2_paired_deltas.csv": "7c91e726ada7226c3df8d0cec4905608b869b7d991dcb17e0d343f1999132216",
+    "baseline_recovery_v2_oof_smoke_20260916_v2_seed42.csv": "66e15e1cfb0dc297f2a815925ceeb7170d4a52c126515102cbd4a208630d67c2",
+    "baseline_recovery_v2_oof_smoke_20260916_v2_summary.csv": "d3614e8694b82e1ae30aeab6c9063f7d94f46dc505003f512cf69ae31e16e451"
+  }
+}

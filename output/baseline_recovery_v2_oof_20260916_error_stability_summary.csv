@@ -1,0 +1,17 @@
+phase_key,y_true,error_seed_count,n
+P6_fixed,0,0,155079
+P6_fixed,0,1,18970
+P6_fixed,0,2,13559
+P6_fixed,0,3,22393
+P6_fixed,1,0,10768
+P6_fixed,1,1,4465
+P6_fixed,1,2,5260
+P6_fixed,1,3,24507
+P6_clean,0,0,156478
+P6_clean,0,1,18513
+P6_clean,0,2,13443
+P6_clean,0,3,21567
+P6_clean,1,0,10363
+P6_clean,1,1,4563
+P6_clean,1,2,5179
+P6_clean,1,3,24895

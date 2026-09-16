@@ -178,7 +178,7 @@ def test_malformed_csv_row_rejected(tmp_path, suffix):
 
 
 def test_resume_identity_changes_with_data_sample_config_and_code(tmp_path, monkeypatch):
-    for name in ("src/cv.py", "src/features.py", "src/run_store.py", "rerun_all_phases.py", "data/train.csv"):
+    for name in ("src/cv.py", "src/features.py", "src/run_store.py", "src/oof.py", "rerun_all_phases.py", "data/train.csv"):
         file = tmp_path / name
         file.parent.mkdir(parents=True, exist_ok=True)
         file.write_text("initial")

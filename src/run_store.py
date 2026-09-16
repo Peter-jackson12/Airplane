@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import csv
+import gzip
 import hashlib
+import io
 import json
 import os
 import tempfile
@@ -59,3 +61,58 @@ def upsert_row(path: Path, fields: list[str], run_id: str, row: dict) -> None:
     finally:
         if os.path.exists(name):
             os.unlink(name)
+
+
+def save_oof(rows, directory: Path, phase_key: str) -> tuple[Path, str]:
+    """Content-addressed artifact first, summary commit second; orphan files are safe."""
+    if not phase_key or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for c in phase_key):
+        raise ValueError("Invalid phase key")
+    directory.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(prefix=phase_key + ".", suffix=".tmp", dir=directory)
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            with gzip.GzipFile(filename="", mode="wb", fileobj=handle, mtime=0) as compressed:
+                with io.TextIOWrapper(compressed, encoding="utf-8", newline="") as writer:
+                    rows.to_csv(writer, index=False)
+            handle.flush()
+            os.fsync(handle.fileno())
+        sha = file_digest(Path(name))
+        path = directory / f"{phase_key}-{sha}.csv.gz"
+        os.replace(name, path)
+        return path, sha
+    finally:
+        if os.path.exists(name):
+            os.unlink(name)
+
+
+def read_oof(summary_path: Path, row: dict):
+    """Verify checkpoint artifact, experiment, schema, fold settings, and coverage."""
+    import numpy as np
+    import pandas as pd
+    from .oof import OOF_SCHEMA_VERSION, validate_oof_rows
+
+    meta = json.loads(row["run_metadata"])
+    if digest(meta) != row["run_id"] or meta.get("oof_schema_version") != OOF_SCHEMA_VERSION:
+        raise ValueError("OOF experiment/schema mismatch")
+    directory = summary_path.parent / f"{summary_path.stem}_oof"
+    expected_name = f"{row['phase_key']}-{row['oof_sha256']}.csv.gz"
+    path = summary_path.parent / row["oof_path"]
+    if path.resolve() != (directory / expected_name).resolve():
+        raise ValueError("OOF path mismatch")
+    if not path.is_file() or file_digest(path) != row["oof_sha256"]:
+        raise ValueError("OOF artifact missing or hash mismatch; use a new output prefix")
+    try:
+        rows = pd.read_csv(path, dtype={"ID": "str"}, float_precision="round_trip")
+        if list(rows.columns) != json.loads(row["oof_columns"]):
+            raise ValueError("OOF column schema mismatch")
+        validate_oof_rows(rows, run_id=row["run_id"], phase_key=row["phase_key"],
+                          seed=meta["cv"]["seed"], n_rows=int(row["n_rows"]),
+                          n_splits=meta["cv"]["n_splits"])
+        per_fold = rows.groupby("fold")[["threshold", "n_estimators"]].first()
+        if not np.array_equal(per_fold.threshold, json.loads(row["per_fold_thresholds"])) or not np.array_equal(
+            per_fold.n_estimators, json.loads(row["selected_n_estimators"])
+        ):
+            raise ValueError("OOF fold settings differ from summary")
+    except (KeyError, TypeError, pd.errors.ParserError) as exc:
+        raise ValueError("Malformed OOF artifact") from exc
+    return rows
