@@ -1,0 +1,1502 @@
+{
+  "purpose": "current raw-to-feature schema, not a new performance run",
+  "data_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "code_sha256": {
+    "src/features.py": "b1e655dc40256d0ef8630b357cdd0971cb10761c12efd0c93a3fe65ca33e2699",
+    "src/cv.py": "63f8f7b0cbd550463e5b95ca76e1df22fd0d518d9678033323fe846ea2e89cc6",
+    "rerun_all_phases.py": "5ab0826065abf4465c66a5aa131c976fdcb93c7cd266342541e8d1b302e41f7a"
+  },
+  "input_schemas": {
+    "P4_clean": {
+      "n_labeled": 255001,
+      "n_unlabeled": 744999,
+      "before_te": [
+        "Month",
+        "Estimated_Departure_Time",
+        "Estimated_Arrival_Time",
+        "Origin_Airport",
+        "Destination_Airport",
+        "Distance",
+        "Airline",
+        "Tail_Number",
+        "Route",
+        "Dep_Hour",
+        "Arr_Hour",
+        "Local_Time_Gap_Minutes",
+        "Dep_Hour_Originally_Missing",
+        "Arr_Hour_Originally_Missing",
+        "Local_Time_Gap_Originally_Missing",
+        "Dep_Hour_Missing",
+        "Sin_Dep_Hour",
+        "Cos_Dep_Hour",
+        "Local_Time_Gap_Zero",
+        "Distance_Per_Local_Minute",
+        "Distance_Per_Local_Minute_Missing"
+      ],
+      "final_columns_from_te_contract": [
+        "Month",
+        "Estimated_Departure_Time",
+        "Estimated_Arrival_Time",
+        "Origin_Airport",
+        "Destination_Airport",
+        "Distance",
+        "Airline",
+        "Tail_Number",
+        "Route",
+        "Dep_Hour",
+        "Arr_Hour",
+        "Local_Time_Gap_Minutes",
+        "Dep_Hour_Originally_Missing",
+        "Arr_Hour_Originally_Missing",
+        "Local_Time_Gap_Originally_Missing",
+        "Dep_Hour_Missing",
+        "Sin_Dep_Hour",
+        "Cos_Dep_Hour",
+        "Local_Time_Gap_Zero",
+        "Distance_Per_Local_Minute",
+        "Distance_Per_Local_Minute_Missing",
+        "TE_Tail_Number",
+        "TE_Route",
+        "TE_Origin_Airport",
+        "TE_Destination_Airport",
+        "TE_Airline"
+      ],
+      "dtypes_before_te": {
+        "Month": "int64",
+        "Estimated_Departure_Time": "float64",
+        "Estimated_Arrival_Time": "float64",
+        "Origin_Airport": "category",
+        "Destination_Airport": "category",
+        "Distance": "float64",
+        "Airline": "category",
+        "Tail_Number": "category",
+        "Route": "category",
+        "Dep_Hour": "int64",
+        "Arr_Hour": "int64",
+        "Local_Time_Gap_Minutes": "float64",
+        "Dep_Hour_Originally_Missing": "int8",
+        "Arr_Hour_Originally_Missing": "int8",
+        "Local_Time_Gap_Originally_Missing": "int8",
+        "Dep_Hour_Missing": "int8",
+        "Sin_Dep_Hour": "float64",
+        "Cos_Dep_Hour": "float64",
+        "Local_Time_Gap_Zero": "int8",
+        "Distance_Per_Local_Minute": "float64",
+        "Distance_Per_Local_Minute_Missing": "int8"
+      }
+    },
+    "P6_clean": {
+      "n_labeled": 255001,
+      "n_unlabeled": 744999,
+      "before_te": [
+        "Month",
+        "Estimated_Departure_Time",
+        "Estimated_Arrival_Time",
+        "Origin_Airport",
+        "Destination_Airport",
+        "Distance",
+        "Airline",
+        "Tail_Number",
+        "Route",
+        "Dep_Hour",
+        "Arr_Hour",
+        "Local_Time_Gap_Minutes",
+        "Dep_Hour_Originally_Missing",
+        "Arr_Hour_Originally_Missing",
+        "Local_Time_Gap_Originally_Missing",
+        "Origin_Hour_Missing",
+        "Origin_Traffic",
+        "Dest_Hour_Missing",
+        "Dest_Traffic",
+        "Dep_Hour_Missing",
+        "Sin_Dep_Hour",
+        "Cos_Dep_Hour",
+        "Local_Time_Gap_Zero",
+        "Distance_Per_Local_Minute",
+        "Distance_Per_Local_Minute_Missing"
+      ],
+      "final_columns_from_te_contract": [
+        "Month",
+        "Estimated_Departure_Time",
+        "Estimated_Arrival_Time",
+        "Origin_Airport",
+        "Destination_Airport",
+        "Distance",
+        "Airline",
+        "Tail_Number",
+        "Route",
+        "Dep_Hour",
+        "Arr_Hour",
+        "Local_Time_Gap_Minutes",
+        "Dep_Hour_Originally_Missing",
+        "Arr_Hour_Originally_Missing",
+        "Local_Time_Gap_Originally_Missing",
+        "Origin_Hour_Missing",
+        "Origin_Traffic",
+        "Dest_Hour_Missing",
+        "Dest_Traffic",
+        "Dep_Hour_Missing",
+        "Sin_Dep_Hour",
+        "Cos_Dep_Hour",
+        "Local_Time_Gap_Zero",
+        "Distance_Per_Local_Minute",
+        "Distance_Per_Local_Minute_Missing",
+        "TE_Tail_Number",
+        "TE_Route",
+        "TE_Origin_Airport",
+        "TE_Destination_Airport",
+        "TE_Airline"
+      ],
+      "dtypes_before_te": {
+        "Month": "int64",
+        "Estimated_Departure_Time": "float64",
+        "Estimated_Arrival_Time": "float64",
+        "Origin_Airport": "category",
+        "Destination_Airport": "category",
+        "Distance": "float64",
+        "Airline": "category",
+        "Tail_Number": "category",
+        "Route": "category",
+        "Dep_Hour": "int64",
+        "Arr_Hour": "int64",
+        "Local_Time_Gap_Minutes": "float64",
+        "Dep_Hour_Originally_Missing": "int8",
+        "Arr_Hour_Originally_Missing": "int8",
+        "Local_Time_Gap_Originally_Missing": "int8",
+        "Origin_Hour_Missing": "int8",
+        "Origin_Traffic": "float64",
+        "Dest_Hour_Missing": "int8",
+        "Dest_Traffic": "float64",
+        "Dep_Hour_Missing": "int8",
+        "Sin_Dep_Hour": "float64",
+        "Cos_Dep_Hour": "float64",
+        "Local_Time_Gap_Zero": "int8",
+        "Distance_Per_Local_Minute": "float64",
+        "Distance_Per_Local_Minute_Missing": "int8"
+      }
+    }
+  },
+  "completed_runs": [
+    {
+      "seed": 42,
+      "phase": "P4",
+      "run_id": "15cbe3329dd98dab6866c6962ff0b6f38189097ce377b321cc36f8daa6ad2d57",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 42,
+        "verbose": -1
+      },
+      "elapsed_sec": 55.5,
+      "confusion_matrix": {
+        "tn": 171226,
+        "fp": 38775,
+        "fn": 29220,
+        "tp": 15780
+      },
+      "thresholds": [
+        0.22,
+        0.22,
+        0.23,
+        0.22,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "seed": 42,
+      "phase": "P6_fixed",
+      "run_id": "15cbe3329dd98dab6866c6962ff0b6f38189097ce377b321cc36f8daa6ad2d57",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 42,
+        "verbose": -1
+      },
+      "elapsed_sec": 63.6,
+      "confusion_matrix": {
+        "tn": 172482,
+        "fp": 37519,
+        "fn": 29527,
+        "tp": 15473
+      },
+      "thresholds": [
+        0.22,
+        0.23,
+        0.22,
+        0.23,
+        0.23
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "seed": 42,
+      "phase": "P4_clean",
+      "run_id": "15cbe3329dd98dab6866c6962ff0b6f38189097ce377b321cc36f8daa6ad2d57",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 42,
+        "verbose": -1
+      },
+      "elapsed_sec": 69.7,
+      "confusion_matrix": {
+        "tn": 170202,
+        "fp": 39799,
+        "fn": 29003,
+        "tp": 15997
+      },
+      "thresholds": [
+        0.23,
+        0.22,
+        0.22,
+        0.22,
+        0.22
+      ],
+      "selected_n_estimators": [
+        75,
+        75,
+        75,
+        75,
+        50
+      ]
+    },
+    {
+      "seed": 42,
+      "phase": "P6_clean",
+      "run_id": "15cbe3329dd98dab6866c6962ff0b6f38189097ce377b321cc36f8daa6ad2d57",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 42,
+        "verbose": -1
+      },
+      "elapsed_sec": 66.1,
+      "confusion_matrix": {
+        "tn": 173448,
+        "fp": 36553,
+        "fn": 29789,
+        "tp": 15211
+      },
+      "thresholds": [
+        0.22,
+        0.23,
+        0.23,
+        0.23,
+        0.23
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "seed": 42,
+      "phase": "P4_impute",
+      "run_id": "15cbe3329dd98dab6866c6962ff0b6f38189097ce377b321cc36f8daa6ad2d57",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 42,
+        "verbose": -1
+      },
+      "elapsed_sec": 68.7,
+      "confusion_matrix": {
+        "tn": 171277,
+        "fp": 38724,
+        "fn": 29346,
+        "tp": 15654
+      },
+      "thresholds": [
+        0.23,
+        0.22,
+        0.22,
+        0.22,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "seed": 42,
+      "phase": "P4_ratio",
+      "run_id": "15cbe3329dd98dab6866c6962ff0b6f38189097ce377b321cc36f8daa6ad2d57",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 42,
+        "verbose": -1
+      },
+      "elapsed_sec": 67.5,
+      "confusion_matrix": {
+        "tn": 175349,
+        "fp": 34652,
+        "fn": 30657,
+        "tp": 14343
+      },
+      "thresholds": [
+        0.23,
+        0.22,
+        0.23,
+        0.24,
+        0.23
+      ],
+      "selected_n_estimators": [
+        75,
+        50,
+        50,
+        75,
+        75
+      ]
+    },
+    {
+      "seed": 42,
+      "phase": "P4_missing",
+      "run_id": "15cbe3329dd98dab6866c6962ff0b6f38189097ce377b321cc36f8daa6ad2d57",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 42,
+        "verbose": -1
+      },
+      "elapsed_sec": 66.3,
+      "confusion_matrix": {
+        "tn": 171215,
+        "fp": 38786,
+        "fn": 29303,
+        "tp": 15697
+      },
+      "thresholds": [
+        0.22,
+        0.23,
+        0.22,
+        0.22,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "seed": 42,
+      "phase": "P6_fixed_impute",
+      "run_id": "15cbe3329dd98dab6866c6962ff0b6f38189097ce377b321cc36f8daa6ad2d57",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 42,
+        "verbose": -1
+      },
+      "elapsed_sec": 65.3,
+      "confusion_matrix": {
+        "tn": 170963,
+        "fp": 39038,
+        "fn": 29087,
+        "tp": 15913
+      },
+      "thresholds": [
+        0.22,
+        0.23,
+        0.22,
+        0.23,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "seed": 42,
+      "phase": "P6_fixed_ratio",
+      "run_id": "15cbe3329dd98dab6866c6962ff0b6f38189097ce377b321cc36f8daa6ad2d57",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 42,
+        "verbose": -1
+      },
+      "elapsed_sec": 68.8,
+      "confusion_matrix": {
+        "tn": 173709,
+        "fp": 36292,
+        "fn": 30082,
+        "tp": 14918
+      },
+      "thresholds": [
+        0.23,
+        0.23,
+        0.24,
+        0.22,
+        0.23
+      ],
+      "selected_n_estimators": [
+        75,
+        50,
+        75,
+        50,
+        75
+      ]
+    },
+    {
+      "seed": 42,
+      "phase": "P6_fixed_missing",
+      "run_id": "15cbe3329dd98dab6866c6962ff0b6f38189097ce377b321cc36f8daa6ad2d57",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 42,
+        "verbose": -1
+      },
+      "elapsed_sec": 66.5,
+      "confusion_matrix": {
+        "tn": 173594,
+        "fp": 36407,
+        "fn": 29903,
+        "tp": 15097
+      },
+      "thresholds": [
+        0.23,
+        0.23,
+        0.23,
+        0.23,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "seed": 1,
+      "phase": "P4",
+      "run_id": "7301394d304c01fa87b697e86576902e391db72327e30f692fbd664237b1b77d",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 1,
+        "verbose": -1
+      },
+      "elapsed_sec": 63.3,
+      "confusion_matrix": {
+        "tn": 170477,
+        "fp": 39524,
+        "fn": 29177,
+        "tp": 15823
+      },
+      "thresholds": [
+        0.22,
+        0.22,
+        0.22,
+        0.23,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        75,
+        100
+      ]
+    },
+    {
+      "seed": 1,
+      "phase": "P6_fixed",
+      "run_id": "7301394d304c01fa87b697e86576902e391db72327e30f692fbd664237b1b77d",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 1,
+        "verbose": -1
+      },
+      "elapsed_sec": 70.2,
+      "confusion_matrix": {
+        "tn": 171955,
+        "fp": 38046,
+        "fn": 29585,
+        "tp": 15415
+      },
+      "thresholds": [
+        0.22,
+        0.23,
+        0.23,
+        0.23,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        75
+      ]
+    },
+    {
+      "seed": 1,
+      "phase": "P4_clean",
+      "run_id": "7301394d304c01fa87b697e86576902e391db72327e30f692fbd664237b1b77d",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 1,
+        "verbose": -1
+      },
+      "elapsed_sec": 72.0,
+      "confusion_matrix": {
+        "tn": 171249,
+        "fp": 38752,
+        "fn": 29428,
+        "tp": 15572
+      },
+      "thresholds": [
+        0.22,
+        0.23,
+        0.22,
+        0.23,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        75,
+        50,
+        75,
+        75
+      ]
+    },
+    {
+      "seed": 1,
+      "phase": "P6_clean",
+      "run_id": "7301394d304c01fa87b697e86576902e391db72327e30f692fbd664237b1b77d",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 1,
+        "verbose": -1
+      },
+      "elapsed_sec": 72.7,
+      "confusion_matrix": {
+        "tn": 171881,
+        "fp": 38120,
+        "fn": 29491,
+        "tp": 15509
+      },
+      "thresholds": [
+        0.22,
+        0.23,
+        0.23,
+        0.23,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        75
+      ]
+    },
+    {
+      "seed": 1,
+      "phase": "P4_impute",
+      "run_id": "7301394d304c01fa87b697e86576902e391db72327e30f692fbd664237b1b77d",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 1,
+        "verbose": -1
+      },
+      "elapsed_sec": 68.4,
+      "confusion_matrix": {
+        "tn": 171972,
+        "fp": 38029,
+        "fn": 29691,
+        "tp": 15309
+      },
+      "thresholds": [
+        0.22,
+        0.22,
+        0.23,
+        0.22,
+        0.23
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        100
+      ]
+    },
+    {
+      "seed": 1,
+      "phase": "P4_ratio",
+      "run_id": "7301394d304c01fa87b697e86576902e391db72327e30f692fbd664237b1b77d",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 1,
+        "verbose": -1
+      },
+      "elapsed_sec": 70.7,
+      "confusion_matrix": {
+        "tn": 172199,
+        "fp": 37802,
+        "fn": 29639,
+        "tp": 15361
+      },
+      "thresholds": [
+        0.22,
+        0.23,
+        0.22,
+        0.23,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        75
+      ]
+    },
+    {
+      "seed": 1,
+      "phase": "P4_missing",
+      "run_id": "7301394d304c01fa87b697e86576902e391db72327e30f692fbd664237b1b77d",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 1,
+        "verbose": -1
+      },
+      "elapsed_sec": 68.6,
+      "confusion_matrix": {
+        "tn": 169647,
+        "fp": 40354,
+        "fn": 29076,
+        "tp": 15924
+      },
+      "thresholds": [
+        0.22,
+        0.22,
+        0.22,
+        0.22,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "seed": 1,
+      "phase": "P6_fixed_impute",
+      "run_id": "7301394d304c01fa87b697e86576902e391db72327e30f692fbd664237b1b77d",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 1,
+        "verbose": -1
+      },
+      "elapsed_sec": 65.0,
+      "confusion_matrix": {
+        "tn": 172063,
+        "fp": 37938,
+        "fn": 29600,
+        "tp": 15400
+      },
+      "thresholds": [
+        0.22,
+        0.23,
+        0.23,
+        0.23,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        75
+      ]
+    },
+    {
+      "seed": 1,
+      "phase": "P6_fixed_ratio",
+      "run_id": "7301394d304c01fa87b697e86576902e391db72327e30f692fbd664237b1b77d",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 1,
+        "verbose": -1
+      },
+      "elapsed_sec": 65.6,
+      "confusion_matrix": {
+        "tn": 168844,
+        "fp": 41157,
+        "fn": 28645,
+        "tp": 16355
+      },
+      "thresholds": [
+        0.22,
+        0.22,
+        0.23,
+        0.22,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        75,
+        75
+      ]
+    },
+    {
+      "seed": 1,
+      "phase": "P6_fixed_missing",
+      "run_id": "7301394d304c01fa87b697e86576902e391db72327e30f692fbd664237b1b77d",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 1,
+        "verbose": -1
+      },
+      "elapsed_sec": 66.4,
+      "confusion_matrix": {
+        "tn": 173159,
+        "fp": 36842,
+        "fn": 29928,
+        "tp": 15072
+      },
+      "thresholds": [
+        0.23,
+        0.23,
+        0.23,
+        0.23,
+        0.23
+      ],
+      "selected_n_estimators": [
+        75,
+        75,
+        50,
+        75,
+        75
+      ]
+    },
+    {
+      "seed": 7,
+      "phase": "P4",
+      "run_id": "b6db8b293186d53fe0a39aa144aea8ee5491a76d61360abf689c2da7de2e22a8",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 7,
+        "verbose": -1
+      },
+      "elapsed_sec": 64.0,
+      "confusion_matrix": {
+        "tn": 172400,
+        "fp": 37601,
+        "fn": 29636,
+        "tp": 15364
+      },
+      "thresholds": [
+        0.23,
+        0.22,
+        0.23,
+        0.22,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "seed": 7,
+      "phase": "P6_fixed",
+      "run_id": "b6db8b293186d53fe0a39aa144aea8ee5491a76d61360abf689c2da7de2e22a8",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 7,
+        "verbose": -1
+      },
+      "elapsed_sec": 68.3,
+      "confusion_matrix": {
+        "tn": 172299,
+        "fp": 37702,
+        "fn": 29394,
+        "tp": 15606
+      },
+      "thresholds": [
+        0.23,
+        0.23,
+        0.23,
+        0.22,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "seed": 7,
+      "phase": "P4_clean",
+      "run_id": "b6db8b293186d53fe0a39aa144aea8ee5491a76d61360abf689c2da7de2e22a8",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 7,
+        "verbose": -1
+      },
+      "elapsed_sec": 72.2,
+      "confusion_matrix": {
+        "tn": 171783,
+        "fp": 38218,
+        "fn": 29445,
+        "tp": 15555
+      },
+      "thresholds": [
+        0.22,
+        0.22,
+        0.23,
+        0.22,
+        0.23
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        75,
+        50,
+        75
+      ]
+    },
+    {
+      "seed": 7,
+      "phase": "P6_clean",
+      "run_id": "b6db8b293186d53fe0a39aa144aea8ee5491a76d61360abf689c2da7de2e22a8",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 7,
+        "verbose": -1
+      },
+      "elapsed_sec": 69.3,
+      "confusion_matrix": {
+        "tn": 174574,
+        "fp": 35427,
+        "fn": 30326,
+        "tp": 14674
+      },
+      "thresholds": [
+        0.23,
+        0.23,
+        0.23,
+        0.23,
+        0.24
+      ],
+      "selected_n_estimators": [
+        75,
+        75,
+        75,
+        75,
+        50
+      ]
+    },
+    {
+      "seed": 7,
+      "phase": "P4_impute",
+      "run_id": "b6db8b293186d53fe0a39aa144aea8ee5491a76d61360abf689c2da7de2e22a8",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 7,
+        "verbose": -1
+      },
+      "elapsed_sec": 62.2,
+      "confusion_matrix": {
+        "tn": 169695,
+        "fp": 40306,
+        "fn": 28807,
+        "tp": 16193
+      },
+      "thresholds": [
+        0.22,
+        0.22,
+        0.22,
+        0.22,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "seed": 7,
+      "phase": "P4_ratio",
+      "run_id": "b6db8b293186d53fe0a39aa144aea8ee5491a76d61360abf689c2da7de2e22a8",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 7,
+        "verbose": -1
+      },
+      "elapsed_sec": 70.4,
+      "confusion_matrix": {
+        "tn": 175078,
+        "fp": 34923,
+        "fn": 30566,
+        "tp": 14434
+      },
+      "thresholds": [
+        0.23,
+        0.23,
+        0.23,
+        0.22,
+        0.23
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "seed": 7,
+      "phase": "P4_missing",
+      "run_id": "b6db8b293186d53fe0a39aa144aea8ee5491a76d61360abf689c2da7de2e22a8",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 7,
+        "verbose": -1
+      },
+      "elapsed_sec": 66.1,
+      "confusion_matrix": {
+        "tn": 171250,
+        "fp": 38751,
+        "fn": 29233,
+        "tp": 15767
+      },
+      "thresholds": [
+        0.22,
+        0.22,
+        0.22,
+        0.22,
+        0.23
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "seed": 7,
+      "phase": "P6_fixed_impute",
+      "run_id": "b6db8b293186d53fe0a39aa144aea8ee5491a76d61360abf689c2da7de2e22a8",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 7,
+        "verbose": -1
+      },
+      "elapsed_sec": 64.9,
+      "confusion_matrix": {
+        "tn": 172347,
+        "fp": 37654,
+        "fn": 29441,
+        "tp": 15559
+      },
+      "thresholds": [
+        0.23,
+        0.23,
+        0.23,
+        0.22,
+        0.22
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "seed": 7,
+      "phase": "P6_fixed_ratio",
+      "run_id": "b6db8b293186d53fe0a39aa144aea8ee5491a76d61360abf689c2da7de2e22a8",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 7,
+        "verbose": -1
+      },
+      "elapsed_sec": 68.8,
+      "confusion_matrix": {
+        "tn": 173087,
+        "fp": 36914,
+        "fn": 29728,
+        "tp": 15272
+      },
+      "thresholds": [
+        0.22,
+        0.23,
+        0.23,
+        0.23,
+        0.23
+      ],
+      "selected_n_estimators": [
+        50,
+        50,
+        75,
+        50,
+        75
+      ]
+    },
+    {
+      "seed": 7,
+      "phase": "P6_fixed_missing",
+      "run_id": "b6db8b293186d53fe0a39aa144aea8ee5491a76d61360abf689c2da7de2e22a8",
+      "versions": {
+        "lightgbm": "4.7.0",
+        "pandas": "3.0.5",
+        "numpy": "2.5.3",
+        "scikit-learn": "1.9.0"
+      },
+      "params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 7,
+        "verbose": -1
+      },
+      "elapsed_sec": 70.9,
+      "confusion_matrix": {
+        "tn": 170869,
+        "fp": 39132,
+        "fn": 29104,
+        "tp": 15896
+      },
+      "thresholds": [
+        0.23,
+        0.22,
+        0.23,
+        0.22,
+        0.23
+      ],
+      "selected_n_estimators": [
+        75,
+        75,
+        50,
+        50,
+        75
+      ]
+    }
+  ],
+  "example_note": "Actual rows: clean leaves ambiguous Airline missing; not prediction errors."
+}

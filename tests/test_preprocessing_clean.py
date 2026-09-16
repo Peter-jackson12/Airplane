@@ -51,6 +51,21 @@ def test_clean_specs_have_distinct_cache_keys_and_noon_is_disabled():
         assert not old.safe_preprocessing and new.safe_preprocessing
 
 
+@pytest.mark.parametrize('base', ['P4','P6_fixed'])
+@pytest.mark.parametrize('suffix,field', [('impute','unique_imputation'),
+                                        ('ratio','safe_ratio'),
+                                        ('missing','explicit_time_missing')])
+def test_ablation_changes_only_one_control(base, suffix, field):
+    from dataclasses import asdict
+    old = next(s for s in runner.PHASES if s.key == base)
+    new = next(s for s in runner.PHASES if s.key == f'{base}_{suffix}')
+    before, after = asdict(old), asdict(new)
+    changed = {k for k in before if before[k] != after[k]}
+    assert changed == {'key','label','note',field}
+    assert getattr(new, field) is True
+    assert new.feature_signature() != old.feature_signature()
+
+
 def test_clean_pipeline_preserves_labels_and_provenance_flags():
     raw = pd.DataFrame({
         'ID':['a','b','c','d'], 'Delay':['Delayed','Not_Delayed',None,None],

@@ -1,0 +1,205 @@
+==============================================================================
+Phase 1~6 통일 프로토콜 재측정 — 정직한 기준선 확정
+PLAN.md §4-0 P0-2 / P0-3 · AUDIT.md §3 대응
+==============================================================================
+
+[실행 시각] 2026-09-16T02:28:26+00:00
+
+[CVConfig.describe()]
+  n_splits                 = 5
+  shuffle                  = True
+  seed                     = 7
+  stopping_rounds          = 40
+  threshold_grid           = (0.1, 0.7, 0.01)
+  metric_aggregation       = pooled_oof
+  inner_holdout_frac       = 0.2
+  n_thresholds             = 61
+  inner_early_stopping     = False
+  nested_threshold         = True
+  tree_selection           = nested_grid
+  n_estimators_grid        = [10, 25, 50, 75, 100, 150, 300, 600]
+  threshold_selection      = outer_train_holdout
+  teacher_scope            = student_inner_train
+  teacher_selection        = nested_grid
+  stopping_rounds_used     = False
+
+[LightGBM 하이퍼파라미터 — 전 Phase 동일 고정 (Phase 4 기준)]
+  objective                = binary
+  metric                   = binary_logloss
+  boosting_type            = gbdt
+  learning_rate            = 0.05
+  num_leaves               = 63
+  max_depth                = 8
+  subsample                = 0.8
+  colsample_bytree         = 0.8
+  random_state             = 7
+  verbose                  = -1
+  scale_pos_weight         = 미적용 (전 Phase 고정, es_protocol_final.md 작업 5)
+  n_estimators             = nested grid 선택 (아래 grid, ES 아님)
+  n_estimators_grid        = [10, 25, 50, 75, 100, 150, 300, 600]
+
+[TE 설정 — 전 Phase 동일 고정]
+  smoothing_m              = 20.0  (기존 Phase 6 만 25.0 이었음)
+  inner_splits             = 5  (기존 5개 스크립트는 0 에 해당)
+  ※ P4_te0 만 inner_splits=0 으로 추가 실행 — TE 방식 변경의 단독 효과 분리용
+
+[실행 대상] 10개
+  P4           Phase 4: Hybrid
+  P6_fixed     Phase 6: Advanced (Traffic 결측 제외)
+  P4_clean     Phase 4: 전처리 개선
+  P6_clean     Phase 6: 전처리 개선
+  P4_impute    Phase 4: Hybrid / impute only
+  P4_ratio     Phase 4: Hybrid / ratio only
+  P4_missing   Phase 4: Hybrid / missing only
+  P6_fixed_impute Phase 6: Advanced (Traffic 결측 제외) / impute only
+  P6_fixed_ratio Phase 6: Advanced (Traffic 결측 제외) / ratio only
+  P6_fixed_missing Phase 6: Advanced (Traffic 결측 제외) / missing only
+
+[제외] Phase 7-Ex — 원천 데이터 결함으로 폐기 (PLAN.md §3-12)
+==============================================================================
+
+>> 데이터 로드: C:\Projects\01_Lecture_Study\Airplane\data\train.csv
+   1,000,000행 × 19열 | 1.1s
+
+==============================================================================
+▶ P4 — Phase 4: Hybrid
+==============================================================================
+   원본 category dtype + TE 동시 투입. 하이퍼파라미터 기준 Phase.
+   피처 빌드 2.6s
+   라벨 255,001행 | 피처 15개 | 미라벨 744,999행 | scale_pos_weight 미적용(고정, es_protocol_final.md 작업 5)
+   fold 1/5 | 학습 163,200행 (holdout 40,800) | n_estimators 50 | 9.9s
+   fold 2/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 12.0s
+   fold 3/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 11.7s
+   fold 4/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 11.5s
+   fold 5/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 11.3s
+   ★ LogLoss 0.4480 | AUC 0.6410 | Macro F1(nested) 0.5752 (naive 0.5754, 차이 +0.0002) | 64s
+   >> CSV checkpoint 완료: C:\Projects\01_Lecture_Study\Airplane\output\baseline_recovery_v2_preprocessing_full_seed7.csv
+
+==============================================================================
+▶ P6_fixed — Phase 6: Advanced (Traffic 결측 제외)
+==============================================================================
+   Dep_Hour==-1 행을 집계에서 제외 + 결측 플래그 분리 (AUDIT §3-8 수정).
+   피처 빌드 3.8s
+   라벨 255,001행 | 피처 19개 | 미라벨 744,999행 | scale_pos_weight 미적용(고정, es_protocol_final.md 작업 5)
+   fold 1/5 | 학습 163,200행 (holdout 40,800) | n_estimators 50 | 10.9s
+   fold 2/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 11.8s
+   fold 3/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 12.0s
+   fold 4/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 12.5s
+   fold 5/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 12.5s
+   ★ LogLoss 0.4474 | AUC 0.6433 | Macro F1(nested) 0.5773 (naive 0.5770, 차이 -0.0002) | 68s
+   >> CSV checkpoint 완료: C:\Projects\01_Lecture_Study\Airplane\output\baseline_recovery_v2_preprocessing_full_seed7.csv
+
+==============================================================================
+▶ P4_clean — Phase 4: 전처리 개선
+==============================================================================
+   유일 대응만 대치; local-clock proxy 명시; 0분 분모 NaN; 시각 결측 플래그
+   피처 빌드 3.0s
+   라벨 255,001행 | 피처 21개 | 미라벨 744,999행 | scale_pos_weight 미적용(고정, es_protocol_final.md 작업 5)
+   fold 1/5 | 학습 163,200행 (holdout 40,800) | n_estimators 50 | 12.4s
+   fold 2/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 13.4s
+   fold 3/5 | 학습 163,200행 (holdout 40,801) | n_estimators 75 | 13.3s
+   fold 4/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 13.1s
+   fold 5/5 | 학습 163,200행 (holdout 40,801) | n_estimators 75 | 12.4s
+   ★ LogLoss 0.4481 | AUC 0.6410 | Macro F1(nested) 0.5752 (naive 0.5754, 차이 +0.0002) | 72s
+   >> CSV checkpoint 완료: C:\Projects\01_Lecture_Study\Airplane\output\baseline_recovery_v2_preprocessing_full_seed7.csv
+
+==============================================================================
+▶ P6_clean — Phase 6: 전처리 개선
+==============================================================================
+   유일 대응만 대치; local-clock proxy 명시; 0분 분모 NaN; 시각 결측 플래그
+   피처 빌드 3.8s
+   라벨 255,001행 | 피처 25개 | 미라벨 744,999행 | scale_pos_weight 미적용(고정, es_protocol_final.md 작업 5)
+   fold 1/5 | 학습 163,200행 (holdout 40,800) | n_estimators 75 | 11.7s
+   fold 2/5 | 학습 163,200행 (holdout 40,801) | n_estimators 75 | 12.1s
+   fold 3/5 | 학습 163,200행 (holdout 40,801) | n_estimators 75 | 12.3s
+   fold 4/5 | 학습 163,200행 (holdout 40,801) | n_estimators 75 | 12.9s
+   fold 5/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 11.9s
+   ★ LogLoss 0.4478 | AUC 0.6418 | Macro F1(nested) 0.5751 (naive 0.5754, 차이 +0.0004) | 69s
+   >> CSV checkpoint 완료: C:\Projects\01_Lecture_Study\Airplane\output\baseline_recovery_v2_preprocessing_full_seed7.csv
+
+==============================================================================
+▶ P4_impute — Phase 4: Hybrid / impute only
+==============================================================================
+   단일 변경: unique_imputation
+   피처 빌드 3.0s
+   라벨 255,001행 | 피처 15개 | 미라벨 744,999행 | scale_pos_weight 미적용(고정, es_protocol_final.md 작업 5)
+   fold 1/5 | 학습 163,200행 (holdout 40,800) | n_estimators 50 | 10.3s
+   fold 2/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 11.2s
+   fold 3/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 10.9s
+   fold 4/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 11.1s
+   fold 5/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 10.9s
+   ★ LogLoss 0.4481 | AUC 0.6407 | Macro F1(nested) 0.5749 (naive 0.5749, 차이 +0.0000) | 62s
+   >> CSV checkpoint 완료: C:\Projects\01_Lecture_Study\Airplane\output\baseline_recovery_v2_preprocessing_full_seed7.csv
+
+==============================================================================
+▶ P4_ratio — Phase 4: Hybrid / ratio only
+==============================================================================
+   단일 변경: safe_ratio
+   피처 빌드 2.6s
+   라벨 255,001행 | 피처 17개 | 미라벨 744,999행 | scale_pos_weight 미적용(고정, es_protocol_final.md 작업 5)
+   fold 1/5 | 학습 163,200행 (holdout 40,800) | n_estimators 50 | 11.4s
+   fold 2/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 12.7s
+   fold 3/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 14.5s
+   fold 4/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 12.4s
+   fold 5/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 12.0s
+   ★ LogLoss 0.4483 | AUC 0.6401 | Macro F1(nested) 0.5742 (naive 0.5742, 차이 +0.0000) | 70s
+   >> CSV checkpoint 완료: C:\Projects\01_Lecture_Study\Airplane\output\baseline_recovery_v2_preprocessing_full_seed7.csv
+
+==============================================================================
+▶ P4_missing — Phase 4: Hybrid / missing only
+==============================================================================
+   단일 변경: explicit_time_missing
+   피처 빌드 2.8s
+   라벨 255,001행 | 피처 19개 | 미라벨 744,999행 | scale_pos_weight 미적용(고정, es_protocol_final.md 작업 5)
+   fold 1/5 | 학습 163,200행 (holdout 40,800) | n_estimators 50 | 11.3s
+   fold 2/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 11.9s
+   fold 3/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 11.7s
+   fold 4/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 11.6s
+   fold 5/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 11.7s
+   ★ LogLoss 0.4479 | AUC 0.6417 | Macro F1(nested) 0.5756 (naive 0.5759, 차이 +0.0002) | 66s
+   >> CSV checkpoint 완료: C:\Projects\01_Lecture_Study\Airplane\output\baseline_recovery_v2_preprocessing_full_seed7.csv
+
+==============================================================================
+▶ P6_fixed_impute — Phase 6: Advanced (Traffic 결측 제외) / impute only
+==============================================================================
+   단일 변경: unique_imputation
+   피처 빌드 4.0s
+   라벨 255,001행 | 피처 19개 | 미라벨 744,999행 | scale_pos_weight 미적용(고정, es_protocol_final.md 작업 5)
+   fold 1/5 | 학습 163,200행 (holdout 40,800) | n_estimators 50 | 10.5s
+   fold 2/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 11.5s
+   fold 3/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 11.3s
+   fold 4/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 11.3s
+   fold 5/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 11.4s
+   ★ LogLoss 0.4474 | AUC 0.6430 | Macro F1(nested) 0.5770 (naive 0.5769, 차이 -0.0000) | 65s
+   >> CSV checkpoint 완료: C:\Projects\01_Lecture_Study\Airplane\output\baseline_recovery_v2_preprocessing_full_seed7.csv
+
+==============================================================================
+▶ P6_fixed_ratio — Phase 6: Advanced (Traffic 결측 제외) / ratio only
+==============================================================================
+   단일 변경: safe_ratio
+   피처 빌드 3.6s
+   라벨 255,001행 | 피처 21개 | 미라벨 744,999행 | scale_pos_weight 미적용(고정, es_protocol_final.md 작업 5)
+   fold 1/5 | 학습 163,200행 (holdout 40,800) | n_estimators 50 | 10.9s
+   fold 2/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 12.0s
+   fold 3/5 | 학습 163,200행 (holdout 40,801) | n_estimators 75 | 12.6s
+   fold 4/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 12.3s
+   fold 5/5 | 학습 163,200행 (holdout 40,801) | n_estimators 75 | 12.5s
+   ★ LogLoss 0.4475 | AUC 0.6428 | Macro F1(nested) 0.5764 (naive 0.5766, 차이 +0.0002) | 69s
+   >> CSV checkpoint 완료: C:\Projects\01_Lecture_Study\Airplane\output\baseline_recovery_v2_preprocessing_full_seed7.csv
+
+==============================================================================
+▶ P6_fixed_missing — Phase 6: Advanced (Traffic 결측 제외) / missing only
+==============================================================================
+   단일 변경: explicit_time_missing
+   피처 빌드 3.8s
+   라벨 255,001행 | 피처 23개 | 미라벨 744,999행 | scale_pos_weight 미적용(고정, es_protocol_final.md 작업 5)
+   fold 1/5 | 학습 163,200행 (holdout 40,800) | n_estimators 75 | 12.2s
+   fold 2/5 | 학습 163,200행 (holdout 40,801) | n_estimators 75 | 12.6s
+   fold 3/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 12.3s
+   fold 4/5 | 학습 163,200행 (holdout 40,801) | n_estimators 50 | 12.8s
+   fold 5/5 | 학습 163,200행 (holdout 40,801) | n_estimators 75 | 12.1s
+   ★ LogLoss 0.4476 | AUC 0.6423 | Macro F1(nested) 0.5757 (naive 0.5760, 차이 +0.0003) | 71s
+   >> CSV checkpoint 완료: C:\Projects\01_Lecture_Study\Airplane\output\baseline_recovery_v2_preprocessing_full_seed7.csv
+
+>> 대조표 저장: C:\Projects\01_Lecture_Study\Airplane\output\baseline_recovery_v2_preprocessing_full_seed7.md
+>> 원본 CSV   : C:\Projects\01_Lecture_Study\Airplane\output\baseline_recovery_v2_preprocessing_full_seed7.csv

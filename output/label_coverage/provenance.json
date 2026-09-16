@@ -1,0 +1,18 @@
+{
+  "rows": 1000000,
+  "columns": 19,
+  "labeled": 255001,
+  "unlabeled": 744999,
+  "positive": 45000,
+  "label_rate": 0.255001,
+  "duplicate_id": 0,
+  "duplicate_rows": 0,
+  "positive_rate_labeled": 0.1764698961964855,
+  "generated_utc": "2026-09-16T02:51:38.541858+00:00",
+  "data_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "script_sha256": "9f8a56416066867d8fea46b6dc68f212414e4a6c8053ce56b57af8e67f2c5ffc",
+  "python": "3.14.6",
+  "pandas": "3.0.5",
+  "numpy": "2.5.3",
+  "scope": "raw data; label availability, not unobserved delay outcome"
+}

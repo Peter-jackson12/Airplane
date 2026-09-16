@@ -184,6 +184,9 @@ class PhaseSpec:
     note: str = ""
     #: 개선 전처리는 별도 Phase 키로 선택하여 과거 피처 정의를 보존한다.
     safe_preprocessing: bool = False
+    unique_imputation: bool | None = None
+    safe_ratio: bool | None = None
+    explicit_time_missing: bool | None = None
 
     def feature_signature(self) -> tuple:
         """피처 빌드 캐시 키. 타깃 의존 설정은 제외한다."""
@@ -191,7 +194,8 @@ class PhaseSpec:
             self.bidirectional_impute, self.prune_preset, self.drop_extra,
             self.cyclic_missing, self.include_cos, self.restore_duration,
             self.restore_hours, self.traffic, self.traffic_exclude_missing,
-            self.cat_cols, self.safe_preprocessing,
+            self.cat_cols, self.safe_preprocessing, self.unique_imputation,
+            self.safe_ratio, self.explicit_time_missing,
         )
 
 
@@ -267,6 +271,17 @@ PHASES.extend([
     ]
 ])
 
+# One-component changes from each unchanged reference; do not infer component
+# contributions by comparing the combined clean pipeline with old reports.
+for _base in ("P4", "P6_fixed"):
+    _spec = next(s for s in PHASES if s.key == _base)
+    for _suffix, _field in [("impute", "unique_imputation"),
+                             ("ratio", "safe_ratio"),
+                             ("missing", "explicit_time_missing")]:
+        PHASES.append(replace(_spec, key=f"{_base}_{_suffix}",
+                              label=f"{_spec.label} / {_suffix} only",
+                              note=f"단일 변경: {_field}", **{_field: True}))
+
 #: `best_iterations`(ES `best_iteration_`) 대신 `selected_n_estimators`(nested grid 가
 #: 고른 fold별 n_estimators) 와 `grid_scores`(fold별 `{k: inner-holdout LogLoss}`) 를
 #: 기록한다 — 조건 A/B(ES) 에서 조건 C(nested grid) 로 전환한 구조 변경을 CSV 스키마에
@@ -294,8 +309,11 @@ def build_features(raw: pd.DataFrame, spec: PhaseSpec):
     전부 타깃 비의존이다. 전체 데이터 집계/vocabulary를 사용하는 기존 실험
     계약은 유지하며, 실제 배포 시점에 해당 자료를 사용할 수 있는지는 별도 문제다.
     """
+    unique = spec.safe_preprocessing if spec.unique_imputation is None else spec.unique_imputation
+    safe_ratio = spec.safe_preprocessing if spec.safe_ratio is None else spec.safe_ratio
+    explicit_missing = spec.safe_preprocessing if spec.explicit_time_missing is None else spec.explicit_time_missing
     df = impute_cross(raw, bidirectional=spec.bidirectional_impute,
-                      conflict="unique" if spec.safe_preprocessing else "first")
+                      conflict="unique" if unique else "first")
 
     # Route 는 traffic / TE 보다 먼저 있어야 한다.
     df["Route"] = (
@@ -305,7 +323,7 @@ def build_features(raw: pd.DataFrame, spec: PhaseSpec):
     # 분 단위는 restore_time_missing(fill_hours=True) 에 필요하므로 항상 만든 뒤,
     # 필요 없는 Phase 에서는 prune 단계에서 떨군다.
     df = build_time_features(df, keep_minute=True)
-    if spec.safe_preprocessing:
+    if explicit_missing:
         for col in ("Dep_Hour", "Arr_Hour"):
             df[f"{col}_Originally_Missing"] = df[col].lt(0).astype("int8")
         df["Local_Time_Gap_Originally_Missing"] = df.Estimated_Duration.isna().astype("int8")
@@ -325,12 +343,12 @@ def build_features(raw: pd.DataFrame, spec: PhaseSpec):
         )
 
     df = build_cyclic_features(
-        df, missing=spec.cyclic_missing, include_cos=spec.include_cos,
-        add_missing_flag=spec.safe_preprocessing,
+        df, missing="nan" if explicit_missing else spec.cyclic_missing, include_cos=spec.include_cos,
+        add_missing_flag=explicit_missing,
     )
 
     # 7개 스크립트 공통 파생. 복원된 Duration 을 쓰도록 restore 뒤에 계산한다.
-    df = build_speed_features(df, safe=spec.safe_preprocessing)
+    df = build_speed_features(df, safe=safe_ratio)
 
     df = prune_columns(df, preset=spec.prune_preset, extra=spec.drop_extra)
 
@@ -666,13 +684,17 @@ def print_header(specs: list[PhaseSpec], sample: int | None) -> None:
 
 
 def main() -> int:
+    global CFG
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--sample", type=int, default=None, help="축소 스모크용 행 수")
+    ap.add_argument("--seed", type=int, default=42, help="CV와 LightGBM에 동일 적용할 시드")
     ap.add_argument("--phases", type=str, default=None, help="쉼표 구분 phase_key")
     ap.add_argument("--force", action="store_true", help="같은 실험의 선택 Phase를 재실행해 교체")
     ap.add_argument("--report-only", action="store_true", help="CSV 로 리포트만 재생성")
     ap.add_argument("--output-prefix", help="output/ 아래 새 결과 파일 이름(확장자 제외)")
     args = ap.parse_args()
+    CFG = replace(CFG, seed=args.seed)
+    LGBM_PARAMS["random_state"] = args.seed
 
     if not DATA_PATH.exists():
         print(f"[!] 데이터 파일이 없습니다: {DATA_PATH}")

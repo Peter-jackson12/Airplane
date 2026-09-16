@@ -1,0 +1,9 @@
+ID,Carrier_Code(IATA),Airline,old_filled_airline,clean_airline
+TRAIN_000007,UA,,SkyWest Airlines Inc.,
+TRAIN_000017,UA,,SkyWest Airlines Inc.,
+TRAIN_000032,UA,,SkyWest Airlines Inc.,
+TRAIN_000056,DL,,Delta Air Lines Inc.,
+TRAIN_000062,UA,,SkyWest Airlines Inc.,
+TRAIN_000088,DL,,Delta Air Lines Inc.,
+TRAIN_000100,UA,,SkyWest Airlines Inc.,
+TRAIN_000117,DL,,Delta Air Lines Inc.,
