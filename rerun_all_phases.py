@@ -10,8 +10,8 @@
 * **지표 집계**: 전 Phase pooled OOF. 기존 Phase 1 만 fold 평균이었다 (AUDIT §3-9).
 * **임계값**: 전 Phase nested 선택. 기존 6개 스크립트의 "전체 OOF 최댓값"은
   winner's curse 이므로 `naive_macro_f1` 로 따로 기록만 한다 (AUDIT §2.6).
-* **early stopping**: 전 Phase 학습 fold 내부 holdout. 채점 fold 는 평가셋에
-  들어가지 않는다 (AUDIT §2.5).
+* **트리/임계값 선택**: outer-train 내부 holdout에서 선택한다. Teacher도 student
+  inner-train 안에서만 적합한다. P5_leaky는 의도적인 누수 대조군이다.
 * **LightGBM 하이퍼파라미터**: 전 Phase 동일 고정 (Phase 4 설정 기준). Phase 별로
   **피처셋만** 교체한다.
 * **TE 평활 계수 `m`**: 전 Phase 20.0 고정. 기존 Phase 6 만 25.0 이었다 (AUDIT §3.3).
@@ -27,26 +27,26 @@ Phase 7-Ex (기상 결합). 원천 데이터 결함(적설·돌풍 100% 결측, 
 
 산출물
 ------
-* `output/baseline_recovery.csv` — Phase 단위로 즉시 append. 중단되어도 이어서 실행된다.
-* `output/baseline_recovery.md` — 구프로토콜(§2-1) 대 신프로토콜 대조표 + 해석.
+* `output/baseline_recovery_v2.csv` — Phase 단위 원자적 저장(스키마/실험 지문 검사). 중단되어도 이어서 실행된다.
+* `output/baseline_recovery_v2.md` — 구프로토콜(§2-1) 대 신프로토콜 대조표 + 해석.
 
 사용법
 ------
     uv run python rerun_all_phases.py                 # 전체 실행 (재개 지원)
     uv run python rerun_all_phases.py --sample 30000  # 축소 스모크 테스트
     uv run python rerun_all_phases.py --phases P4,P5_honest
-    uv run python rerun_all_phases.py --force         # 기존 CSV 무시하고 재실행
+    uv run python rerun_all_phases.py --force         # 같은 실험의 선택 Phase를 재실행해 교체
 """
 
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import sys
 import time
 import warnings
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass
+from importlib.metadata import version
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -54,17 +54,16 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
-from src.cv import CVConfig, evaluate_oof, make_folds, run_fold, run_fold_nested_grid
+from src.cv import CVConfig, evaluate_oof, make_folds, run_fold_nested_grid
+from src.run_store import digest, file_digest, read_rows, upsert_row
 from src.features import (
     build_cyclic_features,
     build_time_features,
     build_traffic_features,
     encode_categoricals,
-    fit_fold_teacher,
     impute_cross,
     load_data,
     make_pseudo_labels,
-    oof_target_encode,
     prune_columns,
     restore_time_missing,
     split_labeled,
@@ -83,8 +82,10 @@ for _stream in (sys.stdout, sys.stderr):
 ROOT = Path(__file__).resolve().parent
 DATA_PATH = ROOT / "data" / "train.csv"
 OUTPUT_DIR = ROOT / "output"
-CSV_PATH = OUTPUT_DIR / "baseline_recovery.csv"
-MD_PATH = OUTPUT_DIR / "baseline_recovery.md"
+CSV_PATH = OUTPUT_DIR / "baseline_recovery_v2.csv"
+MD_PATH = OUTPUT_DIR / "baseline_recovery_v2.md"
+RUN_METADATA: dict = {}
+RUN_ID = ""
 
 
 # =============================================================================
@@ -92,12 +93,7 @@ MD_PATH = OUTPUT_DIR / "baseline_recovery.md"
 # =============================================================================
 
 #: 단일 인스턴스. 모든 Phase 가 이 객체 하나를 그대로 쓴다.
-#: `stopping_rounds` 는 이제 이 스크립트의 학습 경로(`run_fold_nested_grid()`)에서는
-#: 쓰이지 않는다 — patience 기반 ES 계열(es_diagnosis.md 조건 A/B)은 fold간·시드간
-#: 분산이 유의 기준(0.002)과 같은 자릿수이거나 초과해 Phase 비교에 부적합하다고
-#: 판정되었다(es_protocol_final.md 작업 1·3). 필드 자체는 원본 스크립트/조건 A·B
-#: 재현용으로 남겨 둔다(예: run_fold() 를 직접 쓰는 teacher 학습 경로는 여전히
-#: 이 값을 참조한다).
+#: stopping_rounds는 레거시 API 호환용이다. Student/teacher 모두 nested grid를 사용한다.
 CFG = CVConfig(
     n_splits=5,
     shuffle=True,
@@ -112,7 +108,7 @@ CFG = CVConfig(
 #: `n_estimators` 는 더 이상 여기서 고정하지 않는다 — `run_fold_nested_grid()` 가
 #: `N_ESTIMATORS_GRID` 를 스윕해 fold마다 명시적으로 확정한다(es_protocol_final.md
 #: "최종 권장 n_estimators 선택 절차"). `scale_pos_weight` 는 지정하지 않는다
-#: (es_protocol_final.md 작업 5 — Macro F1 은 통계적 동률, LogLoss 는 spw 없음이
+#: (es_protocol_final.md 작업 5 — Macro F1 차이는 작은 3시드 실험에서 불확실하며, LogLoss 는 spw 없음이
 #: 압도적으로 우세해 제거가 확정되었다. 기본값 1.0 이 적용된다).
 LGBM_PARAMS: dict = {
     "objective": "binary",
@@ -129,7 +125,7 @@ LGBM_PARAMS: dict = {
 
 #: `es_protocol_final.md` 작업 1~3 이 쓴 그리드 그대로. 5-fold x 3seed 15회 중
 #: 14회가 정확히 k=50 을 선택했다(1회만 k=75) — 이미 이 조도로도 fold/시드 간
-#: 선택이 사실상 결정론적이다.
+#: 선택이 안정적이었다. 작은 표본에서 결정론적이라고 일반화하지 않는다.
 N_ESTIMATORS_GRID: list[int] = [10, 25, 50, 75, 100, 150, 300, 600]
 
 TE_SMOOTHING_M = 20.0
@@ -226,7 +222,7 @@ PHASES: list[PhaseSpec] = [
     PhaseSpec(
         key="P4_nospw", label="Phase 4: Hybrid (scale_pos_weight 미적용)",
         te=True, te_drop_original=False, use_spw=False,
-        note="진단용. spw 는 eval set 에도 적용되어 early stopping 을 2회차에 멈춘다.",
+        note="호환용 별칭. 현재 P4와 동일하며 spw 비교 조건이 아니다.",
     ),
     PhaseSpec(
         key="P5_leaky", label="Phase 5: Pseudo-Labeling (누수 재현)",
@@ -261,6 +257,7 @@ PHASES: list[PhaseSpec] = [
 #: 기록한다 — 조건 A/B(ES) 에서 조건 C(nested grid) 로 전환한 구조 변경을 CSV 스키마에
 #: 그대로 반영한다. `scale_pos_weight` 는 항상 "-" 로 기록된다(작업 3, 전 Phase 제거).
 CSV_FIELDS = [
+    "run_id", "run_metadata",
     "phase_key", "label", "n_rows", "n_features", "log_loss", "roc_auc",
     "f1_at_050", "macro_f1_nested", "naive_macro_f1", "threshold_optimism",
     "deployment_threshold", "per_fold_thresholds", "tn", "fp", "fn", "tp",
@@ -345,55 +342,29 @@ def model_factory() -> lgb.LGBMClassifier:
 
 
 def _teacher_fit_predict(X_tr, y_tr, X_apply, spec: PhaseSpec, fold: int):
-    """teacher 한 대를 적합시켜 `X_apply` 에 대한 지연 확률을 돌려준다.
+    """Teacher도 clean inner TE + nested grid를 사용한다.
 
-    TE 는 `oof_target_encode()` 로 계산한다. `X_apply` 쪽 라벨은 더미(0)를 넘기는데,
-    이 함수가 valid 측 라벨을 절대 읽지 않기 때문이다 — 그 성질 자체가
-    `tests/test_features.py::test_validation_labels_never_enter_encoding` 으로
-    검증되어 있다.
-
-    [작업 3 판단 근거 — teacher 는 의도적으로 `run_fold()`(ES 기반) 를 유지한다]
-    student(최종 fold 학습, `run_phase()` 본문)는 `run_fold_nested_grid()` 로
-    옮겼지만, teacher 는 이 함수처럼 `run_fold()` + 사전 계산된 `oof_target_encode()`
-    조합을 그대로 쓴다. 근거:
-      1. **비용**: nested grid 는 fold 하나당 그리드 점 수(8개)만큼 모델을 학습한다.
-         teacher 는 이미 P5_leaky 에서 fold 마다(5회) 통째로 다시 학습되므로,
-         teacher 에도 grid 를 적용하면 8배가 추가로 곱해진다 — 정확도 개선 대비
-         비용이 이번 범위(구조 변경 검증)에서 정당화되지 않는다고 판단했다.
-      2. **오염 경로가 다르다**: `output/audit_addendum_te_leak.md` 가 실측한 TE-inner
-         리키지는 "채점 대상 모델"(evaluate_oof 에 들어가는 최종 확률)의 트리 수
-         선택에 영향을 준다. teacher 의 출력은 그 자체로 채점되지 않고
-         `make_pseudo_labels()` 의 분위수 임계값(상위 2%/하위 10%)을 통과하는지만
-         결정하는 데 쓰인다 — teacher 확률의 순위가 완전히 뒤집히지 않는 한 이
-         임계값 선별은 완만한 변화에 비교적 둔감하다.
-      3. student 쪽의 성능(evaluate_oof 로 보고되는 pooled AUC/LogLoss/Macro F1)이
-         이번 회귀 테스트(작업 4)의 판정 대상이므로, teacher 를 바꾸지 않아도
-         "nested grid 구조 변경"의 핵심 효과는 그대로 검증할 수 있다.
-    이 판단은 회색지대이며 재검토 가능하다 — 최종 보고서(`output/
-    nested_grid_implementation.md`)에 그대로 남긴다.
+    Honest 경로의 X_tr은 student inner-train만 포함한다. Teacher의 자체
+    holdout은 그 안에서 분리되므로 student holdout 라벨을 참조하지 않는다.
     """
-    combined = pd.concat([X_tr, X_apply], ignore_index=True)
-    y_combined = pd.concat(
-        [y_tr.reset_index(drop=True), pd.Series(np.zeros(len(X_apply), dtype=int))],
-        ignore_index=True,
+    fit = run_fold_nested_grid(
+        model_factory, X_tr, y_tr, X_apply, CFG, fold=fold,
+        n_estimators_grid=N_ESTIMATORS_GRID,
+        te_cols=spec.cat_cols if spec.te else (), te_m=TE_SMOOTHING_M,
+        te_inner_splits=spec.inner_splits, te_drop_original=spec.te_drop_original,
     )
-    for col in spec.cat_cols:
-        if col in combined.columns:
-            combined[col] = combined[col].astype("category")
-
-    te = oof_target_encode(
-        combined,
-        y_combined,
-        np.arange(len(X_tr)),
-        np.arange(len(X_tr), len(combined)),
-        cols=spec.cat_cols,
-        m=TE_SMOOTHING_M,
-        inner_splits=spec.inner_splits,
-        seed=CFG.seed,
-        drop_original=spec.te_drop_original,
-    )
-    fit = run_fold(model_factory, te.X_train, te.y_train, te.X_valid, CFG, fold=fold)
     return fit.valid_probs
+
+
+def _honest_pseudo_factory(X_unlab, spec, fold):
+    """student의 inner 분할 이후에만 호출되는 pseudo 생성자."""
+    def build(X_inner, y_inner):
+        teacher = lambda apply: _teacher_fit_predict(X_inner, y_inner, apply, spec, fold)
+        pseudo = make_pseudo_labels(
+            teacher, X_unlab, neg_percentile=10.0, pos_percentile=98.0
+        )
+        return pseudo.X, pseudo.y
+    return build
 
 
 def _leaky_ensemble_pseudo_labels(X_lab, y, X_unlab, folds, spec):
@@ -481,6 +452,7 @@ def run_phase(spec: PhaseSpec, raw: pd.DataFrame, cache: dict) -> dict:
     selected_n_estimators: list[int] = []
     grid_scores_per_fold: list[dict[int, float]] = []
     pseudo_counts: list[int] = []
+    thresholds: list[float] = []
     feature_names: list[str] = []
 
     for fold, (tr, va) in enumerate(folds):
@@ -489,24 +461,7 @@ def run_phase(spec: PhaseSpec, raw: pd.DataFrame, cache: dict) -> dict:
 
         if spec.pseudo == "leaky":
             extra = frozen_pseudo
-            pseudo_counts.append(len(frozen_pseudo[0]))
-        elif spec.pseudo == "honest":
-            # teacher 는 이 fold 의 학습 파트만 본다. 분위수도 여기서 재계산된다.
-            teacher = fit_fold_teacher(
-                X_lab, y, tr,
-                fit_predict=lambda a, b, c, _f=fold: _teacher_fit_predict(
-                    a, b, c, spec, _f
-                ),
-            )
-            pseudo = make_pseudo_labels(
-                teacher, X_unlab, neg_percentile=10.0, pos_percentile=98.0
-            )
-            extra = (pseudo.X, pseudo.y)
-            pseudo_counts.append(len(pseudo.X))
-            print(
-                f"   fold {fold + 1} teacher: pseudo {len(pseudo.X):,}건 "
-                f"(임계 {pseudo.thresh_neg:.4f} / {pseudo.thresh_pos:.4f})"
-            )
+
 
         # X_tr/X_va 는 TE 인코딩 **전** 원본 카테고리 상태로 넘긴다 — TE 계산 자체를
         # run_fold_nested_grid() 내부에서 outer/inner 2단계로 수행하기 때문이다
@@ -519,6 +474,7 @@ def run_phase(spec: PhaseSpec, raw: pd.DataFrame, cache: dict) -> dict:
         y_tr_raw = y.iloc[tr].reset_index(drop=True)
         X_va_raw = X_lab.iloc[va].reset_index(drop=True)
 
+        selection = {}
         fit = run_fold_nested_grid(
             model_factory, X_tr_raw, y_tr_raw, X_va_raw, CFG,
             fold=fold,
@@ -528,7 +484,13 @@ def run_phase(spec: PhaseSpec, raw: pd.DataFrame, cache: dict) -> dict:
             te_inner_splits=spec.inner_splits,
             te_drop_original=spec.te_drop_original,
             extra_fit_rows=extra,
+            extra_fit_factory=(_honest_pseudo_factory(X_unlab, spec, fold)
+                               if spec.pseudo == "honest" else None),
+            selection_metadata=selection,
         )
+        thresholds.append(selection["threshold"])
+        if spec.pseudo:
+            pseudo_counts.append(selection["pseudo_count"])
         oof[va] = fit.valid_probs
         selected_n_estimators.append(fit.selected_n_estimators)
         grid_scores_per_fold.append(fit.grid_scores)
@@ -542,7 +504,9 @@ def run_phase(spec: PhaseSpec, raw: pd.DataFrame, cache: dict) -> dict:
 
     assert not np.isnan(oof).any(), "모든 행이 정확히 한 번 채점되어야 한다"
 
-    res = evaluate_oof(y, oof, folds, CFG, label=spec.label, feature_names=feature_names)
+    res = evaluate_oof(y, oof, folds, CFG, label=spec.label,
+                       feature_names=feature_names, per_fold_thresholds=thresholds)
+    res["protocol"].update(protocol_description())
     elapsed = time.perf_counter() - started
 
     row = {
@@ -588,7 +552,7 @@ def run_phase(spec: PhaseSpec, raw: pd.DataFrame, cache: dict) -> dict:
     print(
         f"   ★ LogLoss {row['log_loss']:.4f} | AUC {row['roc_auc']:.4f} | "
         f"Macro F1(nested) {row['macro_f1_nested']:.4f} "
-        f"(naive {row['naive_macro_f1']:.4f}, 편향 +{row['threshold_optimism']:.4f}) "
+        f"(naive {row['naive_macro_f1']:.4f}, 차이 {row['threshold_optimism']:+.4f}) "
         f"| {elapsed:.0f}s"
     )
     return row
@@ -600,20 +564,52 @@ def run_phase(spec: PhaseSpec, raw: pd.DataFrame, cache: dict) -> dict:
 
 
 def load_done(force: bool) -> dict[str, dict]:
-    if force or not CSV_PATH.exists():
-        return {}
-    with CSV_PATH.open(encoding="utf-8-sig", newline="") as fh:
-        return {r["phase_key"]: r for r in csv.DictReader(fh)}
+    # --force controls execution, never bypasses schema/protocol validation.
+    if not RUN_ID:
+        raise ValueError("Experiment identity has not been initialized")
+    return read_rows(CSV_PATH, CSV_FIELDS, RUN_ID)
 
 
 def append_row(row: dict) -> None:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    is_new = not CSV_PATH.exists()
-    with CSV_PATH.open("a", encoding="utf-8-sig", newline="") as fh:
-        writer = csv.DictWriter(fh, fieldnames=CSV_FIELDS)
-        if is_new:
-            writer.writeheader()
-        writer.writerow(row)
+    if not RUN_ID:
+        raise ValueError("Experiment identity has not been initialized")
+    row.update(run_id=RUN_ID, run_metadata=json.dumps(RUN_METADATA, ensure_ascii=False))
+    upsert_row(CSV_PATH, CSV_FIELDS, RUN_ID, row)
+
+
+def configure_run(sample: int | None, output_prefix: str | None) -> None:
+    global CSV_PATH, MD_PATH, RUN_METADATA, RUN_ID
+    if sample is not None and sample <= 0:
+        raise ValueError("sample must be positive")
+    prefix = output_prefix or (
+        f"baseline_recovery_v2_sample_{sample}" if sample else "baseline_recovery_v2"
+    )
+    if Path(prefix).name != prefix or any(c in prefix for c in '/\\:.'):
+        raise ValueError("output-prefix must be a plain filename stem")
+    if not prefix.startswith("baseline_recovery_v2"):
+        raise ValueError("output-prefix must start with baseline_recovery_v2")
+    CSV_PATH, MD_PATH = OUTPUT_DIR / f"{prefix}.csv", OUTPUT_DIR / f"{prefix}.md"
+    RUN_METADATA = {
+        "protocol_version": "nested-grid-inner-te-teacher-threshold-v2",
+        "cv": protocol_description(), "grid": N_ESTIMATORS_GRID, "params": LGBM_PARAMS,
+        "te_m": TE_SMOOTHING_M, "phases": [asdict(s) for s in PHASES],
+        "sample": sample, "data_sha256": file_digest(DATA_PATH),
+        "code_sha256": {name: file_digest(ROOT / name) for name in
+                        ("src/cv.py", "src/features.py", "src/run_store.py", "rerun_all_phases.py")},
+        "versions": {name: version(name) for name in
+                     ("lightgbm", "pandas", "numpy", "scikit-learn")},
+        "threshold_selection": "outer_train_holdout",
+        "teacher_scope": "student_inner_train",
+    }
+    RUN_ID = digest(RUN_METADATA)
+
+
+def protocol_description() -> dict:
+    return {**CFG.describe(), "inner_early_stopping": False,
+            "tree_selection": "nested_grid", "n_estimators_grid": N_ESTIMATORS_GRID,
+            "threshold_selection": "outer_train_holdout",
+            "teacher_scope": "student_inner_train", "teacher_selection": "nested_grid",
+            "stopping_rounds_used": False}
 
 
 def print_header(specs: list[PhaseSpec], sample: int | None) -> None:
@@ -626,7 +622,7 @@ def print_header(specs: list[PhaseSpec], sample: int | None) -> None:
         print(f"[!] 축소 스모크 모드: 상위 {sample:,}행만 사용 — 결과를 인용하지 말 것")
 
     print("\n[CVConfig.describe()]")
-    for k, v in CFG.describe().items():
+    for k, v in protocol_description().items():
         print(f"  {k:24} = {v}")
 
     print("\n[LightGBM 하이퍼파라미터 — 전 Phase 동일 고정 (Phase 4 기준)]")
@@ -652,12 +648,20 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--sample", type=int, default=None, help="축소 스모크용 행 수")
     ap.add_argument("--phases", type=str, default=None, help="쉼표 구분 phase_key")
-    ap.add_argument("--force", action="store_true", help="기존 CSV 무시하고 재실행")
+    ap.add_argument("--force", action="store_true", help="같은 실험의 선택 Phase를 재실행해 교체")
     ap.add_argument("--report-only", action="store_true", help="CSV 로 리포트만 재생성")
+    ap.add_argument("--output-prefix", help="output/ 아래 새 결과 파일 이름(확장자 제외)")
     args = ap.parse_args()
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    done = load_done(args.force)
+    if not DATA_PATH.exists():
+        print(f"[!] 데이터 파일이 없습니다: {DATA_PATH}")
+        return 1
+    try:
+        configure_run(args.sample, args.output_prefix)
+        done = load_done(args.force)
+    except ValueError as exc:
+        print(f"[!] {exc}")
+        return 1
 
     if args.report_only:
         if not done:
@@ -669,7 +673,7 @@ def main() -> int:
 
     wanted = set(args.phases.split(",")) if args.phases else None
     specs = [s for s in PHASES if wanted is None or s.key in wanted]
-    if wanted and not specs:
+    if wanted and wanted - {s.key for s in PHASES}:
         print(f"[!] 알 수 없는 phase: {wanted}")
         return 1
 
@@ -687,6 +691,7 @@ def main() -> int:
     print(f"   {raw.shape[0]:,}행 × {raw.shape[1]}열 | {time.perf_counter() - t0:.1f}s")
 
     cache: dict = {}
+    failed = False
     for spec in specs:
         if spec.key in done and not args.force:
             print(f"\n▶ {spec.key} — 이미 완료됨, 건너뜀 (--force 로 재실행)")
@@ -698,15 +703,16 @@ def main() -> int:
             import traceback
 
             traceback.print_exc()
+            failed = True
             continue
         append_row(row)
         done[spec.key] = row
-        print(f"   >> CSV append 완료: {CSV_PATH}")
+        print(f"   >> CSV checkpoint 완료: {CSV_PATH}")
 
     write_report(done)
     print(f"\n>> 대조표 저장: {MD_PATH}")
     print(f">> 원본 CSV   : {CSV_PATH}")
-    return 0
+    return 1 if failed else 0
 
 
 # =============================================================================
@@ -730,7 +736,11 @@ def write_report(done: dict[str, dict]) -> None:
     A = L.append
     A("# 기준선 복구 — Phase 1~6 통일 프로토콜 재측정 결과\n")
     A(f"> 생성 시각: {now}  ")
-    A("> 원본 데이터: `output/baseline_recovery.csv`  ")
+    A(f"> 원본 데이터: `{CSV_PATH.name}`  ")
+    A(f"> 실험 ID: `{RUN_ID}`  ")
+    if RUN_METADATA.get("sample") is not None:
+        A(f"> **스모크 테스트: 원본 앞 {RUN_METADATA['sample']:,}행. 성능 비교에 인용하지 말 것.**  ")
+    A("> P5_leaky는 의도적 누수 대조군이며 성능 순위에서 제외한다.  ")
     A("> 근거 문서: [AUDIT.md](../AUDIT.md) §3, [PLAN.md](../PLAN.md) §4-0 P0-2·P0-3\n")
     A("---\n")
 
@@ -759,7 +769,7 @@ def write_report(done: dict[str, dict]) -> None:
     A("## 2. 구프로토콜 대 신프로토콜 대조표\n")
     A("`macro_f1_nested` 가 보고용 값이다. `naive` 는 기존 6개 스크립트 방식(전체 OOF ")
     A("최댓값)으로, winner's curse 를 포함하므로 성능 수치로 인용해서는 안 된다.\n")
-    A("| Phase | LogLoss 구 | LogLoss 신 | AUC 구 | AUC 신 | F1 구 | **F1 신(nested)** | F1 신(naive) | 임계값 편향 | TP 구 | TP 신 |")
+    A("| Phase | LogLoss 구 | LogLoss 신 | AUC 구 | AUC 신 | F1 구 | **F1 신(nested)** | F1 신(naive) | naive−보고 F1 | TP 구 | TP 신 |")
     A("| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |")
     for r in rows:
         old = OLD_PROTOCOL.get(r["phase_key"])
@@ -804,243 +814,24 @@ SIG = 0.002  # AUDIT §3-10: 0.002 이하 차이는 실질 개선으로 보지 �
 
 
 def _interpretation(done: dict[str, dict]) -> str:
-    """재측정이 기존 서술을 뒤집는 부분을 명시한다 (요청 [5])."""
-    L: list[str] = []
-    A = L.append
-    g = lambda k, f: float(done[k][f]) if k in done else None  # noqa: E731
-
-    A("## 3. 재측정이 기존 서술에 대해 말하는 것\n")
-    A(f"판정 기준은 AUDIT.md §3-10 을 따른다 — **Macro F1 / AUC 차이가 {SIG} 이하면 ")
-    A("실질 개선으로 인정하지 않는다.** early stopping 과 임계값 선택에서 오는 잔여 ")
-    A("편향이 그 크기이기 때문이다.\n")
-
-    # --- 3-0. 헤드라인 -------------------------------------------------------
-    A("### 3-0. 신프로토콜 기준 순위 — 기존 서사와 정면으로 어긋난다\n")
-    ranked = [
-        (k, float(done[k]["roc_auc"]), float(done[k]["macro_f1_nested"]),
-         float(done[k]["log_loss"]), done[k]["label"])
-        for k in done
+    """단일 실행의 기술 통계만 보고한다. 통계적 유의성/인과 결론을 자동 생성하지 않는다."""
+    lines = [
+        "## 3. 해석 범위", "",
+        "트리 수와 임계값은 각 outer-train 내부 holdout에서 선택했다.",
+        "혼동행렬과 recall도 각 fold의 사전 선택 임계값으로 계산한다.",
+        "배포 임계값은 fold별 임계값의 중앙값이며 전체 데이터 재학습 시 별도 검증이 필요하다.",
+        "naive F1과 보고 F1의 차이는 진단값이며 편향의 인과 추정치가 아니다.",
+        "단일 시드 결과나 0.002 기준만으로 유의성/동률을 판정하지 않는다.",
+        "후속 비교는 동일 시드/분할의 Phase 간 차이를 짝지어 보고해야 한다.",
+        "구프로토콜 수치는 역사적 기록이며 새 수치와의 차이를 피처 효과로 귀속하지 않는다.",
+        "", "| Phase | Macro F1 | LogLoss | AUC |", "| :--- | ---: | ---: | ---: |",
     ]
-    if ranked:
-        A("| 순위 | Phase | ROC-AUC | Macro F1(nested) | LogLoss |")
-        A("| ---: | :--- | ---: | ---: | ---: |")
-        for i, (k, auc, f1, ll, lab) in enumerate(
-            sorted(ranked, key=lambda r: -r[1]), 1
-        ):
-            A(f"| {i} | {lab} | **{auc:.4f}** | {f1:.4f} | {ll:.4f} |")
-        A("")
-        best_auc = max(ranked, key=lambda r: r[1])
-        best_f1 = max(ranked, key=lambda r: r[2])
-        best_ll = min(ranked, key=lambda r: r[3])
-        A(f"* **AUC 최고: {best_auc[4]}** (`{best_auc[1]:.4f}`)")
-        A(f"* **Macro F1 최고: {best_f1[4]}** (`{best_f1[2]:.4f}`)")
-        A(f"* **LogLoss 최저: {best_ll[4]}** (`{best_ll[3]:.4f}`)")
-        A("")
-        if best_auc[0] == "P3":
-            A("> 기존 §2-1 은 Phase 3 을 \"카테고리 분기력 상실로 AUC 급락\"으로 기록했다. ")
-            A("> 통일 프로토콜에서는 **Phase 3 이 AUC 최고**다. 구프로토콜의 Phase 3 평가는 ")
-            A("> 피처셋이 아니라 TE 구현 방식(`inner_splits=0`)에서 온 것이었다(§3-4 참조).\n")
-        if best_ll[0] == "P4_nospw":
-            A("> `scale_pos_weight` 는 이제 전 Phase 에서 제거되어 있으므로(작업 3), ")
-            A("> `P4_nospw` 는 `P4` 와 설정상 동일하고 수치도 사실상 같아야 한다 — ")
-            A("> 이 진단용 변형은 spw 를 켰던 구프로토콜 시절의 유물이다(§3-7 참조).\n")
-
-    # (1) Phase 5 vs Phase 6
-    A("### 3-1. Phase 5 는 여전히 Phase 6 보다 우수한가?\n")
-    p5h, p6 = g("P5_honest", "roc_auc"), g("P6_fixed", "roc_auc")
-    p5h_f1, p6_f1 = g("P5_honest", "macro_f1_nested"), g("P6_fixed", "macro_f1_nested")
-    if None in (p5h, p6, p5h_f1, p6_f1):
-        A("_아직 두 Phase 가 모두 완료되지 않았다._\n")
-    else:
-        d_auc, d_f1 = p5h - p6, p5h_f1 - p6_f1
-        A(f"* 정직한 Phase 5 AUC `{p5h:.4f}` vs Phase 6(수정) AUC `{p6:.4f}` → 차이 `{d_auc:+.4f}`")
-        A(f"* 정직한 Phase 5 F1 `{p5h_f1:.4f}` vs Phase 6(수정) F1 `{p6_f1:.4f}` → 차이 `{d_f1:+.4f}`")
-        if abs(d_auc) <= SIG and abs(d_f1) <= SIG:
-            A(f"\n**판정: 구분되지 않는다.** 두 지표 모두 차이가 {SIG} 이하다. ")
-            A("기존 §2-1 의 \"Phase 5 전 지표 최고치\" 서술은 재측정으로 지지되지 않는다.\n")
-        elif d_auc > SIG and d_f1 > SIG:
-            A("\n**판정: Phase 5 우세가 유지된다.** 누수를 제거한 뒤에도 차이가 유의하다.\n")
-        elif d_auc < -SIG or d_f1 < -SIG:
-            A("\n**판정: 뒤집혔다.** 누수 제거 후 Phase 6 이 우세하다. ")
-            A("기존 서술은 수정되어야 한다.\n")
-        else:
-            A("\n**판정: 지표별로 엇갈린다.** 단일 우열을 주장할 수 없다.\n")
-
-    # (2) 누수 크기 실측
-    A("### 3-2. Phase 5 누수의 실측 크기\n")
-    lk, hn = g("P5_leaky", "roc_auc"), g("P5_honest", "roc_auc")
-    lk_f1, hn_f1 = g("P5_leaky", "macro_f1_nested"), g("P5_honest", "macro_f1_nested")
-    if None in (lk, hn, lk_f1, hn_f1):
-        A("_두 변형이 모두 완료되지 않았다._\n")
-    else:
-        A(f"| 지표 | 누수 재현 | 정직 | 차이(= 누수 크기) | AUDIT §3-6 추정 |")
-        A(f"| :--- | ---: | ---: | ---: | :--- |")
-        A(f"| ROC-AUC | {lk:.4f} | {hn:.4f} | **{lk - hn:+.4f}** | +0.002 ~ +0.008 |")
-        A(f"| Macro F1 | {lk_f1:.4f} | {hn_f1:.4f} | **{lk_f1 - hn_f1:+.4f}** | +0.002 ~ +0.006 |")
-        A("")
-        d = lk - hn
-        if 0.002 <= d <= 0.008:
-            A("**추정 구간 안에 들어왔다.** AUDIT §2.1-C 의 낙관 편향 추정이 실측으로 확인되었다.\n")
-        elif d > 0.008:
-            A("**추정 상한을 넘었다.** 누수가 예상보다 크다. §2.1-C 의 억제 요인 분석을 재검토해야 한다.\n")
-        elif d < 0:
-            A("**부호가 반대다.** 누수 재현 쪽이 오히려 낮다. fold 간 teacher 분산 등 ")
-            A("다른 요인이 더 크게 작용했을 수 있으므로 단정할 수 없다.\n")
-        else:
-            A("**추정 하한보다 작다.** 누수의 실효 크기가 예상보다 작았다.\n")
-        # fold별 선별 건수 편차
-        pc = json.loads(done["P5_honest"]["pseudo_counts"] or "[]")
-        if pc:
-            A(f"fold 별 pseudo 선별 건수(정직): {', '.join(f'{c:,}' for c in pc)} — ")
-            A(f"최소 {min(pc):,} / 최대 {max(pc):,}, 편차 {max(pc) - min(pc):,}건. ")
-            A("fold 마다 teacher 가 다르므로 기존 기록의 **89,438건 고정이 성립하지 않는다.**\n")
-
-    # (3) Phase 3 -> 4 AUC 반등
-    A("### 3-3. Phase 3→4 의 \"AUC 반등\"은 재현되는가?\n")
-    p3, p4 = g("P3", "roc_auc"), g("P4", "roc_auc")
-    if None in (p3, p4):
-        A("_두 Phase 가 모두 완료되지 않았다._\n")
-    else:
-        d = p4 - p3
-        A(f"* Phase 3 AUC `{p3:.4f}` → Phase 4 AUC `{p4:.4f}` → 차이 `{d:+.4f}`")
-        A(f"* 구프로토콜 기록: 0.6043 → 0.6107 (차이 +0.0064)\n")
-        if d > SIG:
-            A("**판정: 재현된다.** 원본 category dtype 을 유지하는 하이브리드 인코딩의 ")
-            A("이점은 프로토콜을 통일해도 살아남는다.\n")
-        elif d < -SIG:
-            A("**판정: 재현되지 않는다. 부호가 뒤집혔다.** 통일 프로토콜에서는 원본 범주를 ")
-            A("복원한 Phase 4 가 TE 단독 치환인 Phase 3 보다 **오히려 낮다**. ")
-            A("구프로토콜의 \"AUC 반등\"은 프로토콜 요인(임계값 그리드, TE 방식)이 만든 ")
-            A("허상이었을 가능성이 크다.\n")
-            A("이는 PLAN.md §3-A 항목 2(\"하이브리드 카테고리 보존\")의 근거를 직접 흔든다. ")
-            A("해당 도메인 규칙은 재검증 전까지 보류해야 한다.\n")
-        else:
-            A(f"**판정: 재현되지 않는다.** 차이가 ±{SIG} 이내로 구분되지 않는다. ")
-            A("구프로토콜에서 관측된 반등은 프로토콜 요인이었을 수 있다.\n")
-
-    # (4) TE inner K-fold 단독 효과
-    A("### 3-4. TE 내부 K-fold 도입의 단독 효과\n")
-    a, b = g("P4", "roc_auc"), g("P4_te0", "roc_auc")
-    a_f1, b_f1 = g("P4", "macro_f1_nested"), g("P4_te0", "macro_f1_nested")
-    if None in (a, b, a_f1, b_f1):
-        A("_Phase 4 두 변형이 모두 완료되지 않았다._\n")
-    else:
-        A(f"| 지표 | inner_splits=0 (기존 방식) | inner_splits=5 (신) | 차이 |")
-        A(f"| :--- | ---: | ---: | ---: |")
-        A(f"| ROC-AUC | {b:.4f} | {a:.4f} | {a - b:+.4f} |")
-        A(f"| Macro F1 | {b_f1:.4f} | {a_f1:.4f} | {a_f1 - b_f1:+.4f} |")
-        A("")
-        A("이 차이만큼은 **\"프로토콜 통일\"이 아니라 \"TE 방식 변경\"의 효과**다. ")
-        A("§2 대조표의 신구 차이를 해석할 때 이 몫을 먼저 덜어내야 한다.\n")
-
-    # (5) Traffic 수정의 순효과
-    A("### 3-5. Traffic 결측 버킷 수정(AUDIT §3-8)의 순효과\n")
-    lg, fx = g("P6_legacy", "roc_auc"), g("P6_fixed", "roc_auc")
-    lg_f1, fx_f1 = g("P6_legacy", "macro_f1_nested"), g("P6_fixed", "macro_f1_nested")
-    if None in (lg, fx, lg_f1, fx_f1):
-        A("_Phase 6 두 변형이 모두 완료되지 않았다._\n")
-    else:
-        A(f"| 지표 | 레거시(-1 뭉침) | 수정(결측 제외 + 플래그) | 차이 |")
-        A(f"| :--- | ---: | ---: | ---: |")
-        A(f"| ROC-AUC | {lg:.4f} | {fx:.4f} | {fx - lg:+.4f} |")
-        A(f"| Macro F1 | {lg_f1:.4f} | {fx_f1:.4f} | {fx_f1 - lg_f1:+.4f} |")
-        A("")
-        if abs(fx - lg) <= SIG:
-            A(f"**판정: 성능 차이는 유의하지 않다.** 다만 수정본은 `Origin_Traffic` 이 ")
-            A("혼잡도만 측정하고 결측 여부는 별도 플래그로 분리되므로, **피처 의미가 ")
-            A("해석 가능해진다**는 이점은 성능과 무관하게 유효하다.\n")
-        elif fx > lg:
-            A("**판정: 수정본이 우세하다.** 결측 밀도를 혼잡도로 오인하던 것이 실제로 ")
-            A("성능을 갉아먹고 있었다.\n")
-        else:
-            A("**판정: 레거시가 높게 나왔다.** `-1` 버킷이 우연히 예측력 있는 신호로 ")
-            A("작동했을 수 있으나, 그것은 혼잡도가 아니라 결측 패턴이므로 배포 시 ")
-            A("재현을 신뢰하기 어렵다.\n")
-
-    # (6) 유의하게 남는 전이
-    A(f"### 3-6. {SIG} 규칙을 적용했을 때 실제로 남는 Phase 전이\n")
-    chain = [
-        ("P1", "P2", "Phase 1 → 2 (Pruning + 임계값)"),
-        ("P2", "P3", "Phase 2 → 3 (TE 도입 + 원본 범주 제거)"),
-        ("P3", "P4", "Phase 3 → 4 (원본 범주 복원)"),
-        ("P4", "P5_honest", "Phase 4 → 5 (준지도 증강, 정직)"),
-        ("P5_honest", "P6_fixed", "Phase 5 → 6 (도메인 피처)"),
-    ]
-    A("| 전이 | ΔAUC | ΔMacro F1 | 판정 |")
-    A("| :--- | ---: | ---: | :--- |")
-    survivors: list[str] = []
-    for a_k, b_k, name in chain:
-        if a_k not in done or b_k not in done:
-            A(f"| {name} | — | — | 미완료 |")
-            continue
-        d_auc = float(done[b_k]["roc_auc"]) - float(done[a_k]["roc_auc"])
-        d_f1 = float(done[b_k]["macro_f1_nested"]) - float(done[a_k]["macro_f1_nested"])
-        up_auc, up_f1 = d_auc > SIG, d_f1 > SIG
-        dn_auc, dn_f1 = d_auc < -SIG, d_f1 < -SIG
-        if up_auc and up_f1:
-            verdict = "**유의한 개선** (두 지표 모두)"
-            survivors.append(name)
-        elif dn_auc and dn_f1:
-            verdict = "**유의한 악화** (두 지표 모두)"
-        elif (up_auc and dn_f1) or (up_f1 and dn_auc):
-            verdict = "**엇갈림** — 단일 우열 주장 불가"
-        elif up_auc:
-            verdict = "AUC만 개선, F1 구분 불가"
-            survivors.append(f"{name} [AUC 한정]")
-        elif up_f1:
-            verdict = "F1만 개선, AUC 구분 불가"
-            survivors.append(f"{name} [F1 한정]")
-        elif dn_auc or dn_f1:
-            verdict = "한쪽 지표 악화"
-        else:
-            verdict = f"구분 불가 (±{SIG} 이내)"
-        A(f"| {name} | {d_auc:+.4f} | {d_f1:+.4f} | {verdict} |")
-    A("")
-    if survivors:
-        A("**실질 개선으로 남는 단계:** " + ", ".join(survivors) + "\n")
-    else:
-        A("**유의하게 남는 개선 단계가 없다.** 기존의 \"단계적 성능 향상\" 서사는 ")
-        A("통일된 프로토콜에서 재현되지 않는다.\n")
-
-    # --- 3-7. scale_pos_weight — 이제는 진단이 아니라 구조적 제거 ---
-    A("### 3-7. `scale_pos_weight` 는 더 이상 조기 종료를 붕괴시키지 않는다 — 제거로 대체\n")
-    A("**이 절의 서술은 `output/es_diagnosis.md`/`output/es_protocol_final.md` 로 정정·")
-    A("확정되었다** — 원래 이 표가 실었던 \"LightGBM 이 `scale_pos_weight` 를 평가셋에도 ")
-    A("적용해 조기 종료가 가중 지표를 본다\"는 가설은 **반증**되었다. 실제 메커니즘은 ")
-    A("목적함수(그래디언트)만 가중되고 평가지표(`binary_logloss`)는 비가중이라 서로 ")
-    A("어긋나는 것이었다(`es_diagnosis.md` §2-3). 또한 \"2-트리 AUC 가 500-트리 AUC 보다 ")
-    A("높다 → 부스팅이 랭킹을 해친다\"는 후속 해석도 spw 교락을 제거하면 성립하지 않음이 ")
-    A("확인되었다(`es_diagnosis.md` §3) — 정점은 spw 유무와 무관하게 `n_estimators≈50` ")
-    A("부근이다.\n")
-    A("이번 구조 변경(작업 3, `output/nested_grid_implementation.md`)은 그 결론을 그대로 ")
-    A("실행에 옮긴 것이다: `scale_pos_weight` 는 이제 **전 Phase 에서 계산조차 되지 않고**, ")
-    A("`n_estimators` 는 조기 종료 대신 nested grid(`N_ESTIMATORS_GRID`)로 fold마다 ")
-    A("명시적으로 선택된다(es_protocol_final.md 조건 C). 그 결과 `P4` 와 `P4_nospw` 는 ")
-    A("이제 설정상 동일하며(`use_spw` 필드는 무시된다), 이 CSV 스키마의 `scale_pos_weight` ")
-    A("열은 항상 `-` 로 기록된다.\n")
-    a_ll, b_ll = g("P4", "log_loss"), g("P4_nospw", "log_loss")
-    a_ne, b_ne = done.get("P4", {}).get("selected_n_estimators"), done.get("P4_nospw", {}).get("selected_n_estimators")
-    if None not in (a_ll, b_ll) and a_ne and b_ne:
-        A("| 항목 | P4 | P4_nospw |")
-        A("| :--- | ---: | ---: |")
-        A(f"| fold별 선택 n_estimators | `{a_ne}` | `{b_ne}` |")
-        A(f"| LogLoss | {a_ll:.4f} | {b_ll:.4f} |")
-        A("")
-        A("두 행이 사실상 동일하게 나오는 것이 **기대되는 결과**다 — `P4_nospw` 는 이제 ")
-        A("`P4` 와 구분되는 설정이 아니라, spw 를 적용하던 구프로토콜 시절의 유물이다.\n")
-    else:
-        A("_두 Phase 가 모두 완료되지 않았다._\n")
-
-    A("---\n")
-    A("## 4. 한계\n")
-    A("* 본 재측정은 **단일 시드(42)** 의 5-Fold 1회 실행이다. fold 분할 자체의 ")
-    A(f"변동을 반영하지 않으므로, {SIG} 근처의 차이는 시드를 바꾸면 순위가 뒤집힐 수 ")
-    A("있다. 확정하려면 시드를 바꿔 여러 번 반복해야 한다.")
-    A("* 하이퍼파라미터를 Phase 4 설정으로 고정했으므로, 각 Phase 가 **자기 피처셋에 ")
-    A("최적인 설정**에서 얼마나 나올 수 있는지는 측정하지 않았다. 이는 의도된 것이다 ")
-    A("— 혼입 요인을 줄이는 대신 각 Phase 의 상한을 포기했다.")
-    A("* `naive_macro_f1` 은 기존 스크립트 방식의 재현일 뿐이며 성능 수치가 아니다.")
-    return "\n".join(L)
+    rows = [r for r in done.values() if r["phase_key"] not in {"P5_leaky", "P4_nospw"}]
+    for r in sorted(rows, key=lambda r: (-float(r["macro_f1_nested"]), float(r["log_loss"]))):
+        lines.append(f"| {r['label']} | {_f(r, 'macro_f1_nested')} | {_f(r, 'log_loss')} | {_f(r, 'roc_auc')} |")
+    lines.extend(["", "P5_leaky는 outer-valid 라벨의 간접 유입을 의도적으로 유지한 진단 대조군이다.",
+                  "P4_nospw는 현재 P4와 동일한 호환용 별칭이므로 순위에서 제외했다."])
+    return "\n".join(lines)
 
 
 if __name__ == "__main__":

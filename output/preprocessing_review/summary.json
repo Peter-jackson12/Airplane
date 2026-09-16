@@ -1,0 +1,58 @@
+{
+  "rows": 1000000,
+  "columns": 19,
+  "labeled": 255001,
+  "unlabeled": 744999,
+  "positive": 45000,
+  "positive_rate_labeled": 0.1764698961964855,
+  "duplicate_id": 0,
+  "duplicate_rows_exact": 0,
+  "duplicate_predictors_without_id": 0,
+  "constant_columns": [
+    "Cancelled",
+    "Diverted"
+  ],
+  "airline_missing_before": 108920,
+  "airline_missing_after": 11864,
+  "mapping_ambiguous_fill": 66448,
+  "airline_order_sensitive_rows": 27536,
+  "duration_missing": 206371,
+  "duration_zero": 370,
+  "duration_over_12h": 1122,
+  "midnight_wrap_rows": 26802,
+  "route_median_filled": 206335,
+  "global_median_filled": 36,
+  "hours_both_missing": 11688,
+  "p6_noon_encoded_missing": 11688,
+  "speed_proxy_max": 75800000.0,
+  "traffic": [
+    {
+      "피처": "Origin_Traffic",
+      "시각미상_행": 11688,
+      "legacy_미상행_중앙값": 1.0,
+      "legacy_미상행_최대": 8.0,
+      "fixed_미상행_NaN": 11688
+    },
+    {
+      "피처": "Dest_Traffic",
+      "시각미상_행": 11688,
+      "legacy_미상행_중앙값": 1.0,
+      "legacy_미상행_최대": 7.0,
+      "fixed_미상행_NaN": 11688
+    }
+  ],
+  "te_scope": {
+    "outer_train": 204000,
+    "outer_valid": 51001,
+    "inner_train": 163200,
+    "inner_holdout": 40800,
+    "holdout_flip_invariant": true
+  },
+  "checks": {
+    "행수보존": true,
+    "타깃분리": true,
+    "복원건수일치": true,
+    "holdout라벨_TE불변": true,
+    "Traffic_단일그룹_독립검산": true
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "raw_rows": 1000000,
+  "raw_columns": 19,
+  "legacy_columns": 29,
+  "raw_columns_changed": [],
+  "origin_airports": 374,
+  "dest_airports": 375,
+  "origin_airports_with_weather": 30,
+  "weather_columns": [
+    "Weather_Origin_temp",
+    "Weather_Origin_dwpt",
+    "Weather_Origin_rhum",
+    "Weather_Origin_prcp",
+    "Weather_Origin_snow",
+    "Weather_Origin_wspd",
+    "Weather_Origin_wpgt",
+    "Weather_Origin_pres",
+    "Weather_Origin_coco"
+  ],
+  "year_columns": [],
+  "feb29_rows": 0,
+  "departure_missing": 109019,
+  "candidate_year": 2022,
+  "candidate_year_verified": false,
+  "fingerprint_rows": 240,
+  "flight_weather_join_performed": false,
+  "raw_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "legacy_sha256": "4db1ae996075134b05920e0094c21d2af2bd8f0e5f7805d9f83dcb036f76dd6c",
+  "executed_utc": "2026-09-16T01:33:05.334398+00:00",
+  "meteostat_hourly_signature": "(loc: pandas.DataFrame | meteostat.interface.point.Point | list | str, start=datetime.datetime(1890, 1, 1, 0, 0), end=datetime.datetime(2026, 9, 26, 23, 59, 59, 999999), timezone: str | None = None, model=True, flags=False) -> None"
+}

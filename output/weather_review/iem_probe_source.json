@@ -1,0 +1,8 @@
+{
+  "url": "https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?station=ATL&station=ORD&station=JFK&data=all&sts=2022-12-23T00%3A00%3A00Z&ets=2022-12-24T00%3A00%3A00Z&tz=UTC&format=onlycomma&latlon=yes&missing=M&trace=T&report_type=3&report_type=4",
+  "sha256": "55d64e2cc08ba939c68a9e867e69334c1db911a6e6e54ad79fc3e016bf3603ee",
+  "cache": "data\\weather_probe\\iem_20221223_ATL_ORD_JFK.csv",
+  "rows": 102,
+  "probe_only_not_flight_year": true,
+  "checked_utc": "2026-09-16T01:33:05.671540+00:00"
+}

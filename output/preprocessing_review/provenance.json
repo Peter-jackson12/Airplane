@@ -1,0 +1,18 @@
+{
+  "source": "data/train.csv",
+  "sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "bytes": 116707688,
+  "executed_utc": "2026-09-16T01:19:04.482234+00:00",
+  "versions": {
+    "pandas": "3.0.5",
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.0",
+    "lightgbm": "4.7.0",
+    "matplotlib": "3.11.1"
+  },
+  "code_sha256": {
+    "src/features.py": "bdb9ecaa20b574aa7d2b36de6d480c6428805990ca34d8d242c8be4c5606b9c6",
+    "src/cv.py": "63f8f7b0cbd550463e5b95ca76e1df22fd0d518d9678033323fe846ea2e89cc6",
+    "rerun_all_phases.py": "d11fd9db2e9009a873e9da5cde9f757faf4963272d9da6985f803af574d6bf23"
+  }
+}

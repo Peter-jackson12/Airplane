@@ -1,0 +1,30 @@
+    def _set_time(
+        self,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
+        timezone: Optional[str] = None,
+    ) -> None:
+        """
+        Set & adapt the period's time zone
+        """
+        if timezone:
+            # Save timezone
+            self._timezone = timezone
+
+            if start and end:
+                # Initialize time zone
+                timezone = pytz.timezone(self._timezone)
+
+                # Set start date
+                start = timezone.localize(start, is_dst=None).astimezone(pytz.utc)
+
+                # Set end date
+                end = timezone.localize(end, is_dst=None).astimezone(pytz.utc)
+
+        if self.chunked:
+            self._annual_steps = [
+                start.year + i for i in range(end.year - start.year + 1)
+            ]
+
+        self._start = start
+        self._end = end

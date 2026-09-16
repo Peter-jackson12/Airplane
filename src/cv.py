@@ -13,12 +13,11 @@ Phase 간 성능 비교가 통계적으로 무효가 되었다 (AUDIT.md §3).
 넘기면 fold 분할·early stopping·임계값 선택·지표 집계가 모두 그 설정으로 고정되고,
 `describe()` 로 결과에 그대로 직렬화된다.
 
-두 가지 편향은 옵션이 아니라 **기본 동작으로 제거**했다.
+검증 경계:
 1. early stopping 은 학습 fold 를 다시 쪼갠 내부 holdout 에서 수행한다.
    채점 fold(`X_valid`)는 `eval_set` 에 들어가지 않는다 (AUDIT.md §2.5).
-2. 임계값은 nested 방식으로 고른다. K-1 fold 의 OOF 에서 고르고 남은 fold 에서
-   채점한다. 전체 OOF 벡터에서 최댓값을 고르는 방식은 winner's curse 이므로
-   점수로 보고하지 않는다 (AUDIT.md §2.6).
+2. 새 runner는 outer-train 내부 holdout에서 임계값을 선택한다. 호환용
+   tune_threshold_nested의 K-1 fold OOF 방식에는 교차 fold 라벨 의존성이 남는다.
 """
 
 from __future__ import annotations
@@ -395,6 +394,8 @@ def run_fold_nested_grid(
     te_drop_original: bool = False,
     holdout_eligible: np.ndarray | None = None,
     extra_fit_rows: tuple[pd.DataFrame, pd.Series] | None = None,
+    extra_fit_factory: Callable[[pd.DataFrame, pd.Series], tuple[pd.DataFrame, pd.Series]] | None = None,
+    selection_metadata: dict[str, Any] | None = None,
     fit_kwargs: dict[str, Any] | None = None,
 ) -> FoldFitGrid:
     """early stopping 대신 nested grid 로 `n_estimators` 를 고정 선택한다.
@@ -406,15 +407,9 @@ def run_fold_nested_grid(
     콜백(`stopping_rounds` 기반 patience) 대신, `n_estimators_grid` 각 점을 명시
     학습해 inner-holdout LogLoss 가 최소인 점을 고른다.
 
-    **왜 콜백 기반 ES 를 버리는가** (`output/es_diagnosis.md` §2·3,
-    `output/es_protocol_final.md` 작업 1·2·3 실측 요약): `binary_logloss` +
-    `scale_pos_weight` 조합은 목적함수-지표 불일치로 `best_iteration` 이 2~3
-    그루에서 결정론적으로 붕괴한다. `scale_pos_weight` 를 빼도 patience 기반 ES 는
-    fold마다 54~567그루 사이에서 제멋대로 멈춘다 — 정점(n_estimators≈50) 자체는
-    5-fold 전부 거의 동일한데, 그 주변 곡선이 평탄하고 잡음이 섞여 있어 patience
-    카운터가 위치를 특정하지 못하기 때문이다. Nested grid 는 이 불안정성을
-    "그리드 위에서 직접 관측한 최솟값"으로 대체해 fold간·시드간 분산을 유의
-    기준(0.002)의 1/3 이하로 줄인다(작업 3 실측).
+    기존 ES 실험은 TE 사전 인코딩에 의한 inner 검증 오염을 포함했다.
+    순수 잡음이나 ES 자체의 결함으로 일반화하지 않는다. 이 함수는 clean inner
+    경계에서 후보를 비교한다. 과거 3시드 결과는 통계적 유의성 보장이 아니다.
 
     **핵심 차이 — `X_train` 은 TE 인코딩 전 원본 카테고리여야 한다**
     -------------------------------------------------------------
@@ -424,9 +419,10 @@ def run_fold_nested_grid(
     inner-holdout 을 만드는데, **outer 경계에서 이미 계산된 TE 는 inner 경계를
     모른다.** `oof_target_encode()` 가 outer-train 전체를 `inner_splits`(TE 자체의
     K-fold, ES 의 inner-holdout 과는 다른 개념) 로 회전시키며 각 행의 `TE_*` 를
-    계산하므로, 이 함수의 inner-holdout 에 속한 행 중 상당수는 자신이 속한
-    TE-회전-fold 가 우연히 inner-train 쪽 행들의 라벨을 포함하고 있어 **그 라벨
-    정보가 `TE_*` 값에 간접적으로 스며든다** (`output/audit_addendum_te_leak.md`
+    계산하므로, inner-holdout의 TE 통계에 다른 inner-holdout 라벨이 사용되며
+    inner-train 피처에도
+    holdout 라벨 정보가 유입될 수 있다. Train 라벨로 holdout을 인코딩하는 것은
+    정상이며, 반대 방향이 누수다 (`output/audit_addendum_te_leak.md`
     §2). 트리 수가 늘어날수록 모델이 이 간접 정보를 정교하게 활용해
     inner-holdout LogLoss 를 실제 일반화 능력과 무관하게 계속 낮출 수 있어, 그리드
     선택이 "가장 많이 외운" 지점(그리드 최댓값)을 고르는 정반대 결과를 낸다 —
@@ -461,6 +457,12 @@ def run_fold_nested_grid(
         `oof_target_encode()` 동명 인자에 그대로 전달된다. 항상 inner-train
         쪽에만 추가되므로(그 함수의 계약), pseudo 행이 inner-holdout 채점에
         섞이는 일은 구조적으로 없다.
+    extra_fit_factory
+        분할 이후 inner-train 원본 피처/라벨만 받는 pseudo 생성 콜러블.
+        extra_fit_rows와 동시 사용 불가. 외부 holdout 라벨을 캡처하지 않아야 한다.
+    selection_metadata
+        전달하면 선택 모델의 inner-holdout 확률로 고른 threshold와 pseudo_count를
+        저장한다. Outer-valid 라벨은 이 함수에 전달되지 않는다.
     fit_kwargs
         `model.fit()` 에 전달할 추가 인자. `callbacks` 키는 제거한다 — 이
         경로는 early stopping 콜백을 쓰지 않는다(그리드 각 점을 조기종료 없이
@@ -476,12 +478,26 @@ def run_fold_nested_grid(
         raise ValueError(
             f"X_train({len(X_train)}) 과 y_train({len(y_train)}) 의 길이가 다릅니다."
         )
-    grid = [int(k) for k in n_estimators_grid]
+    if any(isinstance(k, (bool, np.bool_)) or not isinstance(k, (int, np.integer))
+           or k <= 0 for k in n_estimators_grid):
+        raise ValueError("n_estimators_grid 는 양의 정수여야 합니다.")
+    grid = sorted(set(int(k) for k in n_estimators_grid))
     if not grid:
         raise ValueError("n_estimators_grid 가 비어 있습니다.")
+    if any(str(c).startswith("TE_") for X in (X_train, X_valid) for c in X.columns):
+        raise ValueError("TE 사전 인코딩 데이터는 nested grid에 전달할 수 없습니다.")
 
     n_rows = len(X_train)
     inner_tr, inner_ho = _make_inner_split(n_rows, y_train, cfg, fold, holdout_eligible)
+
+    if extra_fit_factory is not None:
+        if extra_fit_rows is not None:
+            raise ValueError("extra_fit_rows 와 extra_fit_factory 는 동시에 지정할 수 없습니다.")
+        # Teacher/pseudo 생성자는 student holdout 라벨에 접근하지 못한다.
+        extra_fit_rows = extra_fit_factory(
+            X_train.iloc[inner_tr].copy().reset_index(drop=True),
+            y_train.iloc[inner_tr].copy().reset_index(drop=True),
+        )
 
     # 2단계: TE 를 inner 경계에서 계산한다. drop_original 은 여기서는 항상 False 로
     # 호출해 원본 컬럼을 남겨 둔다 — outer-valid 인코딩(5단계)에 같은 모집단의
@@ -518,6 +534,8 @@ def run_fold_nested_grid(
     # 3단계: 그리드 스윕. early stopping 콜백은 쓰지 않는다 — 각 k 를 끝까지 학습.
     kwargs = dict(fit_kwargs or {})
     kwargs.pop("callbacks", None)
+    if "eval_set" in kwargs or "eval_sample_weight" in kwargs:
+        raise ValueError("nested grid 에 외부 eval_set 을 전달할 수 없습니다.")
 
     grid_scores: dict[int, float] = {}
     best_k: int | None = None
@@ -542,6 +560,17 @@ def run_fold_nested_grid(
 
     assert best_model is not None and best_k is not None  # grid 가 비어 있지 않으므로 항상 참
 
+    if selection_metadata is not None:
+        # k 와 임계값 모두 outer-train 내부에서 결정한다. 이 holdout 점수는
+        # 튜닝용이며 성능 추정치로 보고하지 않는다. outer-valid 는 마지막에만 채점한다.
+        selected_probs = np.asarray(best_model.predict_proba(X_ho_model))[:, 1]
+        scores = [f1_score(y_ho, selected_probs >= th, average="macro")
+                  for th in cfg.thresholds()]
+        selection_metadata.update(
+            threshold=float(cfg.thresholds()[int(np.argmax(scores))]),
+            pseudo_count=0 if extra_fit_rows is None else len(extra_fit_rows[0]),
+        )
+
     valid_probs = np.asarray(best_model.predict_proba(X_va_model), dtype=float)[:, 1]
     return FoldFitGrid(
         model=best_model,
@@ -565,7 +594,7 @@ class ThresholdResult(NamedTuple):
     ----------
     nested_f1
         **보고해야 할 값.** fold k 의 임계값을 나머지 K-1 fold 에서 고르고 fold k 에서만
-        채점한 뒤 pooled 로 계산한 Macro-F1. winner's curse 가 제거되어 있다.
+        채점한 뒤 pooled 로 계산한 Macro-F1. 교차 fold 라벨 의존성은 남는다.
     deployment_threshold
         실제 배포에 쓸 임계값. fold 별 선택값의 중앙값이다. 전체 OOF 최댓값을 쓰지
         않는 이유는 그것이 곧 winner's curse 의 정의이기 때문이다.
@@ -591,7 +620,7 @@ def tune_threshold_nested(
     folds: Sequence[tuple[np.ndarray, np.ndarray]],
     cfg: CVConfig,
 ) -> ThresholdResult:
-    """임계값을 nested 방식으로 선택하고 편향 없는 Macro-F1 을 돌려준다.
+    """레거시 cross-fold OOF 임계값 선택. 완전한 label-independent nested CV는 아니다.
 
     절차 (AUDIT.md §2.6)
     --------------------
@@ -600,7 +629,8 @@ def tune_threshold_nested(
       2. 그 임계값을 fold `k` 의 행에**만** 적용해 예측 라벨을 확정한다.
     모든 fold 의 예측 라벨을 pooled 하여 Macro-F1 을 한 번 계산한다.
 
-    각 행의 임계값이 그 행을 보지 않고 결정되므로, 기존 방식의 낙관 편향이 사라진다.
+    자기 fold OOF는 제외하지만 다른 fold 모델에 자기 fold 라벨이 사용될 수 있다.
+    엄격한 평가는 outer-train 내부에서 임계값을 선택해 evaluate_oof에 전달한다.
     """
     y = np.asarray(y_true)
     probs = np.asarray(oof_probs, dtype=float)
@@ -659,13 +689,17 @@ def evaluate_oof(
     *,
     label: str = "",
     feature_names: Sequence[str] | None = None,
+    per_fold_thresholds: Sequence[float] | None = None,
 ) -> dict[str, Any]:
     """OOF 벡터를 pooled 로 채점해 결과 dict 를 돌려준다.
 
     반환 dict 에는 `cfg.describe()` 와 피처 목록 해시가 포함되므로, 결과만 보고도
     어떤 프로토콜로 얻은 수치인지 사후에 확인할 수 있다 (AUDIT.md §1.3 섹션 E).
 
-    `macro_f1` 키는 **nested 값**이다. 기존 스크립트가 보고하던 naive 최댓값은
+    per_fold_thresholds는 outer-train 내부에서 미리 선택한 값이어야 한다.
+    전달된 경우 F1/혼동행렬/recall 모두 fold별 임계값으로 계산한다.
+    미전달 시 호환용 cross-fold OOF 선택을 사용하며 완전한 label independence는 없다.
+    `macro_f1` 키는 fold별 임계값 점수다. 기존 스크립트가 보고하던 naive 최댓값은
     `naive_macro_f1` 로 분리해 두었고, 두 값의 차이가 `threshold_optimism` 이다.
     """
     y = np.asarray(y_true)
@@ -673,6 +707,18 @@ def evaluate_oof(
 
     th = tune_threshold_nested(y, probs, folds, cfg)
     preds_at_deploy = (probs >= th.deployment_threshold).astype(int)
+    if per_fold_thresholds is not None:
+        thresholds = [float(t) for t in per_fold_thresholds]
+        if len(thresholds) != len(folds) or any(
+            not np.isfinite(t) or not 0 <= t <= 1 for t in thresholds
+        ):
+            raise ValueError("각 fold 에 유효한 사전 선택 임계값 하나가 필요합니다.")
+        preds_at_deploy = np.zeros_like(y, dtype=int)
+        for (_, va), threshold in zip(folds, thresholds):
+            preds_at_deploy[va] = probs[va] >= threshold
+        score = float(f1_score(y, preds_at_deploy, average="macro"))
+        th = ThresholdResult(score, float(np.median(thresholds)), thresholds,
+                             th.naive_threshold, th.naive_f1, th.naive_f1 - score)
     cm = confusion_matrix(y, preds_at_deploy, labels=[0, 1])
 
     result: dict[str, Any] = {
@@ -697,6 +743,9 @@ def evaluate_oof(
         "recall": float(cm[1, 1] / max(cm[1, 0] + cm[1, 1], 1)),
         "protocol": cfg.describe(),
     }
+    result["protocol"]["threshold_selection"] = (
+        "outer_train_holdout" if per_fold_thresholds is not None else "cross_fold_oof_legacy"
+    )
     if feature_names is not None:
         names = list(feature_names)
         result["n_features"] = len(names)

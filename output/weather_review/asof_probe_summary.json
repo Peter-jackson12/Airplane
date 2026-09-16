@@ -1,0 +1,8 @@
+{
+  "requests": 72,
+  "matched": 68,
+  "assumed_latency_minutes": 10,
+  "future_reports_selected": 0,
+  "flight_rows_used": 0,
+  "max_age_minutes": 69.0
+}
