@@ -33,9 +33,11 @@ output/*_error_stability.csv.gz
 output/pytest_oof_tmp*/
 
 # =====================================
-# IDE 및 운영체제 캐시
+# 에이전트·IDE·운영체제 로컬 설정
 # =====================================
 .vscode/
 .idea/
+# 에이전트가 자동 생성하는 사용자별 설정. 저장소 공용 규칙은 AGENTS.md 에 둔다.
+.codex/
 Thumbs.db
 .DS_Store
