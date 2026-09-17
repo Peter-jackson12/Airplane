@@ -1,6 +1,6 @@
 import pandas as pd
 
-from notebooks.verify_bts_november_marketing import (KEYS, RENAMES, USECOLS, match_counts,
+from notebooks.verify_bts_marketing import (KEYS, RENAMES, USECOLS, match_counts,
                                                      normalize)
 
 DELAY_COLUMNS = {'DepDelay', 'ArrDelay', 'DepDel15', 'ArrDel15', 'CarrierDelay',
@@ -51,3 +51,32 @@ def test_tail_normalization_keeps_the_prefix_and_ignores_case_and_spacing():
     assert match_counts(normalize(sample()), normalize(right), KEYS).tolist() == [1]
     assert match_counts(normalize(sample()), normalize(sample(Tail_Number='123AB')),
                         KEYS).tolist() == [0]
+
+
+def test_month_is_a_required_argument_with_a_valid_range():
+    """The script used to be November-only; the month must now be explicit."""
+    import argparse
+    import inspect
+
+    from notebooks import verify_bts_marketing as mod
+    source = inspect.getsource(mod.main)
+    assert "--month" in source and "required=True" in source
+    assert "choices=range(1, 13)" in source
+
+
+def test_archive_path_follows_the_month(tmp_path, monkeypatch):
+    from notebooks import verify_bts_marketing as mod
+    seen = {}
+
+    class FakeZip:
+        def __init__(self, path): seen['path'] = path
+        def __enter__(self): raise RuntimeError('stop after path construction')
+        def __exit__(self, *a): return False
+
+    monkeypatch.setattr(mod.zipfile, 'ZipFile', FakeZip)
+    for month in (2, 7, 11):
+        try:
+            mod.read_marketing(2018, month)
+        except RuntimeError:
+            pass
+        assert str(seen['path']).endswith(f'_2018_{month}.zip')

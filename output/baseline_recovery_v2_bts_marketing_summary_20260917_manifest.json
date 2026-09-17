@@ -1,0 +1,69 @@
+{
+  "name": "baseline_recovery_v2_bts_marketing_summary_20260917",
+  "code_sha256": "f91b853f86a5598d6e17b0078282ef91b3026bbde2dee356440fde31d01dfd60",
+  "fits_any_model": false,
+  "uses_external_data": false,
+  "target_columns_used": [],
+  "sources": [
+    {
+      "run": "baseline_recovery_v2_bts_marketing_m02_20260917",
+      "manifest_sha256": "c85f96f3967aab0d06538909b2c48d90d67c008512e18f7b2a63de61f76d8e1c",
+      "row_evidence_sha256": "a3f5c6766b37ff5a5b7d7dc29d13507a0a948069af1db75b741374478c96b8a3"
+    },
+    {
+      "run": "baseline_recovery_v2_bts_marketing_m07_20260917",
+      "manifest_sha256": "ac764c52c0b0f935be44173432612943de65d71d1ecdf4f1a9f07c49ff2e5732",
+      "row_evidence_sha256": "3b4c716afd53ab1936419bb62fc4d8818dadd58f2501220ce12f6c59c186937b"
+    },
+    {
+      "run": "baseline_recovery_v2_bts_marketing_m11_20260917",
+      "manifest_sha256": "770fca1d5186a5ec0bd0a228a052082a95ce63487170410c28b77e109fa7ee86",
+      "row_evidence_sha256": "be565058ac0257bf3be9ea6bd9e1ef948aa3e6d9a88ac630a3e93b4b7cec0a64"
+    }
+  ],
+  "totals": {
+    "months_compared": [
+      2,
+      7,
+      11
+    ],
+    "complete_rows": 165541,
+    "matched_rows": 165541,
+    "unmatched_rows": 0,
+    "resolved_to_one_year": 165504,
+    "unresolved_both_years": 37,
+    "missing_key_rows": 68572,
+    "missing_key_no_candidate": 0,
+    "missing_key_unique": 68294,
+    "missing_key_multiple": 278,
+    "share_2018_min_month": 0.39259066868152626,
+    "share_2018_max_month": 0.5837617729343352
+  },
+  "thanksgiving_check": [
+    {
+      "date": "11-22",
+      "thanksgiving_year": 2018,
+      "share_2018": 0.4512847965738758,
+      "november_median_share_2018": 0.583317174886363,
+      "delta_vs_median": -0.1320323783124872,
+      "direction": "depresses 2018",
+      "matches_prediction": true
+    },
+    {
+      "date": "11-28",
+      "thanksgiving_year": 2019,
+      "share_2018": 0.7032563025210085,
+      "november_median_share_2018": 0.583317174886363,
+      "delta_vs_median": 0.11993912763464543,
+      "direction": "depresses 2019",
+      "matches_prediction": true
+    }
+  ],
+  "limitations": [
+    "Only the compared months are covered; the remaining months are untested.",
+    "Shares are computed over rows resolved to exactly one year; rows matching both are excluded, not assigned.",
+    "A per-month share describes this file's composition, not any airline's traffic.",
+    "Missing-key rows are counted separately and never pooled with complete rows.",
+    "Matching a year means the flight existed that year, not that the file contains no other year."
+  ]
+}
