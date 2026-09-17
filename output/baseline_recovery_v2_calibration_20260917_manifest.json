@@ -1,0 +1,84 @@
+{
+  "name": "baseline_recovery_v2_calibration_20260917",
+  "created": "2026-09-17T01:23:53+00:00",
+  "sample": null,
+  "seeds": [
+    42,
+    1,
+    7
+  ],
+  "phases": [
+    "P6_fixed",
+    "P6_clean"
+  ],
+  "arms": [
+    "shared",
+    "split"
+  ],
+  "calibrators": [
+    "none",
+    "platt",
+    "isotonic"
+  ],
+  "boundary": "calibrators and thresholds are fitted on inner-holdout rows of outer-train; outer-valid is scored once and never fitted",
+  "n_labeled_rows": 255001,
+  "source_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "code_sha256": {
+    "src/cv.py": "04e69fa4dfc7acf48b1e2cf81f4d0be6b276effb1ad10a77d0e5b65aa5e5caf2",
+    "src/calibration.py": "9d7a3bfdb18a17de056cf688e849a65c8c92c5f0813c1c022c574dddedca6b62",
+    "src/features.py": "c64cdbe62ecbb45f0ccc0794772a078870c2e713f3df0736c053104535f4d5ec",
+    "src/oof.py": "ac877b73f9148f9760c6a7abab24b6d3098b5f579c9c244e2c61813b3187a66e",
+    "rerun_all_phases.py": "a9278cce2c798f5d65bda846559c8feff343c61e46e1864e2fc0495f0dcea9bd",
+    "notebooks/run_calibration_experiment.py": "eedadb514c00f3bc501afab8d367e93062ea5bf92f777d6da5b5778c0cf02f54"
+  },
+  "cv": {
+    "n_splits": 5,
+    "shuffle": true,
+    "seed": 7,
+    "stopping_rounds": 40,
+    "threshold_grid": [
+      0.1,
+      0.7,
+      0.01
+    ],
+    "metric_aggregation": "pooled_oof",
+    "inner_holdout_frac": 0.2,
+    "n_thresholds": 61,
+    "inner_early_stopping": true,
+    "nested_threshold": true
+  },
+  "lgbm_params": {
+    "objective": "binary",
+    "metric": "binary_logloss",
+    "boosting_type": "gbdt",
+    "learning_rate": 0.05,
+    "num_leaves": 63,
+    "max_depth": 8,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "random_state": 7,
+    "verbose": -1
+  },
+  "grid": [
+    10,
+    25,
+    50,
+    75,
+    100,
+    150,
+    300,
+    600
+  ],
+  "versions": {
+    "lightgbm": "4.7.0",
+    "pandas": "3.0.5",
+    "numpy": "2.4.4",
+    "scikit-learn": "1.9.1"
+  },
+  "files": [
+    "baseline_recovery_v2_calibration_20260917_folds.csv",
+    "baseline_recovery_v2_calibration_20260917_scores.csv",
+    "baseline_recovery_v2_calibration_20260917_calibration_bins.csv",
+    "baseline_recovery_v2_calibration_20260917_summary.csv"
+  ]
+}

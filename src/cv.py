@@ -397,6 +397,8 @@ def run_fold_nested_grid(
     extra_fit_factory: Callable[[pd.DataFrame, pd.Series], tuple[pd.DataFrame, pd.Series]] | None = None,
     selection_metadata: dict[str, Any] | None = None,
     fit_kwargs: dict[str, Any] | None = None,
+    holdout_capture: dict[str, Any] | None = None,
+    calibration_holdout_frac: float = 0.0,
 ) -> FoldFitGrid:
     """early stopping 대신 nested grid 로 `n_estimators` 를 고정 선택한다.
 
@@ -487,8 +489,29 @@ def run_fold_nested_grid(
     if any(str(c).startswith("TE_") for X in (X_train, X_valid) for c in X.columns):
         raise ValueError("TE 사전 인코딩 데이터는 nested grid에 전달할 수 없습니다.")
 
+    if not 0.0 <= float(calibration_holdout_frac) < 1.0:
+        raise ValueError("calibration_holdout_frac 는 [0, 1) 이어야 합니다.")
+    if calibration_holdout_frac and holdout_capture is None:
+        raise ValueError("calibration_holdout_frac 는 holdout_capture 와 함께 써야 합니다.")
+
     n_rows = len(X_train)
     inner_tr, inner_ho = _make_inner_split(n_rows, y_train, cfg, fold, holdout_eligible)
+    # 보정 전용 조각: inner-holdout 을 한 번 더 갈라, 트리 수·임계값 선택에 쓰지
+    # 않은 부분만 보정기 적합용으로 넘긴다. 두 조각 모두 outer-train 내부이므로
+    # outer-valid 는 어느 쪽에도 참여하지 않는다. frac=0 이면 기존 경로와 동일하다.
+    calibration_local = np.empty(0, dtype=int)
+    if calibration_holdout_frac:
+        local = np.arange(len(inner_ho))
+        y_ho_all = np.asarray(y_train)[inner_ho]
+        stratify = y_ho_all if np.unique(y_ho_all).size > 1 else None
+        selection_local, calibration_local = train_test_split(
+            local, test_size=float(calibration_holdout_frac),
+            random_state=cfg.seed + fold + 10_000, stratify=stratify,
+        )
+        selection_local = np.sort(selection_local)
+        calibration_local = np.sort(calibration_local)
+    else:
+        selection_local = np.arange(len(inner_ho))
 
     if extra_fit_factory is not None:
         if extra_fit_rows is not None:
@@ -550,7 +573,8 @@ def run_fold_nested_grid(
         model.fit(X_in_model, y_in, **call_kwargs)
 
         ho_probs = np.asarray(model.predict_proba(X_ho_model), dtype=float)[:, 1]
-        score = float(log_loss(y_ho, ho_probs, labels=[0, 1]))
+        score = float(log_loss(y_ho.iloc[selection_local], ho_probs[selection_local],
+                               labels=[0, 1]))
         grid_scores[k] = score
 
         # 4단계: LogLoss 최소점을 선택한다(작업 0 — 동급 1순위 지표, threshold 없이
@@ -564,11 +588,27 @@ def run_fold_nested_grid(
         # k 와 임계값 모두 outer-train 내부에서 결정한다. 이 holdout 점수는
         # 튜닝용이며 성능 추정치로 보고하지 않는다. outer-valid 는 마지막에만 채점한다.
         selected_probs = np.asarray(best_model.predict_proba(X_ho_model))[:, 1]
-        scores = [f1_score(y_ho, selected_probs >= th, average="macro")
+        y_sel = y_ho.iloc[selection_local]
+        p_sel = selected_probs[selection_local]
+        scores = [f1_score(y_sel, p_sel >= th, average="macro")
                   for th in cfg.thresholds()]
         selection_metadata.update(
             threshold=float(cfg.thresholds()[int(np.argmax(scores))]),
             pseudo_count=0 if extra_fit_rows is None else len(extra_fit_rows[0]),
+        )
+
+    if holdout_capture is not None:
+        # 보정기 적합 재료. 전부 outer-train 내부(inner-holdout)의 값이며
+        # outer-valid 확률·라벨은 이 딕셔너리에 들어가지 않는다.
+        captured = np.asarray(best_model.predict_proba(X_ho_model), dtype=float)[:, 1]
+        y_ho_np = np.asarray(y_ho, dtype=int)
+        fit_local = calibration_local if calibration_holdout_frac else selection_local
+        holdout_capture.update(
+            selection_y=y_ho_np[selection_local],
+            selection_probs=captured[selection_local],
+            calibration_y=y_ho_np[fit_local],
+            calibration_probs=captured[fit_local],
+            calibration_is_disjoint=bool(calibration_holdout_frac),
         )
 
     valid_probs = np.asarray(best_model.predict_proba(X_va_model), dtype=float)[:, 1]
