@@ -2,9 +2,9 @@
 
 **이 README가 프로젝트 전체 설명과 최신 상태의 기준 문서입니다.** 발표는 1~6절 순서로 진행하고, 세부 수치·실행 코드는 마지막 문서 안내에서 확인할 수 있습니다.
 
-작성: Peter-jackson12 TF · 갱신: 2026-09-16 · 문서 버전: v0.9
+작성: Peter-jackson12 TF · 갱신: 2026-09-17 · 문서 버전: v0.10
 
-> **현재 결론:** 불확실한 결측 대치와 시간 피처의 의미를 바로잡고, 검증 라벨이 모델 선택에 유입되지 않도록 파이프라인을 수정했습니다. P4/P6 및 개별 변경 조건을 전체 데이터에서 3시드로 재학습한 결과, 새 전처리의 성능 향상은 확인되지 않았습니다. 데이터 처리의 타당성과 예측 성능은 별도로 평가합니다.
+> **현재 결론:** 불확실한 결측 대치와 시간 피처의 의미를 바로잡고, 검증 라벨이 모델 선택에 유입되지 않도록 파이프라인을 수정했습니다. P4/P6 및 개별 변경 조건을 전체 데이터에서 3시드로 재학습한 결과, 새 전처리의 성능 향상은 확인되지 않았습니다. 확률 보정기를 outer-train 내부에서 적합해 독립 outer-valid에서 비교한 결과, 확률의 계통 오차는 줄었지만 분류 성능(Macro F1)의 향상은 확인되지 않았습니다. 데이터 처리의 타당성, 확률의 정확성, 분류 성능은 각각 따로 평가합니다.
 
 | 완료한 일 | 현재 범위 |
 |---|---|
@@ -14,6 +14,8 @@
 | 성능 재검증 | P4/P6와 개별 변경: 10조건 × 3시드 × 5-fold |
 | 라벨 대표성 진단 | 라벨·미라벨의 구성비·결측률 비교 |
 | 행별 OOF·오분류·확률 진단 | P6_fixed/P6_clean × 3시드, 원본 결측별 성능·반복 오류·보정 상태 분석 |
+| 오분류 기술 분석 | 약한 그룹과 반복 오류의 원본 특성·확률 분포 기술. 재학습 없음 |
+| 확률 보정 실험 | 보정기를 outer-train 내부에서 적합, 독립 outer-valid로 2조건 × 3시드 × 2방식 비교 |
 | 미완료·범위 밖 | 독립 미래 테스트, 최종 모델 서빙, 전체 Phase의 최신 프로토콜 성능 비교 |
 
 **목차:** [1. 목적](#1-목적과문제정의) · [2. 데이터](#2-데이터와분석범위) · [3. 전처리](#3-전처리결정과근거) · [4. 파이프라인](#4-현재파이프라인) · [5. 결과](#5-최신검증결과) · [6. 한계](#6-한계와다음단계) · [7. 재현](#7-코드구조와재현) · [8. 문서안내](#8-문서안내)
@@ -182,13 +184,70 @@ P6_clean은 실제 지연 45,000행 중 **24,895행을 세 시드 모두에서 F
 
 기존 `current_pipeline_evidence.json`의 코드 해시는 이번 변경 전 파일과도 일치하지 않았고, 줄바꿈 정규화만으로 설명되지 않았습니다. 데이터 해시는 일치했습니다. 과거 명세는 작성 시점의 기록으로 보존하며, 이번 실행은 새 manifest와 각 시드 CSV의 `run_metadata`를 근거로 사용합니다. 점수 재현이 과거 코드의 바이트 동일성까지 입증하지는 않습니다.
 
+### 확률 보정 실험 — outer-train 내부 적합, 독립 outer-valid 비교
+
+`baseline_recovery_v2_calibration_20260917`에서 **P6_fixed/P6_clean × seed 42/1/7 × 5-fold × 2방식**을 실행했습니다(총 12회 CV·60개 outer fold). 보정기는 outer-train 안의 inner-holdout에서만 적합하고, 채점 대상인 outer-valid에는 적용만 합니다. 보정 후 확률의 임계값도 같은 inner-holdout에서 다시 고릅니다. **전체 OOF에 적합한 보정기를 같은 OOF로 평가한 것이 아닙니다.**
+
+두 방식은 보정기가 보는 행만 다릅니다.
+
+| 방식 | 보정기 적합에 쓰는 행 | 성격 |
+|---|---|---|
+| 공유형 | inner-holdout 전체 | 그 행들은 트리 수·임계값 선택에도 쓰였으므로 확률이 낙관적일 수 있음 |
+| 분리형 | inner-holdout의 절반(약 20,400행) | 트리 수·임계값 선택에 쓰이지 않은 조각. 더 엄격한 대조 |
+
+**검증:** 보정기를 쓰지 않은 조건이 기존 파이프라인 결과와 완전히 일치했습니다(P6_clean seed 42: Macro F1 0.576926, LogLoss 0.447225, 혼동행렬·fold별 임계값·트리 수 전부 동일). 따라서 아래 차이는 보정 외의 원인으로 설명되지 않습니다.
+
+**실행 환경:** 이 실험은 기존 실행과 다른 리눅스 환경(Python 3.11, numpy 2.4.4, scikit-learn 1.9.1)에서 수행했습니다. 기존 실행은 Windows·numpy 2.5.3·scikit-learn 1.9.0이었습니다. 환경 차이가 결과를 바꾸지 않는지 먼저 확인했습니다 — 같은 `data/train.csv` 해시로 P6_clean seed 42를 전체 재학습했을 때 Macro F1·LogLoss·ROC-AUC·혼동행렬·fold별 임계값·트리 수와 트리 수 그리드 점수 40개가 기존 기록과 소수점 6자리까지 일치했고, 테스트 182개도 그대로 통과했습니다. [대조 실행](output/baseline_recovery_v2_cloud_parity_p6_clean_seed42.csv)
+
+아래는 P6_clean·공유형의 3시드 평균 수준값입니다. 라벨 255,001행, 동일 nested 평가 프로토콜입니다.
+
+| 보정기 | Macro F1 ↑ | LogLoss ↓ | ROC-AUC ↑ | Brier ↓ | ECE (%p) ↓ | 평균확률−실제 |
+|---|---:|---:|---:|---:|---:|---:|
+| 없음 | 0.575685 | 0.447577 | 0.642804 | 0.139904 | 0.4588 | −0.002189 |
+| Platt | 0.575517 | 0.447519 | 0.642799 | 0.139890 | 0.3477 | −0.000059 |
+| Isotonic | 0.575248 | 0.448937 | 0.642120 | 0.139915 | 0.1877 | −0.000077 |
+
+- **확률의 계통 오차는 실제로 줄었습니다.** 보정 전 모델은 지연 확률을 평균 0.22%p 낮게 말했는데, 두 보정기 모두 이 편향을 사실상 0으로 만들었습니다. ECE는 Isotonic이 약 59%, Platt이 약 24% 낮췄습니다. 이 방향은 **2조건 × 2방식 × 3시드 12개 셀 전부에서 같았습니다.**
+- **분류 성능은 좋아지지 않았습니다.** Macro F1 차이는 −0.0004~+0.0002로 시드 SD와 같은 자릿수이고 부호도 섞였습니다. 임계값은 평균 0.227에서 Platt 0.231, Isotonic 0.236으로 옮겨갔습니다.
+- **Isotonic은 ECE를 가장 많이 줄이지만 대가가 있습니다.** LogLoss가 +0.00136 나빠지고 ROC-AUC가 0.6428에서 0.6421로 내려갑니다. 계단 함수가 확률을 같은 값으로 묶어 순위 정보를 일부 잃기 때문입니다. **Platt은 LogLoss·AUC를 사실상 그대로 두고 편향만 제거합니다.**
+- **분리형이 공유형보다 개선 폭이 작습니다**(Isotonic ΔECE −0.27%p → −0.22%p). 공유형의 이득에 낙관 성분이 있다는 뜻이지만, 방향이 뒤집히지는 않았습니다.
+- **양쪽 시각 결측 그룹은 보정으로 나아지지 않았습니다.** 이 그룹의 ΔBrier는 오히려 +0.00004~+0.00027이고 ΔMacro F1·Δ재현율은 시드 SD 안에 있습니다. 이 그룹의 낮은 재현율은 확률 보정 문제가 아닙니다.
+
+![보정 전후 구간별 오차와 ECE](output/baseline_recovery_v2_calibration_20260917_reliability.png)
+
+왼쪽은 구간별 (실제 지연율 − 예측 확률)이고 0이 완벽한 일치입니다. 오른쪽 점 3개는 시드별 ECE, 세로 막대는 시드 평균입니다. 표본 수가 적은 상위 확률 구간에서는 세 조건 모두 확률을 크게 과대 추정하며, 보정도 이를 고치지 못합니다. 곡선은 3시드 표본수 가중 평균이고 오차막대가 아닙니다.
+
+**요약: 보정은 "확률을 얼마나 믿을 수 있는가"를 개선했고, "지연을 얼마나 잘 찾아내는가"는 개선하지 못했습니다.** 확률값 자체를 쓰는 용도라면 Platt을 기본으로 둘 근거가 생겼고, Macro F1이 목표라면 보정은 답이 아닙니다. 이 결과는 라벨 255,001행의 교차검증 범위에 한정되며 12개 셀의 부호 일치는 통계적 유의성 검정이 아닙니다.
+
+근거: [짝지은 차이 요약](output/baseline_recovery_v2_calibration_20260917_report.md), [시드별 짝지은 차이](output/baseline_recovery_v2_calibration_20260917_paired_deltas.csv), [수준값](output/baseline_recovery_v2_calibration_20260917_level_summary.csv), [fold별 임계값·트리 수](output/baseline_recovery_v2_calibration_20260917_folds.csv), [구간별 확률](output/baseline_recovery_v2_calibration_20260917_calibration_bins.csv), [실행 지문](output/baseline_recovery_v2_calibration_20260917_manifest.json)
+
+### 오분류 기술 분석 — 저장된 예측만 사용
+
+`baseline_recovery_v2_error_profile_20260917`은 **모델을 새로 적합하지 않고** 저장된 행별 OOF(P6_clean × seed 42/1/7)를 원본 100만 행과 대조해 약한 그룹의 정체를 기술합니다. 파일 해시·ID·행 위치·정답·결측 플래그를 먼저 대조했습니다.
+
+**1. 양쪽 시각 결측 3,031행은 특별한 집단이 아닙니다.** 월·항공사·출발 공항·거리·일자 어느 축에서도 관측 그룹 대비 비중비가 0.89~1.26에 머뭅니다. 다른 컬럼이 함께 결측인 비율도 10.8~11.4%로 나머지(10.8~10.9%)와 사실상 같아, "레코드 자체가 망가진 행"이라는 설명은 관측되지 않았습니다. 평범한 운항편에서 시각 두 칸만 비어 있는 것입니다.
+
+**2. 대신 이 그룹의 확률이 좁게 눌려 있습니다.** 82.4%가 `[0.10, 0.20)`에 몰려 있어 fold 임계값 0.22~0.23을 넘지 못하고, 최대 확률도 0.4986입니다(양쪽 관측 그룹은 0.7279). 양쪽 관측 그룹은 30.9%가 0.20 이상입니다. 재현율 10%는 모델이 이 행들을 엉뚱하게 판단해서가 아니라 **거의 전원에게 비슷하게 낮은 확률을 주기 때문**입니다. 다만 그룹 안에서도 확률이 오르면 실제 지연율이 12.7% → 22.7% → 24.2%로 올라, 순위 정보가 완전히 사라진 것은 아닙니다.
+
+**3. 모델의 출력은 대체로 그룹의 평균 위험도입니다.** 2,000행 이상 그룹에서 실제 지연율과 평균 예측 확률의 상관은 출발 공항 **0.988**, Carrier_Code 0.973, 항공사 0.961, 월 0.848입니다. 예측 폭은 실제 폭보다 좁습니다(공항: 실제 0.078~0.254 대 예측 0.098~0.221).
+
+**4. 반복 오류는 그 평균 위험도가 개별 결과와 어긋난 자리에 쌓입니다.** 3시드 공통 FN 24,895행(지연의 55.3%)은 지연율이 낮은 맥락에 몰려 있고(9~12월 비중비 2.2~2.5배, SkyWest 4.0배·Delta 3.8배·Alaska 5.4배, 거리 중앙값 612 대 762), 3시드 공통 FP 21,567행은 지연율이 높은 맥락에 몰려 있습니다(5~8월 1.7~1.8배, EWR 4.1배·MDW 4.7배·LGA 2.8배, JetBlue 3.8배·Frontier 3.3배, 거리 중앙값 738 대 590).
+
+**5. 세 시드가 함께 틀리는 행은 임계값에서 멀리 떨어진 행입니다.** 공통 FN의 3시드 평균 확률 중앙값은 0.1551, 시드 간 변동폭은 0.0227로 작습니다. 공통 FP는 0.2841 / 0.0456입니다. 반대로 시드마다 갈리는 행(1~2개 시드만 오류)은 확률이 0.217~0.241로 임계값 근처에 있고 변동폭도 0.058~0.063으로 큽니다. 즉 **오류는 무작위 잡음이 아니라, 맥락이 말해 주는 방향으로 안정적으로 발생**합니다.
+
+![오분류 기술 분석](output/baseline_recovery_v2_error_profile_20260917.png)
+
+**해석과 한계.** 이상을 종합하면 현재 입력이 식별하는 것은 주로 **맥락 단위 위험도**(어느 항공사, 어느 공항, 어느 계절, 어느 거리대)이고, 같은 맥락 안에서 어떤 편이 실제로 지연되는지를 가르는 정보는 거의 없습니다. ROC-AUC 0.64와 전처리 개선이 Macro F1을 움직이지 못한 결과가 이 그림과 일치합니다. 다만 이것은 **관측된 그룹에 대한 기술**이며 인과가 아닙니다. 그룹들은 크기·지연율·구성이 서로 다르고, 상관계수는 유의성 검정이 아닙니다. 또 "정보가 부족하다"는 결론은 **현재 입력 집합과 현재 모델 설정**에 한정되며, 다른 피처나 다른 모델에서도 같다는 증명이 아닙니다.
+
+근거: [분석 요약](output/baseline_recovery_v2_error_profile_20260917_report.md), [그룹 구성 비교](output/baseline_recovery_v2_error_profile_20260917_group_profile.csv), [동반 결측](output/baseline_recovery_v2_error_profile_20260917_missing_cooccurrence.csv), [확률 구간](output/baseline_recovery_v2_error_profile_20260917_probability_bands.csv), [그룹 평균 위험도](output/baseline_recovery_v2_error_profile_20260917_base_rate_tracking.csv), [점수 재현 검증](output/baseline_recovery_v2_error_profile_20260917_score_reproduction.csv), [실행 지문](output/baseline_recovery_v2_error_profile_20260917_manifest.json)
+
 ## 6. 한계와 다음 단계
 
 <a id="6-한계와다음단계"></a>
 
 1. **날씨 결합은 현재 모델에서 제외했습니다.** 정확한 날짜·시간대 연결을 확정하지 못한 상태에서 연도를 가정해 일별 날씨를 붙이지 않습니다. 날씨가 쓸모없다는 결론과는 다릅니다. [기상 결합 재검토](output/weather_recovery_review.md)
 2. **미라벨·미래 환경 성능은 미확인입니다.** 라벨의 수집/선정 규칙과 예측 시점의 입력 가용성을 먼저 확인해야 합니다.
-3. **행별 오분류와 확률 보정 상태를 진단했습니다.** 양쪽 시각 결측 그룹의 낮은 재현율과 반복 오류가 확인됐지만 원인은 아직 확정하지 못했습니다. 보정 모델의 효과를 검증하려면 outer-train 내부에서 적합하고 독립 outer-valid에서 비교해야 합니다. 전체 OOF에 적합한 보정기를 같은 OOF로 평가하지 않습니다.
+3. **확률 보정을 검증했고, 오분류 구조를 기술했습니다.** 보정은 확률의 계통 편향과 ECE를 줄였지만 Macro F1은 개선하지 못했고 양쪽 시각 결측 그룹도 나아지지 않았습니다. 이어진 기술 분석에서 현재 입력이 식별하는 것은 주로 맥락 단위 위험도이고 같은 맥락 안의 개별 편을 가르는 정보는 거의 없다는 점이 관측됐습니다. **다음 단계는 임계값·보정 조정이 아니라 새로운 정보원입니다.** 다만 지금까지 확인한 것은 관측된 그룹의 기술이며, 어떤 피처가 실제로 도움이 되는지는 별도 실험으로 검증해야 합니다.
 4. **서빙은 아직 없습니다.** 현재 규모에서는 기존 모듈을 유지합니다. 배포가 실제 요구될 때 저장된 전처리 통계·미관측 범주 처리·모델 로드 계약을 추가합니다.
 
 발표에서는 **데이터 문제 → 처리 근거 → 정보 경계 → 실제 재검증 → 남은 한계** 순서로 설명합니다. 기대 운영 효과나 오래된 피처 중요도를 검증된 성과처럼 제시하지 않습니다.
@@ -203,8 +262,11 @@ P6_clean은 실제 지연 45,000행 중 **24,895행을 세 시드 모두에서 F
 | `src/cv.py` | fold 분할, nested grid, 임계값, OOF 평가 |
 | `src/run_store.py` | 스키마·실험 지문 검사와 원자적 결과 저장 |
 | `src/oof.py` | 행별 OOF 계약·원본 결측 이력·그룹별 성능·확률 보정 진단 |
+| `src/calibration.py` | 확률 보정기(none/Platt/Isotonic)와 보정 후 임계값 선택 |
 | `rerun_all_phases.py` | Phase 정의와 실행 진입점 |
 | `notebooks/run_oof_diagnostics.py` | P6 두 조건의 OOF 저장·검증·3시드 분석 실행 |
+| `notebooks/run_calibration_experiment.py` | nested 보정 실험 실행. 보고서·그림은 `report_`/`plot_` 스크립트 |
+| `notebooks/analyze_oof_error_profile.py` | 저장된 OOF의 오분류 기술 분석. 모델을 적합하지 않음 |
 | `notebooks/` | 재현 가능한 진단·실험 집계·실행 노트북 |
 | `tests/` | 정보 경계·전처리·저장 회귀 검사 |
 | `output/` | 실행 증거 및 작성 시점별 보고서 |
@@ -265,6 +327,35 @@ OOF 파일을 먼저 원자적으로 저장한 뒤 집계표에 파일 경로·�
 .venv/Scripts/python.exe -u notebooks/run_oof_diagnostics.py --name baseline_recovery_v2_oof_20260916_v2 --analyze-only
 ```
 
+### 확률 보정 실험
+
+보정기는 학습 데이터 안쪽에서 떼어 둔 inner-holdout에서만 적합합니다. `--arms split`은 그 inner-holdout을 다시 반으로 갈라, 트리 수·임계값 선택에 쓰이지 않은 절반만 보정기에 넘깁니다. 채점 대상인 outer-valid는 두 경로 어디에도 들어가지 않으며, 보정 후 임계값도 inner-holdout에서 고릅니다. 보정 인자를 주지 않으면 기존 학습 경로와 완전히 동일하게 동작합니다.
+
+```powershell
+.venv/Scripts/python.exe -u notebooks/run_calibration_experiment.py --sample 2000 --seeds 42 --name baseline_recovery_v2_calibration_smoke_20260917
+.venv/Scripts/python.exe -u notebooks/run_calibration_experiment.py --name baseline_recovery_v2_calibration_20260917
+.venv/Scripts/python.exe -u notebooks/report_calibration_experiment.py --name baseline_recovery_v2_calibration_20260917
+.venv/Scripts/python.exe -u notebooks/plot_calibration_experiment.py --name baseline_recovery_v2_calibration_20260917
+```
+
+보정 없음 조건이 기존 파이프라인과 같은 값을 내는지는 다음으로 대조합니다. 두 결과의 Macro F1·LogLoss·혼동행렬·fold별 임계값·트리 수가 모두 일치해야 합니다.
+
+```powershell
+.venv/Scripts/python.exe -u rerun_all_phases.py --seed 42 --phases P6_clean --output-prefix baseline_recovery_v2_calibration_equivalence_baseline
+.venv/Scripts/python.exe -u notebooks/run_calibration_experiment.py --seeds 42 --phases P6_clean --arms shared --name baseline_recovery_v2_calibration_equivalence_20260917
+```
+
+이번 보정 작업의 코드 검증은 **193개 테스트 통과**이며, 기존 182개에 보정 경계 검사 11개를 더한 것입니다. 추가 검사는 채점용 outer-valid를 바꿔도 보정 재료·임계값·트리 수·그리드 점수가 움직이지 않음, 보정 조각과 선택 조각의 분리, 보정기 출력이 [0, 1]을 벗어나지 않음, 단일 클래스 표본에서 항등 함수로 물러남, 잘못된 입력·비율의 거부를 포함합니다.
+
+### 오분류 기술 분석
+
+저장된 행별 OOF와 원본만 있으면 되고 재학습이 없습니다. 실행에는 로컬에 보관된 `output/<run>_seed<seed>_oof/*.csv.gz`가 필요하며, 파일 해시·ID·행 위치·정답·결측 플래그를 먼저 대조한 뒤 분석합니다.
+
+```powershell
+.venv/Scripts/python.exe -u notebooks/analyze_oof_error_profile.py --source baseline_recovery_v2_oof_20260916_v2 --name baseline_recovery_v2_error_profile_20260917
+.venv/Scripts/python.exe -u notebooks/plot_oof_error_profile.py --name baseline_recovery_v2_error_profile_20260917
+```
+
 `--analyze-only`는 재학습 없이 저장된 예측을 검증하고 분석합니다. 원본 데이터가 필요하며, 실행별 로그는 `<name>_seed<seed>.log`에 남습니다. 학습 코드·설정이 바뀌면 새로운 `--name`을 사용합니다.
 
 초기 `baseline_recovery_v2_oof_20260916` 및 `..._smoke_20260916` 실행(OOF 스키마 1)은 전처리 후 Airline 결측을 정수 코드가 아닌 문자열로 검사한 저장 오류가 있어 해당 결측 분석에서 제외합니다. 확률·원본 결측 이력은 이 오류의 영향을 받지 않았지만, 최신 근거는 수정된 `_v2` 실행(OOF 스키마 2)으로 통일합니다. 분석 시 대치 후 Airline 결측을 원본 코드–항공사 대응 수로 독립 재계산해 행별로 대조합니다.
@@ -298,6 +389,8 @@ OOF 파일을 먼저 원자적으로 저장한 뒤 집계표에 파일 경로·�
 | 라벨행은 어떤 분포인가 | [진단 보고서](output/label_coverage_review.md), [실행 노트북](notebooks/label_coverage_review.ipynb) |
 | 전처리 검증 당시 입력·설정·사용 범위는 무엇인가 | [작성 시점의 입력·실행 명세](output/current_pipeline_evidence.json), [데이터 사용 계약](output/pipeline_data_contract.md) |
 | 최신 OOF·결측·오분류·확률 진단의 근거는 무엇인가 | [실행 manifest](output/baseline_recovery_v2_oof_20260916_v2_manifest.json), [분석 요약](output/baseline_recovery_v2_oof_20260916_v2_summary.csv), [재현 코드](notebooks/run_oof_diagnostics.py) |
+| 확률 보정은 어떤 경계에서 어떻게 비교했는가 | [짝지은 차이 요약](output/baseline_recovery_v2_calibration_20260917_report.md), [실행 manifest](output/baseline_recovery_v2_calibration_20260917_manifest.json), [재현 코드](notebooks/run_calibration_experiment.py) |
+| 모델이 어떤 행을 왜 놓치는가 | [기술 분석 요약](output/baseline_recovery_v2_error_profile_20260917_report.md), [실행 manifest](output/baseline_recovery_v2_error_profile_20260917_manifest.json), [재현 코드](notebooks/analyze_oof_error_profile.py) |
 | 처음 전처리 문제를 어떻게 발견했는가 | [설명 노트북](notebooks/preprocessing_walkthrough.ipynb) — 수정 전 진단임에 유의 |
 
 ### 과거 계획과 진단 — 현행 성능 근거로 사용하지 않음

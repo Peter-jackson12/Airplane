@@ -1,0 +1,81 @@
+{
+  "name": "baseline_recovery_v2_error_profile_20260917",
+  "source_run": "baseline_recovery_v2_oof_20260916_v2",
+  "phase": "P6_clean",
+  "seeds": [
+    42,
+    1,
+    7
+  ],
+  "fits_any_model": false,
+  "note": "Descriptive only. Group differences are not causal; groups differ in size, delay rate and composition.",
+  "source_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "oof_files": [
+    {
+      "seed": 42,
+      "phase_key": "P6_fixed",
+      "oof_path": "baseline_recovery_v2_oof_20260916_v2_seed42_oof/P6_fixed-e6c663b078fc3aea18d3a4ea22a3ec6f57322d0582e91068cbecd8825dce51e8.csv.gz",
+      "oof_sha256": "e6c663b078fc3aea18d3a4ea22a3ec6f57322d0582e91068cbecd8825dce51e8"
+    },
+    {
+      "seed": 42,
+      "phase_key": "P6_clean",
+      "oof_path": "baseline_recovery_v2_oof_20260916_v2_seed42_oof/P6_clean-744179c6c77e366e9ac802999e0819fafc7e1cb961cc21ca4364f0edd9383f5c.csv.gz",
+      "oof_sha256": "744179c6c77e366e9ac802999e0819fafc7e1cb961cc21ca4364f0edd9383f5c"
+    },
+    {
+      "seed": 1,
+      "phase_key": "P6_fixed",
+      "oof_path": "baseline_recovery_v2_oof_20260916_v2_seed1_oof/P6_fixed-b3c4bdea677f1a6eb9ad92106b3a44a8801fd9bed224566527bcf76fb2a51a43.csv.gz",
+      "oof_sha256": "b3c4bdea677f1a6eb9ad92106b3a44a8801fd9bed224566527bcf76fb2a51a43"
+    },
+    {
+      "seed": 1,
+      "phase_key": "P6_clean",
+      "oof_path": "baseline_recovery_v2_oof_20260916_v2_seed1_oof/P6_clean-0428dd06d8e431d899f22e8353d09968c96880d541a607647dea43bd5f3c0a72.csv.gz",
+      "oof_sha256": "0428dd06d8e431d899f22e8353d09968c96880d541a607647dea43bd5f3c0a72"
+    },
+    {
+      "seed": 7,
+      "phase_key": "P6_fixed",
+      "oof_path": "baseline_recovery_v2_oof_20260916_v2_seed7_oof/P6_fixed-3815249128561b6aa1bd7d0a188f2164b5d696766f792443d54a947e107dc6af.csv.gz",
+      "oof_sha256": "3815249128561b6aa1bd7d0a188f2164b5d696766f792443d54a947e107dc6af"
+    },
+    {
+      "seed": 7,
+      "phase_key": "P6_clean",
+      "oof_path": "baseline_recovery_v2_oof_20260916_v2_seed7_oof/P6_clean-e3c0d0e2093a4a4caeffc1627c2b0d143abb21d19cfec68993c8d4aed9a48e8d.csv.gz",
+      "oof_sha256": "e3c0d0e2093a4a4caeffc1627c2b0d143abb21d19cfec68993c8d4aed9a48e8d"
+    }
+  ],
+  "code_sha256": {
+    "src/oof.py": "ac877b73f9148f9760c6a7abab24b6d3098b5f579c9c244e2c61813b3187a66e",
+    "src/features.py": "c64cdbe62ecbb45f0ccc0794772a078870c2e713f3df0736c053104535f4d5ec",
+    "notebooks/analyze_oof_error_profile.py": "05db436e0542ceb9669d2fbbd8916c78d59bda2b57d0a56ab93892f04697f894"
+  },
+  "counts": {
+    "labeled_rows": 255001,
+    "both_missing": 3031,
+    "both_observed": 202507,
+    "always_fn": 24895,
+    "never_fn": 10363,
+    "always_fp": 21567,
+    "never_fp": 156478,
+    "always_fn_share_of_delayed": 0.5532222222222222,
+    "max_probability_both_missing": 0.4985907793467701,
+    "max_probability_both_observed": 0.7278530651936665,
+    "fold_thresholds": {
+      "0": 0.22,
+      "1": 0.23,
+      "2": 0.23,
+      "3": 0.23,
+      "4": 0.23
+    },
+    "base_rate_correlation": {
+      "Month": 0.8477855356722371,
+      "Airline": 0.9612232482683722,
+      "Origin_Airport": 0.988070629008375,
+      "Carrier_Code(IATA)": 0.972668718609376
+    }
+  }
+}
