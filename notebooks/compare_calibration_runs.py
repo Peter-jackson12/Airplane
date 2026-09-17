@@ -6,8 +6,10 @@ nothing is overwritten; the script reads two result sets and reports the largest
 absolute difference for every metric.
 
 It compares on the natural key of the experiment — condition, seed, arm,
-calibrator, group — and fails loudly when a key is present in one run and not the
-other, because a silently smaller intersection would look like agreement.
+calibrator, group — and fails loudly when a key, or a measure column, is present in
+one run and not the other, because a silently smaller comparison would look like
+agreement. A measure absent from both runs is reported separately and does not
+fail, since it is simply not part of that table.
 
 Exit status is 0 when every difference is within --tolerance, 1 otherwise, so the
 result can be read without parsing the output.
@@ -67,7 +69,12 @@ def compare(left: pd.DataFrame, right: pd.DataFrame, keys, measures, label, near
     only_right = b.index.difference(a.index)
     common = a.index.intersection(b.index)
     columns = [c for c in measures if c in a.columns and c in b.columns]
-    missing = [c for c in measures if c not in columns]
+    # A measure absent from both runs is simply not part of this table. A measure
+    # present on one side only is schema drift between the runs, and skipping it
+    # would shrink the comparison silently — the same failure the key check guards
+    # against — so the two cases are kept apart.
+    absent = [c for c in measures if c not in a.columns and c not in b.columns]
+    one_sided = [c for c in measures if c not in columns and c not in absent]
     rows = []
     for column in columns:
         x = pd.to_numeric(a.loc[common, column], errors="coerce").to_numpy(dtype=float)
@@ -85,7 +92,8 @@ def compare(left: pd.DataFrame, right: pd.DataFrame, keys, measures, label, near
                      "max_abs_diff": largest if gap.size else np.nan,
                      "identical": bool(gap.size and largest == 0.0),
                      "verdict": verdict_for(largest, near), "note": ""})
-    return (pd.DataFrame(rows), len(only_left), len(only_right), len(common), missing)
+    return (pd.DataFrame(rows), len(only_left), len(only_right), len(common),
+            one_sided, absent)
 
 
 def main() -> int:
@@ -103,7 +111,8 @@ def main() -> int:
         print("[!] --near 는 음수일 수 없습니다")
         return 1
 
-    reports, mismatched_keys, missing_columns = [], [], []
+    reports, mismatched_keys = [], []
+    one_sided_columns, absent_columns = [], []
     for suffix, keys, measures, label in (
             ("scores", KEYS, MEASURES, "scores"),
             ("folds", FOLD_KEYS, FOLD_MEASURES, "folds")):
@@ -112,15 +121,17 @@ def main() -> int:
         except FileNotFoundError as error:
             print(f"[!] {error}")
             return 1
-        report, n_left, n_right, n_common, missing = compare(
+        report, n_left, n_right, n_common, one_sided, absent = compare(
             left, right, keys, measures, label, args.near)
         reports.append(report)
         print(f"[{label}] 공통 키 {n_common}개 "
               f"| {args.left} 에만 {n_left}개 | {args.right} 에만 {n_right}개")
         if n_left or n_right:
             mismatched_keys.append(label)
-        if missing:
-            missing_columns.append(f"{label}: {', '.join(missing)}")
+        if one_sided:
+            one_sided_columns.append(f"{label}: {', '.join(one_sided)}")
+        if absent:
+            absent_columns.append(f"{label}: {', '.join(absent)}")
         print(report.to_string(index=False))
         print()
 
@@ -131,7 +142,8 @@ def main() -> int:
         print(f">> saved: {path.name}")
 
     worst = combined.max_abs_diff.max(skipna=True)
-    failed = bool(mismatched_keys) or bool(combined.note.ne("").any()) \
+    failed = bool(mismatched_keys) or bool(one_sided_columns) \
+        or bool(combined.note.ne("").any()) \
         or (not np.isnan(worst) and worst > args.tolerance)
     counts = combined.verdict.value_counts()
     print(f"최대 절대 차이 {worst:.3e} | 허용치 {args.tolerance:.3e} "
@@ -146,8 +158,11 @@ def main() -> int:
               f"수치가 같다고 볼지는 읽는 사람이 판단합니다.")
     if mismatched_keys:
         print(f"[!] 두 실행의 키 집합이 다릅니다: {', '.join(mismatched_keys)}")
-    if missing_columns:
-        print(f"[!] 한쪽에 없어 비교하지 못한 열이 있습니다: {'; '.join(missing_columns)}")
+    if one_sided_columns:
+        print(f"[!] 한쪽 실행에만 있는 열이 있어 비교하지 못했습니다: "
+              f"{'; '.join(one_sided_columns)}")
+    if absent_columns:
+        print(f"[i] 양쪽 모두에 없어 비교 대상이 아닌 열: {'; '.join(absent_columns)}")
     return 1 if failed else 0
 
 
