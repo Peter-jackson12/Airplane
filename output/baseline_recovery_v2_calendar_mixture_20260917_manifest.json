@@ -1,0 +1,47 @@
+{
+  "name": "baseline_recovery_v2_calendar_mixture_20260917",
+  "fits_any_model": false,
+  "uses_external_data": false,
+  "source_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "code_sha256": {
+    "src/features.py": "c64cdbe62ecbb45f0ccc0794772a078870c2e713f3df0736c053104535f4d5ec",
+    "notebooks/analyze_calendar_signature.py": "df36d6ae6708d441feb4943bb19feb2c192d394e3ae85b24f5710d6bc67f4464",
+    "notebooks/analyze_calendar_mixture.py": "51780b7a2a07e932199aebdce27a0ded96780df58d3f320c8b95902d1f0121d1"
+  },
+  "dip_threshold_z": -2.0,
+  "alignments_with_dip_pair": 2,
+  "alignments_without_dip_pair": 4,
+  "present": [
+    {
+      "thanksgiving": "11/22",
+      "z_thursday": -4.93,
+      "z_friday": -3.12,
+      "implied_share": 0.5615,
+      "years": "2007, 2018"
+    },
+    {
+      "thanksgiving": "11/28",
+      "z_thursday": -3.85,
+      "z_friday": -2.62,
+      "implied_share": 0.4385,
+      "years": "2013, 2019"
+    }
+  ],
+  "absent_thursday_z": {
+    "11/24": 1.87,
+    "11/25": 1.31,
+    "11/26": 1.01,
+    "11/27": 1.42
+  },
+  "implied_single_calendar_depth_z": 8.78,
+  "third_calendar_share_upper_bound": {
+    "z<=1.0": 0.1139,
+    "z<=2.0": 0.2278
+  },
+  "assumptions": [
+    "Every calendar present would produce the same Thanksgiving dip depth per unit of share.",
+    "The anomaly scale removes a single weekday cycle, so a mixture leaves the depths approximate.",
+    "Labor Day is excluded: its weekend spans three days and different calendars overlap on the same dates."
+  ],
+  "note": "Row counts describe how the file was sampled, not real traffic. A share is an estimate under the stated assumptions, not a measurement, and an upper bound is not proof of absence."
+}

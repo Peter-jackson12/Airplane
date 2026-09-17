@@ -1,0 +1,8 @@
+jan1_weekday,thanksgiving,z_thursday,z_friday,z_wednesday_before,years,dip_pair,after_a_confirmed_thanksgiving
+월,11/22,-4.93,-3.12,1.56,"2007, 2018",True,False
+일,11/23,-3.12,1.87,-4.93,"2006, 2017, 2023",False,True
+토,11/24,1.87,1.31,-3.12,"2005, 2011, 2022",False,False
+금,11/25,1.31,1.01,1.87,"2010, 2021",False,False
+목,11/26,1.01,1.42,1.31,"2009, 2015, 2026",False,False
+수,11/27,1.42,-3.85,1.01,"2014, 2025",False,False
+화,11/28,-3.85,-2.62,1.42,"2013, 2019",True,False
