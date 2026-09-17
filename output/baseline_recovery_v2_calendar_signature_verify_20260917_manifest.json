@@ -1,0 +1,28 @@
+{
+  "name": "baseline_recovery_v2_calendar_signature_verify_20260917",
+  "fits_any_model": false,
+  "uses_external_data": false,
+  "source_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "code_sha256": {
+    "src/features.py": "c64cdbe62ecbb45f0ccc0794772a078870c2e713f3df0736c053104535f4d5ec",
+    "notebooks/analyze_calendar_signature.py": "df36d6ae6708d441feb4943bb19feb2c192d394e3ae85b24f5710d6bc67f4464"
+  },
+  "distinct_days": 365,
+  "feb29_rows": 0,
+  "rows": 1000000,
+  "month_variance_explained": 0.817,
+  "weekly_cycle_variance_explained_after_month": 0.365,
+  "weekly_cycle_permutation_p": 0.0,
+  "weekly_cycle_null_999": 0.0583,
+  "permutation_draws": 20000,
+  "thanksgiving_pairs_found": 2,
+  "thanksgiving_dates": [
+    "11/22",
+    "11/28"
+  ],
+  "implied_year_sets": [
+    "2007, 2018",
+    "2013, 2019"
+  ],
+  "note": "Counts describe how the file was sampled, not real traffic. Holiday signatures identify the calendar, never a single year."
+}
