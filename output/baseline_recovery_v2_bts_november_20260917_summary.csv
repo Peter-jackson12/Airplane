@@ -1,0 +1,17 @@
+year,time_mode,policy,eligible_rows,matched_rows,match_rate,multiple_bts_rows,fingerprint_rows,fingerprint_matched
+2007,scheduled,strict,68283,0,0.0,0,20,0
+2007,scheduled,without_dot,68283,0,0.0,0,20,0
+2007,actual,strict,68283,0,0.0,0,20,0
+2007,actual,without_dot,68283,0,0.0,0,20,0
+2013,scheduled,strict,68283,0,0.0,0,20,0
+2013,scheduled,without_dot,68283,0,0.0,0,20,0
+2013,actual,strict,68283,0,0.0,0,20,0
+2013,actual,without_dot,68283,0,0.0,0,20,0
+2018,scheduled,strict,68283,36605,0.5360777938872047,0,20,15
+2018,scheduled,without_dot,68283,36605,0.5360777938872047,0,20,15
+2018,actual,strict,68283,58,0.000849406147943119,0,20,0
+2018,actual,without_dot,68283,58,0.000849406147943119,0,20,0
+2019,scheduled,strict,68283,26184,0.3834629409955626,0,20,5
+2019,scheduled,without_dot,68283,26184,0.3834629409955626,0,20,5
+2019,actual,strict,68283,30,0.0004393480075567857,0,20,0
+2019,actual,without_dot,68283,30,0.0004393480075567857,0,20,0

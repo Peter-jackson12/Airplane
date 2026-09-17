@@ -1,0 +1,78 @@
+{
+  "name": "baseline_recovery_v2_bts_november_20260917",
+  "source_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "code_sha256": "f3ad67b52ef035c307fb5ea9187a7797bfec23c0215d4a54f9009f455cc8d689",
+  "fits_any_model": false,
+  "uses_external_data": true,
+  "target_columns_used": [],
+  "november_rows": 96710,
+  "complete_rows": 68283,
+  "incomplete_rows_excluded": 28427,
+  "keys": [
+    "Month",
+    "Day_of_Month",
+    "Tail_Number",
+    "Origin_Airport",
+    "Destination_Airport",
+    "Distance",
+    "Carrier_ID(DOT)",
+    "Estimated_Departure_Time",
+    "Estimated_Arrival_Time"
+  ],
+  "files": [
+    {
+      "file": "data\\bts\\On_Time_Reporting_Carrier_On_Time_Performance_1987_present_2007_11.zip",
+      "sha256": "c532b8fa37c7353b57019aadfc1c42a385e2e1958e2bb68d8790fa385e3165c7",
+      "bytes": 28804371,
+      "rows": 605149,
+      "crc_ok": true,
+      "url": "https://transtats.bts.gov/PREZIP/On_Time_Reporting_Carrier_On_Time_Performance_1987_present_2007_11.zip"
+    },
+    {
+      "file": "data\\bts\\On_Time_Reporting_Carrier_On_Time_Performance_1987_present_2013_11.zip",
+      "sha256": "ad2542165aef5f70cbcc3605c087be96a9718099b1943698983a39abb1b01eeb",
+      "bytes": 24325811,
+      "rows": 503296,
+      "crc_ok": true,
+      "url": "https://transtats.bts.gov/PREZIP/On_Time_Reporting_Carrier_On_Time_Performance_1987_present_2013_11.zip"
+    },
+    {
+      "file": "data\\bts\\On_Time_Reporting_Carrier_On_Time_Performance_1987_present_2018_11.zip",
+      "sha256": "409d05a88e646c21b635a7332bf4cc9eb570f62b376b11bfd81049218d1367f8",
+      "bytes": 29969446,
+      "rows": 586231,
+      "crc_ok": true,
+      "url": "https://transtats.bts.gov/PREZIP/On_Time_Reporting_Carrier_On_Time_Performance_1987_present_2018_11.zip"
+    },
+    {
+      "file": "data\\bts\\On_Time_Reporting_Carrier_On_Time_Performance_1987_present_2019_11.zip",
+      "sha256": "6ec48d19a3d4813c96b4a96c0cdf9385ade530cc20b193b63ec607bb032de916",
+      "bytes": 31005144,
+      "rows": 602453,
+      "crc_ok": true,
+      "url": "https://transtats.bts.gov/PREZIP/On_Time_Reporting_Carrier_On_Time_Performance_1987_present_2019_11.zip"
+    }
+  ],
+  "cross_year": {
+    "scheduled": {
+      "no_candidate": 5506,
+      "one_candidate_year": 62765,
+      "multiple_candidate_years": 12
+    },
+    "actual": {
+      "no_candidate": 68195,
+      "one_candidate_year": 88,
+      "multiple_candidate_years": 0
+    }
+  },
+  "row_evidence": "data\\bts\\baseline_recovery_v2_bts_november_20260917\\matches.csv.gz",
+  "row_sha256": "44e47858d219b45077338364e5ef7296817f4dff3b7fb482924eb00fd11a29af",
+  "limitations": [
+    "Only November and four candidate years are covered.",
+    "Missing-key rows are excluded, not counted as failed matches.",
+    "A failed exact match can reflect source coverage or field transformations.",
+    "without_dot is diagnostic only and does not assign years.",
+    "Tail numbers retain their N prefix; no undocumented transformation.",
+    "Other months and event weather remain unverified."
+  ]
+}
