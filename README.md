@@ -197,7 +197,21 @@ P6_clean은 실제 지연 45,000행 중 **24,895행을 세 시드 모두에서 F
 
 **검증:** 보정기를 쓰지 않은 조건이 기존 파이프라인 결과와 완전히 일치했습니다(P6_clean seed 42: Macro F1 0.576926, LogLoss 0.447225, 혼동행렬·fold별 임계값·트리 수 전부 동일). 따라서 아래 차이는 보정 외의 원인으로 설명되지 않습니다.
 
-**실행 환경:** 이 실험은 기존 실행과 다른 리눅스 환경(Python 3.11, numpy 2.4.4, scikit-learn 1.9.1)에서 수행했습니다. 기존 실행은 Windows·numpy 2.5.3·scikit-learn 1.9.0이었습니다. 환경 차이가 결과를 바꾸지 않는지 먼저 확인했습니다 — 같은 `data/train.csv` 해시로 P6_clean seed 42를 전체 재학습했을 때 Macro F1·LogLoss·ROC-AUC·혼동행렬·fold별 임계값·트리 수와 트리 수 그리드 점수 40개가 기존 기록과 소수점 6자리까지 일치했고, 테스트 182개도 그대로 통과했습니다. [대조 실행](output/baseline_recovery_v2_cloud_parity_p6_clean_seed42.csv)
+**실행 환경과 검증 범위:** 위 표의 수치는 작업 환경(리눅스, Python 3.11 · numpy 2.4.4 · scikit-learn 1.9.1)에서 산출했고, 이후 로컬 환경(Windows, Python 3.14.6 · numpy 2.5.3 · scikit-learn 1.9.0)에서 다시 확인했습니다. 어디까지 확인했는지는 다음과 같습니다.
+
+| 확인 항목 | 범위 | 결과 |
+|---|---|---|
+| 전체 테스트 | 두 환경 각각 | 193개 통과 |
+| 보정 없음 = 기존 파이프라인 | P6_clean · seed 42 · 5-fold | Macro F1·LogLoss·ROC-AUC·혼동행렬·fold별 임계값·트리 수 일치 |
+| 세 보정기 결과의 환경 간 재현 | P6_clean · seed 42 · 공유형 (5그룹 × 9지표) | 부동소수점 단위까지 동일 |
+| 코드 해시 대 실행 manifest | 커밋한 6개 파일 | 일치 |
+| **전체 실험의 환경 간 재현** | **12개 셀 전부 — 2조건 × 3시드 × 2방식 × 3보정기, 60 fold** | **선택·분류 지표 전부 동일. 평균 기반 지표 4개가 1~3 ULP 차이** |
+
+전체 실험을 로컬에서 다시 돌려 기존 결과와 키 단위로 대조했습니다(scores 180키, folds 180키, 한쪽에만 있는 키 0개). `macro_f1`·`roc_auc`·`precision`·`recall`·혼동행렬과 fold별 임계값·트리 수는 **180개 키 전부에서 비트 단위로 동일**했습니다. 순위 통계인 ROC-AUC가 그대로이고 혼동행렬도 그대로이므로, 255,001행 중 임계값을 넘나든 행은 없습니다.
+
+다만 **완전히 같지는 않습니다.** 평균 기반 지표 4개(LogLoss·Brier·ECE·평균확률−실제)에서 720개 셀 중 19개가 **5.55e-17 ~ 1.67e-16(1~3 ULP)** 만큼 다릅니다. 이는 배정밀도 machine epsilon 수준이고 위 표에 싣는 소수점 6자리보다 10자리 아래입니다. 19개 중 14개가 Platt(반복 수치 해법인 `LogisticRegression`)이고 보정 없음 조건에서는 차이가 0인데, 이는 라이브러리 버전 차이로 누산 순서가 달라진 결과라는 해석과 맞습니다. 다만 이 원인 귀속은 **해석이며 별도로 검증하지 않았습니다.** 비교 스크립트는 기본 허용치가 0이므로 이 경우에도 종료 코드 1을 돌려줍니다.
+
+근거: [비교 결과](output/baseline_recovery_v2_calibration_local_20260917_comparison.csv), [로컬 전체 실행](output/baseline_recovery_v2_calibration_local_20260917_scores.csv), [로컬 재검증 실행](output/baseline_recovery_v2_local_verify_calibration_seed42_scores.csv), [로컬 기준선 실행](output/baseline_recovery_v2_local_verify_p6_clean_seed42.csv), [작업 환경 대조 실행](output/baseline_recovery_v2_cloud_parity_p6_clean_seed42.csv)
 
 아래는 P6_clean·공유형의 3시드 평균 수준값입니다. 라벨 255,001행, 동일 nested 평가 프로토콜입니다.
 
@@ -267,6 +281,7 @@ P6_clean은 실제 지연 45,000행 중 **24,895행을 세 시드 모두에서 F
 | `notebooks/run_oof_diagnostics.py` | P6 두 조건의 OOF 저장·검증·3시드 분석 실행 |
 | `notebooks/run_calibration_experiment.py` | nested 보정 실험 실행. 보고서·그림은 `report_`/`plot_` 스크립트 |
 | `notebooks/analyze_oof_error_profile.py` | 저장된 OOF의 오분류 기술 분석. 모델을 적합하지 않음 |
+| `notebooks/compare_calibration_runs.py` | 두 보정 실험 결과를 키 단위로 대조. 동일·거의 같음·불일치를 구분해 표기하고 허용치를 넘으면 종료 코드 1 |
 | `notebooks/` | 재현 가능한 진단·실험 집계·실행 노트북 |
 | `tests/` | 정보 경계·전처리·저장 회귀 검사 |
 | `output/` | 실행 증거 및 작성 시점별 보고서 |
@@ -344,6 +359,15 @@ OOF 파일을 먼저 원자적으로 저장한 뒤 집계표에 파일 경로·�
 .venv/Scripts/python.exe -u rerun_all_phases.py --seed 42 --phases P6_clean --output-prefix baseline_recovery_v2_calibration_equivalence_baseline
 .venv/Scripts/python.exe -u notebooks/run_calibration_experiment.py --seeds 42 --phases P6_clean --arms shared --name baseline_recovery_v2_calibration_equivalence_20260917
 ```
+
+다른 환경에서 전체 실험을 다시 돌려 기존 결과와 대조하려면 새 이름으로 실행한 뒤 비교 명령을 씁니다. 비교는 조건·시드·방식·보정기·그룹을 키로 맞추며, 한쪽에만 있는 키가 있거나 허용치를 넘는 차이가 있으면 종료 코드 1을 돌려줍니다.
+
+```powershell
+.venv/Scripts/python.exe -u notebooks/run_calibration_experiment.py --name baseline_recovery_v2_calibration_local_20260917
+.venv/Scripts/python.exe -u notebooks/compare_calibration_runs.py --left baseline_recovery_v2_calibration_20260917 --right baseline_recovery_v2_calibration_local_20260917 --out baseline_recovery_v2_calibration_local_20260917
+```
+
+비교 출력은 지표마다 `동일`(비트 단위 일치) · `거의 같음`(0이 아니지만 `--near` 이하) · `불일치`로 표기합니다. 이 표기는 읽는 사람을 위한 구분이고 종료 코드를 바꾸지 않습니다. 종료 코드는 `--tolerance`(기본 0)만 따르므로, 마지막 자리 차이만 있어도 1이 나옵니다. 평균 기반 지표는 라이브러리 버전이 다르면 누산 순서 때문에 배정밀도 epsilon 수준의 차이가 날 수 있어 `--near` 기본값을 1e-12로 두었습니다.
 
 이번 보정 작업의 코드 검증은 **193개 테스트 통과**이며, 기존 182개에 보정 경계 검사 11개를 더한 것입니다. 추가 검사는 채점용 outer-valid를 바꿔도 보정 재료·임계값·트리 수·그리드 점수가 움직이지 않음, 보정 조각과 선택 조각의 분리, 보정기 출력이 [0, 1]을 벗어나지 않음, 단일 클래스 표본에서 항등 함수로 물러남, 잘못된 입력·비율의 거부를 포함합니다.
 
