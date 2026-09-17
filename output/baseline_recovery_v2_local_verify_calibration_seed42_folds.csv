@@ -1,0 +1,16 @@
+phase_key,seed,arm,calibrator,fold,n_estimators,threshold,n_inner_train,n_inner_holdout,n_calibration_rows,n_selection_rows,uncalibrated_threshold,elapsed_sec
+P6_clean,42,shared,none,0,50,0.22,163200,40800,40800,40800,0.22,16.1
+P6_clean,42,shared,platt,0,50,0.22,163200,40800,40800,40800,0.22,16.3
+P6_clean,42,shared,isotonic,0,50,0.24,163200,40800,40800,40800,0.22,16.4
+P6_clean,42,shared,none,1,50,0.23,163200,40801,40801,40801,0.23,15.4
+P6_clean,42,shared,platt,1,50,0.23,163200,40801,40801,40801,0.23,15.6
+P6_clean,42,shared,isotonic,1,50,0.24,163200,40801,40801,40801,0.23,15.7
+P6_clean,42,shared,none,2,50,0.23,163200,40801,40801,40801,0.23,15.8
+P6_clean,42,shared,platt,2,50,0.23,163200,40801,40801,40801,0.23,16.0
+P6_clean,42,shared,isotonic,2,50,0.24,163200,40801,40801,40801,0.23,16.2
+P6_clean,42,shared,none,3,50,0.23,163200,40801,40801,40801,0.23,18.1
+P6_clean,42,shared,platt,3,50,0.23,163200,40801,40801,40801,0.23,18.3
+P6_clean,42,shared,isotonic,3,50,0.24,163200,40801,40801,40801,0.23,18.5
+P6_clean,42,shared,none,4,50,0.23,163200,40801,40801,40801,0.23,16.6
+P6_clean,42,shared,platt,4,50,0.24,163200,40801,40801,40801,0.23,16.7
+P6_clean,42,shared,isotonic,4,50,0.24,163200,40801,40801,40801,0.23,16.8
