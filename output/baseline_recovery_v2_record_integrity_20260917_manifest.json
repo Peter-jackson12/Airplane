@@ -1,0 +1,88 @@
+{
+  "name": "baseline_recovery_v2_record_integrity_20260917",
+  "fits_any_model": false,
+  "uses_external_data": false,
+  "source_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "code_sha256": {
+    "src/features.py": "c64cdbe62ecbb45f0ccc0794772a078870c2e713f3df0736c053104535f4d5ec",
+    "notebooks/analyze_record_integrity.py": "68b15c34a2836eeef3dfa026ac40db98f87ade8da44b66054121a0e0f6d92e27"
+  },
+  "constraints": [
+    {
+      "check": "노선당 거리",
+      "groups": 6709,
+      "single_valued": 6632,
+      "share_single_valued": 0.988523,
+      "breaches": 77,
+      "example_breach": {
+        "key": "ABE / ORD",
+        "values": [
+          654.0,
+          655.0
+        ]
+      }
+    },
+    {
+      "check": "기체번호당 운항사",
+      "groups": 6424,
+      "single_valued": 6250,
+      "share_single_valued": 0.972914,
+      "breaches": 174,
+      "example_breach": {
+        "key": "N12163",
+        "values": [
+          20366.0,
+          20445.0
+        ]
+      }
+    },
+    {
+      "check": "출발공항당 주",
+      "groups": 374,
+      "single_valued": 374,
+      "share_single_valued": 1.0,
+      "breaches": 0,
+      "example_breach": null
+    },
+    {
+      "check": "도착공항당 주",
+      "groups": 374,
+      "single_valued": 374,
+      "share_single_valued": 1.0,
+      "breaches": 0,
+      "example_breach": null
+    },
+    {
+      "check": "공항코드당 공항ID",
+      "groups": 374,
+      "single_valued": 374,
+      "share_single_valued": 1.0,
+      "breaches": 0,
+      "example_breach": null
+    },
+    {
+      "check": "공항ID당 공항코드",
+      "groups": 374,
+      "single_valued": 374,
+      "share_single_valued": 1.0,
+      "breaches": 0,
+      "example_breach": null
+    },
+    {
+      "check": "운항사ID당 항공사명",
+      "groups": 28,
+      "single_valued": 28,
+      "share_single_valued": 1.0,
+      "breaches": 0,
+      "example_breach": null
+    }
+  ],
+  "dual_distance_routes": 77,
+  "dual_distance_rows": 16439,
+  "columns_separating_the_calendars": [],
+  "columns_tested_for_separation": [
+    "Carrier_ID(DOT)",
+    "distance_side"
+  ],
+  "note": "A constraint holding is evidence the fields belong together, not proof. A column failing to separate the calendars bounds internal attribution; it does not prove no column could."
+}
