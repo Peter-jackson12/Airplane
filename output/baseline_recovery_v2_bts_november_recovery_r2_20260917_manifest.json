@@ -1,0 +1,26 @@
+{
+  "name": "baseline_recovery_v2_bts_november_recovery_r2_20260917",
+  "source_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "code_sha256": "496a93524fc6b9619a4aa8d3920a3f7ac21bd1ff51b2bc62b38711c58c0d44e1",
+  "fits_any_model": false,
+  "uses_external_data": true,
+  "target_columns_used": [],
+  "years_compared": [
+    2018,
+    2019
+  ],
+  "complete_rows": 68283,
+  "multi_candidate_rows": 12,
+  "incomplete_rows": 28427,
+  "incomplete_no_candidate": 2285,
+  "incomplete_unique_single_bts_row": 26020,
+  "incomplete_many_candidates": 122,
+  "row_evidence": "data/bts/baseline_recovery_v2_bts_november_recovery_r2_20260917/missing_key_rows.csv.gz",
+  "limitations": [
+    "A unique relaxed-key candidate is not a confirmed match and assigns no year.",
+    "Missing-key results are never pooled with complete-fingerprint results.",
+    "Only November and the 2018/2019 reporting-carrier files are covered.",
+    "Rows that stay ambiguous are left unresolved by design.",
+    "Carriers absent from the reporting-carrier file cannot match at any key level."
+  ]
+}

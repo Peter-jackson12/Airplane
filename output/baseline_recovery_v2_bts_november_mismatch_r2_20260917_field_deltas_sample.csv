@@ -1,0 +1,2 @@
+ID,Month,Day_of_Month,Tail_Number,Origin_Airport,Destination_Airport,Distance_src,Carrier_ID(DOT)_src,Estimated_Departure_Time_src,Estimated_Arrival_Time_src,Distance_bts,Carrier_ID(DOT)_bts,Estimated_Departure_Time_bts,Estimated_Arrival_Time_bts,Reporting_Airline,Distance_delta,Carrier_ID(DOT)_delta,Estimated_Departure_Time_delta,Estimated_Arrival_Time_delta,year,abs_dep_delta
+TRAIN_368514,11,19,N16178,EWR,CAK,382,20445,1120,1300,382,20366,1520,1705,EV,0,-79,400,405,2018.0,400

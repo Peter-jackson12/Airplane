@@ -1,0 +1,8 @@
+field,rows,differs_between_candidate_years,matches_source_in_2018,matches_source_in_2019,can_break_tie
+Origin_Airport_ID,12,0,12,12,False
+Origin_State,12,0,0,0,False
+Destination_Airport_ID,12,0,12,12,False
+Destination_State,12,0,0,0,False
+Cancelled,12,0,0,0,False
+Diverted,12,0,0,0,False
+Flight_Number_Reporting_Airline (not in source),12,4,0,0,False

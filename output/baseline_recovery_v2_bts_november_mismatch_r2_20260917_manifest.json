@@ -1,0 +1,24 @@
+{
+  "name": "baseline_recovery_v2_bts_november_mismatch_r2_20260917",
+  "source_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "code_sha256": "91cb989806b4dce585211fed7854fd30ddd8757675d937a97ae241f394a4bd47",
+  "fits_any_model": false,
+  "uses_external_data": true,
+  "target_columns_used": [],
+  "november_rows": 96710,
+  "complete_rows": 68283,
+  "incomplete_rows": 28427,
+  "unmatched_rows": 5506,
+  "multi_candidate_rows": 12,
+  "prior_row_evidence_reproduced": true,
+  "prior_row_evidence": "data/bts/baseline_recovery_v2_bts_november_20260917/matches.csv.gz",
+  "row_evidence": "data/bts/baseline_recovery_v2_bts_november_mismatch_r2_20260917/unmatched_rows.csv.gz",
+  "row_sha256": "259696fbe0501f9a34133b857f86cdca6d92d2755f3ecf5ca23c040d56c1707a",
+  "limitations": [
+    "Relaxed keys are diagnostic candidates, not confirmed matches.",
+    "A relaxed-key candidate does not assign a year to any row.",
+    "Only November and the four candidate years are covered.",
+    "Missing-key rows are reported separately and never merged with complete rows.",
+    "A failed exact match can reflect reporting scope, column transformation, or another year."
+  ]
+}

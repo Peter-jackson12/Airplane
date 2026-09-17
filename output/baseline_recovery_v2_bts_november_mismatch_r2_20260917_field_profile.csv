@@ -1,0 +1,5 @@
+field,rows_with_candidate,equal,differ,median_abs_delta,max_abs_delta
+Distance,1,1,0,0.0,0.0
+Carrier_ID(DOT),1,0,1,79.0,79.0
+Estimated_Departure_Time,1,0,1,400.0,400.0
+Estimated_Arrival_Time,1,0,1,405.0,405.0
