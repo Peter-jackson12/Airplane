@@ -13,11 +13,10 @@ import argparse
 import hashlib
 import io
 import json
+import subprocess
 import time
-import urllib.error
 from pathlib import Path
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
 
 import pandas as pd
 
@@ -25,6 +24,35 @@ from notebooks.select_weather_sample import AIRPORTS
 from src.weather import local_hhmm_to_utc
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+class FetchError(RuntimeError):
+    pass
+
+
+def http_get(url: str, *, timeout: int = 20) -> bytes:
+    """Download `url` via curl (subprocess), not urllib.
+
+    Confirmed by direct comparison on 2026-09-18: identical requests that
+    urllib.request.urlopen hung on indefinitely (well past its own `timeout=`
+    argument, and past a process-wide socket.setdefaulttimeout backstop) were
+    completed by curl in a few seconds. curl's own --max-time is enforced by
+    curl itself (a separate process Python can also kill via subprocess
+    timeout), so a stalled transfer cannot hang this script.
+    """
+    try:
+        result = subprocess.run(
+            ['curl', '-sS', '--max-time', str(timeout), '--fail',
+             '-H', 'User-Agent: Airplane-course-weather-sample/1.0', url],
+            capture_output=True, timeout=timeout + 5, check=False)
+    except subprocess.TimeoutExpired as exc:
+        raise FetchError(f'curl exceeded {timeout + 5}s wall-clock timeout for {url}') from exc
+    if result.returncode != 0:
+        raise FetchError(f'curl exit {result.returncode} for {url}: '
+                         f'{result.stderr.decode(errors="replace")[:500]}')
+    return result.stdout
+
+
 CACHE_DIR = ROOT / 'data/weather_probe/sample'
 PREDICTION_OFFSET_MINUTES = 60  # fixed contract: 60 minutes before scheduled departure
 LOOKBACK_HOURS = 6  # window padding before the earliest prediction_at in a group
@@ -57,25 +85,22 @@ def fetch_window(station: str, start: pd.Timestamp, end: pd.Timestamp) -> tuple[
               'missing': 'M', 'trace': 'T', 'report_type': [3, 4]}
     url = 'https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?' + urlencode(params, doseq=True)
     if not cache.exists():
-        for attempt in range(5):
+        body = None
+        for attempt in range(3):
             try:
-                req = Request(url, headers={'User-Agent': 'Airplane-course-weather-sample/1.0'})
-                with urlopen(req, timeout=60) as r:
-                    body = r.read(2_000_001)
+                body = http_get(url, timeout=15)
                 break
-            except urllib.error.HTTPError as exc:
-                if exc.code != 429 or attempt == 4:
+            except FetchError:
+                if attempt == 2:
                     raise
-                time.sleep(5 * (attempt + 1))
-        else:
-            raise RuntimeError('unreachable')
+                time.sleep(10 * (attempt + 1))
         if len(body) > 2_000_000:
             raise ValueError('Response exceeds bounded size')
         parsed = pd.read_csv(io.BytesIO(body), comment='#', na_values=['M'], keep_default_na=False)
         if not {'station', 'valid'}.issubset(parsed):
             raise ValueError('Unexpected archive schema; response not cached')
         cache.write_bytes(body)
-        time.sleep(2)  # be polite to the free public archive between requests
+        time.sleep(3)  # be polite to the free public archive between requests
     obs = pd.read_csv(cache, comment='#', na_values=['M'], keep_default_na=False)
     return cache, url, len(obs)
 

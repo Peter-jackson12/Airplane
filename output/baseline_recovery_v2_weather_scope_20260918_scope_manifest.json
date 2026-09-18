@@ -1,0 +1,37 @@
+{
+  "name": "baseline_recovery_v2_weather_scope_20260918",
+  "attribution_run": "baseline_recovery_v2_row_date_attribution_20260918",
+  "attribution_row_sha256": "9c679535e59666bfb2de8a4460fd0c0a8b433f29900b704d0de4ff21e712421a",
+  "mapping_name": "baseline_recovery_v2_weather_scope_20260918",
+  "code_sha256": "70d7bf2bc1f888fe52074dc2fc4ac3934d23a350c04b71253a4236b485ea7206",
+  "fits_any_model": false,
+  "uses_external_data": false,
+  "target_columns_used": [],
+  "adopted_rows": 706759,
+  "row_tier_counts": {
+    "confirmed_period": 691386,
+    "unconfirmed": 8514,
+    "tz_conflict_needs_resolution": 6273,
+    "confirmed_current_only": 586
+  },
+  "prediction_at_unresolved_dst": 1,
+  "safe_rows_confirmed_period_both_ends": 691385,
+  "season_definition": "meteorological: Dec/Jan/Feb=winter, Mar/Apr/May=spring, Jun/Jul/Aug=summer, Sep/Oct/Nov=fall",
+  "region_definition": "US Census Bureau 4-region (Northeast/Midwest/South/West) by origin airport state; Alaska and Hawaii kept separate; non-US territories grouped as \"Non-contiguous territory\"",
+  "full_collection_estimate_confirmed_period_only": {
+    "basis": "measured 21-row/40-request probe (2026-09-18)",
+    "station_days_for_confirmed_period_rows_only": 142574,
+    "distinct_stations": 355,
+    "requests_at_one_per_station_day": 142574,
+    "extrapolated_bytes": 348062341.85,
+    "extrapolated_bytes_is_measured": false,
+    "extrapolated_seconds_sequential_with_politeness_sleep": 457662.54,
+    "extrapolated_seconds_is_measured": false
+  },
+  "coverage_table": "output\\baseline_recovery_v2_weather_scope_20260918_scope_coverage.csv",
+  "limitations": [
+    "This sizing covers only confirmed_period-tier rows (both origin and destination). unconfirmed/tz_conflict/confirmed_current_only rows are excluded from the station-day estimate and reported separately in row_tier_counts, not silently dropped from the adopted-row denominator.",
+    "The byte/time estimate is a linear extrapolation from the 21-row probe's measured average when --measured-* is supplied; it is NOT a new measurement at this scale.",
+    "DST-unresolved rows (ambiguous/nonexistent local departure) have no prediction_at and are excluded from station-day sizing, matching the row-level join policy already in place."
+  ]
+}

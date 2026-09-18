@@ -1,0 +1,408 @@
+year,season,region,origin_timezone,row_tier,rows
+2018,fall,Alaska,America/Adak,confirmed_period,2
+2018,fall,Alaska,America/Anchorage,confirmed_period,397
+2018,fall,Alaska,America/Juneau,confirmed_period,32
+2018,fall,Alaska,America/Juneau,tz_conflict_needs_resolution,17
+2018,fall,Alaska,America/Nome,confirmed_period,28
+2018,fall,Alaska,America/Sitka,tz_conflict_needs_resolution,77
+2018,fall,Alaska,America/Yakutat,confirmed_period,12
+2018,fall,Hawaii,Pacific/Honolulu,confirmed_period,1690
+2018,fall,Midwest,America/Chicago,confirmed_current_only,38
+2018,fall,Midwest,America/Chicago,confirmed_period,15491
+2018,fall,Midwest,America/Chicago,tz_conflict_needs_resolution,106
+2018,fall,Midwest,America/Chicago,unconfirmed,99
+2018,fall,Midwest,America/Denver,confirmed_period,112
+2018,fall,Midwest,America/Denver,unconfirmed,4
+2018,fall,Midwest,America/Detroit,confirmed_period,3275
+2018,fall,Midwest,America/Detroit,tz_conflict_needs_resolution,31
+2018,fall,Midwest,America/Detroit,unconfirmed,53
+2018,fall,Midwest,America/Indiana/Indianapolis,confirmed_period,1045
+2018,fall,Midwest,America/Indiana/Indianapolis,unconfirmed,2
+2018,fall,Midwest,America/New_York,confirmed_period,1949
+2018,fall,Non-contiguous territory,America/Puerto_Rico,confirmed_period,321
+2018,fall,Non-contiguous territory,America/Puerto_Rico,tz_conflict_needs_resolution,15
+2018,fall,Non-contiguous territory,America/St_Thomas,tz_conflict_needs_resolution,49
+2018,fall,Non-contiguous territory,Pacific/Guam,confirmed_period,5
+2018,fall,Non-contiguous territory,Pacific/Guam,unconfirmed,4
+2018,fall,Non-contiguous territory,Pacific/Pago_Pago,confirmed_period,2
+2018,fall,Non-contiguous territory,Pacific/Saipan,unconfirmed,4
+2018,fall,Northeast,America/New_York,confirmed_period,16458
+2018,fall,Northeast,America/New_York,tz_conflict_needs_resolution,67
+2018,fall,Northeast,America/New_York,unconfirmed,238
+2018,fall,South,America/Chicago,confirmed_period,16955
+2018,fall,South,America/Chicago,tz_conflict_needs_resolution,58
+2018,fall,South,America/Chicago,unconfirmed,14
+2018,fall,South,America/Denver,confirmed_period,261
+2018,fall,South,America/Kentucky/Louisville,tz_conflict_needs_resolution,430
+2018,fall,South,America/New_York,confirmed_period,28375
+2018,fall,South,America/New_York,tz_conflict_needs_resolution,193
+2018,fall,South,America/New_York,unconfirmed,553
+2018,fall,West,America/Boise,confirmed_period,449
+2018,fall,West,America/Boise,unconfirmed,4
+2018,fall,West,America/Denver,confirmed_current_only,15
+2018,fall,West,America/Denver,confirmed_period,7383
+2018,fall,West,America/Denver,tz_conflict_needs_resolution,16
+2018,fall,West,America/Denver,unconfirmed,104
+2018,fall,West,America/Los_Angeles,confirmed_period,21314
+2018,fall,West,America/Los_Angeles,tz_conflict_needs_resolution,24
+2018,fall,West,America/Los_Angeles,unconfirmed,48
+2018,fall,West,America/Phoenix,confirmed_current_only,32
+2018,fall,West,America/Phoenix,confirmed_period,2908
+2018,fall,West,America/Phoenix,tz_conflict_needs_resolution,6
+2018,fall,West,America/Phoenix,unconfirmed,67
+2018,spring,Alaska,America/Adak,confirmed_period,1
+2018,spring,Alaska,America/Anchorage,confirmed_period,387
+2018,spring,Alaska,America/Juneau,confirmed_period,39
+2018,spring,Alaska,America/Juneau,tz_conflict_needs_resolution,25
+2018,spring,Alaska,America/Nome,confirmed_period,37
+2018,spring,Alaska,America/Sitka,tz_conflict_needs_resolution,71
+2018,spring,Alaska,America/Yakutat,confirmed_period,17
+2018,spring,Hawaii,Pacific/Honolulu,confirmed_period,1609
+2018,spring,Midwest,America/Chicago,confirmed_current_only,28
+2018,spring,Midwest,America/Chicago,confirmed_period,8997
+2018,spring,Midwest,America/Chicago,tz_conflict_needs_resolution,58
+2018,spring,Midwest,America/Chicago,unconfirmed,76
+2018,spring,Midwest,America/Denver,confirmed_period,56
+2018,spring,Midwest,America/Denver,unconfirmed,3
+2018,spring,Midwest,America/Detroit,confirmed_period,1423
+2018,spring,Midwest,America/Detroit,tz_conflict_needs_resolution,9
+2018,spring,Midwest,America/Detroit,unconfirmed,21
+2018,spring,Midwest,America/Indiana/Indianapolis,confirmed_period,603
+2018,spring,Midwest,America/Indiana/Indianapolis,unconfirmed,1
+2018,spring,Midwest,America/New_York,confirmed_period,1105
+2018,spring,Non-contiguous territory,America/Puerto_Rico,confirmed_period,335
+2018,spring,Non-contiguous territory,America/Puerto_Rico,tz_conflict_needs_resolution,19
+2018,spring,Non-contiguous territory,America/St_Thomas,tz_conflict_needs_resolution,26
+2018,spring,Non-contiguous territory,Pacific/Guam,confirmed_period,6
+2018,spring,Non-contiguous territory,Pacific/Guam,unconfirmed,21
+2018,spring,Non-contiguous territory,Pacific/Pago_Pago,confirmed_period,1
+2018,spring,Non-contiguous territory,Pacific/Saipan,confirmed_period,5
+2018,spring,Non-contiguous territory,Pacific/Saipan,unconfirmed,30
+2018,spring,Northeast,America/New_York,confirmed_period,8699
+2018,spring,Northeast,America/New_York,tz_conflict_needs_resolution,18
+2018,spring,Northeast,America/New_York,unconfirmed,276
+2018,spring,South,America/Chicago,confirmed_period,9371
+2018,spring,South,America/Chicago,tz_conflict_needs_resolution,14
+2018,spring,South,America/Chicago,unconfirmed,12
+2018,spring,South,America/Denver,confirmed_period,157
+2018,spring,South,America/Kentucky/Louisville,tz_conflict_needs_resolution,202
+2018,spring,South,America/Kentucky/Louisville,unconfirmed,2
+2018,spring,South,America/New_York,confirmed_period,14414
+2018,spring,South,America/New_York,tz_conflict_needs_resolution,79
+2018,spring,South,America/New_York,unconfirmed,398
+2018,spring,West,America/Boise,confirmed_period,392
+2018,spring,West,America/Boise,unconfirmed,6
+2018,spring,West,America/Denver,confirmed_current_only,10
+2018,spring,West,America/Denver,confirmed_period,5470
+2018,spring,West,America/Denver,tz_conflict_needs_resolution,15
+2018,spring,West,America/Denver,unconfirmed,95
+2018,spring,West,America/Los_Angeles,confirmed_period,16975
+2018,spring,West,America/Los_Angeles,tz_conflict_needs_resolution,27
+2018,spring,West,America/Los_Angeles,unconfirmed,40
+2018,spring,West,America/Phoenix,confirmed_period,1540
+2018,spring,West,America/Phoenix,tz_conflict_needs_resolution,7
+2018,spring,West,America/Phoenix,unconfirmed,90
+2018,summer,Alaska,America/Anchorage,confirmed_period,199
+2018,summer,Alaska,America/Juneau,confirmed_period,20
+2018,summer,Alaska,America/Juneau,tz_conflict_needs_resolution,11
+2018,summer,Alaska,America/Nome,confirmed_period,21
+2018,summer,Alaska,America/Sitka,tz_conflict_needs_resolution,32
+2018,summer,Alaska,America/Yakutat,confirmed_period,5
+2018,summer,Hawaii,Pacific/Honolulu,confirmed_period,1194
+2018,summer,Midwest,America/Chicago,confirmed_current_only,17
+2018,summer,Midwest,America/Chicago,confirmed_period,9683
+2018,summer,Midwest,America/Chicago,tz_conflict_needs_resolution,78
+2018,summer,Midwest,America/Chicago,unconfirmed,64
+2018,summer,Midwest,America/Denver,confirmed_period,76
+2018,summer,Midwest,America/Denver,unconfirmed,2
+2018,summer,Midwest,America/Detroit,confirmed_period,939
+2018,summer,Midwest,America/Detroit,unconfirmed,4
+2018,summer,Midwest,America/Indiana/Indianapolis,confirmed_period,572
+2018,summer,Midwest,America/Indiana/Indianapolis,unconfirmed,4
+2018,summer,Midwest,America/New_York,confirmed_period,1304
+2018,summer,Non-contiguous territory,America/Puerto_Rico,confirmed_period,407
+2018,summer,Non-contiguous territory,America/Puerto_Rico,tz_conflict_needs_resolution,12
+2018,summer,Non-contiguous territory,America/St_Thomas,tz_conflict_needs_resolution,32
+2018,summer,Non-contiguous territory,Pacific/Guam,confirmed_period,4
+2018,summer,Non-contiguous territory,Pacific/Guam,unconfirmed,8
+2018,summer,Non-contiguous territory,Pacific/Pago_Pago,confirmed_period,1
+2018,summer,Non-contiguous territory,Pacific/Saipan,unconfirmed,2
+2018,summer,Northeast,America/New_York,confirmed_period,9529
+2018,summer,Northeast,America/New_York,tz_conflict_needs_resolution,25
+2018,summer,Northeast,America/New_York,unconfirmed,228
+2018,summer,South,America/Chicago,confirmed_period,11473
+2018,summer,South,America/Chicago,tz_conflict_needs_resolution,39
+2018,summer,South,America/Chicago,unconfirmed,12
+2018,summer,South,America/Denver,confirmed_period,223
+2018,summer,South,America/Kentucky/Louisville,tz_conflict_needs_resolution,247
+2018,summer,South,America/New_York,confirmed_period,14884
+2018,summer,South,America/New_York,tz_conflict_needs_resolution,107
+2018,summer,South,America/New_York,unconfirmed,291
+2018,summer,West,America/Boise,confirmed_period,255
+2018,summer,West,America/Boise,unconfirmed,4
+2018,summer,West,America/Denver,confirmed_current_only,25
+2018,summer,West,America/Denver,confirmed_period,5900
+2018,summer,West,America/Denver,tz_conflict_needs_resolution,23
+2018,summer,West,America/Denver,unconfirmed,95
+2018,summer,West,America/Los_Angeles,confirmed_period,14892
+2018,summer,West,America/Los_Angeles,tz_conflict_needs_resolution,24
+2018,summer,West,America/Los_Angeles,unconfirmed,31
+2018,summer,West,America/Phoenix,confirmed_current_only,14
+2018,summer,West,America/Phoenix,confirmed_period,1854
+2018,summer,West,America/Phoenix,tz_conflict_needs_resolution,10
+2018,summer,West,America/Phoenix,unconfirmed,99
+2018,winter,Alaska,America/Anchorage,confirmed_period,259
+2018,winter,Alaska,America/Juneau,confirmed_period,30
+2018,winter,Alaska,America/Juneau,tz_conflict_needs_resolution,11
+2018,winter,Alaska,America/Nome,confirmed_period,24
+2018,winter,Alaska,America/Sitka,tz_conflict_needs_resolution,49
+2018,winter,Alaska,America/Yakutat,confirmed_period,11
+2018,winter,Hawaii,Pacific/Honolulu,confirmed_period,1640
+2018,winter,Midwest,America/Chicago,confirmed_current_only,25
+2018,winter,Midwest,America/Chicago,confirmed_period,10505
+2018,winter,Midwest,America/Chicago,tz_conflict_needs_resolution,67
+2018,winter,Midwest,America/Chicago,unconfirmed,85
+2018,winter,Midwest,America/Denver,confirmed_period,57
+2018,winter,Midwest,America/Denver,unconfirmed,2
+2018,winter,Midwest,America/Detroit,confirmed_period,2250
+2018,winter,Midwest,America/Detroit,tz_conflict_needs_resolution,22
+2018,winter,Midwest,America/Detroit,unconfirmed,41
+2018,winter,Midwest,America/Indiana/Indianapolis,confirmed_period,687
+2018,winter,Midwest,America/Indiana/Indianapolis,unconfirmed,3
+2018,winter,Midwest,America/New_York,confirmed_period,1375
+2018,winter,Non-contiguous territory,America/Puerto_Rico,confirmed_period,336
+2018,winter,Non-contiguous territory,America/Puerto_Rico,tz_conflict_needs_resolution,17
+2018,winter,Non-contiguous territory,America/St_Thomas,tz_conflict_needs_resolution,39
+2018,winter,Non-contiguous territory,Pacific/Guam,confirmed_period,9
+2018,winter,Non-contiguous territory,Pacific/Guam,unconfirmed,13
+2018,winter,Non-contiguous territory,Pacific/Pago_Pago,confirmed_period,1
+2018,winter,Non-contiguous territory,Pacific/Saipan,confirmed_period,2
+2018,winter,Non-contiguous territory,Pacific/Saipan,unconfirmed,17
+2018,winter,Northeast,America/New_York,confirmed_period,10635
+2018,winter,Northeast,America/New_York,tz_conflict_needs_resolution,40
+2018,winter,Northeast,America/New_York,unconfirmed,296
+2018,winter,South,America/Chicago,confirmed_period,11379
+2018,winter,South,America/Chicago,tz_conflict_needs_resolution,24
+2018,winter,South,America/Chicago,unconfirmed,11
+2018,winter,South,America/Denver,confirmed_period,184
+2018,winter,South,America/Kentucky/Louisville,tz_conflict_needs_resolution,265
+2018,winter,South,America/New_York,confirmed_period,18847
+2018,winter,South,America/New_York,tz_conflict_needs_resolution,113
+2018,winter,South,America/New_York,unconfirmed,526
+2018,winter,West,America/Boise,confirmed_period,376
+2018,winter,West,America/Boise,unconfirmed,4
+2018,winter,West,America/Denver,confirmed_current_only,11
+2018,winter,West,America/Denver,confirmed_period,5912
+2018,winter,West,America/Denver,tz_conflict_needs_resolution,13
+2018,winter,West,America/Denver,unconfirmed,95
+2018,winter,West,America/Los_Angeles,confirmed_period,16168
+2018,winter,West,America/Los_Angeles,tz_conflict_needs_resolution,21
+2018,winter,West,America/Los_Angeles,unconfirmed,24
+2018,winter,West,America/Phoenix,confirmed_current_only,18
+2018,winter,West,America/Phoenix,confirmed_period,1965
+2018,winter,West,America/Phoenix,tz_conflict_needs_resolution,4
+2018,winter,West,America/Phoenix,unconfirmed,92
+2019,fall,Alaska,America/Anchorage,confirmed_period,276
+2019,fall,Alaska,America/Juneau,confirmed_period,21
+2019,fall,Alaska,America/Juneau,tz_conflict_needs_resolution,7
+2019,fall,Alaska,America/Nome,confirmed_period,17
+2019,fall,Alaska,America/Sitka,tz_conflict_needs_resolution,56
+2019,fall,Alaska,America/Yakutat,confirmed_period,9
+2019,fall,Hawaii,Pacific/Honolulu,confirmed_period,1342
+2019,fall,Midwest,America/Chicago,confirmed_current_only,38
+2019,fall,Midwest,America/Chicago,confirmed_period,10987
+2019,fall,Midwest,America/Chicago,tz_conflict_needs_resolution,76
+2019,fall,Midwest,America/Chicago,unconfirmed,85
+2019,fall,Midwest,America/Denver,confirmed_period,92
+2019,fall,Midwest,America/Denver,unconfirmed,4
+2019,fall,Midwest,America/Detroit,confirmed_period,2298
+2019,fall,Midwest,America/Detroit,tz_conflict_needs_resolution,18
+2019,fall,Midwest,America/Detroit,unconfirmed,36
+2019,fall,Midwest,America/Indiana/Indianapolis,confirmed_period,728
+2019,fall,Midwest,America/Indiana/Indianapolis,unconfirmed,4
+2019,fall,Midwest,America/New_York,confirmed_period,1414
+2019,fall,Non-contiguous territory,America/Puerto_Rico,confirmed_period,260
+2019,fall,Non-contiguous territory,America/Puerto_Rico,tz_conflict_needs_resolution,10
+2019,fall,Non-contiguous territory,America/St_Thomas,tz_conflict_needs_resolution,30
+2019,fall,Non-contiguous territory,Pacific/Guam,confirmed_period,4
+2019,fall,Non-contiguous territory,Pacific/Guam,unconfirmed,3
+2019,fall,Non-contiguous territory,Pacific/Pago_Pago,confirmed_period,1
+2019,fall,Non-contiguous territory,Pacific/Saipan,unconfirmed,4
+2019,fall,Northeast,America/New_York,confirmed_period,11287
+2019,fall,Northeast,America/New_York,tz_conflict_needs_resolution,43
+2019,fall,Northeast,America/New_York,unconfirmed,197
+2019,fall,South,America/Chicago,confirmed_current_only,2
+2019,fall,South,America/Chicago,confirmed_period,12793
+2019,fall,South,America/Chicago,tz_conflict_needs_resolution,50
+2019,fall,South,America/Chicago,unconfirmed,18
+2019,fall,South,America/Denver,confirmed_period,216
+2019,fall,South,America/Kentucky/Louisville,tz_conflict_needs_resolution,301
+2019,fall,South,America/New_York,confirmed_period,20057
+2019,fall,South,America/New_York,tz_conflict_needs_resolution,140
+2019,fall,South,America/New_York,unconfirmed,420
+2019,fall,West,America/Boise,confirmed_period,327
+2019,fall,West,America/Boise,unconfirmed,2
+2019,fall,West,America/Denver,confirmed_current_only,14
+2019,fall,West,America/Denver,confirmed_period,5618
+2019,fall,West,America/Denver,tz_conflict_needs_resolution,21
+2019,fall,West,America/Denver,unconfirmed,74
+2019,fall,West,America/Los_Angeles,confirmed_period,15280
+2019,fall,West,America/Los_Angeles,tz_conflict_needs_resolution,19
+2019,fall,West,America/Los_Angeles,unconfirmed,24
+2019,fall,West,America/Phoenix,confirmed_current_only,31
+2019,fall,West,America/Phoenix,confirmed_period,2133
+2019,fall,West,America/Phoenix,tz_conflict_needs_resolution,7
+2019,fall,West,America/Phoenix,unconfirmed,52
+2019,spring,Alaska,America/Anchorage,confirmed_period,298
+2019,spring,Alaska,America/Juneau,confirmed_period,26
+2019,spring,Alaska,America/Juneau,tz_conflict_needs_resolution,16
+2019,spring,Alaska,America/Nome,confirmed_period,22
+2019,spring,Alaska,America/Sitka,tz_conflict_needs_resolution,49
+2019,spring,Alaska,America/Yakutat,confirmed_period,13
+2019,spring,Hawaii,Pacific/Honolulu,confirmed_period,1269
+2019,spring,Midwest,America/Chicago,confirmed_current_only,25
+2019,spring,Midwest,America/Chicago,confirmed_period,10813
+2019,spring,Midwest,America/Chicago,tz_conflict_needs_resolution,76
+2019,spring,Midwest,America/Chicago,unconfirmed,72
+2019,spring,Midwest,America/Denver,confirmed_period,81
+2019,spring,Midwest,America/Denver,unconfirmed,3
+2019,spring,Midwest,America/Detroit,confirmed_period,2425
+2019,spring,Midwest,America/Detroit,tz_conflict_needs_resolution,13
+2019,spring,Midwest,America/Detroit,unconfirmed,51
+2019,spring,Midwest,America/Indiana/Indianapolis,confirmed_period,741
+2019,spring,Midwest,America/Indiana/Indianapolis,unconfirmed,3
+2019,spring,Midwest,America/New_York,confirmed_period,1403
+2019,spring,Midwest,America/New_York,unconfirmed,4
+2019,spring,Non-contiguous territory,America/Puerto_Rico,confirmed_period,320
+2019,spring,Non-contiguous territory,America/Puerto_Rico,tz_conflict_needs_resolution,2
+2019,spring,Non-contiguous territory,America/St_Thomas,tz_conflict_needs_resolution,70
+2019,spring,Non-contiguous territory,Pacific/Guam,confirmed_period,4
+2019,spring,Non-contiguous territory,Pacific/Guam,unconfirmed,1
+2019,spring,Non-contiguous territory,Pacific/Pago_Pago,confirmed_period,2
+2019,spring,Non-contiguous territory,Pacific/Saipan,unconfirmed,6
+2019,spring,Northeast,America/New_York,confirmed_period,11715
+2019,spring,Northeast,America/New_York,tz_conflict_needs_resolution,33
+2019,spring,Northeast,America/New_York,unconfirmed,268
+2019,spring,South,America/Chicago,confirmed_current_only,4
+2019,spring,South,America/Chicago,confirmed_period,12950
+2019,spring,South,America/Chicago,tz_conflict_needs_resolution,37
+2019,spring,South,America/Chicago,unconfirmed,14
+2019,spring,South,America/Denver,confirmed_period,196
+2019,spring,South,America/Kentucky/Louisville,tz_conflict_needs_resolution,303
+2019,spring,South,America/New_York,confirmed_period,21549
+2019,spring,South,America/New_York,tz_conflict_needs_resolution,156
+2019,spring,South,America/New_York,unconfirmed,541
+2019,spring,West,America/Boise,confirmed_period,344
+2019,spring,West,America/Boise,unconfirmed,3
+2019,spring,West,America/Denver,confirmed_current_only,15
+2019,spring,West,America/Denver,confirmed_period,5358
+2019,spring,West,America/Denver,tz_conflict_needs_resolution,11
+2019,spring,West,America/Denver,unconfirmed,82
+2019,spring,West,America/Los_Angeles,confirmed_period,15343
+2019,spring,West,America/Los_Angeles,tz_conflict_needs_resolution,30
+2019,spring,West,America/Los_Angeles,unconfirmed,19
+2019,spring,West,America/Phoenix,confirmed_current_only,41
+2019,spring,West,America/Phoenix,confirmed_period,2256
+2019,spring,West,America/Phoenix,tz_conflict_needs_resolution,3
+2019,spring,West,America/Phoenix,unconfirmed,69
+2019,summer,Alaska,America/Adak,confirmed_period,2
+2019,summer,Alaska,America/Anchorage,confirmed_period,414
+2019,summer,Alaska,America/Juneau,confirmed_period,50
+2019,summer,Alaska,America/Juneau,tz_conflict_needs_resolution,23
+2019,summer,Alaska,America/Nome,confirmed_period,27
+2019,summer,Alaska,America/Sitka,tz_conflict_needs_resolution,68
+2019,summer,Alaska,America/Yakutat,confirmed_period,5
+2019,summer,Hawaii,Pacific/Honolulu,confirmed_period,1496
+2019,summer,Midwest,America/Chicago,confirmed_current_only,45
+2019,summer,Midwest,America/Chicago,confirmed_period,11921
+2019,summer,Midwest,America/Chicago,tz_conflict_needs_resolution,72
+2019,summer,Midwest,America/Chicago,unconfirmed,80
+2019,summer,Midwest,America/Denver,confirmed_period,116
+2019,summer,Midwest,America/Denver,unconfirmed,3
+2019,summer,Midwest,America/Detroit,confirmed_period,2593
+2019,summer,Midwest,America/Detroit,tz_conflict_needs_resolution,23
+2019,summer,Midwest,America/Detroit,unconfirmed,43
+2019,summer,Midwest,America/Indiana/Indianapolis,confirmed_period,689
+2019,summer,Midwest,America/New_York,confirmed_period,1444
+2019,summer,Non-contiguous territory,America/Puerto_Rico,confirmed_period,381
+2019,summer,Non-contiguous territory,America/Puerto_Rico,tz_conflict_needs_resolution,15
+2019,summer,Non-contiguous territory,America/St_Thomas,tz_conflict_needs_resolution,52
+2019,summer,Non-contiguous territory,Pacific/Guam,confirmed_period,6
+2019,summer,Non-contiguous territory,Pacific/Guam,unconfirmed,4
+2019,summer,Non-contiguous territory,Pacific/Saipan,unconfirmed,6
+2019,summer,Northeast,America/New_York,confirmed_period,12068
+2019,summer,Northeast,America/New_York,tz_conflict_needs_resolution,62
+2019,summer,Northeast,America/New_York,unconfirmed,210
+2019,summer,South,America/Chicago,confirmed_current_only,4
+2019,summer,South,America/Chicago,confirmed_period,13237
+2019,summer,South,America/Chicago,tz_conflict_needs_resolution,48
+2019,summer,South,America/Chicago,unconfirmed,20
+2019,summer,South,America/Denver,confirmed_period,237
+2019,summer,South,America/Kentucky/Louisville,tz_conflict_needs_resolution,345
+2019,summer,South,America/New_York,confirmed_period,21927
+2019,summer,South,America/New_York,tz_conflict_needs_resolution,153
+2019,summer,South,America/New_York,unconfirmed,450
+2019,summer,West,America/Boise,confirmed_period,358
+2019,summer,West,America/Boise,unconfirmed,6
+2019,summer,West,America/Denver,confirmed_current_only,17
+2019,summer,West,America/Denver,confirmed_period,6101
+2019,summer,West,America/Denver,tz_conflict_needs_resolution,13
+2019,summer,West,America/Denver,unconfirmed,141
+2019,summer,West,America/Los_Angeles,confirmed_period,16449
+2019,summer,West,America/Los_Angeles,tz_conflict_needs_resolution,37
+2019,summer,West,America/Los_Angeles,unconfirmed,37
+2019,summer,West,America/Phoenix,confirmed_current_only,32
+2019,summer,West,America/Phoenix,confirmed_period,2171
+2019,summer,West,America/Phoenix,tz_conflict_needs_resolution,1
+2019,summer,West,America/Phoenix,unconfirmed,57
+2019,winter,Alaska,America/Adak,confirmed_period,3
+2019,winter,Alaska,America/Anchorage,confirmed_period,252
+2019,winter,Alaska,America/Juneau,confirmed_period,25
+2019,winter,Alaska,America/Juneau,tz_conflict_needs_resolution,15
+2019,winter,Alaska,America/Nome,confirmed_period,15
+2019,winter,Alaska,America/Sitka,tz_conflict_needs_resolution,52
+2019,winter,Alaska,America/Yakutat,confirmed_period,13
+2019,winter,Hawaii,Pacific/Honolulu,confirmed_period,1259
+2019,winter,Midwest,America/Chicago,confirmed_current_only,28
+2019,winter,Midwest,America/Chicago,confirmed_period,9969
+2019,winter,Midwest,America/Chicago,tz_conflict_needs_resolution,84
+2019,winter,Midwest,America/Chicago,unconfirmed,77
+2019,winter,Midwest,America/Denver,confirmed_period,48
+2019,winter,Midwest,America/Denver,unconfirmed,1
+2019,winter,Midwest,America/Detroit,confirmed_period,2182
+2019,winter,Midwest,America/Detroit,tz_conflict_needs_resolution,22
+2019,winter,Midwest,America/Detroit,unconfirmed,32
+2019,winter,Midwest,America/Indiana/Indianapolis,confirmed_period,703
+2019,winter,Midwest,America/Indiana/Indianapolis,unconfirmed,2
+2019,winter,Midwest,America/New_York,confirmed_period,1254
+2019,winter,Non-contiguous territory,America/Puerto_Rico,confirmed_period,383
+2019,winter,Non-contiguous territory,America/Puerto_Rico,tz_conflict_needs_resolution,6
+2019,winter,Non-contiguous territory,America/St_Thomas,tz_conflict_needs_resolution,48
+2019,winter,Non-contiguous territory,Pacific/Guam,confirmed_period,4
+2019,winter,Non-contiguous territory,Pacific/Guam,unconfirmed,5
+2019,winter,Non-contiguous territory,Pacific/Pago_Pago,confirmed_period,2
+2019,winter,Non-contiguous territory,Pacific/Saipan,unconfirmed,4
+2019,winter,Northeast,America/New_York,confirmed_period,10759
+2019,winter,Northeast,America/New_York,tz_conflict_needs_resolution,40
+2019,winter,Northeast,America/New_York,unconfirmed,255
+2019,winter,South,America/Chicago,confirmed_current_only,2
+2019,winter,South,America/Chicago,confirmed_period,11754
+2019,winter,South,America/Chicago,tz_conflict_needs_resolution,45
+2019,winter,South,America/Chicago,unconfirmed,19
+2019,winter,South,America/Denver,confirmed_period,207
+2019,winter,South,America/Kentucky/Louisville,tz_conflict_needs_resolution,297
+2019,winter,South,America/New_York,confirmed_period,19973
+2019,winter,South,America/New_York,tz_conflict_needs_resolution,152
+2019,winter,South,America/New_York,unconfirmed,520
+2019,winter,West,America/Boise,confirmed_period,354
+2019,winter,West,America/Denver,confirmed_current_only,15
+2019,winter,West,America/Denver,confirmed_period,5277
+2019,winter,West,America/Denver,tz_conflict_needs_resolution,11
+2019,winter,West,America/Denver,unconfirmed,78
+2019,winter,West,America/Los_Angeles,confirmed_period,14574
+2019,winter,West,America/Los_Angeles,tz_conflict_needs_resolution,26
+2019,winter,West,America/Los_Angeles,unconfirmed,26
+2019,winter,West,America/Phoenix,confirmed_current_only,40
+2019,winter,West,America/Phoenix,confirmed_period,2206
+2019,winter,West,America/Phoenix,tz_conflict_needs_resolution,2
+2019,winter,West,America/Phoenix,unconfirmed,61

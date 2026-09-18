@@ -1,0 +1,51 @@
+attributed_year,season,region,rows,collectible,matched_both
+2018,fall,Alaska,3,3,3
+2018,fall,Hawaii,2,2,2
+2018,fall,Midwest,12,12,12
+2018,fall,Non-contiguous territory,3,3,2
+2018,fall,Northeast,3,3,3
+2018,fall,South,8,7,7
+2018,fall,West,12,11,11
+2018,spring,Alaska,3,3,3
+2018,spring,Hawaii,2,2,2
+2018,spring,Midwest,12,11,11
+2018,spring,Non-contiguous territory,3,1,1
+2018,spring,Northeast,3,3,3
+2018,spring,South,8,7,7
+2018,spring,West,11,10,10
+2018,summer,Alaska,3,3,3
+2018,summer,Hawaii,2,2,2
+2018,summer,Midwest,12,12,12
+2018,summer,Non-contiguous territory,3,2,2
+2018,summer,Northeast,3,3,3
+2018,summer,South,8,7,7
+2018,summer,West,10,8,8
+2018,winter,Alaska,3,3,3
+2018,winter,Hawaii,2,2,2
+2018,winter,Midwest,12,11,11
+2018,winter,Non-contiguous territory,3,3,2
+2018,winter,Northeast,3,3,3
+2018,winter,South,8,7,7
+2018,winter,West,12,10,10
+2019,fall,Alaska,3,2,2
+2019,fall,Hawaii,2,2,2
+2019,fall,Midwest,12,12,12
+2019,fall,Non-contiguous territory,3,1,1
+2019,fall,Northeast,3,3,3
+2019,fall,South,8,7,7
+2019,fall,West,12,12,12
+2019,spring,Alaska,3,2,2
+2019,spring,Hawaii,2,2,2
+2019,spring,Midwest,12,12,12
+2019,spring,Non-contiguous territory,3,1,1
+2019,spring,Northeast,3,3,3
+2019,spring,South,8,7,7
+2019,spring,West,12,11,11
+2019,summer,Alaska,3,2,2
+2019,summer,Hawaii,2,2,2
+2019,summer,Midwest,12,12,12
+2019,summer,Non-contiguous territory,3,1,1
+2019,summer,Northeast,3,3,3
+2019,summer,South,8,7,7
+2019,summer,West,12,11,11
+2019,winter,Alaska,2,2,2

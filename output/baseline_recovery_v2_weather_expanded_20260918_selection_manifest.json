@@ -1,0 +1,31 @@
+{
+  "name": "baseline_recovery_v2_weather_expanded_20260918",
+  "attribution_run": "baseline_recovery_v2_row_date_attribution_20260918",
+  "attribution_row_sha256": "9c679535e59666bfb2de8a4460fd0c0a8b433f29900b704d0de4ff21e712421a",
+  "mapping_name": "baseline_recovery_v2_weather_scope_20260918",
+  "code_sha256": "2b29eba8313325def206e3918cf7feb69afdf9918dc8563128ffcb7d656d972d",
+  "fits_any_model": false,
+  "uses_external_data": false,
+  "target_columns_used": [],
+  "selection_rule": "stratify by (year, season, region/timezone bucket, origin-airport size tertile); within each non-empty stratum, sort by sha256(ID) and take up to 2 rows per stratum, breadth-first across strata",
+  "max_rows_cap": 300,
+  "selected_rows": 300,
+  "strata_total": 341,
+  "strata_with_at_least_one_row_selected": 300,
+  "collectible_rows": 271,
+  "not_collectible_rows": 29,
+  "not_collectible_breakdown": {
+    "tz_conflict_needs_resolution": 18,
+    "unconfirmed": 10,
+    "confirmed_current_only": 1
+  },
+  "strata_table": "output\\baseline_recovery_v2_weather_expanded_20260918_strata.csv",
+  "population_composition": "output\\baseline_recovery_v2_weather_expanded_20260918_population_composition.csv",
+  "sample_composition": "output\\baseline_recovery_v2_weather_expanded_20260918_sample_composition.csv",
+  "limitations": [
+    "This sample is for representativeness/coverage checking; the original 21-row sample remains the boundary-condition regression sample and is not replaced.",
+    "not_collectible rows are kept in the selection and denominator with an explicit reason; they are never weather-joined and never silently dropped.",
+    "Airport size tier is a tertile of in-sample origin frequency within the adopted population itself, not an external traffic ranking.",
+    "Overlap between strata is not possible by construction (each row has exactly one year/season/region-timezone/size-tier combination), but a stratum can still be very small (or a single airport), so oversampling relative to the population is expected."
+  ]
+}

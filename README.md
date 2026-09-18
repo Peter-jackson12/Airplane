@@ -2,7 +2,7 @@
 
 **이 README가 프로젝트 전체 설명과 최신 상태의 기준 문서입니다.** 발표는 1~6절 순서로 진행하고, 세부 수치·실행 코드는 마지막 문서 안내에서 확인할 수 있습니다.
 
-작성: Peter-jackson12 TF · 갱신: 2026-09-18 · 문서 버전: v0.15
+작성: Peter-jackson12 TF · 갱신: 2026-09-18 · 문서 버전: v0.16
 
 > **현재 결론:** 불확실한 결측 대치와 시간 피처의 의미를 바로잡고, 검증 라벨이 모델 선택에 유입되지 않도록 파이프라인을 수정했습니다. P4/P6 및 개별 변경 조건을 전체 데이터에서 3시드로 재학습한 결과, 새 전처리의 성능 향상은 확인되지 않았습니다. 확률 보정기를 outer-train 내부에서 적합해 독립 outer-valid에서 비교한 결과, 확률의 계통 오차는 줄었지만 분류 성능(Macro F1)의 향상은 확인되지 않았습니다. 데이터 처리의 타당성, 확률의 정확성, 분류 성능은 각각 따로 평가합니다.
 
@@ -19,7 +19,7 @@
 | 날짜 달력 구조 확인 | 미국 공휴일과 부합하는 신호와 추수감사절 후보 급감 쌍 두 곳을 관측. 실제 연도는 미확정 |
 | 기록 정합성 검사 | 노선·기체·공항·운항사 필드의 정합성을 검사. 실제 운항편과의 동일성은 외부 대조 필요 |
 | 행별 날짜 귀속 규칙 고정·적용 | 2018·2019년 Marketing Carrier 12개월 전체 대조 기반, 완전 지문 706,759행(70.68%) 채택·나머지 293,241행 보류 |
-| 예측 시점·날씨 가용성 규칙 고정·소규모 검증 | 예정 출발 60분 전 계약 고정, 8개 공항·21행 실측 자료로 결합 규칙·서머타임 정책 검증(20/21 결합) |
+| 예측 시점·날씨 가용성 규칙 고정·검증 | 예정 출발 60분 전 계약 고정, 21행 경계 검증(20/21 결합) + 375개 공항 매핑·수집 범위 산정 + 300행 확대 표본 실수집·지연 민감도 검증(수집 가능 271행 중 10분 가정 기준 99~100% 결합) |
 | 미완료·범위 밖 | 독립 미래 테스트, 최종 모델 서빙, 전체 Phase의 최신 프로토콜 성능 비교, 706,759행 전체 날씨 결합·재학습 |
 
 **목차:** [1. 목적](#1-목적과문제정의) · [2. 데이터](#2-데이터와분석범위) · [3. 전처리](#3-전처리결정과근거) · [4. 파이프라인](#4-현재파이프라인) · [5. 결과](#5-최신검증결과) · [6. 한계](#6-한계와다음단계) · [7. 재현](#7-코드구조와재현) · [8. 문서안내](#8-문서안내)
@@ -325,7 +325,7 @@ BTS는 IATA 코드가 시기에 따라 다른 항공사에 재배정될 수 있�
 
 **예측 시점 계약(고정, 성능을 보고 바꾸지 않음):** `예측 시점 = 예정 출발(현지) − 60분`. 출발 공항의 현지 날짜(`Month`/`Day_of_Month` + 귀속된 연도)와 `Estimated_Departure_Time`(HHMM, 이전 대조에서 BTS CRS와 일치 확인됨)을 IANA 시간대로 변환해 UTC로 만든 뒤 60분을 뺍니다. 출발·도착 양쪽 관측을 쓸 경우 **둘 다 이 동일한 예측 시점까지 이용 가능한 관측만** 사용하며, 도착 시각 자체나 그 이후에 관측된 날씨는 입력에 넣지 않습니다(도착 시각 예보는 이번 범위에서 다루지 않았습니다).
 
-**기존 `src/weather.py`를 수정 없이 재사용했습니다.** `local_hhmm_to_utc`(2400·DST 중복/미존재 시각 → `NaT`, 임의 보정 없음)와 `join_weather_asof`(관측 시각 `observed_at`과 이용 가능 시각 `available_at`을 구분해 예측 시점까지 이용 가능한 마지막 보고만 backward 결합, 관측 나이 상한, 중복 보고 거부)는 2026-09-16에 이미 구현·단위 테스트된 모듈입니다. 이번에 처음으로 **출발·도착 두 공항을 같은 예측 시점에 동시에** 묻는 실제 다공항 자료로 실행했고, 코드 수정 없이 요구된 동작을 그대로 보였습니다. 검증 과정에서 실제 결함 하나를 발견했지만 **`src/weather.py`가 아니라 이번에 새로 작성한 검증 스크립트 쪽의 버그**였습니다 — 요청에 그대로 echo되는 `station` 열(요청한 관측소 이름)을 결합 성공 여부로 오인했었고, 실제 결합 여부는 `observed_at`의 결측 여부로 판정하도록 고쳤습니다.
+**기존 `src/weather.py`를 수정 없이 재사용했습니다.** `local_hhmm_to_utc`는 두 가지를 구분합니다. **`2400`은 명확한 값**이라 다음 날 자정으로 변환합니다(모호함이 없습니다). **서머타임으로 시계가 건너뛰거나(봄, 예: 02:00–02:59 자체가 존재하지 않음) 중복되는(가을, 같은 01:00대가 두 번 있음) 시각은 값 자체가 정의되지 않으므로** `NaT`로 남기고 앞뒤 시각으로 임의 보정하지 않습니다. 이 두 경우를 같은 취급으로 섞지 않습니다. `join_weather_asof`(관측 시각 `observed_at`과 이용 가능 시각 `available_at`을 구분해 예측 시점까지 이용 가능한 마지막 보고만 backward 결합, 관측 나이 상한, 중복 보고 거부)는 2026-09-16에 이미 구현·단위 테스트된 모듈입니다. 이번에 처음으로 **출발·도착 두 공항을 같은 예측 시점에 동시에** 묻는 실제 다공항 자료로 실행했고, 코드 수정 없이 요구된 동작을 그대로 보였습니다. 검증 과정에서 실제 결함 하나를 발견했지만 **`src/weather.py`가 아니라 이번에 새로 작성한 검증 스크립트 쪽의 버그**였습니다 — 요청에 그대로 echo되는 `station` 열(요청한 관측소 이름)을 결합 성공 여부로 오인했었고, 실제 결합 여부는 `observed_at`의 결측 여부로 판정하도록 고쳤습니다.
 
 **공항→시간대→관측소 매핑은 8개 공항만, 출처를 밝혀 개별 확인했습니다.** 374개 공항 전체에 자동 매핑을 적용하지 않고, IANA 시간대가 서로 다른 8개 공항(ATL·ORD·DEN·LAX·PHX·ANC·LAS·AUS, 6개 시간대: New_York/Chicago/Denver/Los_Angeles/Phoenix/Anchorage)만 골라 [mwgg/Airports](https://github.com/mwgg/Airports)(공개 데이터셋, 커밋 해시 대신 파일 SHA256으로 고정: `f369eaa1c2944280d9678a96d5b477cedea0417f3c12a333c39834bf1c035739`)에서 시간대를 가져오고, 알려진 사실(ATL=America/New_York 등)과 대조해 확인했습니다. IEM ASOS 관측소 ID도 실제 조회로 확인했는데, **ANC는 IATA 코드가 아니라 ICAO 코드 `PANC`로만 조회됩니다** — 매핑을 단순 가정했다면 놓쳤을 차이입니다. 매핑표: [output/baseline_recovery_v2_weather_sample_20260918_airport_stations.csv](output/baseline_recovery_v2_weather_sample_20260918_airport_stations.csv).
 
@@ -333,7 +333,7 @@ BTS는 IATA 코드가 시기에 따라 다른 항공사에 재배정될 수 있�
 
 **실제 데이터 수집 규모:** 8개 IEM ASOS 관측소, 관측소·일자별로 묶은 40건의 요청(각 요청은 약 8~10시간 창), 실제 다운로드한 관측 행 370개. 각 요청의 URL·응답 SHA256·행 수를 [fetch manifest](output/baseline_recovery_v2_weather_sample_20260918_fetch_manifest.json)에 남겼고, 원본 응답 CSV는 `data/weather_probe/sample/`에 로컬 보관합니다(추적 제외). 겹치는 조회 구간에서 재수집된 완전히 동일한 보고는 제거하도록 했지만 이번 40건에서는 0건이었고, **같은 관측소·같은 시각에 내용이 다른 보고(진짜 정정)가 있었다면 조용히 넘기지 않고 예외를 던지도록** 했습니다(이번 표본에서도 발생하지 않았습니다).
 
-**결합 결과.** 21행 중 **20행(95.2%)이 출발·도착 양쪽에서 결합**됐고, 나머지 1행(`TRAIN_920488`)은 예측 시점 자체가 없어 출발·도착 어느 쪽도 결합하지 않았습니다(공란으로 보존, 값을 채우지 않음). 결합된 관측의 나이는 출발 측 중앙값 48분·최대 67분, 도착 측 중앙값 44.5분·최대 68분으로 관측 나이 상한 90분을 넘지 않았습니다. `available_at`은 **원본 아카이브에 실제 수신·발표 이력이 없어** 관측 시각(`observed_at`) + 10분이라는 **가정**을 적용했습니다(2026-09-16 probe와 동일한 가정, 검증되지 않음). 따라서 이 결과는 **"가정된 지연 아래에서의 과거 결합"**이며, 실제 운영 시점의 정확한 재현으로 해석하지 않습니다.
+**결합 결과.** 21행 중 **20행(95.2%)이 출발·도착 양쪽에서 결합**됐고, 나머지 1행(`TRAIN_920488`)은 예측 시점 자체가 없어 출발·도착 어느 쪽도 결합하지 않았습니다. **이 행은 표본에서 삭제된 것이 아닙니다** — 21행 모두 결과 파일에 그대로 남아 있고, 이 행만 날씨 열이 결측(공란)입니다. 결합된 관측의 나이는 출발 측 중앙값 48분·최대 67분, 도착 측 중앙값 44.5분·최대 68분으로 관측 나이 상한 90분을 넘지 않았습니다. `available_at`은 **원본 아카이브에 실제 수신·발표 이력이 없어** 관측 시각(`observed_at`) + 10분이라는 **가정**을 적용했습니다(2026-09-16 probe와 동일한 가정, 검증되지 않음). 따라서 이 결과는 **"가정된 지연 아래에서의 과거 결합"**이며, 실제 운영 시점의 정확한 재현으로 해석하지 않습니다.
 
 **검증한 경계 조건**(모두 코드 내 assertion으로 확인, 위반 시 예외):
 
@@ -350,6 +350,72 @@ BTS는 IATA 코드가 시기에 따라 다른 항공사에 재배정될 수 있�
 근거: [표본 선정 manifest](output/baseline_recovery_v2_weather_sample_20260918_selection_manifest.json), [결합 manifest](output/baseline_recovery_v2_weather_sample_20260918_join_manifest.json), [결합 요약](output/baseline_recovery_v2_weather_sample_20260918_join_summary.csv), [공항·연도별 커버리지](output/baseline_recovery_v2_weather_sample_20260918_join_coverage_by_airport_year.csv), [재현 코드](notebooks/select_weather_sample.py) · [notebooks/fetch_weather_sample.py](notebooks/fetch_weather_sample.py) · [notebooks/join_weather_sample.py](notebooks/join_weather_sample.py). 행별 결합 결과(날씨 값 포함)는 `data/weather_probe/baseline_recovery_v2_weather_sample_20260918_joined/joined_sample.csv`에 로컬 보관합니다.
 
 **뜻하는 것과 뜻하지 않는 것.** 뜻하는 것은 예측 시점·시간대·관측 가용성 규칙이 실제 다공항·다시간대 자료에서 코드 그대로 작동하고, 서머타임 경계 같은 실제 엣지 케이스를 임의 보정 없이 처리한다는 점입니다. **뜻하지 않는 것**은 전체 706,759행에 대한 날씨 결합이나 모델 성능입니다. 이번 21행은 8개 공항으로 제한된 표본이며, 결측 키 기반 291,308행 등 보류 상태 행은 건드리지 않았습니다. 앞으로 날씨 유무 성능을 비교하려면 **같은 평가 행 집합**에서 비교해야 하며, 채택 비율 70.68%를 전체 데이터 성능으로 일반화해서는 안 됩니다.
+
+### 전체 채택 집단(706,759행)의 날씨 수집 범위를 먼저 산정했습니다 (2026-09-18)
+
+21행 검증 다음 단계로, **전체 결합을 실행하기 전에** 그 규모부터 쟀습니다. 대상은 채택된 706,759행 전체이며, 타깃·지연·실제 출도착 시각·날씨 값은 이 산정 어디에서도 읽지 않습니다.
+
+**공항→시간대→관측소 매핑을 706,759행에 등장하는 공항 375개 전부로 확장해 검증했습니다.** 기존 21행 표본의 8개 공항 상수에 머무르지 않고, [notebooks/map_weather_stations.py](notebooks/map_weather_stations.py)가 각 공항을 IEM의 공식 관측소 메타데이터([mesonet.agron.iastate.edu/geojson/network](https://mesonet.agron.iastate.edu/geojson/network/GA_ASOS.geojson) 등, 주(state)·준주별 53개 네트워크를 실제로 조회)와 대조합니다. IEM 메타데이터는 관측소 ID·IANA 시간대(`tzname`)·**기록 보유 기간**(`archive_begin`/`archive_end`)을 함께 주므로, "현재 지도에 있다"와 "2018~2019년에 그 관측소가 그 자리에 있었다"를 구분할 수 있습니다.
+
+| 확인 수준 | 공항 수 | 의미 |
+|---|---:|---|
+| `confirmed_period` | 355 | 관측소 존재 확인 + 시간대 일치 + 기록 보유 기간이 2018-01-01~2019-12-31을 덮음 |
+| `confirmed_current_only` | 3 | 관측소·시간대는 확인되지만 기록 보유 기간이 2018~2019년을 덮지 못함 |
+| `tz_conflict_needs_resolution` | 8 | IEM과 mwgg 두 출처의 시간대가 서로 다름 — 해결 전에는 확인된 것으로 세지 않음 |
+| `unconfirmed` | 9 | 추정한 관측소 ID가 해당 주/준주 네트워크에서 발견되지 않음 |
+
+**`confirmed_current_only` 3곳은 실제 역사적 사건입니다.** 노스다코타 윌리스턴은 2019년 10월 기존 공항(ISN, 기록보유 ~2019-10-18까지)을 폐쇄하고 새 공항(XWA, 기록보유 2019-10-12부터)으로 이전했습니다 — 정확히 이 프로젝트가 다루는 2018~2019년 한가운데서 벌어진 일입니다. 유마(YUM)는 현재 지도에 있는 관측소의 기록이 2007년에 끝나 있어, 오늘날의 매핑을 그대로 2018~2019년에 적용할 수 없습니다. 이 셋은 "현재 지도가 있다"와 "그 지도가 당시에도 맞았다"가 다르다는 것을 실제로 보여줍니다.
+
+**시간대 자체가 출처마다 다른 8곳은 확인된 것으로 세지 않습니다.** 예를 들어 세인트토마스·세인트크로이(미국령 버진아일랜드, STT/STX)를 IEM은 `Atlantic/Bermuda`(서머타임 적용)로, mwgg는 `America/St_Thomas`(서머타임 미적용)로 서로 다르게 기록합니다. 두 시간대는 서머타임 기간에 실제 시각이 달라지므로, 이 불일치를 해결하지 않고 아무 쪽이나 채택하면 예측 시점 자체가 틀릴 수 있습니다. 나머지 6곳(IMT, KTN, PSG, SDF, SIT, WRG)은 미국 시간대 역사상 이름만 다르고 실질 규칙은 1980년대 이후 동일해진 경우들이지만, 코드가 임의로 "실질적으로 같다"고 판단하지 않고 전부 같은 `tz_conflict_needs_resolution` 상태로 남겼습니다. **`unconfirmed` 9곳**(AZA·BKG·FCA·HHH·MQT·PBI·SCE·SPN·USA)은 추정한 관측소 ID를 그 지역 네트워크에서 찾지 못한 경우이며, 가까운 관측소로 조용히 대체하지 않았습니다.
+
+전체 공항 매핑표: [output/baseline_recovery_v2_weather_scope_20260918_mapping_table.csv](output/baseline_recovery_v2_weather_scope_20260918_mapping_table.csv), [매핑 실행 manifest](output/baseline_recovery_v2_weather_scope_20260918_mapping_manifest.json).
+
+**이 매핑을 706,759행에 적용한 결과입니다.** 한 행은 출발·도착 공항 중 더 나쁜 쪽 확인 수준을 따릅니다.
+
+| 상태(출발·도착 중 더 나쁜 쪽) | 행 수 | 비율 |
+|---|---:|---:|
+| `confirmed_period` (양쪽 다) | 691,386 | 97.83% |
+| `confirmed_current_only` | 586 | 0.08% |
+| `tz_conflict_needs_resolution` | 6,273 | 0.89% |
+| `unconfirmed` | 8,514 | 1.20% |
+
+서머타임 중복/미존재로 예측 시점 자체가 없는 행은 **1건**(21행 표본에서 이미 확인한 `TRAIN_920488`과 같은 종류)뿐이며, 전체 706,759행 중 이 하나뿐이라는 것도 이번에 확인했습니다.
+
+**전체(`confirmed_period` 691,385행) 수집 규모를 21행 표본의 실측치로 추정했습니다.** 관측소·UTC일 단위로 묶으면(21행 표본과 같은 예측 시점 앞 6시간·뒤 2시간 창) **142,574개의 관측소·일 조합**, **관측소 355곳**이 필요합니다. 21행 표본의 실측 평균(요청당 2,441바이트, 요청당 3.21초 — 파일 캐시 생성 시각으로 재구성한 실측값)을 그대로 곱하면 **약 348MB**, **순차 실행 시 약 457,663초(약 127시간, 5.3일)**입니다. **이 값은 21행 표본을 707배로 외삽한 추정치이며 이 규모의 새 실측이 아닙니다.** 매핑 미확인·시간대 충돌 15,373행(2.09%)은 이 추정에서 제외했고, 그 이유는 숨기지 않고 위 표에 그대로 남겼습니다.
+
+근거: [범위 산정 manifest](output/baseline_recovery_v2_weather_scope_20260918_scope_manifest.json), [연도·계절·지역·시간대별 집계](output/baseline_recovery_v2_weather_scope_20260918_scope_coverage.csv), [재현 코드](notebooks/scope_weather_collection.py)
+
+### 확대 표본(300행, 8→많은 공항)으로 대표성을 확인했습니다 (2026-09-18)
+
+기존 21행 표본은 경계 조건 회귀검사용으로 그대로 보존합니다. 대표성 확인은 **별도의 새 표본**으로 수행했고, 두 결과를 합쳐 하나의 "결합률"로 보고하지 않습니다.
+
+**층화 규칙(결정적, 시드 없이 재현 가능):** 연도(2)×계절(기상학적 정의: 12–2월 겨울, 3–5월 봄, 6–8월 여름, 9–11월 가을)×지역/시간대 묶음×출발 공항 규모(3분위)로 나눈 341개 층에서, 층마다 `sha256(ID)` 순으로 최대 2행을 breadth-first로 뽑아 300행 상한을 채웁니다. 지역은 미국 통계청(Census Bureau) 4대 권역(Northeast/Midwest/South/West)에 알래스카·하와이·비본토 준주(괌·사이판·푸에르토리코·버진아일랜드·아메리칸사모아 등, 채택 집단에 실제로 존재)를 별도 범주로 더했습니다. **매핑 미확인 공항의 행도 선정 대상에서 빼지 않았습니다** — 뽑히면 "수집 불가" 사유와 함께 표본에 그대로 남습니다.
+
+| 항목 | 값 |
+|---|---:|
+| 대상 층 | 341 |
+| 뽑힌 행 | 300 (모든 층에서 최소 1행) |
+| 수집 가능(`confirmed_period` 양쪽) | 271 |
+| 수집 불가 | 29 (`tz_conflict` 18, `unconfirmed` 10, `confirmed_current_only` 1) |
+
+근거: [선정 manifest](output/baseline_recovery_v2_weather_expanded_20260918_selection_manifest.json), [층별 인구·표본 대조](output/baseline_recovery_v2_weather_expanded_20260918_strata.csv), [모집단 구성](output/baseline_recovery_v2_weather_expanded_20260918_population_composition.csv), [표본 구성](output/baseline_recovery_v2_weather_expanded_20260918_sample_composition.csv), [재현 코드](notebooks/select_weather_sample_expanded.py)
+
+**300행을 실제로 수집·결합한 결과입니다.** 수집 가능한 271행에 필요한 관측소·일 조합은 **534개**였고, 이 중 기존 21행 표본과 겹치는 부분을 제외한 **275건을 새로 요청**해 **약 690KB**를 내려받았습니다(600건·200MB·3600초 상한 안에서, 실제로는 275건·690KB·약 1,209초 사용). 요청 중 실패는 0건입니다. 겹치는 조회 구간의 완전 동일 재수집도 0건이었습니다.
+
+가용성 지연은 수집 전에 **0·10·30·60분 네 가지로 고정**했고 전부 미검증 가정으로 표시합니다(관측 나이 상한은 네 시나리오 모두 90분으로 동일). 같은 관측 자료에 지연 가정만 바꿔 네 번 결합했습니다.
+
+| 지연 가정 | 출발 결합률(수집 가능 271행 중) | 도착 결합률 | 출발 관측 나이 중앙값·최댓값 |
+|---:|---:|---:|---:|
+| 0분 | 99.26% | 100.00% | 27분·59분 |
+| 10분(21행 표본과 동일 가정) | 99.26% | 100.00% | 37분·69분 |
+| 30분 | 98.89% | 100.00% | 57분·89분 |
+| **60분** | **56.83%** | **58.30%** | 72분·90분 |
+
+**지연 가정이 관측 나이 상한(90분)에 가까워질수록 결합률이 무너집니다.** 60분 지연을 가정하면 예측 시점(출발 60분 전)까지 "이용 가능"하다고 인정되는 가장 최근 보고가 이미 90분 상한에 가깝거나 넘는 경우가 많아지기 때문입니다. **어느 지연값도 "맞는 값"으로 선택하지 않았습니다** — 10분(21행 표본과 동일)을 대표값으로 보고하되, 이 표 전체가 결과라는 점을 분명히 합니다. 관측 나이 0~90분 경계, 출발·도착 동일 예측 시점, 관측소 혼동 없음, 매핑 미확인 행의 무결합, 네 시나리오에서 ID·분모가 동일함을 전부 코드로 검증했습니다.
+
+근거: [결합 manifest](output/baseline_recovery_v2_weather_expanded_20260918_join_manifest.json), [결합 요약](output/baseline_recovery_v2_weather_expanded_20260918_join_summary.csv), [지연 민감도 전체 표](output/baseline_recovery_v2_weather_expanded_20260918_latency_sensitivity.csv), [연도·계절·지역별 커버리지](output/baseline_recovery_v2_weather_expanded_20260918_join_coverage_by_year_season_region.csv), [재현 코드](notebooks/fetch_weather_sample_expanded.py) · [notebooks/join_weather_sample_expanded.py](notebooks/join_weather_sample_expanded.py). 시나리오별 행별 결과는 `data/weather_probe/baseline_recovery_v2_weather_expanded_20260918_joined/joined_latency{0,10,30,60}min.csv`에 로컬 보관합니다.
+
+**실제 결함 하나를 이번에도 발견해 고쳤습니다.** `urllib.request.urlopen`이 이 실행 환경에서 일부 요청에 대해 `timeout` 인자와 프로세스 전역 `socket.setdefaulttimeout()`을 모두 무시하고 무기한 멈추는 현상을 확인했습니다(동일 요청을 `curl`로는 3.7초에 완료). `notebooks/fetch_weather_sample.py`의 다운로드를 `curl` 서브프로세스 호출로 교체했고, 이미 캐시된 21행 표본의 40개 요청은 재요청 없이 그대로 재사용되므로 **기존 결과의 재현성에는 영향이 없습니다**(재실행해 `총 40건·370행`이 동일하게 나옴을 확인했습니다).
 
 ## 3. 전처리 결정과 근거
 
@@ -557,7 +623,14 @@ P6_clean은 실제 지연 45,000행 중 **24,895행을 세 시드 모두에서 F
 
 - **BTS 12개월 전체 대조와 행별 귀속 — 완료.** Marketing Carrier 12개월 전체(부족했던 9개월 18개 ZIP 추가 확보)를 대조했고, 행별 귀속 규칙을 코드로 고정해 완전 지문·후보 연도 1개인 706,759행(70.68%)만 채택하고 나머지 293,241행(29.32%)은 상태를 구분해 보류했습니다. 결측 키 기반 단일 후보(291,308행)는 채택하지 않으며, 이를 완전 지문 키를 인위적으로 가려 재현한 마스킹 진단에서도 틀린 연도 확정은 0건이었지만 이는 실제 결측 행의 정확도를 보장하지 않습니다. 9개월로 넓히며 새로 나타난 미일치(1월 6행, 8월 411행)는 규칙을 완화하지 않고 원인을 확인했습니다 — 8월 411행은 하와이안 항공(DOT 19690)의 운항사 기록이 2018년 8월 Marketing 파일에서 관측되지 않는다는 사실을 확인한 것이며, 그 원인(보고 누락·자료 결손 등)은 확정하지 않았습니다. 1월 6행은 11월에 남았던 12행과 같은 성격의, 원인을 확인하지 못한 개별 불일치입니다. 두 경우 모두 날짜를 귀속하지 않고 보류로 남겼습니다. [행별 귀속 규칙과 결과](#2-데이터와분석범위), [재현 코드](notebooks/assign_row_dates.py)
 - **예측 시점·날씨 가용성 규칙 고정과 소규모 실측 검증 — 완료.** 기본 계약을 **예정 출발 60분 전**으로 고정했고(성능을 보고 바꾸지 않음), `src/weather.py`의 기존 `local_hhmm_to_utc`/`join_weather_asof`를 **수정 없이** 재사용해 채택된 706,759행 중 8개 공항(6개 IANA 시간대)으로 제한한 21행 표본에 실제 IEM ASOS 관측을 결합했습니다. 20/21행이 출발·도착 양쪽에서 결합됐고, 나머지 1행(2019-11-03 LAS 01:40 출발)은 그 시각이 서머타임 종료로 실제 두 번 존재하는 시각이라 `local_hhmm_to_utc`의 기존 정책대로 `NaT`가 되어 날씨를 임의로 채우지 않고 결합에서 제외했습니다. 세부 내용은 아래 새 절에서 다룹니다.
-- **남은 것.** 채택된 706,759행 전체에 대한 날씨 실수집과 재학습은 이번에도 수행하지 않았습니다. 결측 키 기반 292,683행과 미검사 293,241행 중 결측 키 행은 여전히 보류 상태이며, 전체 결합 전에 이번 21행 검증에서 확인한 경계 규칙(같은 컷오프, 동일 관측 나이 제한, DST 정책)을 그대로 확장 적용해야 합니다. [기상 결합 재검토(2026-09-16)](output/weather_recovery_review.md), [달력 분석](notebooks/analyze_calendar_signature.py)
+- **수집 범위 산정·매핑 검증·확대 표본 검증 — 완료(2026-09-18).** 706,759행 전체를 실제로 결합하기 전에 규모부터 쟀습니다 — 375개 공항 전부의 관측소 매핑을 IEM 공식 메타데이터로 검증(97.83%가 `confirmed_period`, 나머지는 시간대 충돌·미확인·기간 밖으로 구분), 전체 결합 시 필요한 관측소·일 조합 142,574개와 예상 규모(약 348MB, 순차 실행 약 127시간)를 21행 표본의 실측값으로 추정했습니다. 그 다음 **300행 확대 표본**(341개 층, 8개가 아닌 375개 전체 공항 대상)을 결정적으로 선정해 실제 수집·결합했고(534개 관측소·일 조합, 275건 신규 요청, 약 690KB, 실패 0건), 0·10·30·60분 네 가지 지연 가정으로 민감도까지 비교했습니다(10분 기준 수집 가능 271행 중 출발 99.26%·도착 100% 결합, 60분 가정에서는 관측 나이 상한에 걸려 56~58%로 떨어짐). 어떤 지연값도 "맞는 값"으로 선택하지 않았습니다.
+- **남은 것.** 채택된 706,759행 전체에 대한 날씨 실수집과 재학습은 이번에도 수행하지 않았습니다. **12개월을 모두 검사한 뒤 날짜 귀속을 보류한 293,241행**(결측 키 292,683행 + 완전 지문이지만 후보 연도 0개·2개인 558행)은 "검사하지 않은 행"이 아니라 "검사했지만 채택 조건을 충족하지 못해 보류한 행"입니다 — 미검사 월은 이제 없습니다. 매핑 미확인·시간대 충돌 15,373행(2.09%)은 원인을 먼저 해결해야 전체 결합 대상에 넣을 수 있습니다. 전체 결합 전에 이번 검증에서 확인한 경계 규칙(같은 컷오프, 동일 관측 나이 제한, DST 정책)을 그대로 확장 적용해야 합니다. [기상 결합 재검토(2026-09-16)](output/weather_recovery_review.md), [달력 분석](notebooks/analyze_calendar_signature.py)
+
+**다음 비교 설계(모델 재학습 없음, 설계만).** 날씨 유무 성능을 비교할 때는 다음을 지켜야 합니다.
+1. **같은 라벨 평가 행·같은 분할·같은 시드·같은 프로토콜**에서 비교합니다 — `src/cv.py`의 기존 nested grid, inner 경계 TE, outer-valid 채점 구조를 그대로 씁니다.
+2. 날씨 결측 처리·범주형/TE·트리 수·임계값 선택은 전부 **inner-train 경계 안에서**만 수행하고, outer-valid를 이 선택 어디에도 쓰지 않습니다(기존 프로젝트 규칙과 동일).
+3. 날씨가 실제로 결합된 행만 골라 평가 집단을 바꾸지 않습니다 — 결합 성공 여부로 사후에 표본을 선택하면 결과가 왜곡됩니다.
+4. **완전 지문 채택 706,759행(전체의 70.68%)은 "두 예정 시각 등이 모두 관측된" 선택된 부분집합입니다.** 이 집단에서 얻는 어떤 결과도 원본 100만 행 전체나 미래 실제 운영 성능으로 일반화하지 않습니다.
 2. **미라벨·미래 환경 성능은 미확인입니다.** 라벨의 수집/선정 규칙과 예측 시점의 입력 가용성을 먼저 확인해야 합니다.
 3. **확률 보정을 검증했고, 오분류 구조를 기술했습니다.** 보정은 확률의 계통 편향과 ECE를 줄였지만 Macro F1은 개선하지 못했고 양쪽 시각 결측 그룹도 나아지지 않았습니다. 이어진 기술 분석에서 현재 입력이 식별하는 것은 주로 맥락 단위 위험도이고 같은 맥락 안의 개별 편을 가르는 정보는 거의 없다는 점이 관측됐습니다. **다음 단계는 임계값·보정 조정이 아니라 새로운 정보원입니다.** 다만 지금까지 확인한 것은 관측된 그룹의 기술이며, 어떤 피처가 실제로 도움이 되는지는 별도 실험으로 검증해야 합니다.
 4. **서빙은 아직 없습니다.** 현재 규모에서는 기존 모듈을 유지합니다. 배포가 실제 요구될 때 저장된 전처리 통계·미관측 범주 처리·모델 로드 계약을 추가합니다.
@@ -590,6 +663,11 @@ P6_clean은 실제 지연 45,000행 중 **24,895행을 세 시드 모두에서 F
 | `notebooks/select_weather_sample.py` | 채택된 행 중 타깃과 무관한 소규모 날씨 검증 표본 선정, 공항→시간대 매핑 확인 |
 | `notebooks/fetch_weather_sample.py` | 표본에 필요한 IEM ASOS 관측만 소량·경계 지정으로 다운로드 |
 | `notebooks/join_weather_sample.py` | `src/weather.py`로 표본을 결합하고 예측 시점·관측 나이·시간대 경계 조건을 검증 |
+| `notebooks/map_weather_stations.py` | 채택 집단 전체 공항의 IEM 공식 관측소 메타데이터 대조(시간대·기록 보유 기간) |
+| `notebooks/scope_weather_collection.py` | 전체 결합 전 수집 범위·비용을 21행 표본 실측치로 산정 |
+| `notebooks/select_weather_sample_expanded.py` | 연도·계절·지역/시간대·공항 규모로 층화한 300행 확대 표본 선정 |
+| `notebooks/fetch_weather_sample_expanded.py` | 확대 표본의 관측소·일 조합을 요청·바이트·시간 상한 안에서 수집 |
+| `notebooks/join_weather_sample_expanded.py` | 확대 표본을 0/10/30/60분 지연 가정 네 가지로 결합·민감도 비교 |
 | `notebooks/` | 재현 가능한 진단·실험 집계·실행 노트북 |
 | `tests/` | 정보 경계·전처리·저장 회귀 검사 |
 | `output/` | 실행 증거 및 작성 시점별 보고서 |
@@ -770,6 +848,26 @@ uv run --offline python -u notebooks/summarize_bts_marketing_months.py --name ba
 .venv/Scripts/python.exe -u -m pytest -q
 ```
 
+### 수집 범위 산정·매핑 검증·확대 표본 검증
+
+`data/train.csv`, 12개월 귀속 결과, 인터넷 접속(IEM 관측소 메타데이터·ASOS 조회)이 필요합니다. 재학습이 없고 타깃·지연·실제 출도착 시각을 읽지 않습니다. 네 단계를 순서대로 실행합니다.
+
+```powershell
+.venv/Scripts/python.exe -u notebooks/map_weather_stations.py --name baseline_recovery_v2_weather_scope_20260918
+.venv/Scripts/python.exe -u -m notebooks.scope_weather_collection --name baseline_recovery_v2_weather_scope_20260918 --mapping-name baseline_recovery_v2_weather_scope_20260918 --measured-bytes-per-request 2441.275 --measured-seconds-per-request 3.21
+.venv/Scripts/python.exe -u -m notebooks.select_weather_sample_expanded --name baseline_recovery_v2_weather_expanded_20260918 --mapping-name baseline_recovery_v2_weather_scope_20260918 --max-rows 300
+.venv/Scripts/python.exe -u notebooks/fetch_weather_sample_expanded.py --name baseline_recovery_v2_weather_expanded_20260918 --mapping-name baseline_recovery_v2_weather_scope_20260918 --max-requests 600 --max-bytes 200000000 --max-seconds 3600
+.venv/Scripts/python.exe -u -m notebooks.join_weather_sample_expanded --name baseline_recovery_v2_weather_expanded_20260918 --mapping-name baseline_recovery_v2_weather_scope_20260918
+```
+
+`--measured-bytes-per-request`/`--measured-seconds-per-request`는 21행 표본의 실측값(요청 40건의 캐시 파일 크기·생성 시각 간격)이며, 생략하면 산정 결과에서 외삽 항목만 빠지고 나머지 집계는 그대로 나옵니다. 수집·결합 상한(요청 600건·200MB·3600초)은 이번 검증 단계의 자원 경계이며 성능 기준이 아닙니다. 한도에 도달하면 캐시와 진행 상황이 그대로 보존되고 미수행 요청이 manifest에 남으므로, 같은 `--name`으로 다시 실행하면 이어서 진행합니다.
+
+이 작업의 코드 검증은 위 242개에 **20개를 더한 262개 테스트 한 번의 실행에서 전부 통과**입니다. 추가 검사는 주(state)별 IEM 네트워크 후보·알래스카/하와이/준주의 ICAO 코드 사용, 서로 다른 두 출처의 시간대 불일치가 기록 보유 기간과 무관하게 항상 미확인 상태로 남음(윌리스턴 ISN→XWA처럼 기록 보유 기간이 2018~2019년을 덮지 못하는 경우와 구분), 미국 통계청 4대 권역 정의, 층화 선정의 결정적 재현성(`sha256(ID)` 기준), 관측소·일 조합 병합, 요청·바이트·시간 상한 도달 시 중단과 진행 보존, 연속 실패 시 조기 중단, 캐시 적중이 요청 상한에 포함되지 않음, A·A·B·B처럼 서로 다른 관측소가 섞인 상황에서도 동일 관측소·시각의 재수집(허용)과 진짜 충돌(거부)을 구분함을 포함합니다.
+
+```powershell
+.venv/Scripts/python.exe -u -m pytest -q
+```
+
 ### 오분류 기술 분석
 
 저장된 행별 OOF와 원본만 있으면 되고 재학습이 없습니다. 실행에는 로컬에 보관된 `output/<run>_seed<seed>_oof/*.csv.gz`가 필요하며, 파일 해시·ID·행 위치·정답·결측 플래그를 먼저 대조한 뒤 분석합니다.
@@ -816,6 +914,7 @@ uv run --offline python -u notebooks/summarize_bts_marketing_months.py --name ba
 | 모델이 어떤 행을 왜 놓치는가 | [기술 분석 요약](output/baseline_recovery_v2_error_profile_20260917_report.md), [실행 manifest](output/baseline_recovery_v2_error_profile_20260917_manifest.json), [재현 코드](notebooks/analyze_oof_error_profile.py) |
 | 행별 날짜 귀속 규칙과 12개월 결과는 무엇인가 | [상태 집계](output/baseline_recovery_v2_row_date_attribution_20260918_status_summary.csv), [마스킹 진단](output/baseline_recovery_v2_row_date_attribution_20260918_masking_diagnostic.csv), [실행 manifest](output/baseline_recovery_v2_row_date_attribution_20260918_manifest.json), [재현 코드](notebooks/assign_row_dates.py) |
 | 날씨 결합 규칙을 어떻게 정의·검증했는가 | [표본 선정 manifest](output/baseline_recovery_v2_weather_sample_20260918_selection_manifest.json), [결합 manifest](output/baseline_recovery_v2_weather_sample_20260918_join_manifest.json), [결합 요약](output/baseline_recovery_v2_weather_sample_20260918_join_summary.csv), [재현 코드](notebooks/join_weather_sample.py) |
+| 전체 날씨 수집 범위·공항 매핑·확대 표본 결과는 무엇인가 | [매핑 manifest](output/baseline_recovery_v2_weather_scope_20260918_mapping_manifest.json), [범위 산정 manifest](output/baseline_recovery_v2_weather_scope_20260918_scope_manifest.json), [확대 표본 선정 manifest](output/baseline_recovery_v2_weather_expanded_20260918_selection_manifest.json), [확대 표본 결합 manifest](output/baseline_recovery_v2_weather_expanded_20260918_join_manifest.json), [지연 민감도](output/baseline_recovery_v2_weather_expanded_20260918_latency_sensitivity.csv), [재현 코드](notebooks/map_weather_stations.py) · [notebooks/scope_weather_collection.py](notebooks/scope_weather_collection.py) |
 | 처음 전처리 문제를 어떻게 발견했는가 | [설명 노트북](notebooks/preprocessing_walkthrough.ipynb) — 수정 전 진단임에 유의 |
 
 ### 과거 계획과 진단 — 현행 성능 근거로 사용하지 않음
