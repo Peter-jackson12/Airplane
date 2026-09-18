@@ -1,0 +1,71 @@
+{
+  "name": "baseline_recovery_v2_weather_sample_20260918",
+  "source_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "attribution_run": "baseline_recovery_v2_row_date_attribution_20260918",
+  "attribution_row_sha256": "9c679535e59666bfb2de8a4460fd0c0a8b433f29900b704d0de4ff21e712421a",
+  "code_sha256": "4cd3a87f614dd508ab462e9cb5b7dd4b3e45ba473ab626f80fb826712ef40fdd",
+  "fits_any_model": false,
+  "uses_external_data": true,
+  "target_columns_used": [],
+  "timezone_source_url": "https://raw.githubusercontent.com/mwgg/Airports/master/airports.json",
+  "timezone_source_sha256": "f369eaa1c2944280d9678a96d5b477cedea0417f3c12a333c39834bf1c035739",
+  "eligible_pool_rows": 23006,
+  "selected_rows": 21,
+  "selection_reason_counts": {
+    "year_quarter_timezone_coverage": 8,
+    "near_midnight_departure": 12,
+    "dst_transition_date": 1
+  },
+  "airports_in_sample": [
+    "ANC",
+    "ATL",
+    "AUS",
+    "DEN",
+    "LAS",
+    "LAX",
+    "ORD",
+    "PHX"
+  ],
+  "iem_stations_needed": [
+    "ATL",
+    "AUS",
+    "DEN",
+    "LAS",
+    "LAX",
+    "ORD",
+    "PANC",
+    "PHX"
+  ],
+  "dates_needed_local_calendar": [
+    "2018-01-06",
+    "2018-06-11",
+    "2018-06-14",
+    "2018-06-30",
+    "2018-07-22",
+    "2018-08-11",
+    "2018-10-18",
+    "2018-10-20",
+    "2018-10-30",
+    "2018-11-17",
+    "2019-02-23",
+    "2019-03-18",
+    "2019-04-22",
+    "2019-05-01",
+    "2019-08-04",
+    "2019-08-08",
+    "2019-09-12",
+    "2019-10-11",
+    "2019-10-12",
+    "2019-11-03",
+    "2019-12-21"
+  ],
+  "years_represented": [
+    "2018",
+    "2019"
+  ],
+  "limitations": [
+    "Selection pool is restricted to 8 individually-verified airports; it is not a representative sample of the full 706,759 adopted rows or of the other airports.",
+    "attributed_date/attributed_year come from the 2018/2019 BTS candidate comparison; this sample inherits that scope and does not confirm a year outside those two.",
+    "No target, delay, actual-time, or weather value was read to build this selection."
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "name": "baseline_recovery_v2_weather_sample_20260918",
+  "code_sha256": "a57aecf328a18c38a634ce3133cec25a971c60859aa5956be7cf847f34d9f3c6",
+  "fits_any_model": false,
+  "uses_external_data": true,
+  "target_columns_used": [],
+  "prediction_offset_minutes": 60,
+  "max_obs_age": "90min",
+  "assumed_publication_latency_minutes": 10,
+  "assumed_publication_latency_is_verified": false,
+  "rows": 21,
+  "dropped_exact_duplicate_reports": 0,
+  "unresolved_no_prediction_at": 1,
+  "unresolved_ids": [
+    "TRAIN_920488"
+  ],
+  "row_evidence": "data\\weather_probe\\baseline_recovery_v2_weather_sample_20260918_joined\\joined_sample.csv",
+  "row_sha256": "b72a3138366c25a2a496601e343fdf7225b010547ee467da8f4a4a4eddb6a555",
+  "join_summary": [
+    {
+      "role": "origin",
+      "requests": 21,
+      "matched": 20,
+      "unmatched_no_prediction_at": 1,
+      "unmatched_stale_or_no_report": 0,
+      "match_rate": 0.9523809523809523,
+      "median_age_minutes": 48.0,
+      "max_age_minutes": 67.0
+    },
+    {
+      "role": "destination",
+      "requests": 21,
+      "matched": 20,
+      "unmatched_no_prediction_at": 1,
+      "unmatched_stale_or_no_report": 0,
+      "match_rate": 0.9523809523809523,
+      "median_age_minutes": 44.5,
+      "max_age_minutes": 68.0
+    }
+  ],
+  "characterization": "a past combination under an assumed publication latency, not a verified operational point-in-time replay",
+  "limitations": [
+    "This validates the join contract on 21 rows across 8 airports; it is not full-archive weather collection and is not a performance result.",
+    "available_at uses a fixed 10-minute assumed latency; the archive does not record actual historical receipt/publication time, so this cannot be verified against real dissemination logs.",
+    "Sample rows come only from the complete_single_candidate_year (adopted) status; the 291,308 missing-key single-candidate rows and other held statuses are untouched.",
+    "Any future performance comparison must evaluate weather-on vs weather-off on the SAME rows, and must not generalize the ~70.68% adopted share to full-dataset performance."
+  ]
+}

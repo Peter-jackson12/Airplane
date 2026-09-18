@@ -1,0 +1,9 @@
+iata,icao,iem_station,iana_timezone,source_city,source_state
+ATL,KATL,ATL,America/New_York,Atlanta,Georgia
+ORD,KORD,ORD,America/Chicago,Chicago,Illinois
+DEN,KDEN,DEN,America/Denver,Denver,Colorado
+LAX,KLAX,LAX,America/Los_Angeles,Los Angeles,California
+PHX,KPHX,PHX,America/Phoenix,Phoenix,Arizona
+ANC,PANC,PANC,America/Anchorage,Anchorage,Alaska
+LAS,KLAS,LAS,America/Los_Angeles,Las Vegas,Nevada
+AUS,KAUS,AUS,America/Chicago,Austin,Texas
