@@ -38,7 +38,17 @@ from notebooks.fetch_weather_sample import (LOOKAHEAD_HOURS, LOOKBACK_HOURS, MAX
                                             digest, fetch_attempt, validate_cached_window)
 
 ROOT = Path(__file__).resolve().parents[1]
-CHECKPOINT_SCHEMA_VERSION = 1
+# v1 checkpoints (including ones written by the pre-reservation-accounting code that ALSO stamped
+# itself schema_version=1) never reserved bytes_reserved/attempt_overhead_seconds on an in_flight
+# attempt before the network call, and never carried bytes_measured -- the accounting semantics
+# execute_with_caps/recover_interrupted_attempts now depend on. Bumping to 2 makes load_checkpoint's
+# existing version check actually reject that older accounting shape instead of silently accepting
+# it as if it were the same schema.
+CHECKPOINT_SCHEMA_VERSION = 2
+REQUIRED_CHECKPOINT_FIELDS = ('schema_version', 'requests_used', 'bytes_used', 'bytes_measured',
+                             'unmeasured_byte_attempts', 'seconds_used', 'groups', 'attempts_log',
+                             'cap_hit', 'plan_fingerprint')
+REQUIRED_IN_FLIGHT_FIELDS = ('attempt', 'timeout', 'attempt_overhead_seconds', 'bytes_reserved')
 DEFAULT_ATTEMPT_TIMEOUT_SECONDS = 15.0
 MAX_ATTEMPTS_PER_GROUP = 3
 MAX_CONSECUTIVE_FAILURES = 8  # a persistent block (e.g. sustained rate-limit) should stop, not spin
@@ -107,14 +117,45 @@ def recover_interrupted_attempts(state: dict) -> None:
         state['groups'][key] = {'status': 'in_progress', 'attempts_detail': attempts}
 
 
+def validate_checkpoint_schema(state: dict, path: Path) -> None:
+    """A checkpoint that already claims to BE schema_version=CHECKPOINT_SCHEMA_VERSION must still
+    carry every accounting field this version's recovery/budget logic depends on. A missing field
+    is never silently defaulted here (that would let a truncated or hand-edited checkpoint resume
+    from a wrong accounting baseline without any warning) -- it raises instead."""
+    missing_top = [f for f in REQUIRED_CHECKPOINT_FIELDS if f not in state]
+    if missing_top:
+        raise ValueError(
+            f'{path} claims schema_version={CHECKPOINT_SCHEMA_VERSION} but is missing required '
+            f'accounting field(s) {missing_top}; refusing to silently fill in defaults for a schema '
+            'that is supposed to already be complete. Resolve the file or use a fresh --name.')
+    for key, rec in state['groups'].items():
+        in_flight = rec.get('in_flight') if isinstance(rec, dict) else None
+        if not in_flight:
+            continue
+        missing = [f for f in REQUIRED_IN_FLIGHT_FIELDS if f not in in_flight]
+        if missing:
+            raise ValueError(
+                f'{path}: group {key!r} has an in_flight attempt missing required accounting '
+                f'field(s) {missing}; refusing to silently default them. Resolve the file or use a '
+                'fresh --name.')
+
+
 def load_checkpoint(path: Path) -> dict:
     if not path.exists():
         return new_checkpoint_state()
     state = json.loads(path.read_text())
-    if state.get('schema_version') != CHECKPOINT_SCHEMA_VERSION:
-        raise ValueError(f'{path} has an incompatible checkpoint schema; use a fresh --name')
-    state.setdefault('plan_fingerprint', None)
-    state.setdefault('bytes_measured', 0)
+    schema_version = state.get('schema_version')
+    if schema_version != CHECKPOINT_SCHEMA_VERSION:
+        raise ValueError(
+            f'{path} has checkpoint schema_version={schema_version!r}, but this code requires '
+            f'schema_version={CHECKPOINT_SCHEMA_VERSION} (the accounting semantics changed: every '
+            'in_flight attempt must pre-reserve bytes_reserved/attempt_overhead_seconds before the '
+            'network call, and bytes_measured is tracked separately from the conservative reservation). '
+            'An older checkpoint is never auto-migrated, and its cumulative counters are never reset or '
+            'assumed continued under a reused name -- resolve it explicitly (e.g. inspect it manually) '
+            'or start a fresh --name for a new logical run. No network call is made and the original '
+            'checkpoint/cache files are left untouched.')
+    validate_checkpoint_schema(state, path)
     recover_interrupted_attempts(state)
     return state
 

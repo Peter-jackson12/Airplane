@@ -30,6 +30,10 @@ from unittest import mock
 import numpy as np
 import pandas as pd
 
+from notebooks.fetch_weather_sample import compute_prediction_at
+from notebooks.fetch_weather_sample_expanded import (LOOKAHEAD_HOURS, LOOKBACK_HOURS,
+                                                      MAX_ATTEMPTS_PER_GROUP, build_station_day_groups,
+                                                      compute_plan_fingerprint)
 from notebooks.join_weather_sample import load_observations
 from notebooks.join_weather_sample import run_join as run_join_sample21
 from notebooks.join_weather_sample_expanded import build_requests
@@ -41,6 +45,13 @@ SAMPLE21_RUN = 'baseline_recovery_v2_weather_sample_20260918'
 EXPANDED300_RUN = 'baseline_recovery_v2_weather_expanded_20260918'
 EXPANDED300_MAPPING_RUN = 'baseline_recovery_v2_weather_scope_20260918'
 LATENCIES_MINUTES = [0, 10, 30, 60]
+
+# Every code file this reconciliation actually imports and executes, beyond this script itself --
+# so the manifest's code fingerprint scope is explicit rather than silently limited to __file__.
+CODE_FILES_USED_IN_RECOMBINATION = (
+    'notebooks/reconcile_weather_cache_recombination.py', 'notebooks/join_weather_sample.py',
+    'notebooks/join_weather_sample_expanded.py', 'notebooks/select_weather_sample.py',
+    'notebooks/fetch_weather_sample_expanded.py', 'notebooks/fetch_weather_sample.py', 'src/weather.py')
 
 DATETIME_SUFFIXES = ('_observed_at', '_available_at')
 NUMERIC_SUFFIXES = ('_weather_age_minutes', '_tmpf', '_dwpf', '_relh', '_sknt', '_gust', '_vsby',
@@ -104,6 +115,98 @@ def verify_manifest_hashes(out: Path) -> list[dict]:
              ROOT / jm300['row_evidence_by_scenario'][str(lat)], jm300['row_sha256_by_scenario'][str(lat)])
 
     return checks
+
+
+def code_fingerprints() -> dict:
+    """SHA-256 of every code file this reconciliation actually imports and executes -- not just this
+    script's own __file__. Anything not listed in CODE_FILES_USED_IN_RECOMBINATION is OUTSIDE what
+    this manifest's fingerprint claims to cover (e.g. pandas/numpy internals, or unrelated notebooks
+    modules that happen to live alongside these)."""
+    return {rel: hashlib.sha256((ROOT / rel).read_bytes().replace(b'\r\n', b'\n')).hexdigest()
+           for rel in CODE_FILES_USED_IN_RECOMBINATION}
+
+
+def verify_input_provenance(out: Path) -> list[dict]:
+    """verify_manifest_hashes above covers the fetch caches and the two ORIGINAL joined outputs; it
+    never touches the actual selection/mapping inputs this reconciliation reads to rebuild the join
+    requests (the two runs' selection_with_prediction_at.csv, and the 300-row run's mapping_table.csv)
+    -- 579 files that never included those. This records SHA-256 for those three and cross-checks the
+    ones that have a genuine PRIOR recorded expectation to check against.
+
+    mapping_table.csv and the 300-row run's PRE-prediction_at selection.csv are BOTH embedded in that
+    fetch run's own plan_fingerprint mechanism (fetch_weather_sample_expanded.compute_plan_fingerprint)
+    -- but that mechanism (and the caps fields it needs to recompute from) was only added in a LATER
+    fix; the actual 300-row fetch_manifest.json on disk predates it and has no recorded plan_fingerprint
+    at all. When a usable one IS recorded (plan_fingerprint present and every caps field
+    compute_plan_fingerprint needs), recomputing it now from the CURRENT files and comparing against
+    the recorded value is a genuine check against a previously recorded expectation (it does assume
+    LOOKBACK_HOURS/LOOKAHEAD_HOURS/MAX_ATTEMPTS_PER_GROUP are unchanged since that run -- current code
+    constants, not independently recorded in the manifest; that assumption is stated, not hidden).
+    When no usable prior fingerprint exists (the real case for this run today), this never fabricates
+    one to compare against -- it only records the CURRENT hash and says so explicitly.
+
+    Neither run's selection_with_prediction_at.csv -- the exact file actually read by rejoin_sample21/
+    rejoin_expanded300 -- was ever independently hashed anywhere before now: fetch_weather_sample.py
+    (the 21-row run) has no fingerprinting mechanism at all, and even where the 300-row plan_fingerprint
+    exists it covers the selection file BEFORE prediction_at is added, not this one. For both, this only
+    records the file's CURRENT hash; it is never reported as checked against a prior expectation, and
+    past identity is never claimed retroactively."""
+    entries = []
+
+    def record(label, path, *, checked_against_prior, detail):
+        entries.append({'label': label, 'path': str(path.relative_to(ROOT)), 'sha256': digest(path),
+                        'checked_against_prior_recorded_expectation': checked_against_prior,
+                        'detail': detail})
+
+    mapping_path = out / f'{EXPANDED300_MAPPING_RUN}_mapping_table.csv'
+    raw_selection_path = out / f'{EXPANDED300_RUN}_selection.csv'
+    fm300 = json.loads((out / f'{EXPANDED300_RUN}_fetch_manifest.json').read_text())
+    recorded_fp = fm300.get('plan_fingerprint')
+    caps = fm300.get('caps', {})
+    required_caps = ('max_requests', 'max_bytes', 'max_seconds', 'subprocess_termination_grace_seconds',
+                     'success_pause_seconds')
+    can_cross_check = recorded_fp is not None and all(k in caps for k in required_caps)
+
+    if can_cross_check:
+        mapping = pd.read_csv(mapping_path).set_index('iata')
+        raw_selection = pd.read_csv(raw_selection_path)
+        raw_selection['prediction_at'] = compute_prediction_at(raw_selection)
+        collectible = raw_selection.loc[raw_selection.collectible & raw_selection.prediction_at.notna()].copy()
+        collectible['origin_station'] = collectible.Origin_Airport.map(mapping.candidate_sid)
+        collectible['destination_station'] = collectible.Destination_Airport.map(mapping.candidate_sid)
+        groups = build_station_day_groups(collectible)
+        options = {'lookback_hours': LOOKBACK_HOURS, 'lookahead_hours': LOOKAHEAD_HOURS,
+                  'max_requests': caps['max_requests'], 'max_bytes': caps['max_bytes'],
+                  'max_seconds': caps['max_seconds'], 'max_attempts_per_group': MAX_ATTEMPTS_PER_GROUP,
+                  'subprocess_termination_grace_seconds': caps['subprocess_termination_grace_seconds'],
+                  'success_pause_seconds': caps['success_pause_seconds']}
+        recomputed_fp = compute_plan_fingerprint(digest(raw_selection_path), digest(mapping_path), groups, options)
+        fp_matches = recomputed_fp == recorded_fp
+        detail = (f'recomputed plan_fingerprint {"matches" if fp_matches else "DOES NOT MATCH"} the value '
+                 f'recorded in {EXPANDED300_RUN}_fetch_manifest.json (assumes LOOKBACK_HOURS/LOOKAHEAD_HOURS/'
+                 'MAX_ATTEMPTS_PER_GROUP unchanged since that run)')
+        if not fp_matches:
+            raise ValueError(
+                f'input provenance check failed for {EXPANDED300_MAPPING_RUN}/{EXPANDED300_RUN}: {detail}')
+        record('expanded300 mapping_table.csv', mapping_path, checked_against_prior=True, detail=detail)
+        record('expanded300 selection.csv (pre-prediction_at)', raw_selection_path,
+              checked_against_prior=True, detail=detail)
+    else:
+        reason = ('no plan_fingerprint was recorded in the fetch manifest' if recorded_fp is None else
+                  f'the fetch manifest\'s caps is missing field(s) {[k for k in required_caps if k not in caps]} '
+                  'needed to recompute the fingerprint')
+        no_prior_detail = (f'no usable prior recorded expectation exists for this file ({reason}); this '
+                          'records its CURRENT hash only -- past identity is not claimed')
+        record('expanded300 mapping_table.csv', mapping_path, checked_against_prior=False, detail=no_prior_detail)
+        record('expanded300 selection.csv (pre-prediction_at)', raw_selection_path,
+              checked_against_prior=False, detail=no_prior_detail)
+
+    for run_name in (SAMPLE21_RUN, EXPANDED300_RUN):
+        wpa_path = out / f'{run_name}_selection_with_prediction_at.csv'
+        record(f'{run_name} selection_with_prediction_at.csv', wpa_path, checked_against_prior=False,
+              detail='no prior run recorded an independent hash of this exact (post-prediction_at) '
+                     'file; this records its CURRENT hash only -- past identity is not claimed')
+    return entries
 
 
 # ---- Step 2: re-run the CURRENT join code from cache only ----
@@ -231,7 +334,15 @@ def compare_to_original(new_result: pd.DataFrame, original_path: Path, label: st
     weather columns missing on BOTH sides) or an unexpected regression.
     `any_meaning_level_difference_found` in the caller's manifest is computed
     from expected_policy_changes + unexpected_meaning_diffs together, so an
-    approved change is never hidden by reporting it as "no difference"."""
+    approved change is never hidden by reporting it as "no difference".
+
+    The structural check (ID present/unique on both sides, row count, ID
+    order, column set) always runs first, REGARDLESS of whether the two
+    files are byte-identical -- e.g. two files that happen to be byte-for-
+    byte identical but both contain a duplicate ID are still a structural
+    failure, not a silent pass. Only once the structural check has actually
+    passed does a byte-identical result skip the (redundant) per-cell
+    semantic comparison."""
     persist_dir.mkdir(parents=True, exist_ok=True)
     rejoined_path = persist_dir / f'{label}.csv'
     new_result.to_csv(rejoined_path, index=False)
@@ -244,9 +355,6 @@ def compare_to_original(new_result: pd.DataFrame, original_path: Path, label: st
              'rejoined_file': rejoined_file, 'rejoined_sha256': digest(rejoined_path),
              'structural_pass': True, 'structural_failures': [], 'column_diffs': [],
              'expected_policy_change_cells': 0, 'unexpected_meaning_mismatch_cells': 0}
-    if raw_identical:
-        report['regression_pass'] = True
-        return report
 
     old = pd.read_csv(original_path)
     new = pd.read_csv(rejoined_path)
@@ -285,6 +393,12 @@ def compare_to_original(new_result: pd.DataFrame, original_path: Path, label: st
         # aligned); it is itself an unexpected regression, never silently skipped or treated as pass.
         report['unexpected_meaning_mismatch_cells'] = 1
         report['regression_pass'] = False
+        return report
+
+    if raw_identical:
+        # Structure already verified above (this is not a bypass of it); a byte-identical file
+        # cannot contain a semantic difference, so the per-cell comparison below is redundant here.
+        report['regression_pass'] = True
         return report
 
     not_collectible = (~old['collectible'].astype(bool) if 'collectible' in old.columns
@@ -332,6 +446,7 @@ def main() -> None:
         raise FileExistsError('Use a fresh --name; existing evidence is preserved')
 
     hash_checks = verify_manifest_hashes(out)
+    input_provenance = verify_input_provenance(out)
 
     guard_subprocess, guard_urlopen = network_guard()
     with guard_subprocess, guard_urlopen:
@@ -365,9 +480,17 @@ def main() -> None:
         'name': args.name, 'sample21_run': SAMPLE21_RUN, 'expanded300_run': EXPANDED300_RUN,
         'expanded300_mapping_run': EXPANDED300_MAPPING_RUN,
         'code_sha256': hashlib.sha256(Path(__file__).read_bytes().replace(b'\r\n', b'\n')).hexdigest(),
+        'code_fingerprints_scope': (
+            'code_sha256 above is this script\'s own file only; code_fingerprints lists every module '
+            'this reconciliation actually imports and executes (the join/build_requests/select code '
+            'plus src/weather.py) -- code outside that list (pandas/numpy, unrelated notebooks) is not '
+            'covered by either hash.'),
+        'code_fingerprints': code_fingerprints(),
         'fits_any_model': False, 'uses_external_data': False, 'target_columns_used': [],
         'network_guard_active': True,
         'manifest_hash_checks_passed': len(hash_checks),
+        'input_provenance_checks': input_provenance,
+        'input_provenance_checks_passed': len(input_provenance),
         'sample21_dropped_exact_duplicate_reports': sample21_dropped,
         'expanded300_dropped_exact_duplicate_reports': expanded300_dropped,
         'comparisons_table': str((out / f'{args.name}_reconciliation_comparisons.json').relative_to(ROOT)),
@@ -404,6 +527,14 @@ def main() -> None:
             'weather columns missing on BOTH sides; the SAME station change on a collectible row, any '
             'actual weather value/observed-time/station change, or a structural mismatch is always an '
             'unexpected regression regardless of any_meaning_level_difference_found.',
+            'manifest_hash_checks_passed (the fetch caches and the two ORIGINAL joined outputs) and '
+            'input_provenance_checks (the selection/mapping files actually read to rebuild the join '
+            'requests) are separate counts over disjoint file sets -- neither includes the other. Within '
+            'input_provenance_checks, only the entries with checked_against_prior_recorded_expectation='
+            'true were verified against an independently pre-recorded expectation (the 300-row fetch '
+            'run\'s own plan_fingerprint); the two selection_with_prediction_at.csv entries record only '
+            'a CURRENT hash because no run ever recorded an independent expectation for that exact file, '
+            'and past identity for those two is not claimed.',
         ],
     }
     (out / f'{args.name}_reconciliation_manifest.json').write_text(json.dumps(manifest, indent=2, default=str))

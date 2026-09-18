@@ -1,0 +1,71 @@
+{
+  "name": "baseline_recovery_v2_weather_recombination_provenance_20260918",
+  "sample21_run": "baseline_recovery_v2_weather_sample_20260918",
+  "expanded300_run": "baseline_recovery_v2_weather_expanded_20260918",
+  "expanded300_mapping_run": "baseline_recovery_v2_weather_scope_20260918",
+  "code_sha256": "f5246c915d715481d2681d38de05ce0d4142cfa56a9ac8b1a46ec9efd8a4c9ce",
+  "code_fingerprints_scope": "code_sha256 above is this script's own file only; code_fingerprints lists every module this reconciliation actually imports and executes (the join/build_requests/select code plus src/weather.py) -- code outside that list (pandas/numpy, unrelated notebooks) is not covered by either hash.",
+  "code_fingerprints": {
+    "notebooks/reconcile_weather_cache_recombination.py": "f5246c915d715481d2681d38de05ce0d4142cfa56a9ac8b1a46ec9efd8a4c9ce",
+    "notebooks/join_weather_sample.py": "420d877ad345a7b33aa26b0530cc2a374bde1c4a7e50fe59741412629e0a87fc",
+    "notebooks/join_weather_sample_expanded.py": "d064eaa526fbe7d70c0ea2306d4a1e53f8f08a6c6d09fb7d8708f83a6f2f25d7",
+    "notebooks/select_weather_sample.py": "4cd3a87f614dd508ab462e9cb5b7dd4b3e45ba473ab626f80fb826712ef40fdd",
+    "notebooks/fetch_weather_sample_expanded.py": "afd7e0c0557df878e9142102cc3067c4787cd6ae2d296d48402c6234cf9db1cd",
+    "notebooks/fetch_weather_sample.py": "bae531437a5af0a337d17707f409df929c31bc9d85b4d35c3c9c83c66faa31f2",
+    "src/weather.py": "e31a3c75325c2a499c5fd92cfb88cd8b707c5daa3ac71232095dd2f2d6236878"
+  },
+  "fits_any_model": false,
+  "uses_external_data": false,
+  "target_columns_used": [],
+  "network_guard_active": true,
+  "manifest_hash_checks_passed": 579,
+  "input_provenance_checks": [
+    {
+      "label": "expanded300 mapping_table.csv",
+      "path": "output\\baseline_recovery_v2_weather_scope_20260918_mapping_table.csv",
+      "sha256": "2354ffd62827305d7c0625111e956562fd5ccdf203ed6cdb340bec454987e13e",
+      "checked_against_prior_recorded_expectation": false,
+      "detail": "no usable prior recorded expectation exists for this file (no plan_fingerprint was recorded in the fetch manifest); this records its CURRENT hash only -- past identity is not claimed"
+    },
+    {
+      "label": "expanded300 selection.csv (pre-prediction_at)",
+      "path": "output\\baseline_recovery_v2_weather_expanded_20260918_selection.csv",
+      "sha256": "1f388c0419388d65f2c7e4096906a01f89e82ae633f525110198e2d55cb07745",
+      "checked_against_prior_recorded_expectation": false,
+      "detail": "no usable prior recorded expectation exists for this file (no plan_fingerprint was recorded in the fetch manifest); this records its CURRENT hash only -- past identity is not claimed"
+    },
+    {
+      "label": "baseline_recovery_v2_weather_sample_20260918 selection_with_prediction_at.csv",
+      "path": "output\\baseline_recovery_v2_weather_sample_20260918_selection_with_prediction_at.csv",
+      "sha256": "f607402ee801a8f709da82fc1c3495f6501ab8a942fbe8b10fb2352f04da15f9",
+      "checked_against_prior_recorded_expectation": false,
+      "detail": "no prior run recorded an independent hash of this exact (post-prediction_at) file; this records its CURRENT hash only -- past identity is not claimed"
+    },
+    {
+      "label": "baseline_recovery_v2_weather_expanded_20260918 selection_with_prediction_at.csv",
+      "path": "output\\baseline_recovery_v2_weather_expanded_20260918_selection_with_prediction_at.csv",
+      "sha256": "01ad1d0b434a6b9b15f70c3c1caa3cfbf1e76cb994505a31e195ce17ca899a7b",
+      "checked_against_prior_recorded_expectation": false,
+      "detail": "no prior run recorded an independent hash of this exact (post-prediction_at) file; this records its CURRENT hash only -- past identity is not claimed"
+    }
+  ],
+  "input_provenance_checks_passed": 4,
+  "sample21_dropped_exact_duplicate_reports": 0,
+  "expanded300_dropped_exact_duplicate_reports": 0,
+  "comparisons_table": "output\\baseline_recovery_v2_weather_recombination_provenance_20260918_reconciliation_comparisons.json",
+  "rejoined_results_dir": "data\\weather_probe\\baseline_recovery_v2_weather_recombination_provenance_20260918_rejoined",
+  "all_scenarios_byte_identical_to_original": false,
+  "structural_comparison_passed": true,
+  "expected_policy_change_cells_total": 232,
+  "unexpected_meaning_mismatch_cells_total": 0,
+  "any_meaning_level_difference_found": true,
+  "final_regression_verdict": "PASS",
+  "characterization": "differs from the original with 232 approved policy-change cell(s) and 0 unexpected meaning-level differences -- see comparisons_table",
+  "limitations": [
+    "This re-runs the CURRENT join code (src/weather.py, join_weather_sample[_expanded].py) against the SAME cached observations already on disk; it proves the fixed code reproduces the previously reported result from real cached data, not that a full re-collection would match (no new network collection is performed here).",
+    "A network guard monkeypatches subprocess.run and urllib.request.urlopen for the duration of the re-join; a NetworkCallAttempted error means the cache-only assumption was violated and the comparison is invalid, not that new data was collected.",
+    "The per-column format-vs-meaning split is only computed for a column whose CSV-text representation actually differs between the fresh and original result; a byte-identical file skips this entirely and is reported as such.",
+    "The ONLY approved semantic change is a not_collectible row's origin_station/destination_station flipping from a filled value to correctly-missing, with that row's weather columns missing on BOTH sides; the SAME station change on a collectible row, any actual weather value/observed-time/station change, or a structural mismatch is always an unexpected regression regardless of any_meaning_level_difference_found.",
+    "manifest_hash_checks_passed (the fetch caches and the two ORIGINAL joined outputs) and input_provenance_checks (the selection/mapping files actually read to rebuild the join requests) are separate counts over disjoint file sets -- neither includes the other. Within input_provenance_checks, only the entries with checked_against_prior_recorded_expectation=true were verified against an independently pre-recorded expectation (the 300-row fetch run's own plan_fingerprint); the two selection_with_prediction_at.csv entries record only a CURRENT hash because no run ever recorded an independent expectation for that exact file, and past identity for those two is not claimed."
+  ]
+}

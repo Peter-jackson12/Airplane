@@ -4,12 +4,12 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from notebooks.fetch_weather_sample_expanded import (LOOKAHEAD_HOURS, LOOKBACK_HOURS,
-                                                      build_station_day_groups,
+from notebooks.fetch_weather_sample_expanded import (CHECKPOINT_SCHEMA_VERSION, LOOKAHEAD_HOURS,
+                                                      LOOKBACK_HOURS, build_station_day_groups,
                                                       compute_plan_fingerprint, execute_with_caps,
                                                       load_checkpoint, new_checkpoint_state,
                                                       recover_interrupted_attempts, save_checkpoint,
-                                                      verify_plan_fingerprint)
+                                                      validate_checkpoint_schema, verify_plan_fingerprint)
 from notebooks.join_weather_sample import load_observations
 from notebooks.join_weather_sample_expanded import build_requests
 from src.weather import join_weather_asof
@@ -661,8 +661,11 @@ def test_load_checkpoint_recovers_an_in_flight_attempt_from_disk(tmp_path):
     checkpoint_path = tmp_path / 'ckpt.json'
     crashed = new_checkpoint_state()
     crashed['requests_used'] = 1
-    crashed['groups']['A|2019-01-01'] = {'status': 'in_progress', 'attempts_detail': [],
-                                         'in_flight': {'attempt': 1, 'timeout': 15.0}}
+    crashed['bytes_used'] = 500_000
+    crashed['groups']['A|2019-01-01'] = {
+        'status': 'in_progress', 'attempts_detail': [],
+        'in_flight': {'attempt': 1, 'timeout': 15.0, 'attempt_overhead_seconds': 0.0,
+                      'bytes_reserved': 500_000}}
     save_checkpoint(checkpoint_path, crashed)
 
     resumed = load_checkpoint(checkpoint_path)
@@ -879,3 +882,124 @@ def test_fetch_attempt_refuses_to_start_with_no_remaining_byte_budget(tmp_path, 
                                 timeout=5, max_bytes_remaining=0)
     assert outcome['success'] is False
     assert called == []  # no network call is made once the byte budget is already exhausted
+
+
+# ---- checkpoint schema gate: an older-format checkpoint is rejected before any network call ----
+
+def _old_v1_completed_checkpoint() -> dict:
+    """Shape of a pre-reservation-accounting checkpoint (schema_version=1)
+    for an already-completed group: no bytes_measured, no plan_fingerprint,
+    no unmeasured_byte_attempts -- fields the current accounting depends on."""
+    return {'schema_version': 1, 'requests_used': 3, 'bytes_used': 4500, 'groups': {
+        'A|2019-01-01': {'station': 'A', 'day': '2019-01-01', 'status': 'fetched', 'sha256': 'abc',
+                         'window_start_utc': '2019-01-01T00:00:00+00:00',
+                         'window_end_utc': '2019-01-01T01:00:00+00:00', 'cache_file': '/fake/A.csv'}},
+           'attempts_log': [], 'cap_hit': None}
+
+
+def _old_v1_in_flight_checkpoint() -> dict:
+    """An old in_flight marker never recorded bytes_reserved/
+    attempt_overhead_seconds -- the exact fields the new accounting requires."""
+    state = _old_v1_completed_checkpoint()
+    state['groups']['A|2019-01-01'] = {'status': 'in_progress', 'attempts_detail': [],
+                                       'in_flight': {'attempt': 1, 'timeout': 15.0}}
+    return state
+
+
+def _old_v1_unmeasured_failure_checkpoint() -> dict:
+    """An old failed-group record with no byte/time accounting recorded on
+    its attempts at all."""
+    state = _old_v1_completed_checkpoint()
+    state['groups']['A|2019-01-01'] = {
+        'station': 'A', 'day': '2019-01-01', 'attempts': 3,
+        'attempts_detail': [{'attempt': i, 'success': False, 'error': 'boom'} for i in range(1, 4)],
+        'errors': ['boom'] * 3, 'permanent': True, 'reason': 'max_attempts_per_group exhausted',
+        'status': 'failed'}
+    return state
+
+
+@pytest.mark.parametrize('build_old_checkpoint', [
+    _old_v1_completed_checkpoint, _old_v1_in_flight_checkpoint, _old_v1_unmeasured_failure_checkpoint])
+def test_old_schema_checkpoint_is_explicitly_rejected(tmp_path, build_old_checkpoint):
+    checkpoint_path = tmp_path / 'ckpt.json'
+    original_text = json.dumps(build_old_checkpoint(), indent=2)
+    checkpoint_path.write_text(original_text)
+
+    with pytest.raises(ValueError, match='schema_version'):
+        load_checkpoint(checkpoint_path)
+
+    # the original file must be preserved byte-for-byte; a rejected checkpoint is never rewritten,
+    # migrated, or reset, and load_checkpoint makes no network call of any kind
+    assert checkpoint_path.read_text() == original_text
+
+
+def test_current_schema_checkpoint_missing_a_required_top_level_field_is_rejected(tmp_path):
+    """A file that already CLAIMS schema_version=CHECKPOINT_SCHEMA_VERSION but is missing a required
+    accounting field (e.g. truncated or hand-edited) must not be silently defaulted."""
+    checkpoint_path = tmp_path / 'ckpt.json'
+    state = new_checkpoint_state()
+    del state['bytes_measured']
+    original_text = json.dumps(state, indent=2)
+    checkpoint_path.write_text(original_text)
+    with pytest.raises(ValueError, match='missing required accounting field'):
+        load_checkpoint(checkpoint_path)
+    assert checkpoint_path.read_text() == original_text
+
+
+def test_current_schema_checkpoint_with_incomplete_in_flight_is_rejected(tmp_path):
+    """An in_flight marker under the CURRENT schema must carry
+    bytes_reserved/attempt_overhead_seconds; a v2-labeled checkpoint missing
+    them is not silently completed with defaults."""
+    checkpoint_path = tmp_path / 'ckpt.json'
+    state = new_checkpoint_state()
+    state['groups']['A|2019-01-01'] = {'status': 'in_progress', 'attempts_detail': [],
+                                       'in_flight': {'attempt': 1, 'timeout': 15.0}}
+    original_text = json.dumps(state, indent=2)
+    checkpoint_path.write_text(original_text)
+    with pytest.raises(ValueError, match='missing required accounting field'):
+        load_checkpoint(checkpoint_path)
+    assert checkpoint_path.read_text() == original_text
+
+
+def test_current_schema_complete_checkpoint_loads_cleanly():
+    """Negative control: a fully-populated current-schema checkpoint (as
+    save_checkpoint actually writes) passes validation without raising."""
+    state = new_checkpoint_state()
+    assert state['schema_version'] == CHECKPOINT_SCHEMA_VERSION
+    validate_checkpoint_schema(state, Path('irrelevant'))  # must not raise
+
+
+def test_new_schema_resume_after_two_interrupts_reserves_and_charges_grace_without_duplication_or_loss(tmp_path):
+    """End-to-end through disk (save_checkpoint/load_checkpoint) under the CURRENT schema: two
+    separate interrupted-then-resumed cycles for the SAME group must each contribute exactly one
+    reservation and one worst-case overhead charge -- never double-counted on resume, never dropped."""
+    checkpoint_path = tmp_path / 'ckpt.json'
+    planned = [('A', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    checkpoint = new_checkpoint_state()
+
+    def crashing_attempt_fn(station, start, end, *, timeout, max_bytes_remaining):
+        raise RuntimeError('simulated crash mid-attempt')
+
+    for _ in range(2):
+        with pytest.raises(RuntimeError):
+            execute_with_caps(planned, groups, max_requests=10, max_bytes=10**9, max_seconds=10**9,
+                              cache_exists_fn=lambda s, a, b: None, attempt_fn=crashing_attempt_fn,
+                              digest_fn=lambda p: 'x', now_fn=fake_clock(), checkpoint=checkpoint,
+                              checkpoint_path=checkpoint_path, attempt_overhead_seconds=2.0)
+        checkpoint = load_checkpoint(checkpoint_path)  # goes through the full v2 validation + recovery
+
+    assert checkpoint['requests_used'] == 2  # exactly one reservation per crash, none lost or doubled
+    assert checkpoint['unmeasured_byte_attempts'] == 2
+    from notebooks.fetch_weather_sample import MAX_RESPONSE_BYTES
+    assert checkpoint['bytes_used'] == 2 * MAX_RESPONSE_BYTES
+    assert checkpoint['seconds_used'] == pytest.approx(2 * (15.0 + 2.0))  # each: default timeout + overhead
+
+    # finally resolve the group for real; the two recovered interrupted attempts are preserved
+    # alongside the successful one, not discarded
+    attempt_fn = make_attempt_fn({'A': [success()]})
+    result, checkpoint = run(planned, groups, attempt_fn, checkpoint=checkpoint,
+                             checkpoint_path=checkpoint_path, max_requests=10**9, max_bytes=10**9,
+                             max_seconds=10**9)
+    assert len(result['fetched']) == 1
+    assert result['fetched'][0]['attempts'] == 3  # 2 recovered-interrupted + 1 real success
