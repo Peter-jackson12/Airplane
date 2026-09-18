@@ -1,0 +1,6 @@
+ID,Month,Day_of_Month,Tail_Number,Origin_Airport,Destination_Airport,Distance,Carrier_ID(DOT),Estimated_Departure_Time,Estimated_Arrival_Time,Airline,Carrier_Code(IATA)
+TRAIN_091928,1,28,N371NB,SNA,MSP,1522,19790,845,1423,Delta Air Lines Inc.,DL
+TRAIN_474124,1,4,N503MJ,DTW,IAD,383,20378,1455,1625,Mesa Airlines Inc.,UA
+TRAIN_522826,1,18,N18556,IAH,MOB,427,20366,1155,1324,ExpressJet Airlines Inc.,UA
+TRAIN_527464,1,13,N680PA,ANC,DUT,792,20225,730,945,Peninsula Airways Inc.,AS
+TRAIN_637270,1,31,N485HA,HNL,OGG,100,19690,700,739,Hawaiian Airlines Inc.,HA

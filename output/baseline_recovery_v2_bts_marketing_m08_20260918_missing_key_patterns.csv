@@ -1,0 +1,8 @@
+key_pattern,missing_keys,rows,no_candidate,unique_single_bts_row,many_candidates
+Month+Day_of_Month+Tail_Number+Origin_Airport+Destination_Airport+Distance+Carrier_ID(DOT)+Estimated_Arrival_Time,Estimated_Departure_Time,7744,48,7690,6
+Month+Day_of_Month+Tail_Number+Origin_Airport+Destination_Airport+Distance+Carrier_ID(DOT)+Estimated_Departure_Time,Estimated_Arrival_Time,7675,53,7613,9
+Month+Day_of_Month+Tail_Number+Origin_Airport+Destination_Airport+Distance+Estimated_Departure_Time+Estimated_Arrival_Time,Carrier_ID(DOT),7636,48,7584,4
+Month+Day_of_Month+Tail_Number+Origin_Airport+Destination_Airport+Distance+Carrier_ID(DOT),Estimated_Departure_Time+Estimated_Arrival_Time,954,3,877,74
+Month+Day_of_Month+Tail_Number+Origin_Airport+Destination_Airport+Distance+Estimated_Arrival_Time,Carrier_ID(DOT)+Estimated_Departure_Time,951,7,944,0
+Month+Day_of_Month+Tail_Number+Origin_Airport+Destination_Airport+Distance+Estimated_Departure_Time,Carrier_ID(DOT)+Estimated_Arrival_Time,938,4,931,3
+Month+Day_of_Month+Tail_Number+Origin_Airport+Destination_Airport+Distance,Carrier_ID(DOT)+Estimated_Departure_Time+Estimated_Arrival_Time,104,0,96,8

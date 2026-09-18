@@ -1,0 +1,3 @@
+month,year,source,eligible_rows,matched_rows,match_rate,multiple_bts_rows
+12,2018,marketing,70718,40460,0.572131564806697,0
+12,2019,marketing,70718,30266,0.4279815605644956,0

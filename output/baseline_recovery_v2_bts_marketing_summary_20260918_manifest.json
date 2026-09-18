@@ -1,0 +1,123 @@
+{
+  "name": "baseline_recovery_v2_bts_marketing_summary_20260918",
+  "code_sha256": "f91b853f86a5598d6e17b0078282ef91b3026bbde2dee356440fde31d01dfd60",
+  "fits_any_model": false,
+  "uses_external_data": false,
+  "target_columns_used": [],
+  "sources": [
+    {
+      "run": "baseline_recovery_v2_bts_marketing_m01_20260918",
+      "manifest_sha256": "10e445e8e5afb8c93cbff4f850a8428fbcf8e9131588aeb1dd1f08bef3113a27",
+      "row_evidence_sha256": "e8a4dccb024abb4bc571c8d19b278297ab300c2bdbe07234847221e406049688"
+    },
+    {
+      "run": "baseline_recovery_v2_bts_marketing_m02_20260917",
+      "manifest_sha256": "c85f96f3967aab0d06538909b2c48d90d67c008512e18f7b2a63de61f76d8e1c",
+      "row_evidence_sha256": "a3f5c6766b37ff5a5b7d7dc29d13507a0a948069af1db75b741374478c96b8a3"
+    },
+    {
+      "run": "baseline_recovery_v2_bts_marketing_m03_20260918",
+      "manifest_sha256": "066d47bb1c0e9cddb797666192e3e86325877a51c4c78a2ed72c64836aee6b04",
+      "row_evidence_sha256": "f42cd394dfd0ba9af7a72d9415fd204fb446acad36bb93de1d37a9c9968ba941"
+    },
+    {
+      "run": "baseline_recovery_v2_bts_marketing_m04_20260918",
+      "manifest_sha256": "2302b060fcdc477fe1da40374f3a55ac42b5b00897696b0b995a1b7dfa115b9a",
+      "row_evidence_sha256": "3253649c6f75ef41c6331b6c0be16c9d5a7defa482d2e68ca023660a35caefe0"
+    },
+    {
+      "run": "baseline_recovery_v2_bts_marketing_m05_20260918",
+      "manifest_sha256": "21f6110902ed6024c929ff54e76f32ea9ee03eeb2d7a049cbcf9af3e3f771f3c",
+      "row_evidence_sha256": "1fd6bf54e4aa41995e0dc8998f4d23f70cf69e5570259778680bcc32ab4b36ea"
+    },
+    {
+      "run": "baseline_recovery_v2_bts_marketing_m06_20260918",
+      "manifest_sha256": "4d7cf2d560954bbcb64898c8edcc4ded2185330f377d703eb2dc612c24ea2f33",
+      "row_evidence_sha256": "09eb839277a14fc41535967ef0831f0e60dbfaa2392cc0cc9e7c4c9e448559a3"
+    },
+    {
+      "run": "baseline_recovery_v2_bts_marketing_m07_20260917",
+      "manifest_sha256": "ac764c52c0b0f935be44173432612943de65d71d1ecdf4f1a9f07c49ff2e5732",
+      "row_evidence_sha256": "3b4c716afd53ab1936419bb62fc4d8818dadd58f2501220ce12f6c59c186937b"
+    },
+    {
+      "run": "baseline_recovery_v2_bts_marketing_m08_20260918",
+      "manifest_sha256": "2e0289c9f1eb796de3ff99a865760e83db75e788b7b009efb75c21682a3566f1",
+      "row_evidence_sha256": "7513d92511b55c5466ff87e9f6dfcbd87db3e81adf1be6b859dd00a885a11676"
+    },
+    {
+      "run": "baseline_recovery_v2_bts_marketing_m09_20260918",
+      "manifest_sha256": "f73bcb40519dd5b3f9a4a662f6235ff9ec8aa9789cd9b5a3f3ff418b91e7ed3f",
+      "row_evidence_sha256": "1fbd5e65030feb41a235d005f3afd26656ea155d59d5377d2ed587bd1c05f56f"
+    },
+    {
+      "run": "baseline_recovery_v2_bts_marketing_m10_20260918",
+      "manifest_sha256": "0a85d7bdbbaa6734c32599245e64873662932b93d92e487fd54be48d6072b196",
+      "row_evidence_sha256": "b44999c5d786fed02c1f25594d4dc0c77c57ee4de25cd9fd37bb67eb9e1515de"
+    },
+    {
+      "run": "baseline_recovery_v2_bts_marketing_m11_20260917",
+      "manifest_sha256": "770fca1d5186a5ec0bd0a228a052082a95ce63487170410c28b77e109fa7ee86",
+      "row_evidence_sha256": "be565058ac0257bf3be9ea6bd9e1ef948aa3e6d9a88ac630a3e93b4b7cec0a64"
+    },
+    {
+      "run": "baseline_recovery_v2_bts_marketing_m12_20260918",
+      "manifest_sha256": "e0d90b73a6c0cff45947a9414b399d9726416b24efda68ebddfde18019c6f9ea",
+      "row_evidence_sha256": "d2e7aacac7a652618ee587c26c529ee87169c483b543a9d2b82f0787b5b0eef2"
+    }
+  ],
+  "totals": {
+    "months_compared": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "complete_rows": 707317,
+    "matched_rows": 706900,
+    "unmatched_rows": 417,
+    "resolved_to_one_year": 706759,
+    "unresolved_both_years": 141,
+    "missing_key_rows": 292683,
+    "missing_key_no_candidate": 165,
+    "missing_key_unique": 291308,
+    "missing_key_multiple": 1210,
+    "share_2018_min_month": 0.39259066868152626,
+    "share_2018_max_month": 0.5837617729343352
+  },
+  "thanksgiving_check": [
+    {
+      "date": "11-22",
+      "thanksgiving_year": 2018,
+      "share_2018": 0.4512847965738758,
+      "november_median_share_2018": 0.583317174886363,
+      "delta_vs_median": -0.1320323783124872,
+      "direction": "depresses 2018",
+      "matches_prediction": true
+    },
+    {
+      "date": "11-28",
+      "thanksgiving_year": 2019,
+      "share_2018": 0.7032563025210085,
+      "november_median_share_2018": 0.583317174886363,
+      "delta_vs_median": 0.11993912763464543,
+      "direction": "depresses 2019",
+      "matches_prediction": true
+    }
+  ],
+  "limitations": [
+    "Only the compared months are covered; the remaining months are untested.",
+    "Shares are computed over rows resolved to exactly one year; rows matching both are excluded, not assigned.",
+    "A per-month share describes this file's composition, not any airline's traffic.",
+    "Missing-key rows are counted separately and never pooled with complete rows.",
+    "Matching a year means the flight existed that year, not that the file contains no other year."
+  ]
+}

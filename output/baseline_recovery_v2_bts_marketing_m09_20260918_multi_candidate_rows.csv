@@ -1,0 +1,6 @@
+ID,Month,Day_of_Month,Tail_Number,Origin_Airport,Destination_Airport,Distance,Carrier_ID(DOT),Estimated_Departure_Time,Estimated_Arrival_Time,Airline,Carrier_Code(IATA)
+TRAIN_310969,9,27,N530NK,MYR,PHL,473,20416,1104,1241,Spirit Air Lines,NK
+TRAIN_497013,9,1,N801HC,HNL,LNY,72,20263,849,923,Empire Airlines Inc.,HA
+TRAIN_597970,9,10,N945UW,BOS,LGA,184,19805,1000,1123,American Airlines Inc.,AA
+TRAIN_827280,9,9,N963UW,BOS,LGA,184,19805,1000,1123,American Airlines Inc.,AA
+TRAIN_960680,9,16,N11194,PWM,IAD,493,20445,1000,1147,"Commutair Aka Champlain Enterprises, Inc.",UA

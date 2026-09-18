@@ -1,0 +1,60 @@
+{
+  "name": "baseline_recovery_v2_bts_marketing_m05_20260918",
+  "source_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "code_sha256": "a178df6ba07bb5a42a2e20054d531ae292f089fbae5717ba8b9cd32348c90349",
+  "fits_any_model": false,
+  "uses_external_data": true,
+  "target_columns_used": [],
+  "bts_table": "Marketing Carrier On-Time Performance (Beginning January 2018)",
+  "month": 5,
+  "source_rows_in_month": 74533,
+  "complete_rows": 52768,
+  "incomplete_rows": 21765,
+  "matched_rows": 52768,
+  "match_rate": 1.0,
+  "one_candidate_year": 52751,
+  "multiple_candidate_years": 17,
+  "still_unmatched": 0,
+  "reporting_unmatched_now_matched": null,
+  "incomplete_no_candidate": 0,
+  "incomplete_unique_single_bts_row": 21684,
+  "incomplete_many_candidates": 81,
+  "keys": [
+    "Month",
+    "Day_of_Month",
+    "Tail_Number",
+    "Origin_Airport",
+    "Destination_Airport",
+    "Distance",
+    "Carrier_ID(DOT)",
+    "Estimated_Departure_Time",
+    "Estimated_Arrival_Time"
+  ],
+  "files": [
+    {
+      "file": "data\\bts\\On_Time_Marketing_Carrier_On_Time_Performance_Beginning_January_2018_2018_5.zip",
+      "sha256": "868dc3ec5c39a0b87b5738af941135e68ed8aba7f873720147fc939734cf1f4b",
+      "bytes": 36528017,
+      "rows": 671734,
+      "crc_ok": true,
+      "operating_carriers": 27
+    },
+    {
+      "file": "data\\bts\\On_Time_Marketing_Carrier_On_Time_Performance_Beginning_January_2018_2019_5.zip",
+      "sha256": "ee9d9902e252c7b07fbe2f0750ef60c692c3d2d637983e0a02969d8a03313feb",
+      "bytes": 37980415,
+      "rows": 694311,
+      "crc_ok": true,
+      "operating_carriers": 26
+    }
+  ],
+  "row_evidence": "data\\bts\\baseline_recovery_v2_bts_marketing_m05_20260918\\matches.csv.gz",
+  "row_sha256": "1fd6bf54e4aa41995e0dc8998f4d23f70cf69e5570259778680bcc32ab4b36ea",
+  "limitations": [
+    "Only the requested month, in 2018 and 2019, is covered; no other month or year is tested.",
+    "A match confirms the row exists in that year, not that the file is that year.",
+    "Marketing rows repeat one operated flight per selling carrier, so counts above one are codeshare records, not ambiguity.",
+    "Missing-key rows are reported separately and never pooled with complete rows.",
+    "Rows matching both years stay unresolved by design."
+  ]
+}

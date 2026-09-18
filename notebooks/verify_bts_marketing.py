@@ -73,7 +73,11 @@ def read_marketing(year: int, month: int = 11) -> tuple[pd.DataFrame, Path]:
         if len(members) != 1:
             raise ValueError('Expected exactly one CSV')
         with archive.open(members[0]) as stream:
-            frame = pd.read_csv(stream, usecols=USECOLS)
+            # 2018-08 has one row with an invalid UTF-8 byte sequence in a column
+            # outside USECOLS (Operated_or_Branded_Code_Share_Partners); replacing
+            # it is the only way to read the file at all. None of the 9 match KEYS
+            # are affected by that row's corruption.
+            frame = pd.read_csv(stream, usecols=USECOLS, encoding_errors='replace')
     assert frame.Year.eq(year).all() and frame.Month.eq(month).all()
     return normalize(frame.rename(columns=RENAMES)), path
 

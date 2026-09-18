@@ -1,0 +1,412 @@
+ID,Month,Day_of_Month,Estimated_Departure_Time,Estimated_Arrival_Time,Origin_Airport,Destination_Airport,Distance,Airline,Carrier_Code(IATA),Carrier_ID(DOT),Tail_Number,matched,route,carrier_group
+TRAIN_003836,8,5,1425,1515,OGG,LIH,201,Hawaiian Airlines Inc.,HA,19690,N477HA,False,OGG->LIH,reporting carrier
+TRAIN_006222,8,8,1340,1426,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N486HA,False,HNL->OGG,reporting carrier
+TRAIN_006409,8,14,1000,1225,SFO,OGG,2338,Hawaiian Airlines Inc.,HA,19690,N380HA,False,SFO->OGG,reporting carrier
+TRAIN_013626,8,22,810,844,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N487HA,False,LIH->HNL,reporting carrier
+TRAIN_014410,8,27,1521,1615,ITO,HNL,216,Hawaiian Airlines Inc.,HA,19690,N493HA,False,ITO->HNL,reporting carrier
+TRAIN_017053,8,11,730,1115,PHX,HNL,2917,Hawaiian Airlines Inc.,HA,19690,N590HA,False,PHX->HNL,reporting carrier
+TRAIN_020625,8,11,717,752,LIH,HNL,102,Hawaiian Airlines Inc.,,19690,N488HA,False,LIH->HNL,reporting carrier
+TRAIN_023597,8,6,900,1205,SEA,HNL,2677,Hawaiian Airlines Inc.,HA,19690,N383HA,False,SEA->HNL,reporting carrier
+TRAIN_023712,8,13,1351,1443,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N492HA,False,HNL->KOA,reporting carrier
+TRAIN_024252,8,6,1107,1154,OGG,LIH,201,,HA,19690,N476HA,False,OGG->LIH,reporting carrier
+TRAIN_024784,8,27,2002,2039,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N477HA,False,OGG->HNL,reporting carrier
+TRAIN_027739,8,23,1000,1225,SFO,OGG,2338,Hawaiian Airlines Inc.,HA,19690,N396HA,False,SFO->OGG,reporting carrier
+TRAIN_027740,8,9,1450,1534,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N494HA,False,HNL->LIH,reporting carrier
+TRAIN_032284,8,14,1222,1257,LIH,HNL,102,,HA,19690,N490HA,False,LIH->HNL,reporting carrier
+TRAIN_033294,8,5,1245,2105,OGG,SAN,2541,Hawaiian Airlines Inc.,HA,19690,N580HA,False,OGG->SAN,reporting carrier
+TRAIN_033523,8,7,1222,1257,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N475HA,False,LIH->HNL,reporting carrier
+TRAIN_033533,8,21,1511,1607,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N480HA,False,HNL->ITO,reporting carrier
+TRAIN_035737,8,10,1003,1040,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N477HA,False,LIH->HNL,reporting carrier
+TRAIN_036327,8,6,1220,1310,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N484HA,False,HNL->KOA,reporting carrier
+TRAIN_047174,8,20,1958,2045,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N493HA,False,KOA->HNL,reporting carrier
+TRAIN_054107,8,18,726,807,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N483HA,False,HNL->LIH,reporting carrier
+TRAIN_062433,8,13,953,1041,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N483HA,False,HNL->KOA,reporting carrier
+TRAIN_070833,8,23,810,844,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N488HA,False,LIH->HNL,reporting carrier
+TRAIN_071928,8,28,650,726,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N480HA,False,OGG->HNL,reporting carrier
+TRAIN_074449,8,5,1340,1426,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N483HA,False,HNL->OGG,reporting carrier
+TRAIN_075025,8,2,1950,2030,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N488HA,False,HNL->OGG,reporting carrier
+TRAIN_075475,8,15,615,709,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N492HA,False,HNL->ITO,reporting carrier
+TRAIN_079388,8,2,1100,1340,LAX,KOA,2504,Hawaiian Airlines Inc.,HA,19690,N361HA,False,LAX->KOA,reporting carrier
+TRAIN_080863,8,10,1050,1855,OGG,OAK,2349,Hawaiian Airlines Inc.,HA,19690,N583HA,False,OGG->OAK,reporting carrier
+TRAIN_081626,8,20,1805,1853,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N495HA,False,HNL->KOA,reporting carrier
+TRAIN_082067,8,17,1445,2310,HNL,LAX,2556,Hawaiian Airlines Inc.,HA,19690,N383HA,False,HNL->LAX,reporting carrier
+TRAIN_082828,8,15,1321,1357,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N476HA,False,LIH->HNL,reporting carrier
+TRAIN_085087,8,5,1850,1936,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N484HA,False,KOA->HNL,reporting carrier
+TRAIN_087113,8,19,614,650,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N479HA,False,OGG->HNL,reporting carrier
+TRAIN_094819,8,22,1003,1040,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N489HA,False,LIH->HNL,reporting carrier
+TRAIN_096580,8,23,800,1030,OAK,HNL,2409,Hawaiian Airlines Inc.,HA,19690,N215HA,False,OAK->HNL,reporting carrier
+TRAIN_104456,8,4,1321,1357,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N475HA,False,LIH->HNL,reporting carrier
+TRAIN_106979,8,10,1850,1936,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N487HA,False,KOA->HNL,reporting carrier
+TRAIN_107882,8,25,1853,1928,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N480HA,False,LIH->HNL,reporting carrier
+TRAIN_110944,8,4,1605,1646,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N479HA,False,HNL->LIH,reporting carrier
+TRAIN_112626,8,28,1415,2245,HNL,SAN,2614,Hawaiian Airlines Inc.,HA,19690,N379HA,False,HNL->SAN,reporting carrier
+TRAIN_118317,8,14,1015,1315,SEA,OGG,2640,Hawaiian Airlines Inc.,HA,19690,N379HA,False,SEA->OGG,reporting carrier
+TRAIN_120272,8,4,810,906,HNL,ITO,216,,HA,19690,N485HA,False,HNL->ITO,reporting carrier
+TRAIN_122367,8,14,1409,1445,LIH,HNL,102,,HA,19690,N493HA,False,LIH->HNL,reporting carrier
+TRAIN_123262,8,23,1450,1534,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N488HA,False,HNL->LIH,reporting carrier
+TRAIN_123450,8,28,1618,1657,OGG,ITO,121,,HA,19690,N492HA,False,OGG->ITO,reporting carrier
+TRAIN_124176,8,20,1835,1913,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N477HA,False,OGG->HNL,reporting carrier
+TRAIN_124423,8,22,1856,1948,ITO,HNL,216,Hawaiian Airlines Inc.,,19690,N476HA,False,ITO->HNL,reporting carrier
+TRAIN_126143,8,24,1230,2100,HNL,LGB,2569,Hawaiian Airlines Inc.,HA,19690,N214HA,False,HNL->LGB,reporting carrier
+TRAIN_130760,8,5,900,1145,LAX,OGG,2486,Hawaiian Airlines Inc.,,19690,N399HA,False,LAX->OGG,reporting carrier
+TRAIN_134107,8,30,936,1031,HNL,ITO,216,Hawaiian Airlines Inc.,,19690,N489HA,False,HNL->ITO,reporting carrier
+TRAIN_136211,8,6,1740,1815,LIH,HNL,102,Hawaiian Airlines Inc.,,19690,N488HA,False,LIH->HNL,reporting carrier
+TRAIN_141351,8,29,2035,2121,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N493HA,False,HNL->KOA,reporting carrier
+TRAIN_142560,8,11,1825,1904,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N480HA,False,HNL->OGG,reporting carrier
+TRAIN_144657,8,25,1910,1947,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N490HA,False,OGG->HNL,reporting carrier
+TRAIN_158579,8,14,2027,2104,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N487HA,False,OGG->HNL,reporting carrier
+TRAIN_159390,8,2,726,807,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N489HA,False,HNL->LIH,reporting carrier
+TRAIN_161524,8,31,1415,2245,HNL,SAN,2614,,,19690,N360HA,False,HNL->SAN,reporting carrier
+TRAIN_163190,8,29,1111,1200,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N491HA,False,KOA->HNL,reporting carrier
+TRAIN_164243,8,26,933,1012,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N475HA,False,OGG->HNL,reporting carrier
+TRAIN_169235,8,22,1521,1615,ITO,HNL,216,,HA,19690,N491HA,False,ITO->HNL,reporting carrier
+TRAIN_172393,8,23,2150,2231,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N481HA,False,HNL->OGG,reporting carrier
+TRAIN_173698,8,14,1100,1156,HNL,ITO,216,Hawaiian Airlines Inc.,,19690,N495HA,False,HNL->ITO,reporting carrier
+TRAIN_174148,8,5,1305,2115,HNL,SJC,2417,Hawaiian Airlines Inc.,HA,19690,N395HA,False,HNL->SJC,reporting carrier
+TRAIN_175351,8,9,621,706,HNL,KOA,163,Hawaiian Airlines Inc.,,19690,N481HA,False,HNL->KOA,reporting carrier
+TRAIN_178919,8,7,2027,2104,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N493HA,False,OGG->HNL,reporting carrier
+TRAIN_184096,8,16,1722,1802,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N494HA,False,HNL->LIH,reporting carrier
+TRAIN_187119,8,7,935,1017,HNL,LIH,102,Hawaiian Airlines Inc.,,19690,N485HA,False,HNL->LIH,reporting carrier
+TRAIN_187312,8,9,803,850,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N484HA,False,HNL->KOA,reporting carrier
+TRAIN_190379,8,23,936,1031,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N489HA,False,HNL->ITO,reporting carrier
+TRAIN_191391,8,29,1125,1930,OGG,OAK,2349,Hawaiian Airlines Inc.,HA,19690,N582HA,False,OGG->OAK,reporting carrier
+TRAIN_191519,8,8,2151,2235,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N485HA,False,KOA->HNL,reporting carrier
+TRAIN_200855,8,30,816,857,HNL,LIH,102,Hawaiian Airlines Inc.,,19690,N475HA,False,HNL->LIH,reporting carrier
+TRAIN_203131,8,7,736,821,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N486HA,False,KOA->HNL,reporting carrier
+TRAIN_206631,8,12,1505,655,HNL,JFK,4983,Hawaiian Airlines Inc.,HA,19690,N395HA,False,HNL->JFK,reporting carrier
+TRAIN_206836,8,6,1140,1229,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N486HA,False,KOA->HNL,reporting carrier
+TRAIN_208519,8,22,501,546,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N484HA,False,HNL->KOA,reporting carrier
+TRAIN_212170,8,14,1411,1455,HNL,LIH,102,,HA,19690,N495HA,False,HNL->LIH,reporting carrier
+TRAIN_216358,8,18,725,1005,SMF,HNL,2462,Hawaiian Airlines Inc.,HA,19690,N580HA,False,SMF->HNL,reporting carrier
+TRAIN_217922,8,25,1015,1315,SEA,OGG,2640,Hawaiian Airlines Inc.,HA,19690,N370HA,False,SEA->OGG,reporting carrier
+TRAIN_219890,8,12,1722,1802,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N477HA,False,HNL->LIH,reporting carrier
+TRAIN_221291,8,24,1641,1728,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N488HA,False,KOA->HNL,reporting carrier
+TRAIN_221814,8,14,956,1039,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N490HA,False,HNL->OGG,reporting carrier
+TRAIN_222676,8,30,1410,2210,OGG,SFO,2338,Hawaiian Airlines Inc.,HA,19690,N399HA,False,OGG->SFO,reporting carrier
+TRAIN_223003,8,20,953,1041,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N491HA,False,HNL->KOA,reporting carrier
+TRAIN_223422,8,3,1050,1855,OGG,OAK,2349,Hawaiian Airlines Inc.,HA,19690,N590HA,False,OGG->OAK,reporting carrier
+TRAIN_226545,8,14,920,955,KOA,OGG,84,Hawaiian Airlines Inc.,HA,19690,N489HA,False,KOA->OGG,reporting carrier
+TRAIN_226616,8,18,1200,2020,OGG,SAN,2541,Hawaiian Airlines Inc.,HA,19690,N205HA,False,OGG->SAN,reporting carrier
+TRAIN_230297,8,12,1015,1330,SAN,HNL,2614,Hawaiian Airlines Inc.,HA,19690,N378HA,False,SAN->HNL,reporting carrier
+TRAIN_232693,8,20,735,822,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N490HA,False,HNL->KOA,reporting carrier
+TRAIN_233506,8,31,730,1115,PHX,HNL,2917,Hawaiian Airlines Inc.,HA,19690,N580HA,False,PHX->HNL,reporting carrier
+TRAIN_239063,8,31,1100,1141,OGG,HNL,100,,HA,19690,N479HA,False,OGG->HNL,reporting carrier
+TRAIN_239140,8,12,1940,2022,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N477HA,False,HNL->LIH,reporting carrier
+TRAIN_239467,8,7,1450,1534,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N485HA,False,HNL->LIH,reporting carrier
+TRAIN_243478,8,17,1325,2145,OGG,LAX,2486,Hawaiian Airlines Inc.,HA,19690,N386HA,False,OGG->LAX,reporting carrier
+TRAIN_244463,8,16,2027,2104,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N492HA,False,OGG->HNL,reporting carrier
+TRAIN_245584,8,10,700,747,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N494HA,False,HNL->KOA,reporting carrier
+TRAIN_247396,8,25,1100,1141,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N483HA,False,OGG->HNL,reporting carrier
+TRAIN_247401,8,18,1445,2315,OGG,SEA,2640,Hawaiian Airlines Inc.,HA,19690,N390HA,False,OGG->SEA,reporting carrier
+TRAIN_251317,8,10,1913,2000,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N477HA,False,HNL->KOA,reporting carrier
+TRAIN_253091,8,4,1745,1825,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N475HA,False,HNL->LIH,reporting carrier
+TRAIN_255994,8,3,810,906,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N488HA,False,HNL->ITO,reporting carrier
+TRAIN_256130,8,22,1100,1155,ITO,HNL,216,Hawaiian Airlines Inc.,HA,19690,N480HA,False,ITO->HNL,reporting carrier
+TRAIN_256639,8,27,940,1210,OAK,LIH,2457,Hawaiian Airlines Inc.,HA,19690,N212HA,False,OAK->LIH,reporting carrier
+TRAIN_264734,8,5,1830,1905,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N483HA,False,LIH->HNL,reporting carrier
+TRAIN_265763,8,14,1111,1200,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N488HA,False,HNL->KOA,reporting carrier
+TRAIN_266746,8,18,1506,1550,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N487HA,False,HNL->OGG,reporting carrier
+TRAIN_267785,8,31,1810,2100,LAX,HNL,2556,Hawaiian Airlines Inc.,HA,19690,N379HA,False,LAX->HNL,reporting carrier
+TRAIN_273427,8,12,1544,1620,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N495HA,False,LIH->HNL,reporting carrier
+TRAIN_276281,8,6,1913,2000,HNL,KOA,163,Hawaiian Airlines Inc.,,19690,N495HA,False,HNL->KOA,reporting carrier
+TRAIN_278873,8,21,1820,1906,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N483HA,False,KOA->HNL,reporting carrier
+TRAIN_282126,8,25,730,955,SJC,OGG,2355,Hawaiian Airlines Inc.,HA,19690,N581HA,False,SJC->OGG,reporting carrier
+TRAIN_283759,8,30,935,1017,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N480HA,False,HNL->LIH,reporting carrier
+TRAIN_289249,8,8,1511,1607,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N480HA,False,HNL->ITO,reporting carrier
+TRAIN_290399,8,27,1445,2315,OGG,SEA,2640,Hawaiian Airlines Inc.,HA,19690,N383HA,False,OGG->SEA,reporting carrier
+TRAIN_290911,8,7,1720,1758,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N475HA,False,OGG->HNL,reporting carrier
+TRAIN_293435,8,18,1415,1500,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N489HA,False,HNL->OGG,reporting carrier
+TRAIN_295936,8,22,1100,1141,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N486HA,False,OGG->HNL,reporting carrier
+TRAIN_300502,8,26,1820,2135,LAS,HNL,2762,Hawaiian Airlines Inc.,HA,19690,N393HA,False,LAS->HNL,reporting carrier
+TRAIN_300743,8,30,1830,1905,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N484HA,False,LIH->HNL,reporting carrier
+TRAIN_303720,8,9,810,906,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N489HA,False,HNL->ITO,reporting carrier
+TRAIN_314143,8,19,1740,1815,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N476HA,False,LIH->HNL,reporting carrier
+TRAIN_316583,8,30,920,955,KOA,OGG,84,Hawaiian Airlines Inc.,HA,19690,N479HA,False,KOA->OGG,reporting carrier
+TRAIN_318904,8,12,1944,2020,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N488HA,False,LIH->HNL,reporting carrier
+TRAIN_320891,8,5,1610,1652,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N488HA,False,HNL->OGG,reporting carrier
+TRAIN_321702,8,26,1805,1853,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N475HA,False,HNL->KOA,reporting carrier
+TRAIN_325663,8,31,1445,2315,OGG,SEA,2640,Hawaiian Airlines Inc.,HA,19690,N391HA,False,OGG->SEA,reporting carrier
+TRAIN_331040,8,31,1410,2210,OGG,SFO,2338,Hawaiian Airlines Inc.,HA,19690,N382HA,False,OGG->SFO,reporting carrier
+TRAIN_332460,8,5,614,650,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N480HA,False,OGG->HNL,reporting carrier
+TRAIN_332867,8,28,1110,1146,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N492HA,False,LIH->HNL,reporting carrier
+TRAIN_338031,8,9,1800,1835,LIH,HNL,102,,HA,19690,N477HA,False,LIH->HNL,reporting carrier
+TRAIN_338963,8,29,726,807,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N494HA,False,HNL->LIH,reporting carrier
+TRAIN_340784,8,26,1332,1427,ITO,HNL,216,Hawaiian Airlines Inc.,HA,19690,N495HA,False,ITO->HNL,reporting carrier
+TRAIN_343041,8,27,933,1012,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N493HA,False,OGG->HNL,reporting carrier
+TRAIN_345381,8,16,1636,1730,ITO,HNL,216,Hawaiian Airlines Inc.,HA,19690,N486HA,False,ITO->HNL,reporting carrier
+TRAIN_345809,8,31,1330,2200,HNL,PDX,2603,Hawaiian Airlines Inc.,HA,19690,N590HA,False,HNL->PDX,reporting carrier
+TRAIN_351449,8,19,940,1210,OAK,LIH,2457,Hawaiian Airlines Inc.,HA,19690,N202HA,False,OAK->LIH,reporting carrier
+TRAIN_352224,8,23,2027,2104,OGG,HNL,100,Hawaiian Airlines Inc.,,19690,N494HA,False,OGG->HNL,reporting carrier
+TRAIN_353888,8,3,1000,1305,LAX,HNL,2556,,HA,19690,N396HA,False,LAX->HNL,reporting carrier
+TRAIN_354614,8,30,1305,1350,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N477HA,False,HNL->OGG,reporting carrier
+TRAIN_355343,8,30,1835,1913,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N493HA,False,OGG->HNL,reporting carrier
+TRAIN_356363,8,21,1855,1934,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N477HA,False,HNL->OGG,reporting carrier
+TRAIN_356821,8,31,2138,2213,LIH,HNL,102,Hawaiian Airlines Inc.,,19690,N483HA,False,LIH->HNL,reporting carrier
+TRAIN_356911,8,15,717,752,LIH,HNL,102,Hawaiian Airlines Inc.,,19690,N494HA,False,LIH->HNL,reporting carrier
+TRAIN_358894,8,13,1825,1918,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N483HA,False,HNL->ITO,reporting carrier
+TRAIN_359860,8,26,750,1640,HNL,LAS,2762,Hawaiian Airlines Inc.,HA,19690,N393HA,False,HNL->LAS,reporting carrier
+TRAIN_361101,8,29,1310,2120,HNL,SFO,2398,Hawaiian Airlines Inc.,,19690,N399HA,False,HNL->SFO,reporting carrier
+TRAIN_362629,8,6,810,847,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N493HA,False,OGG->HNL,reporting carrier
+TRAIN_363499,8,30,2240,725,HNL,LAS,2762,Hawaiian Airlines Inc.,HA,19690,N388HA,False,HNL->LAS,reporting carrier
+TRAIN_364921,8,2,830,1140,LGB,HNL,2569,Hawaiian Airlines Inc.,HA,19690,N215HA,False,LGB->HNL,reporting carrier
+TRAIN_367351,8,26,1321,1357,LIH,HNL,102,,HA,19690,N494HA,False,LIH->HNL,reporting carrier
+TRAIN_371723,8,4,1215,2030,LIH,OAK,2457,,HA,19690,N209HA,False,LIH->OAK,reporting carrier
+TRAIN_372512,8,15,616,701,KOA,HNL,163,Hawaiian Airlines Inc.,,19690,N489HA,False,KOA->HNL,reporting carrier
+TRAIN_374208,8,6,736,821,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N477HA,False,KOA->HNL,reporting carrier
+TRAIN_378186,8,22,1820,2135,LAS,HNL,2762,Hawaiian Airlines Inc.,HA,19690,N390HA,False,LAS->HNL,reporting carrier
+TRAIN_378905,8,16,1610,1645,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N475HA,False,LIH->HNL,reporting carrier
+TRAIN_381049,8,21,1222,1257,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N486HA,False,LIH->HNL,reporting carrier
+TRAIN_382693,8,2,1641,1728,KOA,HNL,163,,HA,19690,N481HA,False,KOA->HNL,reporting carrier
+TRAIN_387062,8,23,1425,1515,OGG,LIH,201,Hawaiian Airlines Inc.,HA,19690,N481HA,False,OGG->LIH,reporting carrier
+TRAIN_389398,8,4,1419,1500,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N483HA,False,OGG->HNL,reporting carrier
+TRAIN_391440,8,7,1855,1934,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N477HA,False,HNL->OGG,reporting carrier
+TRAIN_392669,8,4,1636,1730,ITO,HNL,216,Hawaiian Airlines Inc.,HA,19690,N485HA,False,ITO->HNL,reporting carrier
+TRAIN_393465,8,24,1305,2115,HNL,SJC,2417,Hawaiian Airlines Inc.,HA,19690,N580HA,False,HNL->SJC,reporting carrier
+TRAIN_395434,8,29,1521,1615,ITO,HNL,216,Hawaiian Airlines Inc.,HA,19690,N485HA,False,ITO->HNL,reporting carrier
+TRAIN_403441,8,19,2100,2151,ITO,HNL,216,Hawaiian Airlines Inc.,HA,19690,N486HA,False,ITO->HNL,reporting carrier
+TRAIN_406295,8,29,1303,1350,LIH,OGG,201,Hawaiian Airlines Inc.,HA,19690,N490HA,False,LIH->OGG,reporting carrier
+TRAIN_406772,8,17,1411,1455,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N485HA,False,HNL->LIH,reporting carrier
+TRAIN_406897,8,19,1913,2000,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N477HA,False,HNL->KOA,reporting carrier
+TRAIN_408594,8,11,705,1005,SAN,OGG,2541,Hawaiian Airlines Inc.,HA,19690,N581HA,False,SAN->OGG,reporting carrier
+TRAIN_417300,8,7,1454,1535,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N475HA,False,OGG->HNL,reporting carrier
+TRAIN_418273,8,22,913,1001,HNL,KOA,163,,HA,19690,N481HA,False,HNL->KOA,reporting carrier
+TRAIN_419488,8,6,625,659,LIH,HNL,102,,HA,19690,N489HA,False,LIH->HNL,reporting carrier
+TRAIN_420590,8,20,810,847,OGG,HNL,100,Hawaiian Airlines Inc.,,19690,N493HA,False,OGG->HNL,reporting carrier
+TRAIN_421688,8,8,1720,1758,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N486HA,False,OGG->HNL,reporting carrier
+TRAIN_421883,8,12,2050,2126,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N477HA,False,LIH->HNL,reporting carrier
+TRAIN_422149,8,9,1550,1637,KOA,HNL,163,,HA,19690,N495HA,False,KOA->HNL,reporting carrier
+TRAIN_422315,8,22,1225,1318,ITO,HNL,216,Hawaiian Airlines Inc.,HA,19690,N483HA,False,ITO->HNL,reporting carrier
+TRAIN_426714,8,6,1510,2355,HNL,LAS,2762,Hawaiian Airlines Inc.,HA,19690,N379HA,False,HNL->LAS,reporting carrier
+TRAIN_428565,8,11,2150,2231,HNL,OGG,100,Hawaiian Airlines Inc.,,19690,N491HA,False,HNL->OGG,reporting carrier
+TRAIN_435142,8,3,1505,1540,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N494HA,False,LIH->HNL,reporting carrier
+TRAIN_436465,8,30,1000,1305,LAX,HNL,2556,Hawaiian Airlines Inc.,HA,19690,N393HA,False,LAX->HNL,reporting carrier
+TRAIN_437661,8,8,936,1031,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N475HA,False,HNL->ITO,reporting carrier
+TRAIN_438022,8,18,1530,1617,LIH,OGG,201,Hawaiian Airlines Inc.,HA,19690,N494HA,False,LIH->OGG,reporting carrier
+TRAIN_439849,8,1,1645,1732,OGG,LIH,201,Hawaiian Airlines Inc.,HA,19690,N491HA,False,OGG->LIH,reporting carrier
+TRAIN_441378,8,4,1303,1350,LIH,OGG,201,Hawaiian Airlines Inc.,HA,19690,N483HA,False,LIH->OGG,reporting carrier
+TRAIN_441522,8,18,736,831,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N495HA,False,HNL->ITO,reporting carrier
+TRAIN_441931,8,26,1600,1648,HNL,KOA,163,,HA,19690,N485HA,False,HNL->KOA,reporting carrier
+TRAIN_444052,8,11,1745,1825,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N488HA,False,HNL->LIH,reporting carrier
+TRAIN_444438,8,6,1000,1455,JFK,HNL,4983,,,19690,N388HA,False,JFK->HNL,reporting carrier
+TRAIN_445659,8,23,1205,1253,OGG,LIH,201,Hawaiian Airlines Inc.,,19690,N488HA,False,OGG->LIH,reporting carrier
+TRAIN_450180,8,8,900,1145,LAX,OGG,2486,Hawaiian Airlines Inc.,HA,19690,N381HA,False,LAX->OGG,reporting carrier
+TRAIN_451081,8,7,1550,1637,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N490HA,False,KOA->HNL,reporting carrier
+TRAIN_451334,8,20,1856,1948,ITO,HNL,216,Hawaiian Airlines Inc.,,19690,N476HA,False,ITO->HNL,reporting carrier
+TRAIN_454614,8,28,816,857,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N475HA,False,HNL->LIH,reporting carrier
+TRAIN_455129,8,22,750,1640,HNL,LAS,2762,Hawaiian Airlines Inc.,HA,19690,N390HA,False,HNL->LAS,reporting carrier
+TRAIN_457103,8,23,1200,2020,OGG,SAN,2541,Hawaiian Airlines Inc.,HA,19690,N209HA,False,OGG->SAN,reporting carrier
+TRAIN_458508,8,11,1850,1936,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N490HA,False,KOA->HNL,reporting carrier
+TRAIN_461717,8,31,1630,1711,HNL,LIH,102,Hawaiian Airlines Inc.,,19690,N484HA,False,HNL->LIH,reporting carrier
+TRAIN_464082,8,18,1125,1930,OGG,OAK,2349,,HA,19690,N594HA,False,OGG->OAK,reporting carrier
+TRAIN_468579,8,3,1655,1751,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N483HA,False,HNL->ITO,reporting carrier
+TRAIN_471650,8,31,736,821,KOA,HNL,163,Hawaiian Airlines Inc.,,19690,N490HA,False,KOA->HNL,reporting carrier
+TRAIN_473891,8,8,810,906,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N480HA,False,HNL->ITO,reporting carrier
+TRAIN_482174,8,8,915,1003,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N487HA,False,KOA->HNL,reporting carrier
+TRAIN_487825,8,2,1856,1948,ITO,HNL,216,Hawaiian Airlines Inc.,HA,19690,N480HA,False,ITO->HNL,reporting carrier
+TRAIN_489641,8,12,1725,1811,HNL,KOA,163,,,19690,N490HA,False,HNL->KOA,reporting carrier
+TRAIN_497818,8,9,1029,1112,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N476HA,False,HNL->OGG,reporting carrier
+TRAIN_501070,8,28,1255,1353,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N488HA,False,HNL->ITO,reporting carrier
+TRAIN_502673,8,3,1220,1310,HNL,KOA,163,,HA,19690,N488HA,False,HNL->KOA,reporting carrier
+TRAIN_509440,8,7,1650,1732,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N488HA,False,HNL->OGG,reporting carrier
+TRAIN_510900,8,13,2145,2226,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N493HA,False,HNL->LIH,reporting carrier
+TRAIN_512120,8,8,1958,2045,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N475HA,False,KOA->HNL,reporting carrier
+TRAIN_512536,8,12,1856,1948,ITO,HNL,216,,HA,19690,N491HA,False,ITO->HNL,reporting carrier
+TRAIN_513420,8,15,1035,1118,HNL,LIH,102,,HA,19690,N493HA,False,HNL->LIH,reporting carrier
+TRAIN_518959,8,7,1820,1906,KOA,HNL,163,,,19690,N479HA,False,KOA->HNL,reporting carrier
+TRAIN_519066,8,5,845,1120,SJC,HNL,2417,Hawaiian Airlines Inc.,HA,19690,N384HA,False,SJC->HNL,reporting carrier
+TRAIN_521553,8,23,1610,1652,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N484HA,False,HNL->OGG,reporting carrier
+TRAIN_524045,8,1,1944,2020,LIH,HNL,102,Hawaiian Airlines Inc.,,19690,N477HA,False,LIH->HNL,reporting carrier
+TRAIN_527269,8,24,1650,1725,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N484HA,False,LIH->HNL,reporting carrier
+TRAIN_529750,8,4,1050,1855,OGG,OAK,2349,,HA,19690,N580HA,False,OGG->OAK,reporting carrier
+TRAIN_532115,8,28,1045,1132,LIH,OGG,201,Hawaiian Airlines Inc.,HA,19690,N489HA,False,LIH->OGG,reporting carrier
+TRAIN_535894,8,1,727,804,OGG,HNL,100,Hawaiian Airlines Inc.,,19690,N485HA,False,OGG->HNL,reporting carrier
+TRAIN_536730,8,28,1640,2120,HNL,PPG,2599,Hawaiian Airlines Inc.,,19690,N392HA,False,HNL->PPG,reporting carrier
+TRAIN_537412,8,14,1351,1443,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N489HA,False,HNL->KOA,reporting carrier
+TRAIN_542060,8,23,1000,1305,LAX,HNL,2556,Hawaiian Airlines Inc.,,19690,N384HA,False,LAX->HNL,reporting carrier
+TRAIN_542683,8,7,2254,2330,LIH,HNL,102,,HA,19690,N491HA,False,LIH->HNL,reporting carrier
+TRAIN_545035,8,29,519,557,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N492HA,False,HNL->LIH,reporting carrier
+TRAIN_549930,8,14,1031,1120,KOA,HNL,163,,HA,19690,N494HA,False,KOA->HNL,reporting carrier
+TRAIN_551891,8,27,1613,1700,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N479HA,False,KOA->HNL,reporting carrier
+TRAIN_551976,8,6,1405,2225,HNL,SMF,2462,Hawaiian Airlines Inc.,HA,19690,N583HA,False,HNL->SMF,reporting carrier
+TRAIN_552772,8,16,1255,1353,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N485HA,False,HNL->ITO,reporting carrier
+TRAIN_554579,8,3,1310,2120,HNL,SFO,2398,Hawaiian Airlines Inc.,,19690,N388HA,False,HNL->SFO,reporting carrier
+TRAIN_555918,8,17,1235,2100,OGG,PDX,2562,Hawaiian Airlines Inc.,HA,19690,N205HA,False,OGG->PDX,reporting carrier
+TRAIN_557500,8,29,816,857,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N493HA,False,HNL->LIH,reporting carrier
+TRAIN_560236,8,5,925,1245,LAS,HNL,2762,Hawaiian Airlines Inc.,HA,19690,N378HA,False,LAS->HNL,reporting carrier
+TRAIN_564928,8,16,1225,1305,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N477HA,False,OGG->HNL,reporting carrier
+TRAIN_565973,8,6,2254,2330,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N491HA,False,LIH->HNL,reporting carrier
+TRAIN_567767,8,26,1450,1534,HNL,LIH,102,,HA,19690,N493HA,False,HNL->LIH,reporting carrier
+TRAIN_567939,8,6,1415,2245,HNL,SAN,2614,Hawaiian Airlines Inc.,HA,19690,N373HA,False,HNL->SAN,reporting carrier
+TRAIN_568337,8,30,1542,1626,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N479HA,False,HNL->OGG,reporting carrier
+TRAIN_569828,8,27,1000,1225,SFO,OGG,2338,Hawaiian Airlines Inc.,HA,19690,N389HA,False,SFO->OGG,reporting carrier
+TRAIN_571592,8,28,822,905,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N477HA,False,HNL->OGG,reporting carrier
+TRAIN_572422,8,16,1950,2030,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N493HA,False,HNL->OGG,reporting carrier
+TRAIN_572440,8,10,920,955,KOA,OGG,84,Hawaiian Airlines Inc.,HA,19690,N489HA,False,KOA->OGG,reporting carrier
+TRAIN_575745,8,21,904,947,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N476HA,False,HNL->OGG,reporting carrier
+TRAIN_576005,8,3,1950,2030,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N483HA,False,HNL->OGG,reporting carrier
+TRAIN_577095,8,14,501,546,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N493HA,False,HNL->KOA,reporting carrier
+TRAIN_578111,8,21,1722,1802,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N481HA,False,HNL->LIH,reporting carrier
+TRAIN_578764,8,13,1140,1224,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N495HA,False,HNL->OGG,reporting carrier
+TRAIN_582848,8,15,1425,1515,OGG,LIH,201,Hawaiian Airlines Inc.,HA,19690,N493HA,False,OGG->LIH,reporting carrier
+TRAIN_584031,8,30,900,1145,LAX,OGG,2486,Hawaiian Airlines Inc.,HA,19690,N392HA,False,LAX->OGG,reporting carrier
+TRAIN_584113,8,6,1259,1341,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N480HA,False,HNL->LIH,reporting carrier
+TRAIN_590138,8,14,1830,1905,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N483HA,False,LIH->HNL,reporting carrier
+TRAIN_590571,8,12,1550,1637,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N490HA,False,KOA->HNL,reporting carrier
+TRAIN_592698,8,17,1100,1156,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N486HA,False,HNL->ITO,reporting carrier
+TRAIN_593981,8,17,1803,1842,HNL,OGG,100,,HA,19690,N484HA,False,HNL->OGG,reporting carrier
+TRAIN_596546,8,18,1015,1110,ITO,HNL,216,Hawaiian Airlines Inc.,HA,19690,N481HA,False,ITO->HNL,reporting carrier
+TRAIN_599438,8,30,1100,1141,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N492HA,False,OGG->HNL,reporting carrier
+TRAIN_599577,8,6,1850,1936,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N491HA,False,KOA->HNL,reporting carrier
+TRAIN_602630,8,19,2030,2110,HNL,LIH,102,,HA,19690,N490HA,False,HNL->LIH,reporting carrier
+TRAIN_604152,8,23,900,1200,PDX,HNL,2603,Hawaiian Airlines Inc.,HA,19690,N385HA,False,PDX->HNL,reporting carrier
+TRAIN_606687,8,5,1100,1340,LAX,KOA,2504,Hawaiian Airlines Inc.,HA,19690,N360HA,False,LAX->KOA,reporting carrier
+TRAIN_607248,8,11,1510,1553,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N481HA,False,HNL->LIH,reporting carrier
+TRAIN_609715,8,14,1820,1912,ITO,HNL,216,Hawaiian Airlines Inc.,HA,19690,N488HA,False,ITO->HNL,reporting carrier
+TRAIN_610114,8,12,1416,1505,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N493HA,False,KOA->HNL,reporting carrier
+TRAIN_612138,8,22,1950,2030,HNL,OGG,100,Hawaiian Airlines Inc.,,19690,N491HA,False,HNL->OGG,reporting carrier
+TRAIN_613527,8,2,1450,1534,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N475HA,False,HNL->LIH,reporting carrier
+TRAIN_622167,8,12,2254,2330,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N494HA,False,LIH->HNL,reporting carrier
+TRAIN_625339,8,19,1307,1348,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N489HA,False,OGG->HNL,reporting carrier
+TRAIN_630448,8,8,1610,1645,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N477HA,False,LIH->HNL,reporting carrier
+TRAIN_634001,8,15,1618,1657,OGG,ITO,121,Hawaiian Airlines Inc.,HA,19690,N483HA,False,OGG->ITO,reporting carrier
+TRAIN_637843,8,23,1720,1758,OGG,HNL,100,Hawaiian Airlines Inc.,,19690,N484HA,False,OGG->HNL,reporting carrier
+TRAIN_644352,8,25,1252,1332,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N495HA,False,OGG->HNL,reporting carrier
+TRAIN_644427,8,1,500,551,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N480HA,False,HNL->ITO,reporting carrier
+TRAIN_645247,8,16,1230,1318,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N493HA,False,KOA->HNL,reporting carrier
+TRAIN_649177,8,20,2151,2235,KOA,HNL,163,,HA,19690,N477HA,False,KOA->HNL,reporting carrier
+TRAIN_651402,8,15,822,905,HNL,OGG,100,Hawaiian Airlines Inc.,,19690,N484HA,False,HNL->OGG,reporting carrier
+TRAIN_652973,8,31,1505,655,HNL,JFK,4983,Hawaiian Airlines Inc.,HA,19690,N375HA,False,HNL->JFK,reporting carrier
+TRAIN_653469,8,9,810,847,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N493HA,False,OGG->HNL,reporting carrier
+TRAIN_656106,8,1,1100,1156,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N486HA,False,HNL->ITO,reporting carrier
+TRAIN_656166,8,19,1305,2115,HNL,SJC,2417,Hawaiian Airlines Inc.,HA,19690,N379HA,False,HNL->SJC,reporting carrier
+TRAIN_656431,8,16,620,710,ITO,HNL,216,Hawaiian Airlines Inc.,HA,19690,N484HA,False,ITO->HNL,reporting carrier
+TRAIN_659202,8,20,1740,1815,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N494HA,False,LIH->HNL,reporting carrier
+TRAIN_662105,8,15,1733,1827,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N488HA,False,HNL->ITO,reporting carrier
+TRAIN_663473,8,15,1415,2245,HNL,SAN,2614,Hawaiian Airlines Inc.,HA,19690,N380HA,False,HNL->SAN,reporting carrier
+TRAIN_666722,8,10,1944,2020,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N489HA,False,LIH->HNL,reporting carrier
+TRAIN_669781,8,17,800,1630,HNL,LAX,2556,Hawaiian Airlines Inc.,HA,19690,N382HA,False,HNL->LAX,reporting carrier
+TRAIN_672604,8,25,900,954,ITO,HNL,216,,HA,19690,N490HA,False,ITO->HNL,reporting carrier
+TRAIN_674227,8,17,500,551,HNL,ITO,216,,HA,19690,N483HA,False,HNL->ITO,reporting carrier
+TRAIN_681134,8,18,2259,2336,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N491HA,False,OGG->HNL,reporting carrier
+TRAIN_682108,8,13,1230,2100,HNL,LGB,2569,Hawaiian Airlines Inc.,HA,19690,N213HA,False,HNL->LGB,reporting carrier
+TRAIN_683403,8,3,730,810,HNL,OGG,100,Hawaiian Airlines Inc.,,19690,N486HA,False,HNL->OGG,reporting carrier
+TRAIN_684599,8,28,1530,1609,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N493HA,False,OGG->HNL,reporting carrier
+TRAIN_686504,8,18,1853,1928,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N490HA,False,LIH->HNL,reporting carrier
+TRAIN_687338,8,11,1718,1805,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N476HA,False,KOA->HNL,reporting carrier
+TRAIN_691458,8,2,700,945,PDX,OGG,2562,Hawaiian Airlines Inc.,HA,19690,N205HA,False,PDX->OGG,reporting carrier
+TRAIN_691539,8,8,730,810,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N490HA,False,HNL->OGG,reporting carrier
+TRAIN_695605,8,24,620,659,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N477HA,False,HNL->OGG,reporting carrier
+TRAIN_697391,8,10,1820,2135,LAS,HNL,2762,Hawaiian Airlines Inc.,HA,19690,N395HA,False,LAS->HNL,reporting carrier
+TRAIN_700074,8,11,1820,1912,ITO,HNL,216,Hawaiian Airlines Inc.,HA,19690,N487HA,False,ITO->HNL,reporting carrier
+TRAIN_704505,8,21,1405,2225,HNL,SMF,2462,Hawaiian Airlines Inc.,HA,19690,N590HA,False,HNL->SMF,reporting carrier
+TRAIN_705059,8,4,650,726,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N485HA,False,OGG->HNL,reporting carrier
+TRAIN_706462,8,17,1140,1221,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N487HA,False,OGG->HNL,reporting carrier
+TRAIN_711457,8,6,2058,2135,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N494HA,False,OGG->HNL,reporting carrier
+TRAIN_712277,8,22,1520,2350,KOA,LAX,2504,Hawaiian Airlines Inc.,,19690,N383HA,False,KOA->LAX,reporting carrier
+TRAIN_715918,8,31,1205,1253,OGG,LIH,201,Hawaiian Airlines Inc.,HA,19690,N491HA,False,OGG->LIH,reporting carrier
+TRAIN_718278,8,7,1740,1815,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N477HA,False,LIH->HNL,reporting carrier
+TRAIN_719617,8,22,1850,1936,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N487HA,False,KOA->HNL,reporting carrier
+TRAIN_724096,8,31,1155,1230,KOA,OGG,84,Hawaiian Airlines Inc.,HA,19690,N489HA,False,KOA->OGG,reporting carrier
+TRAIN_724510,8,14,736,821,KOA,HNL,163,,HA,19690,N485HA,False,KOA->HNL,reporting carrier
+TRAIN_725306,8,17,1800,1846,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N492HA,False,KOA->HNL,reporting carrier
+TRAIN_731376,8,26,1225,2130,HNL,PHX,2917,Hawaiian Airlines Inc.,HA,19690,N582HA,False,HNL->PHX,reporting carrier
+TRAIN_739561,8,17,745,1030,PDX,OGG,2562,Hawaiian Airlines Inc.,HA,19690,N209HA,False,PDX->OGG,reporting carrier
+TRAIN_744812,8,10,2035,2121,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N480HA,False,HNL->KOA,reporting carrier
+TRAIN_745302,8,15,810,847,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N485HA,False,OGG->HNL,reporting carrier
+TRAIN_749989,8,6,1800,1846,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N477HA,False,KOA->HNL,reporting carrier
+TRAIN_753484,8,17,1530,1622,KOA,LIH,263,Hawaiian Airlines Inc.,HA,19690,N494HA,False,KOA->LIH,reporting carrier
+TRAIN_757473,8,18,1255,1353,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N476HA,False,HNL->ITO,reporting carrier
+TRAIN_758856,8,24,610,649,HNL,LIH,102,,HA,19690,N495HA,False,HNL->LIH,reporting carrier
+TRAIN_760910,8,17,1550,1637,KOA,HNL,163,Hawaiian Airlines Inc.,,19690,N475HA,False,KOA->HNL,reporting carrier
+TRAIN_761575,8,11,1641,1728,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N495HA,False,KOA->HNL,reporting carrier
+TRAIN_766381,8,28,1410,2210,OGG,SFO,2338,Hawaiian Airlines Inc.,HA,19690,N370HA,False,OGG->SFO,reporting carrier
+TRAIN_768273,8,11,935,1017,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N488HA,False,HNL->LIH,reporting carrier
+TRAIN_772713,8,9,908,946,OGG,ITO,121,Hawaiian Airlines Inc.,HA,19690,N494HA,False,OGG->ITO,reporting carrier
+TRAIN_773205,8,31,1235,2100,OGG,PDX,2562,Hawaiian Airlines Inc.,HA,19690,N214HA,False,OGG->PDX,reporting carrier
+TRAIN_774051,8,9,900,1135,SFO,HNL,2398,Hawaiian Airlines Inc.,HA,19690,N384HA,False,SFO->HNL,reporting carrier
+TRAIN_775963,8,11,1520,2350,KOA,LAX,2504,Hawaiian Airlines Inc.,HA,19690,N379HA,False,KOA->LAX,reporting carrier
+TRAIN_775976,8,20,1613,1700,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N481HA,False,KOA->HNL,reporting carrier
+TRAIN_777201,8,17,2153,2229,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N477HA,False,OGG->HNL,reporting carrier
+TRAIN_777888,8,19,1155,1230,KOA,OGG,84,Hawaiian Airlines Inc.,HA,19690,N489HA,False,KOA->OGG,reporting carrier
+TRAIN_784596,8,15,925,1001,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N488HA,False,LIH->HNL,reporting carrier
+TRAIN_786382,8,25,810,1110,SAN,OGG,2541,Hawaiian Airlines Inc.,HA,19690,N583HA,False,SAN->OGG,reporting carrier
+TRAIN_786539,8,20,1315,2200,HNL,SEA,2677,Hawaiian Airlines Inc.,HA,19690,N385HA,False,HNL->SEA,reporting carrier
+TRAIN_787111,8,1,1445,2310,HNL,LAX,2556,Hawaiian Airlines Inc.,HA,19690,N399HA,False,HNL->LAX,reporting carrier
+TRAIN_788538,8,11,1113,1157,HNL,OGG,100,Hawaiian Airlines Inc.,,19690,N486HA,False,HNL->OGG,reporting carrier
+TRAIN_790455,8,28,900,1205,SEA,HNL,2677,Hawaiian Airlines Inc.,,19690,N384HA,False,SEA->HNL,reporting carrier
+TRAIN_791319,8,24,1100,1155,ITO,HNL,216,Hawaiian Airlines Inc.,HA,19690,N485HA,False,ITO->HNL,reporting carrier
+TRAIN_797094,8,7,738,832,ITO,HNL,216,Hawaiian Airlines Inc.,,19690,N494HA,False,ITO->HNL,reporting carrier
+TRAIN_797706,8,13,1718,1805,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N493HA,False,KOA->HNL,reporting carrier
+TRAIN_798406,8,6,701,742,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N483HA,False,HNL->LIH,reporting carrier
+TRAIN_798969,8,22,727,804,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N489HA,False,OGG->HNL,reporting carrier
+TRAIN_799564,8,19,900,1135,SJC,HNL,2417,Hawaiian Airlines Inc.,HA,19690,N590HA,False,SJC->HNL,reporting carrier
+TRAIN_807643,8,13,2045,2125,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N491HA,False,HNL->OGG,reporting carrier
+TRAIN_807910,8,16,953,1041,HNL,KOA,163,Hawaiian Airlines Inc.,,19690,N481HA,False,HNL->KOA,reporting carrier
+TRAIN_810623,8,3,650,726,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N488HA,False,OGG->HNL,reporting carrier
+TRAIN_824196,8,31,1416,1505,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N486HA,False,KOA->HNL,reporting carrier
+TRAIN_824578,8,15,1510,2355,HNL,LAS,2762,Hawaiian Airlines Inc.,HA,19690,N373HA,False,HNL->LAS,reporting carrier
+TRAIN_826432,8,2,810,844,LIH,HNL,102,Hawaiian Airlines Inc.,HA,19690,N475HA,False,LIH->HNL,reporting carrier
+TRAIN_827284,8,4,1100,1141,OGG,HNL,100,Hawaiian Airlines Inc.,,19690,N485HA,False,OGG->HNL,reporting carrier
+TRAIN_838826,8,29,935,1017,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N488HA,False,HNL->LIH,reporting carrier
+TRAIN_845679,8,6,1715,1750,LIH,HNL,102,Hawaiian Airlines Inc.,,19690,N486HA,False,LIH->HNL,reporting carrier
+TRAIN_846367,8,25,1913,2000,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N495HA,False,HNL->KOA,reporting carrier
+TRAIN_847086,8,2,1530,1617,LIH,OGG,201,Hawaiian Airlines Inc.,HA,19690,N486HA,False,LIH->OGG,reporting carrier
+TRAIN_847330,8,11,1000,1305,LAX,HNL,2556,Hawaiian Airlines Inc.,HA,19690,N383HA,False,LAX->HNL,reporting carrier
+TRAIN_852908,8,4,1230,2100,HNL,LGB,2569,Hawaiian Airlines Inc.,HA,19690,N212HA,False,HNL->LGB,reporting carrier
+TRAIN_856096,8,26,1430,1520,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N476HA,False,HNL->KOA,reporting carrier
+TRAIN_860618,8,7,1415,2245,HNL,SAN,2614,Hawaiian Airlines Inc.,,19690,N382HA,False,HNL->SAN,reporting carrier
+TRAIN_862311,8,27,1315,2200,HNL,SEA,2677,Hawaiian Airlines Inc.,HA,19690,N384HA,False,HNL->SEA,reporting carrier
+TRAIN_862331,8,7,1733,1827,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N490HA,False,HNL->ITO,reporting carrier
+TRAIN_865572,8,10,1029,1112,HNL,OGG,100,,HA,19690,N485HA,False,HNL->OGG,reporting carrier
+TRAIN_866255,8,23,1015,1330,SAN,HNL,2614,,HA,19690,N386HA,False,SAN->HNL,reporting carrier
+TRAIN_876318,8,31,1511,1607,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N476HA,False,HNL->ITO,reporting carrier
+TRAIN_877254,8,16,1035,1118,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N488HA,False,HNL->LIH,reporting carrier
+TRAIN_879487,8,22,1225,1305,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N490HA,False,OGG->HNL,reporting carrier
+TRAIN_881731,8,6,1835,1916,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N476HA,False,HNL->LIH,reporting carrier
+TRAIN_886035,8,30,1726,1807,ITO,OGG,121,Hawaiian Airlines Inc.,HA,19690,N493HA,False,ITO->OGG,reporting carrier
+TRAIN_886513,8,10,1910,1947,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N476HA,False,OGG->HNL,reporting carrier
+TRAIN_886978,8,20,1455,1530,KOA,OGG,84,Hawaiian Airlines Inc.,HA,19690,N489HA,False,KOA->OGG,reporting carrier
+TRAIN_889010,8,18,1050,1850,OGG,SJC,2355,,HA,19690,N590HA,False,OGG->SJC,reporting carrier
+TRAIN_889196,8,18,1511,1607,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N492HA,False,HNL->ITO,reporting carrier
+TRAIN_890952,8,25,1230,2100,HNL,LGB,2569,,HA,19690,N215HA,False,HNL->LGB,reporting carrier
+TRAIN_891545,8,10,750,1640,HNL,LAS,2762,,HA,19690,N395HA,False,HNL->LAS,reporting carrier
+TRAIN_895131,8,4,1445,2315,OGG,SEA,2640,Hawaiian Airlines Inc.,HA,19690,N391HA,False,OGG->SEA,reporting carrier
+TRAIN_897335,8,11,155,505,LAS,HNL,2762,Hawaiian Airlines Inc.,HA,19690,N393HA,False,LAS->HNL,reporting carrier
+TRAIN_899058,8,7,700,945,PDX,OGG,2562,Hawaiian Airlines Inc.,HA,19690,N215HA,False,PDX->OGG,reporting carrier
+TRAIN_902150,8,4,507,546,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N493HA,False,HNL->OGG,reporting carrier
+TRAIN_902448,8,15,1351,1443,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N484HA,False,HNL->KOA,reporting carrier
+TRAIN_904453,8,10,1825,1918,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N485HA,False,HNL->ITO,reporting carrier
+TRAIN_906005,8,9,1803,1842,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N480HA,False,HNL->OGG,reporting carrier
+TRAIN_907517,8,4,2027,2104,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N487HA,False,OGG->HNL,reporting carrier
+TRAIN_909995,8,29,1305,1350,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N492HA,False,HNL->OGG,reporting carrier
+TRAIN_911402,8,2,614,650,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N489HA,False,OGG->HNL,reporting carrier
+TRAIN_913686,8,2,1530,1609,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N483HA,False,OGG->HNL,reporting carrier
+TRAIN_913933,8,6,1550,1637,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N475HA,False,KOA->HNL,reporting carrier
+TRAIN_921686,8,24,2058,2135,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N494HA,False,OGG->HNL,reporting carrier
+TRAIN_923223,8,12,1720,1758,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N488HA,False,OGG->HNL,reporting carrier
+TRAIN_924977,8,27,1205,1253,OGG,LIH,201,Hawaiian Airlines Inc.,HA,19690,N488HA,False,OGG->LIH,reporting carrier
+TRAIN_925183,8,4,1840,1928,HNL,KOA,163,,HA,19690,N484HA,False,HNL->KOA,reporting carrier
+TRAIN_929502,8,25,1419,1500,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N476HA,False,OGG->HNL,reporting carrier
+TRAIN_931861,8,16,1225,1318,ITO,HNL,216,Hawaiian Airlines Inc.,HA,19690,N492HA,False,ITO->HNL,reporting carrier
+TRAIN_932189,8,30,2151,2235,KOA,HNL,163,Hawaiian Airlines Inc.,HA,19690,N479HA,False,KOA->HNL,reporting carrier
+TRAIN_937549,8,23,1600,1638,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N495HA,False,OGG->HNL,reporting carrier
+TRAIN_948531,8,7,1050,1855,OGG,OAK,2349,Hawaiian Airlines Inc.,HA,19690,N594HA,False,OGG->OAK,reporting carrier
+TRAIN_955352,8,10,1416,1505,KOA,HNL,163,Hawaiian Airlines Inc.,,19690,N485HA,False,KOA->HNL,reporting carrier
+TRAIN_956589,8,3,1340,2150,HNL,OAK,2409,Hawaiian Airlines Inc.,HA,19690,N205HA,False,HNL->OAK,reporting carrier
+TRAIN_957852,8,27,1530,1609,OGG,HNL,100,Hawaiian Airlines Inc.,HA,19690,N476HA,False,OGG->HNL,reporting carrier
+TRAIN_965373,8,6,1325,2200,LIH,LAX,2615,,HA,19690,N202HA,False,LIH->LAX,reporting carrier
+TRAIN_969158,8,2,1853,1928,LIH,HNL,102,Hawaiian Airlines Inc.,,19690,N487HA,False,LIH->HNL,reporting carrier
+TRAIN_971386,8,7,1726,1807,ITO,OGG,121,Hawaiian Airlines Inc.,HA,19690,N495HA,False,ITO->OGG,reporting carrier
+TRAIN_977100,8,10,1840,1928,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N484HA,False,HNL->KOA,reporting carrier
+TRAIN_982026,8,11,1100,1156,HNL,ITO,216,Hawaiian Airlines Inc.,HA,19690,N483HA,False,HNL->ITO,reporting carrier
+TRAIN_982481,8,31,835,924,LIH,OGG,201,Hawaiian Airlines Inc.,HA,19690,N494HA,False,LIH->OGG,reporting carrier
+TRAIN_983339,8,3,1510,2355,HNL,LAS,2762,Hawaiian Airlines Inc.,HA,19690,N378HA,False,HNL->LAS,reporting carrier
+TRAIN_986184,8,4,1113,1157,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N493HA,False,HNL->OGG,reporting carrier
+TRAIN_990466,8,23,700,955,LAX,HNL,2556,Hawaiian Airlines Inc.,HA,19690,N383HA,False,LAX->HNL,reporting carrier
+TRAIN_990950,8,15,1115,1940,OGG,PDX,2562,Hawaiian Airlines Inc.,HA,19690,N205HA,False,OGG->PDX,reporting carrier
+TRAIN_993926,8,1,501,546,HNL,KOA,163,Hawaiian Airlines Inc.,HA,19690,N477HA,False,HNL->KOA,reporting carrier
+TRAIN_995370,8,26,1350,1437,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N486HA,False,HNL->LIH,reporting carrier
+TRAIN_995781,8,12,700,955,LAX,HNL,2556,Hawaiian Airlines Inc.,HA,19690,N390HA,False,LAX->HNL,reporting carrier
+TRAIN_996225,8,23,1415,1500,HNL,OGG,100,Hawaiian Airlines Inc.,HA,19690,N480HA,False,HNL->OGG,reporting carrier
+TRAIN_997183,8,2,1307,1348,OGG,HNL,100,,HA,19690,N480HA,False,OGG->HNL,reporting carrier
+TRAIN_998231,8,25,1350,1437,HNL,LIH,102,Hawaiian Airlines Inc.,HA,19690,N481HA,False,HNL->LIH,reporting carrier

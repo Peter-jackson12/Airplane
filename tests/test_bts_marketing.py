@@ -64,6 +64,16 @@ def test_month_is_a_required_argument_with_a_valid_range():
     assert "choices=range(1, 13)" in source
 
 
+def test_read_marketing_tolerates_invalid_utf8_bytes_outside_the_match_keys():
+    """2018-08's file has one row with a corrupted byte in an unused column;
+    without error tolerance, pandas refuses to read the whole file."""
+    import inspect
+
+    from notebooks import verify_bts_marketing as mod
+    source = inspect.getsource(mod.read_marketing)
+    assert "encoding_errors='replace'" in source or 'encoding_errors="replace"' in source
+
+
 def test_archive_path_follows_the_month(tmp_path, monkeypatch):
     from notebooks import verify_bts_marketing as mod
     seen = {}

@@ -1,0 +1,8 @@
+masked_keys,n_keys_masked,n_rows_tested,resolved_single_year_correct,resolved_single_year_wrong,became_multi_year,became_no_candidate
+Carrier_ID(DOT),1,706759,706759,0,0,0
+Estimated_Departure_Time,1,706759,706630,0,129,0
+Estimated_Arrival_Time,1,706759,706279,0,480,0
+Carrier_ID(DOT)+Estimated_Departure_Time,2,706759,706630,0,129,0
+Carrier_ID(DOT)+Estimated_Arrival_Time,2,706759,706277,0,482,0
+Estimated_Departure_Time+Estimated_Arrival_Time,2,706759,685140,0,21619,0
+Carrier_ID(DOT)+Estimated_Departure_Time+Estimated_Arrival_Time,3,706759,685055,0,21704,0
