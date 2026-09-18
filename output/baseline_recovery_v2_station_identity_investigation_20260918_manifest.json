@@ -1,0 +1,51 @@
+{
+  "name": "baseline_recovery_v2_station_identity_investigation_20260918",
+  "purpose": "Official-source (NOAA/NCEI HOMR) cross-check of the 20 priority airports flagged by output\\baseline_recovery_v2_weather_scope_fix_20260918_mapping_priority_investigation.csv. Scope fixed to exactly these 20 airports.",
+  "fits_any_model": false,
+  "uses_external_data": true,
+  "target_columns_used": [],
+  "code_sha256": "1bcddd648061792af225b4959167e97883ea4735989ac0b952d0cfab49a828be",
+  "priority_csv": {
+    "path": "output\\baseline_recovery_v2_weather_scope_fix_20260918_mapping_priority_investigation.csv",
+    "sha256": "6f83be9a676b78f5286f861c933dfe7ee64d65ab15381df6bf93295bae99f3c6"
+  },
+  "stratafix_selection_csv": {
+    "path": "output\\baseline_recovery_v2_weather_expanded_stratafix_20260918_selection.csv",
+    "sha256": "86b38b0ffb8fdc65bd371e041741b75247567dc8edc0aeb25bf93a49bfed5d8b"
+  },
+  "homr_base_url": "https://www.ncei.noaa.gov/access/homr/services/station/search",
+  "homr_queries": {
+    "AZA": "ICAO:KIWA",
+    "BKG": "ICAO:KBBG",
+    "FCA": "ICAO:KGPI",
+    "HHH": "ICAO:KHXD",
+    "IMT": "ICAO:KIMT",
+    "ISN": "ICAO:KISN",
+    "KTN": "ICAO:PAKT",
+    "MQT": "ICAO:KSAW",
+    "PBI": "FAA:PBI",
+    "PSG": "ICAO:PAPG",
+    "SCE": "ICAO:KUNV",
+    "SDF": "ICAO:KSDF",
+    "SIT": "ICAO:PASI",
+    "SPN": "ICAO:PGSN",
+    "STT": "ICAO:TIST",
+    "STX": "ICAO:TISX",
+    "USA": "ICAO:KJQF",
+    "WRG": "ICAO:PAWG",
+    "XWA": "ICAO:KXWA",
+    "YUM": "FAA:YUM"
+  },
+  "evidence_table": "output\\baseline_recovery_v2_station_identity_investigation_20260918_evidence.csv",
+  "evidence_table_sha256": "158d7db0f7db599597032dc3a33dce0b972e75fe102c3ac38d11c34c31f112eb",
+  "row_count": 20,
+  "stratafix_membership_count": 10,
+  "limitations": [
+    "This script fetches and hashes NOAA/NCEI HOMR raw responses and assembles the evidence table deterministically, but the per-airport facility_finding / identity_determination text in FINDINGS is human-authored analysis of those responses (reading English free-text remarks is not a deterministic classification) -- re-running this script reproduces the same fetch and the same table only because FINDINGS is fixed source, not because the judgment itself is re-derived from the JSON.",
+    "historical_identity_confirmed / verification_tier in the existing pipeline output (mapping_table.csv, mapping_priority_investigation.csv) are NOT modified by this script; identity_determination here is a separate field for a human or a future coding round to act on.",
+    "SPN (Saipan) remains genuinely unconfirmed: NOAA HOMR shows an active ASOS (FAA id GSN) covering 2018-2019, but this project's cached IEM GU_ASOS network response does not list it under any tried id. Not resolved this round.",
+    "The 8 identifier-mismatch findings (AZA/BKG/FCA/HHH/MQT/PBI/SCE/USA) and the YUM finding are candidate bugs in candidate_network_and_sid() in notebooks/map_weather_stations.py; that script was not modified by this investigation.",
+    "FAA facility master records (e.g. a dated Form 5010) were not queried; only NOAA/NCEI HOMR and the already-cached IEM network metadata.",
+    "No new weather time series collection, no stratafix real collection, no model retraining, and no changes to any baseline_recovery_v2_weather_* production output were made."
+  ]
+}

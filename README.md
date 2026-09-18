@@ -2,7 +2,7 @@
 
 **이 README가 프로젝트 전체 설명과 최신 상태의 기준 문서입니다.** 발표는 1~6절 순서로 진행하고, 세부 수치·실행 코드는 마지막 문서 안내에서 확인할 수 있습니다.
 
-작성: Peter-jackson12 TF · 갱신: 2026-09-18 · 문서 버전: v0.20
+작성: Peter-jackson12 TF · 갱신: 2026-09-18 · 문서 버전: v0.21
 
 > **현재 결론:** 불확실한 결측 대치와 시간 피처의 의미를 바로잡고, 검증 라벨이 모델 선택에 유입되지 않도록 파이프라인을 수정했습니다. P4/P6 및 개별 변경 조건을 전체 데이터에서 3시드로 재학습한 결과, 새 전처리의 성능 향상은 확인되지 않았습니다. 확률 보정기를 outer-train 내부에서 적합해 독립 outer-valid에서 비교한 결과, 확률의 계통 오차는 줄었지만 분류 성능(Macro F1)의 향상은 확인되지 않았습니다. 데이터 처리의 타당성, 확률의 정확성, 분류 성능은 각각 따로 평가합니다.
 
@@ -24,7 +24,8 @@
 | 재개 검증·예산 경계 마무리, 실제 캐시 재결합, 수집 범위 재산정 | 체크포인트 재검증·`plan_fingerprint`·요청 사전 예약, 21/300행 실제 재결합 비교(21행 완전 동일, 300행 의미 차이 0건), station별 구간 병합·차감 기반 재산정(531~1,049MB 시나리오 범위), 미결합 사유 3분리(323개 테스트) |
 | 미측정 바이트 예산 우회·재결합 판정 모호성 수정 | 중단된 시도의 바이트도 사전 예약·정산해 누적 상한을 보장, 재결합 비교를 구조 검사+승인된 station 마스킹 예외만 통과시키는 명시적 PASS/FAIL로 교체, 산정·타이밍 표현 정정(341개 테스트, `..._recombination_fix_20260918` 재검증 PASS) |
 | 체크포인트 스키마 경계·재결합 구조 우회·입력 지문 누락 수정 | 회계 의미가 바뀐 체크포인트 스키마를 버전 2로 분리해 구버전을 네트워크 호출 전에 명시적으로 거부, 바이트 동일 경로에서도 구조 검사(ID 존재·유일성·행수·순서·열 집합)를 먼저 수행하도록 재배치, 재결합이 읽는 selection_with_prediction_at.csv 2개·mapping_table.csv의 SHA-256과 재결합 코드 지문 범위를 새 manifest에 연결(354개 테스트, `..._recombination_provenance_20260918` 재검증 PASS) |
-| 미완료·범위 밖 | 독립 미래 테스트, 최종 모델 서빙, 전체 Phase의 최신 프로토콜 성능 비교, 706,759행 전체 날씨 결합·재학습, 355개 공항 공식 자료 기반 역사적 신원 확인, 새 stratafix 표본 실제 수집 |
+| 우선 조사 대상 20개 공항의 역사적 매핑을 공식 자료로 대조 | NOAA/NCEI HOMR(Historical Observing Metadata Repository) 대조로 ISN→XWA 시설 이전·YUM의 두 별개 관측소 확인, 9개 식별자 불일치 중 8개는 IEM 현재 목록의 실제 사용 ID(예: FCA→GPI 2005-10-25 개명)로 해소, STT/STX 시간대 충돌은 미해결 유지, SPN은 파이프라인 수집 공백으로 재확인 |
+| 미완료·범위 밖 | 독립 미래 테스트, 최종 모델 서빙, 전체 Phase의 최신 프로토콜 성능 비교, 706,759행 전체 날씨 결합·재학습, 나머지 335개 공항 공식 자료 기반 역사적 신원 확인, 새 stratafix 표본 실제 수집 |
 
 **목차:** [1. 목적](#1-목적과문제정의) · [2. 데이터](#2-데이터와분석범위) · [3. 전처리](#3-전처리결정과근거) · [4. 파이프라인](#4-현재파이프라인) · [5. 결과](#5-최신검증결과) · [6. 한계](#6-한계와다음단계) · [7. 재현](#7-코드구조와재현) · [8. 문서안내](#8-문서안내)
 
@@ -551,6 +552,26 @@ BTS는 IATA 코드가 시기에 따라 다른 항공사에 재배정될 수 있�
 .venv/Scripts/python.exe -u -m pytest -q
 ```
 
+### 우선 조사 대상 20개 공항의 역사적 매핑을 공식 자료로 대조했습니다 (2026-09-18)
+
+5차 검증까지의 매핑 등급(`confirmed_period` 355·`confirmed_current_only` 3·`tz_conflict_needs_resolution` 8·`unconfirmed` 9)은 IEM 메타데이터의 **현재** 좌표·시간대·기록 보유 기간만 확인한 것이며, 당시 실제 시설·위치·관측 장비의 동일성은 확인하지 않았다는 한계가 있었습니다. 이번에는 이 20개(`confirmed_current_only` 3 + `tz_conflict_needs_resolution` 8 + `unconfirmed` 9)에 한정해 **NOAA/NCEI HOMR**(Historical Observing Metadata Repository, 관측소 식별자·개명·이전 이력을 관리하는 공식 저장소)를 새로 대조했습니다. 20개 밖으로 조사를 넓히지 않았고, 날씨 시계열 수집·stratafix 표본 실수집·모델 재학습은 이번에도 하지 않았습니다. 다른 에이전트도 실행하지 않았습니다.
+
+**방법.** [notebooks/verify_priority_station_identity.py](notebooks/verify_priority_station_identity.py)가 `https://www.ncei.noaa.gov/access/homr/services/station/search?qid=<IDTYPE>:<VALUE>`로 20개 공항의 ICAO 또는 FAA 식별자를 각각 조회해 응답 원문을 `data/weather_probe/baseline_recovery_v2_station_identity_investigation_20260918_homr_raw/`에 저장하고(추적 제외) SHA-256을 [증거표](output/baseline_recovery_v2_station_identity_investigation_20260918_evidence.csv)의 행별 `raw_evidence_file`/`raw_evidence_sha256`에 연결합니다. 대상 20개가 기존 우선 조사 대상 CSV와 정확히 일치하지 않으면 실행이 예외로 중단됩니다. HOMR 응답이 읽는 영문 remark를 시설 이전/개명/장비 교체 중 무엇으로 볼지는 스크립트가 자동 분류하지 않고, `FINDINGS`에 근거를 함께 남긴 사람의 판단으로 기록했습니다(기존 BTS 대조에서 비보고 운항사 9곳을 사람이 읽고 확인한 것과 같은 성격입니다) — 아래 6가지 발견은 그 판단의 요약입니다. 필요한 경우 기존에 캐시된 IEM 주(state)별 네트워크 목록(`data/weather_probe/networks/*.geojson`, 기존 실행이 이미 내려받아 해시가 고정된 파일)을 다시 읽어 IATA가 아닌 다른 식별자로 같은 시설이 등재돼 있는지 대조했습니다 — **새 IEM 네트워크 조회는 하지 않았습니다.**
+
+**1) ISN→XWA는 HOMR 공식 이력으로도 시설 이전이 확인됩니다.** NOAA HOMR의 KISN 레코드는 상태가 `CLOSED`이고 "AIRPORT WAS RELOCATED 7.5 MILES NORTHWEST", "THE LAST LCD PUBLICATION FOR ISN IS SEPTEMBER 2019. THE ASOS IS NOW LOCATED AT XWA"라고 명시합니다. KXWA 레코드는 한 걸음 더 나아가 "WILLISTON AIRPORT ASOS WAS RELOCATED... NOT CONSIDERED CLIMATOLOGICALLY COMPATIBLE WITH THE PREVIOUS SITE (ISN); THEREFORE, A NEW STATION AND NEW CLIMATE RECORD WILL BE STARTED"라고 적어, 두 관측소가 **같은 지점의 장비 교체가 아니라 기후학적으로 다른 별개 관측소**임을 공식적으로 밝힙니다. IEM의 archive_begin(XWA 2019-10-12)과 HOMR의 기록 시작일(2019-10-25)은 13일 차이가 있으며 이번에 해소하지 않았습니다 — 이 구간에 걸친 개별 행은 어느 쪽 기준으로도 확정 근거가 약합니다.
+
+**2) YUM은 "매핑이 불확실한 것"이 아니라 서로 다른 두 관측소였습니다.** 파이프라인의 `candidate_network_and_sid()`는 일반 주(state)에서 IATA 코드를 그대로 IEM station id로 가정합니다 — 유마에서는 이 가정이 틀렸습니다. HOMR에서 FAA 식별자 `YUM`을 조회하면 ICAO **KYUM**, WBAN 23195, "WEATHER SERVICE OFFICE YUMA within and 4 mi SSE of PO"(공항이 아니라 옛 기상청 사무소 위치)에 있던, **2007-01-05에 폐쇄된** 관측소가 나옵니다. 반면 이 프로젝트가 실제로 쓰는 공항(ICAO KNYL, mwgg 기준)의 HOMR 레코드는 FAA 식별자 **NYL**, WBAN 03145, "YUMA MCAS"로 **1960년부터 현재까지 연속 운영 중**입니다. 두 좌표는 약 2.3km 떨어져 있어 같은 시설이 아닙니다. 즉 기존 매핑 코드가 `YUM`이라는 candidate_sid로 찾아낸 관측소는 애초에 이 공항의 관측소가 아니라 오래전 폐쇄된 별개 시설이었고, 2018~2019년 실제로 유효했던 관측소는 IEM이 이미 별도로 갖고 있는 `NYL`입니다. 이는 `notebooks/map_weather_stations.py`의 candidate_sid 가정에 대한 구체적인 결함 후보이며, 이번 라운드에서는 서술만 하고 코드는 고치지 않았습니다(읽기 전용 조사 범위).
+
+**3) 식별자 불일치 9곳 중 8곳은 "관측소가 없는 것"이 아니라 "IATA가 아닌 다른 ID로 등재된 것"이었습니다.** AZA(→IWA)·BKG(→BBG)·FCA(→GPI)·HHH(→HXD)·MQT(→SAW)·PBI(→DJT, NWSLI는 PBI 유지)·SCE(→UNV)·USA(→JQF) 8곳은 기존 캐시된 IEM 주별 네트워크 목록에 IATA 코드로는 없지만 다른 ID로는 이미 존재했고, HOMR 조회로 같은 시설임을 뒷받침하는 공식 이력을 확인했습니다. 특히 FCA는 HOMR에 "STATION ID CHANGED FROM FCA TO GPI AT 14Z (7AM MST) ON OCTOBER 25, 2005"라는 날짜가 명시된 개명 기록이 있어 2018~2019년에는 GPI였음이 분명합니다. PBI는 HOMR 현재 레코드의 공식 명칭이 "DONALD J. TRUMP INTERNATIONAL AIRPORT"이고 FAA 식별자가 DJT로 바뀌어 있지만, NWSLI 필드는 옛 식별자 PBI를 그대로 보존하고 WBAN(12844)·1938년 이래의 연속 기록이 IEM의 기존 `DJT`(속성 `WAS: PBI`) 항목과 정확히 일치합니다 — 2018~2019년 당시에는 "Palm Beach International Airport"였고, 명칭·식별자 변경은 이 조사 대상 기간 **이후**에 일어난 일입니다. 나머지 6곳(BKG·HHH·MQT·SCE·USA와 AZA)도 모두 연속 운영 기록에 시설 이전 remark가 없었습니다. **다만 이 8곳도 코드는 고치지 않았습니다** — `map_weather_stations.py`가 실제로 이 대체 ID를 쓰도록 바뀌어야 매핑표의 등급이 바뀝니다.
+
+**4) SPN(사이판)은 여전히 미확인이지만, 원인이 "관측소 부재"가 아니라 "이 파이프라인이 쓰는 IEM 네트워크 목록의 공백"으로 좁혀졌습니다.** HOMR은 사이판 국제공항에 FAA 식별자 **GSN**, 2000년부터 현재까지 연속 운영 중인 ASOS가 있다고 명시합니다 — 2018~2019년을 덮습니다. 그런데 이 프로젝트가 캐시해 둔 IEM `GU_ASOS` 네트워크 목록(사이판·괌·북마리아나를 담당하도록 코드가 지정한 유일한 네트워크)에는 PGRO(Rota)·PGUA(Andersen)·PGUM(Agana/Guam)·PGWT(West Tinian)·PWAK(Wake) 5개뿐이고 사이판 관측소가 PGSN·SPN·GSN 어느 이름으로도 없습니다. IEM이 이 관측소를 다른 네트워크 이름으로 서비스하는지, 아니면 이 API 경로 자체에서 제공하지 않는지는 이번에 새 IEM 조회를 하지 않았으므로 **확인하지 못했습니다** — 이는 자료 부재의 증거가 아니라 조사 범위의 경계입니다.
+
+**5) STT/STX는 시설 동일성은 뒷받침됐지만 시간대 충돌은 이번에도 해소하지 않았습니다.** HOMR의 TIST(세인트토마스)·TISX(세인트크로이) 레코드는 1945년부터 연속 운영, 이전 remark 없음, UTC 오프셋이 고정 −4로 기록돼 있습니다(서머타임에 따른 계절적 값 구분이 없습니다). 미국령 버진아일랜드는 애리조나·하와이·괌 등과 함께 서머타임을 적용하지 않는 지역으로 널리 알려져 있으나, 이번에 미 연방 1차 문서(예: 연방관보 고시나 15 U.S.C. §260a 원문)를 직접 확보하지는 못했고 2차 자료(위키백과 요약, 2026-09-18 DuckDuckGo 검색)로만 뒷받침했습니다. 이는 mwgg의 `America/St_Thomas`(서머타임 없음, 고정 −4)가 IEM의 `Atlantic/Bermuda`(버뮤다는 서머타임을 적용하므로 −4/−3 계절 변화)보다 물리적으로 타당하다는 정황이며, 기존 코드가 이미 계산해 둔 `utc_offset_equivalent_2018_2019=False`(두 시간대가 실제로 다름)와 같은 방향입니다. **다만 이 정황만으로 `tz_conflict_needs_resolution` 등급을 올리지 않았습니다** — 기존 정책대로 미해결로 남깁니다.
+
+**6) 나머지 6곳(IMT·KTN·PSG·SDF·SIT·WRG, IANA 이름은 다르지만 UTC 오프셋은 이미 동일 확인됨)은 시설 연속성만 추가로 확인했습니다.** 6곳 모두 HOMR 공식 기록에 2018~2019년에 걸친 물리적 이전 remark가 없었습니다. 유일하게 관련된 remark는 KTN(케치칸)의 "THIS WAS A COMPATIBLE STATION MOVE... STATION MOVED NW 5110 YARDS"(1997년, ASOS 도입 시점, NOAA가 명시적으로 "호환 가능한" 이동으로 구분)로, 기후학적으로 단절을 일으킨 ISN→XWA의 "호환 불가능한" 이전과 NOAA 스스로 다르게 취급한 사례입니다. WRG의 COOP(수동 관측) 프로그램은 2012년에 중단됐다는 remark가 있지만, 이 프로젝트가 쓰는 ASOS 플랫폼은 별개로 계속 운영 중입니다.
+
+**증거표와 한계.** 20개 전부에 대해 우선순위 조사 유형(기간/이전, 시간대 충돌, 식별자 불일치)·기존 verification_tier·stratafix 표본 포함 여부·HOMR 조회 결과·`identity_determination`(verification_tier와 별도 필드)·근거(기관·URL·레코드 식별자·조회일)·남은 공백을 [증거표](output/baseline_recovery_v2_station_identity_investigation_20260918_evidence.csv)에 기록했습니다. 20개 중 stratafix 300행 표본에 실제로 등장하는 곳은 AZA·FCA·KTN·MQT·SDF·SIT·SPN·STT·STX·YUM 10곳입니다(포함 여부만 표시, 표본을 다시 뽑지 않았습니다). [조사 manifest](output/baseline_recovery_v2_station_identity_investigation_20260918_manifest.json)에 입력 파일 해시, HOMR 조회 20건의 URL·원자료 경로·SHA-256, 대상 집합이 기존 20개와 정확히 일치함을 확인한 방법, 그리고 이 라운드가 확인하지 못한 것(FAA 5010 시설 마스터 레코드 미조회, SPN의 네트워크 공백 원인 미해결, STT/STX 1차 연방 문서 미확보, `map_weather_stations.py`의 candidate_sid 결함 후보 9곳 미수정)을 남겼습니다. **`historical_identity_confirmed`/`verification_tier`를 포함한 기존 매핑표·선정 결과·캐시·재결합 결과는 이번에도 덮어쓰지 않았고, 코드나 collectible을 변경하지 않았습니다.**
+
 ## 3. 전처리 결정과 근거
 
 <a id="3-전처리결정과근거"></a>
@@ -762,7 +783,7 @@ P6_clean은 실제 지연 45,000행 중 **24,895행을 세 시드 모두에서 F
 - **재개 검증·예산 경계 마무리, 실제 캐시 재결합, 수집 범위 재산정, 진단 표현 정리 — 완료(2026-09-18, 3차 검증).** 2차 검증이 남긴 빈틈 두 가지를 닫았습니다. (1) 재개 시 "이미 수집됨" 체크포인트를 캐시 삭제·내용 변조·조회 구간 변경·`plan_fingerprint` 불일치에 대해 재검증하고, 요청 예산을 네트워크 호출 전에 예약해 중단된 시도를 공짜 재시도로 만들지 않으며, 남은 시간을 1초 미만에서도 부풀리지 않고, 요청당 크기 상한을 하나로 통일했습니다. (2) `diagnose_weather_expanded_cache.py`의 재집계만으로는 수정된 `src/weather.py`·`build_requests`가 실제 데이터에서 같은 결과를 낸다고 주장할 수 없었으므로, 기존 21행·300행 캐시를 수정된 코드로 실제 재결합해 원본과 비교했습니다 — **21행은 원본과 바이트 단위로 완전히 동일**했고, 300행은 수집 불가 29행의 station 표기(의도된 수정)만 다를 뿐 **날씨 값·결합 여부에는 의미 차이가 0건**이었습니다. 전체 조회 구간도 station별 실제 겹침 병합·차감으로 다시 산정해 **바이트 추정이 약 531~1,049MB(중앙값 약 596MB)로 상향**됐고(기존 348MB/368MB는 표본 평균 바이트 × 전체 그룹 수와 대수적으로 같은 식이었음을 확인), 미결합 사유도 "노후/미가용/부재"로 세분화했습니다. 회귀 테스트가 298개에서 **323개**로 늘었습니다. 세부는 위 2절의 새 소절을 참고하세요.
 - **미측정 바이트 예산 우회·재결합 판정 모호성 수정 — 완료(2026-09-18, 4차 검증).** 3차 검증이 남긴 결함 두 가지를 닫았습니다. (1) 중단되거나 바이트를 알 수 없는 일반 실패 시도가 누적 바이트 상한(`bytes_used`)에 전혀 반영되지 않아, 반복하면 상한을 사실상 무제한으로 만들 수 있었던 결함을 고쳐 네트워크 호출 전에 `min(요청당 상한, 남은 예산)`을 먼저 예약하고, 측정되면 실제 값으로 정산하며 측정 불가하면 예약을 그대로 남기도록 바꿨습니다. 실측값(`bytes_measured`)과 예산 차감값(`bytes_used`)을 별도 필드로 분리했고, 시간 복구도 subprocess 종료 유예를 포함하도록 고쳤습니다. (2) 재결합 비교(`compare_to_original`)가 행수·ID 순서 불일치를 문자열로만 남기고 열 추가는 검출하지 못했던 결함을 고쳐, 행수·ID 유일성/순서·열 집합 불일치를 명시적 구조 실패로 만들고, 셀 단위 의미 차이는 승인된 정책 변경(수집 불가 행의 station 마스킹, 날씨 양쪽 결측 확인)과 미승인 차이를 분리해 집계하며 미승인 차이가 있으면 프로세스가 비정상 종료하도록 바꿨습니다. 고쳐진 판정으로 기존 21/300행 캐시를 다시 비교한 `baseline_recovery_v2_weather_recombination_fix_20260918` 실행은 **구조 검사 전부 통과, 승인된 정책 변경 232셀, 미승인 의미 차이 0건, 최종 판정 PASS**였습니다 — 3차 검증의 수치 자체는 바뀌지 않았습니다. 산정·타이밍 서술도 `MAX_RESPONSE_BYTES`가 프로젝트가 정한 경계라는 점, 531~1,049MB가 신뢰구간이 아닌 시나리오 범위라는 점, 3.21초/요청이 검증된 타이밍 로그가 아닌 과거 추정치라는 점을 명확히 했습니다. 회귀 테스트가 323개에서 **341개**로 늘었습니다. 세부는 위 2절의 새 소절을 참고하세요.
 - **체크포인트 스키마 경계·재결합 구조 우회·입력 지문 누락 수정 — 완료(2026-09-18, 5차 검증).** 4차 검증이 남긴 결함 세 가지를 닫았습니다. (1) 3·4차에서 바뀐 체크포인트 회계 의미(사전 예약 바이트/시간, `bytes_measured`)가 `CHECKPOINT_SCHEMA_VERSION`을 그대로 1로 둔 채 도입돼 구버전 체크포인트를 걸러내지 못했던 것을 스키마 버전 2로 분리하고, 구버전은 네트워크 호출 전에 명시적으로 거부하며 필수 회계 필드가 빠진 경우 조용히 기본값을 채우지 않도록 고쳤습니다. (2) 재결합 비교가 바이트 동일 경로에서 구조 검사(ID 유일성·열 집합 등)를 건너뛸 수 있었던 것을 고쳐, 구조 검사를 항상 먼저 수행하도록 순서를 바꿨습니다. (3) 기존 579건 해시 검사가 캐시·원본 결과만 다뤄 재결합이 실제로 읽는 `selection_with_prediction_at.csv` 2개와 `mapping_table.csv`가 빠져 있던 것을, 새 `input_provenance_checks`로 경로·SHA-256을 연결하고 기존 `plan_fingerprint` 기록이 있으면 대조·없으면 현재 지문만 기록하도록 구분했습니다. 고쳐진 코드로 다시 비교한 `baseline_recovery_v2_weather_recombination_provenance_20260918` 실행은 **21행 완전 동일, 300행 네 조건 합계 승인된 station 마스킹 232셀, 미승인 의미 차이 0건, 최종 판정 PASS**였습니다 — 이전 검증들의 수치는 바뀌지 않았습니다. 회귀 테스트가 341개에서 **354개**로 늘었습니다. 세부는 위 2절의 새 소절을 참고하세요.
-- **남은 것.** 채택된 706,759행 전체에 대한 날씨 실수집과 재학습은 이번에도 수행하지 않았습니다. **12개월을 모두 검사한 뒤 날짜 귀속을 보류한 293,241행**(결측 키 292,683행 + 완전 지문이지만 후보 연도 0개·2개인 558행)은 "검사하지 않은 행"이 아니라 "검사했지만 채택 조건을 충족하지 못해 보류한 행"입니다 — 미검사 월은 이제 없습니다. 매핑 미확인·시간대 충돌 15,373행(2.09%)은 원인을 먼저 해결해야 전체 결합 대상에 넣을 수 있습니다. 전체 결합 전에 이번 검증에서 확인한 경계 규칙(같은 컷오프, 동일 관측 나이 제한, DST 정책)을 그대로 확장 적용해야 합니다. **355개 `confirmed_period` 공항의 공식 자료 기반 역사적 신원(위치·동일 시설·이전 이력) 확인은 여전히 하지 않았습니다** — 이번에 20개 우선 조사 대상의 좌표거리·UTC 오프셋 동치성만 기존 캐시로 확인했습니다. IEM 메타데이터의 **현재** 좌표·시간대·`confirmed_period` 기록 기간만으로는 과거에 같은 이름·같은 IATA/ICAO 코드가 다른 물리적 위치나 다른 관측 장비를 가리켰는지 알 수 없으므로, 다음 단계로 **NOAA/NWS의 station history 공식 기록(관측소 이전·장비 교체·좌표 변경 이력이 있는 station history report)과 FAA 공항 마스터 레코드**를 대조해 (a) 채택 기간 내 관측소 이전 여부, (b) 좌표·고도 변경 이력, (c) 관측 장비(ASOS/AWOS) 교체 시점을 개별 공항 단위로 확인하는 작업을 우선 제안합니다 — 이번에 확인한 현재 좌표·시간대 동치성이 이 세 항목을 대신하지 않습니다. **새 규칙으로 다시 선정한 300행 표본(`baseline_recovery_v2_weather_expanded_stratafix_20260918`)은 이번에도 실제로 수집·결합하지 않았습니다** — 선정만 했고, 비교 기준은 여전히 기존 300행입니다. 신규로 필요한 구간(약 220만 station-시간)의 실제 수집도 이번 범위에서는 하지 않았습니다. [기상 결합 재검토(2026-09-16)](output/weather_recovery_review.md), [달력 분석](notebooks/analyze_calendar_signature.py)
+- **남은 것.** 채택된 706,759행 전체에 대한 날씨 실수집과 재학습은 이번에도 수행하지 않았습니다. **12개월을 모두 검사한 뒤 날짜 귀속을 보류한 293,241행**(결측 키 292,683행 + 완전 지문이지만 후보 연도 0개·2개인 558행)은 "검사하지 않은 행"이 아니라 "검사했지만 채택 조건을 충족하지 못해 보류한 행"입니다 — 미검사 월은 이제 없습니다. 매핑 미확인·시간대 충돌 15,373행(2.09%)은 원인을 먼저 해결해야 전체 결합 대상에 넣을 수 있습니다. 전체 결합 전에 이번 검증에서 확인한 경계 규칙(같은 컷오프, 동일 관측 나이 제한, DST 정책)을 그대로 확장 적용해야 합니다. **355개 `confirmed_period` 공항의 공식 자료 기반 역사적 신원(위치·동일 시설·이전 이력) 확인 중 우선 조사 대상 20개는 이번에 NOAA/NCEI HOMR로 마쳤고, 나머지 335개는 여전히 하지 않았습니다.** 20개의 결과는 ISN→XWA 시설 이전 공식 확인, YUM의 두 별개 관측소(폐쇄된 옛 `YUM`과 실제 사용 중인 `NYL`) 확인, 식별자 불일치 9곳 중 8곳의 실제 사용 ID·연속 운영 이력 확인(SPN은 IEM 네트워크 공백으로 미해결), STT/STX 시간대 충돌은 정황 증거만 확보하고 등급 유지입니다 — 자세한 내용과 남은 공백은 2절의 새 소절과 [증거표](output/baseline_recovery_v2_station_identity_investigation_20260918_evidence.csv)를 참고하세요. **이번 조사도 IEM 메타데이터의 현재 목록을 기준점으로 삼되 NOAA/NCEI HOMR라는 별도 공식 자료로 교차 확인했다는 점에서 이전 라운드(IEM 현재 좌표·시간대 동치성만 확인)보다 진전됐지만, FAA 공항 마스터 레코드(예: 날짜가 명시된 Form 5010)는 이번에도 조회하지 못했고, 확인한 8곳의 대체 식별자를 실제로 매핑 코드에 반영하지도 않았습니다.** 나머지 335개 공항과 위 미해결 항목을 다음 단계로 제안합니다 — 이번에 확인한 20개 결과가 이 335개에 그대로 일반화되지는 않습니다. **새 규칙으로 다시 선정한 300행 표본(`baseline_recovery_v2_weather_expanded_stratafix_20260918`)은 이번에도 실제로 수집·결합하지 않았습니다** — 선정만 했고, 비교 기준은 여전히 기존 300행입니다. 신규로 필요한 구간(약 220만 station-시간)의 실제 수집도 이번 범위에서는 하지 않았습니다. [기상 결합 재검토(2026-09-16)](output/weather_recovery_review.md), [달력 분석](notebooks/analyze_calendar_signature.py)
 
 **다음 비교 설계(모델 재학습 없음, 설계만).** 날씨 유무 성능을 비교할 때는 다음을 지켜야 합니다.
 1. **같은 라벨 평가 행·같은 분할·같은 시드·같은 프로토콜**에서 비교합니다 — `src/cv.py`의 기존 nested grid, inner 경계 TE, outer-valid 채점 구조를 그대로 씁니다.
@@ -809,6 +830,7 @@ P6_clean은 실제 지연 45,000행 중 **24,895행을 세 시드 모두에서 F
 | `notebooks/diagnose_weather_expanded_cache.py` | 기존 300행 캐시·결합 결과만으로 분모·연령분포·미결합 사유(노후/미가용/부재 3분리)·필드 품질·수집 규모를 재진단(새 수집 없음) |
 | `notebooks/reconcile_weather_cache_recombination.py` | 기존 21행·300행 캐시를 수정된 `src/weather.py`·`join_weather_sample[_expanded].py`로 다시 결합해 원본과 열별로 비교. 구조(행수·ID 유일성/순서·열 집합) 불일치와 승인되지 않은 의미 차이는 명시적 실패로 판정하고 비정상 종료. 재결합 결과를 `data/weather_probe/<name>_rejoined/`에 보존(네트워크 호출 시 실패하도록 감시) |
 | `notebooks/scope_weather_collection_refined.py` | station별 실제 조회 구간을 병합·기존 캐시로 차감해 신규 필요 구간·요청 수·바이트 범위를 재산정(표본 평균 곱 방식 대체) |
+| `notebooks/verify_priority_station_identity.py` | 우선 조사 대상 20개 공항을 NOAA/NCEI HOMR로 개별 조회해 원자료를 해시와 함께 저장하고, 대체 식별자·시설 이전·연속성 판단을 `verification_tier`와 분리된 `identity_determination` 필드로 기록 |
 | `notebooks/` | 재현 가능한 진단·실험 집계·실행 노트북 |
 | `tests/` | 정보 경계·전처리·저장 회귀 검사 |
 | `output/` | 실행 증거 및 작성 시점별 보고서 |
@@ -1061,6 +1083,16 @@ uv run --offline python -u notebooks/summarize_bts_marketing_months.py --name ba
 .venv/Scripts/python.exe -u -m pytest -q
 ```
 
+### 우선 조사 대상 20개 공항 역사적 매핑 대조
+
+인터넷 접속(NOAA/NCEI HOMR)이 필요합니다. 이미 조회한 20건은 `data/weather_probe/baseline_recovery_v2_station_identity_investigation_20260918_homr_raw/`에 캐시돼 있어 재실행 시 새 네트워크 호출 없이 그대로 재사용됩니다. 재학습이 없고 타깃·지연·실제 출도착 시각·날씨 값을 읽지 않습니다.
+
+```powershell
+.venv/Scripts/python.exe -u -m notebooks.verify_priority_station_identity --name baseline_recovery_v2_station_identity_investigation_20260918
+```
+
+대상 20개가 `output/baseline_recovery_v2_weather_scope_fix_20260918_mapping_priority_investigation.csv`의 iata 집합과 정확히 일치하지 않으면 예외로 중단됩니다. 이 스크립트는 회귀 테스트 스위트에 포함되지 않았습니다(코드·collectible 변경이 없는 증거 수집·서술 라운드이므로 `AGENTS.md`의 "문서·증거만 추가했으면 과거 테스트를 새 실행처럼 보고하지 않는다" 원칙에 따라 354개 전체 테스트를 이번 실행 근거로 인용하지 않습니다).
+
 ### 오분류 기술 분석
 
 저장된 행별 OOF와 원본만 있으면 되고 재학습이 없습니다. 실행에는 로컬에 보관된 `output/<run>_seed<seed>_oof/*.csv.gz`가 필요하며, 파일 해시·ID·행 위치·정답·결측 플래그를 먼저 대조한 뒤 분석합니다.
@@ -1111,6 +1143,7 @@ uv run --offline python -u notebooks/summarize_bts_marketing_months.py --name ba
 | 수정 코드로 실제 재결합했을 때 원본과 같은가(명시적 PASS/FAIL 판정, 4차 검증) | [비교 결과](output/baseline_recovery_v2_weather_recombination_fix_20260918_reconciliation_comparisons.json), [실행 manifest](output/baseline_recovery_v2_weather_recombination_fix_20260918_reconciliation_manifest.json), [재결합 결과 보존 경로](data/weather_probe/baseline_recovery_v2_weather_recombination_fix_20260918_rejoined/), [재현 코드](notebooks/reconcile_weather_cache_recombination.py) — 3차 검증 당시(고쳐지기 전 판정 로직) 결과는 [비교 결과](output/baseline_recovery_v2_weather_recombination_20260918_reconciliation_comparisons.json), [실행 manifest](output/baseline_recovery_v2_weather_recombination_20260918_reconciliation_manifest.json)에 보존 |
 | 전체 조회 구간·바이트를 병합·차감 기준으로 다시 재면 얼마인가 | [station별 상세](output/baseline_recovery_v2_weather_scope_refined_20260918_refined_scope_per_station.csv), [실행 manifest](output/baseline_recovery_v2_weather_scope_refined_20260918_refined_scope_manifest.json), [재현 코드](notebooks/scope_weather_collection_refined.py) |
 | 미결합 사유가 노후·미가용·부재 중 무엇인가 | [세분화된 미결합 사유표](output/baseline_recovery_v2_weather_expanded_diagnostic_v2_20260918_diagnostic_unmatched_reasons.csv), [실행 manifest](output/baseline_recovery_v2_weather_expanded_diagnostic_v2_20260918_diagnostic_manifest.json), [재현 코드](notebooks/diagnose_weather_expanded_cache.py) |
+| 우선 조사 대상 20개 공항의 역사적 매핑을 공식 자료로 어떻게 확인했는가 | [증거표](output/baseline_recovery_v2_station_identity_investigation_20260918_evidence.csv), [실행 manifest](output/baseline_recovery_v2_station_identity_investigation_20260918_manifest.json), [재현 코드](notebooks/verify_priority_station_identity.py) |
 | 처음 전처리 문제를 어떻게 발견했는가 | [설명 노트북](notebooks/preprocessing_walkthrough.ipynb) — 수정 전 진단임에 유의 |
 
 ### 과거 계획과 진단 — 현행 성능 근거로 사용하지 않음
