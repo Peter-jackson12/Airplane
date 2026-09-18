@@ -3,9 +3,11 @@ import hashlib
 import pandas as pd
 import pytest
 
-from notebooks.map_weather_stations import candidate_network_and_sid, classify
+from notebooks.map_weather_stations import (candidate_network_and_sid, classify, haversine_km,
+                                            subperiod_overlap, utc_offsets_match_over_period)
 from notebooks.scope_weather_collection import CENSUS_REGION, NON_CENSUS_TERRITORY, region_for
-from notebooks.select_weather_sample_expanded import region_timezone_bucket, stable_rank
+from notebooks.select_weather_sample_expanded import (broad_inclusion_order, region_timezone_bucket,
+                                                       round_robin_merge, stable_rank)
 
 
 # ---- map_weather_stations: station-candidate rules and tiered classification ----
@@ -66,6 +68,74 @@ def test_classify_tz_conflict_overrides_period_coverage():
     result = classify({'mwgg_tz': 'America/St_Thomas'}, props)
     assert result['verification_tier'] == 'tz_conflict_needs_resolution'
     assert result['tz_matches_mwgg'] is False
+    # Atlantic/Bermuda observes DST, America/St_Thomas never does -- a genuine offset difference,
+    # not just a naming difference, distinct from a case where the strings differ but offsets agree.
+    assert result['utc_offset_equivalent_2018_2019'] is False
+
+
+def test_classify_does_not_confirm_identity_or_location_by_itself():
+    """confirmed_period must carry an explicit evidence-scope statement and a
+    location signal, since the tier name alone invites over-reading it as
+    "this is verifiably the same airport/location", which it is not."""
+    props = {'tzname': 'America/New_York', 'archive_begin': '2000-01-01', 'archive_end': None,
+            'iem_lat': 33.6367, 'iem_lon': -84.4281}
+    result = classify({'mwgg_tz': 'America/New_York', 'lat': 33.6367, 'lon': -84.4281}, props)
+    assert result['verification_tier'] == 'confirmed_period'
+    assert 'evidence_basis' in result and 'location' in result['evidence_basis'].lower()
+    assert result['location_distance_km'] == pytest.approx(0.0, abs=1e-6)
+
+
+def test_classify_reports_valid_subperiod_for_partial_coverage():
+    """A station whose archive window only partially overlaps 2018-2019 (e.g.
+    Williston ISN->XWA mid-period) may still validly map individual rows
+    whose own date falls inside the overlap -- confirmed_current_only is not
+    "never usable", so the usable sub-range must be surfaced, not discarded."""
+    props = {'tzname': 'America/Chicago', 'archive_begin': '1950-04-01', 'archive_end': '2019-10-18'}
+    result = classify({'mwgg_tz': 'America/Chicago'}, props)
+    assert result['verification_tier'] == 'confirmed_current_only'
+    assert result['valid_subperiod_start'] == '2018-01-01'
+    assert result['valid_subperiod_end'] == '2019-10-18'
+
+
+# ---- haversine_km / utc_offsets_match_over_period / subperiod_overlap ----
+
+def test_haversine_km_zero_for_identical_points():
+    assert haversine_km(40.0, -80.0, 40.0, -80.0) == pytest.approx(0.0, abs=1e-9)
+
+
+def test_haversine_km_none_when_a_coordinate_is_missing():
+    assert haversine_km(None, -80.0, 40.0, -80.0) is None
+    assert haversine_km(40.0, -80.0, 40.0, None) is None
+
+
+def test_utc_offsets_match_over_period_true_for_identical_zone():
+    start, end = pd.Timestamp('2018-01-01'), pd.Timestamp('2019-12-31')
+    assert utc_offsets_match_over_period('America/New_York', 'America/New_York', start, end) is True
+
+
+def test_utc_offsets_match_over_period_false_for_genuinely_different_offsets():
+    """Atlantic/Bermuda observes DST; America/St_Thomas never does -- their
+    offsets diverge for large parts of the year."""
+    start, end = pd.Timestamp('2018-01-01'), pd.Timestamp('2019-12-31')
+    assert utc_offsets_match_over_period('Atlantic/Bermuda', 'America/St_Thomas', start, end) is False
+
+
+def test_utc_offsets_match_over_period_none_for_unresolvable_zone():
+    start, end = pd.Timestamp('2018-01-01'), pd.Timestamp('2018-01-02')
+    assert utc_offsets_match_over_period('Not/AZone', 'America/New_York', start, end) is None
+
+
+def test_subperiod_overlap_no_overlap_returns_none_pair():
+    start = pd.Timestamp('1950-01-01')
+    end = pd.Timestamp('2007-12-31')  # entirely before the 2018-2019 period
+    assert subperiod_overlap(start, end, pd.Timestamp('2018-01-01'), pd.Timestamp('2019-12-31')) == (None, None)
+
+
+def test_subperiod_overlap_partial_overlap():
+    start = pd.Timestamp('1950-01-01')
+    end = pd.Timestamp('2019-10-18')
+    result = subperiod_overlap(start, end, pd.Timestamp('2018-01-01'), pd.Timestamp('2019-12-31'))
+    assert result == ('2018-01-01', '2019-10-18')
 
 
 # ---- scope_weather_collection: region definition ----
@@ -102,3 +172,44 @@ def test_region_timezone_bucket_folds_timezone_into_mainland_regions_only():
     assert region_timezone_bucket('West', 'America/Los_Angeles') == 'West:Los_Angeles'
     assert region_timezone_bucket('Alaska', 'America/Anchorage') == 'Alaska'
     assert region_timezone_bucket('Hawaii', 'Pacific/Honolulu') == 'Hawaii'
+
+
+# ---- round_robin_merge / broad_inclusion_order: the 300-row sampling-bias fix ----
+
+def test_round_robin_merge_interleaves_while_preserving_each_list_own_order():
+    assert round_robin_merge([[1, 2, 3], [10, 20], [100]]) == [1, 10, 100, 2, 20, 3]
+
+
+def test_round_robin_merge_skips_empty_sequences_without_erroring():
+    assert round_robin_merge([[], [1, 2], []]) == [1, 2]
+
+
+def test_broad_inclusion_order_visits_both_years_before_repeating_either():
+    strata = [(2018, 'winter', 'R:a', 'small'), (2018, 'summer', 'R:a', 'small'),
+             (2019, 'winter', 'R:a', 'small'), (2019, 'summer', 'R:a', 'small')]
+    order = broad_inclusion_order(strata)
+    assert {order[0][0], order[1][0]} == {2018, 2019}  # first two picks are NOT both the same year
+
+
+def test_broad_inclusion_order_spreads_a_budget_shortfall_across_years():
+    """The actual bug this fixes: sorting the plain stratum LABEL puts the
+    year first alphabetically, so it exhausts one entire year before ever
+    touching the other -- when a row cap lands mid-way through the second
+    year, everything cut is concentrated in whichever season/region happened
+    to sort last, not spread across the population. Here, of the first 4
+    strata (a stand-in for "what a tight cap would keep"), both years must
+    be represented, not 3-and-1 or 4-and-0."""
+    strata = [(year, season, 'R:a', 'small') for year in (2018, 2019) for season in ('fall', 'spring', 'summer')]
+    order = broad_inclusion_order(strata)
+    first_four_years = [s[0] for s in order[:4]]
+    assert first_four_years.count(2018) == 2
+    assert first_four_years.count(2019) == 2
+
+
+def test_broad_inclusion_order_is_deterministic_and_a_permutation_of_the_input():
+    strata = [(2018, 'winter', 'South:New_York', 'small'), (2018, 'summer', 'West:Los_Angeles', 'large'),
+             (2019, 'fall', 'Alaska', 'medium')]
+    order1 = broad_inclusion_order(strata)
+    order2 = broad_inclusion_order(list(reversed(strata)))  # input order must not matter, only content
+    assert sorted(order1) == sorted(strata)
+    assert order1 == order2

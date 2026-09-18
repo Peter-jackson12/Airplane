@@ -35,7 +35,11 @@ observed flight timestamp. Arrival needs its own verified local calendar date.
 def _utc(series: pd.Series, name: str) -> pd.Series:
     if not isinstance(series.dtype, pd.DatetimeTZDtype):
         raise ValueError(f"{name} must be timezone-aware")
-    return series.dt.tz_convert("UTC")
+    # Normalized to a fixed (ns) resolution: pandas infers a datetime64 unit (s/us/ns) from the
+    # INPUT values, so an all-missing or empty series (a legitimate "nothing available" edge case,
+    # not an error) can end up a different unit than a populated one built the same way elsewhere,
+    # and merge_asof's dtype check then rejects the two sides as mismatched types.
+    return series.dt.tz_convert("UTC").astype("datetime64[ns, UTC]")
 
 
 def join_weather_asof(
@@ -78,9 +82,17 @@ prediction. Forecast valid-time/issue-time selection is a separate contract.
         raise ValueError("max_age must be positive")
     req["__row"] = range(len(req))
     eligible = req.station.notna() & req.prediction_at.notna()
+    # An empty observation set (every collection attempt failed, or nothing was ever collectible) is a
+    # legitimate "no data available" input, not an error condition -- but pandas can only infer the
+    # nullable "string" dtype for a text column from actual values; a zero-row frame falls back to
+    # plain "object", which merge_asof's by= key comparison then rejects as a dtype mismatch against a
+    # differently-constructed (e.g. non-empty) station column. Both sides are normalized to plain
+    # object dtype right before the merge so this stays a safe join-key type detail, never a
+    # caller-visible crash on an edge case that is otherwise perfectly answerable ("nothing matches").
+    left = req.loc[eligible].sort_values("prediction_at").assign(station=lambda d: d.station.astype(object))
+    right = obs.sort_values("available_at").assign(station=lambda d: d.station.astype(object))
     matched = pd.merge_asof(
-        req.loc[eligible].sort_values("prediction_at"),
-        obs.sort_values("available_at"),
+        left, right,
         by="station", left_on="prediction_at", right_on="available_at",
         direction="backward", tolerance=age_limit,
     )

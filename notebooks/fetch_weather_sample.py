@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import io
 import json
 import subprocess
 import time
@@ -30,37 +29,126 @@ class FetchError(RuntimeError):
     pass
 
 
-def http_get(url: str, *, timeout: int = 20) -> bytes:
-    """Download `url` via curl (subprocess), not urllib.
+def http_get_once(url: str, *, timeout: float, out_path: Path, max_bytes: int | None = None) -> dict:
+    """Exactly ONE curl attempt (no retry, no sleep) via subprocess, not
+    urllib -- confirmed by direct comparison on 2026-09-18 that identical
+    requests urllib.request.urlopen hung on indefinitely (past its own
+    `timeout=` and a process-wide socket.setdefaulttimeout backstop) were
+    completed by curl in a few seconds.
 
-    Confirmed by direct comparison on 2026-09-18: identical requests that
-    urllib.request.urlopen hung on indefinitely (well past its own `timeout=`
-    argument, and past a process-wide socket.setdefaulttimeout backstop) were
-    completed by curl in a few seconds. curl's own --max-time is enforced by
-    curl itself (a separate process Python can also kill via subprocess
-    timeout), so a stalled transfer cannot hang this script.
+    The response body is written to `out_path` (via curl's own -o) rather
+    than captured in memory, so bytes actually received are measurable from
+    disk even when curl is killed mid-transfer by a timeout or --max-filesize
+    -- capturing stdout would lose that partial data along with the process.
+
+    Returns a dict: success, bytes_received (int, or None only when out_path
+    was never created at all -- never assumed to be 0 for a genuinely
+    unmeasurable attempt), seconds (wall time for this attempt), returncode,
+    error, timed_out. Callers own retry/backoff; this function never retries.
     """
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    if out_path.exists():
+        out_path.unlink()
+    cmd = ['curl', '-sS', '--max-time', str(timeout), '--fail',
+          '-H', 'User-Agent: Airplane-course-weather-sample/1.0', '-o', str(out_path)]
+    if max_bytes:
+        cmd += ['--max-filesize', str(int(max_bytes))]
+    cmd.append(url)
+    start = time.monotonic()
+    timed_out = False
+    returncode = None
+    error = None
     try:
-        result = subprocess.run(
-            ['curl', '-sS', '--max-time', str(timeout), '--fail',
-             '-H', 'User-Agent: Airplane-course-weather-sample/1.0', url],
-            capture_output=True, timeout=timeout + 5, check=False)
-    except subprocess.TimeoutExpired as exc:
-        raise FetchError(f'curl exceeded {timeout + 5}s wall-clock timeout for {url}') from exc
-    if result.returncode != 0:
-        raise FetchError(f'curl exit {result.returncode} for {url}: '
-                         f'{result.stderr.decode(errors="replace")[:500]}')
-    return result.stdout
+        result = subprocess.run(cmd, capture_output=True, timeout=timeout + 5, check=False)
+        returncode = result.returncode
+        if returncode != 0:
+            error = f'curl exit {returncode}: {result.stderr.decode(errors="replace")[:500]}'
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        error = f'curl exceeded {timeout + 5}s wall-clock timeout for {url}'
+    seconds = time.monotonic() - start
+    bytes_received = out_path.stat().st_size if out_path.exists() else None
+    return {'success': returncode == 0 and not timed_out, 'bytes_received': bytes_received,
+           'seconds': seconds, 'returncode': returncode, 'error': error, 'timed_out': timed_out}
 
 
 CACHE_DIR = ROOT / 'data/weather_probe/sample'
 PREDICTION_OFFSET_MINUTES = 60  # fixed contract: 60 minutes before scheduled departure
 LOOKBACK_HOURS = 6  # window padding before the earliest prediction_at in a group
 LOOKAHEAD_HOURS = 2  # window padding after the latest prediction_at in a group
+MAX_RESPONSE_BYTES = 2_000_000
 
 
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def cache_path_for(station: str, start: pd.Timestamp, end: pd.Timestamp) -> Path:
+    tag = f"{station}_{start.strftime('%Y%m%dT%H%M')}_{end.strftime('%Y%m%dT%H%M')}"
+    return CACHE_DIR / f'iem_{tag}.csv'
+
+
+def build_request_url(station: str, start: pd.Timestamp, end: pd.Timestamp) -> str:
+    params = {'station': station, 'data': 'all',
+             'sts': start.strftime('%Y-%m-%dT%H:%M:%SZ'), 'ets': end.strftime('%Y-%m-%dT%H:%M:%SZ'),
+             'tz': 'UTC', 'format': 'onlycomma', 'latlon': 'yes',
+             'missing': 'M', 'trace': 'T', 'report_type': [3, 4]}
+    return 'https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?' + urlencode(params, doseq=True)
+
+
+def validate_cached_window(station: str, start: pd.Timestamp, end: pd.Timestamp) -> Path | None:
+    """Returns the cache path if a schema-valid cache file already exists for
+    exactly this (station, window) request, else None (never partially/blindly
+    trusted). A file that exists but fails to parse or does not match the
+    expected archive schema/station is a hard error, not a silent re-fetch --
+    existing evidence must not be quietly overwritten or bypassed."""
+    cache = cache_path_for(station, start, end)
+    if not cache.exists():
+        return None
+    try:
+        head = pd.read_csv(cache, comment='#', na_values=['M'], keep_default_na=False, nrows=5)
+    except Exception as exc:
+        raise ValueError(f'{cache} exists but failed to parse ({exc}); resolve before reuse') from exc
+    if not {'station', 'valid'}.issubset(head.columns):
+        raise ValueError(f'{cache} exists but does not match the expected archive schema')
+    if len(head) and (head.station != station).any():
+        raise ValueError(f'{cache} station column does not match requested station {station}')
+    return cache
+
+
+def fetch_attempt(station: str, start: pd.Timestamp, end: pd.Timestamp, *, timeout: float,
+                  max_bytes_remaining: int) -> dict:
+    """One bounded HTTP attempt for a (station, window) request; never
+    retries internally. The caller owns retry/backoff/budget accounting so
+    every attempt -- successful or not -- can be charged against the request
+    budget, and partial bytes from a failed attempt are still reported.
+    """
+    url = build_request_url(station, start, end)
+    cache = cache_path_for(station, start, end)
+    part = cache.with_name(cache.name + '.part')
+    outcome = http_get_once(url, timeout=timeout, out_path=part,
+                            max_bytes=max_bytes_remaining if max_bytes_remaining and max_bytes_remaining > 0 else None)
+    if not outcome['success']:
+        if part.exists():
+            part.unlink()
+        return {'success': False, 'bytes_received': outcome['bytes_received'], 'seconds': outcome['seconds'],
+               'error': outcome['error'], 'url': url}
+    if outcome['bytes_received'] is not None and outcome['bytes_received'] > MAX_RESPONSE_BYTES:
+        part.unlink(missing_ok=True)
+        return {'success': False, 'bytes_received': outcome['bytes_received'], 'seconds': outcome['seconds'],
+               'error': 'response exceeds bounded size', 'url': url}
+    try:
+        parsed = pd.read_csv(part, comment='#', na_values=['M'], keep_default_na=False)
+        if not {'station', 'valid'}.issubset(parsed.columns):
+            raise ValueError('unexpected archive schema; response not cached')
+    except Exception as exc:
+        part.unlink(missing_ok=True)
+        return {'success': False, 'bytes_received': outcome['bytes_received'], 'seconds': outcome['seconds'],
+               'error': f'response failed validation: {exc}', 'url': url}
+    part.replace(cache)
+    return {'success': True, 'bytes_received': outcome['bytes_received'], 'seconds': outcome['seconds'],
+           'url': url, 'cache_path': cache, 'cache_file': str(cache.relative_to(ROOT)),
+           'n_rows': len(parsed), 'sha256': digest(cache)}
 
 
 def compute_prediction_at(selection: pd.DataFrame) -> pd.Series:
@@ -76,30 +164,24 @@ def compute_prediction_at(selection: pd.DataFrame) -> pd.Series:
 
 
 def fetch_window(station: str, start: pd.Timestamp, end: pd.Timestamp) -> tuple[Path, str, int]:
+    """Small, uncapped fetch for the original 21-row sample only (no request/
+    byte/time budget here -- that resource accounting lives in
+    execute_with_caps for the expanded sample). Retries up to 3 attempts with
+    linear backoff, each attempt charged nothing but its own wall time since
+    this path has no shared budget to protect."""
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    tag = f"{station}_{start.strftime('%Y%m%dT%H%M')}_{end.strftime('%Y%m%dT%H%M')}"
-    cache = CACHE_DIR / f'iem_{tag}.csv'
-    params = {'station': station, 'data': 'all',
-              'sts': start.strftime('%Y-%m-%dT%H:%M:%SZ'), 'ets': end.strftime('%Y-%m-%dT%H:%M:%SZ'),
-              'tz': 'UTC', 'format': 'onlycomma', 'latlon': 'yes',
-              'missing': 'M', 'trace': 'T', 'report_type': [3, 4]}
-    url = 'https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?' + urlencode(params, doseq=True)
-    if not cache.exists():
-        body = None
+    url = build_request_url(station, start, end)
+    cache = validate_cached_window(station, start, end)
+    if cache is None:
+        outcome = None
         for attempt in range(3):
-            try:
-                body = http_get(url, timeout=15)
+            outcome = fetch_attempt(station, start, end, timeout=15, max_bytes_remaining=MAX_RESPONSE_BYTES)
+            if outcome['success']:
                 break
-            except FetchError:
-                if attempt == 2:
-                    raise
-                time.sleep(10 * (attempt + 1))
-        if len(body) > 2_000_000:
-            raise ValueError('Response exceeds bounded size')
-        parsed = pd.read_csv(io.BytesIO(body), comment='#', na_values=['M'], keep_default_na=False)
-        if not {'station', 'valid'}.issubset(parsed):
-            raise ValueError('Unexpected archive schema; response not cached')
-        cache.write_bytes(body)
+            if attempt == 2:
+                raise FetchError(outcome['error'])
+            time.sleep(10 * (attempt + 1))
+        cache = outcome['cache_path']
         time.sleep(3)  # be polite to the free public archive between requests
     obs = pd.read_csv(cache, comment='#', na_values=['M'], keep_default_na=False)
     return cache, url, len(obs)

@@ -1,0 +1,161 @@
+year,season,region,origin_size_tier,rows
+2018,fall,Alaska,large,272
+2018,fall,Alaska,medium,156
+2018,fall,Alaska,small,137
+2018,fall,Hawaii,large,1534
+2018,fall,Hawaii,medium,156
+2018,fall,Midwest,large,19885
+2018,fall,Midwest,medium,1929
+2018,fall,Midwest,small,391
+2018,fall,Non-contiguous territory,large,295
+2018,fall,Non-contiguous territory,medium,65
+2018,fall,Non-contiguous territory,small,40
+2018,fall,Northeast,large,16001
+2018,fall,Northeast,medium,655
+2018,fall,Northeast,small,107
+2018,fall,South,large,43987
+2018,fall,South,medium,2432
+2018,fall,South,small,420
+2018,fall,West,large,30776
+2018,fall,West,medium,1321
+2018,fall,West,small,273
+2018,spring,Alaska,large,255
+2018,spring,Alaska,medium,153
+2018,spring,Alaska,small,169
+2018,spring,Hawaii,large,1443
+2018,spring,Hawaii,medium,166
+2018,spring,Midwest,large,11273
+2018,spring,Midwest,medium,939
+2018,spring,Midwest,small,168
+2018,spring,Non-contiguous territory,large,312
+2018,spring,Non-contiguous territory,medium,48
+2018,spring,Non-contiguous territory,small,83
+2018,spring,Northeast,large,8619
+2018,spring,Northeast,medium,325
+2018,spring,Northeast,small,49
+2018,spring,South,large,23681
+2018,spring,South,medium,894
+2018,spring,South,small,74
+2018,spring,West,large,23468
+2018,spring,West,medium,999
+2018,spring,West,small,200
+2018,summer,Alaska,large,147
+2018,summer,Alaska,medium,73
+2018,summer,Alaska,small,68
+2018,summer,Hawaii,large,1080
+2018,summer,Hawaii,medium,114
+2018,summer,Midwest,large,11695
+2018,summer,Midwest,medium,896
+2018,summer,Midwest,small,152
+2018,summer,Non-contiguous territory,large,365
+2018,summer,Non-contiguous territory,medium,61
+2018,summer,Non-contiguous territory,small,40
+2018,summer,Northeast,large,9267
+2018,summer,Northeast,medium,443
+2018,summer,Northeast,small,72
+2018,summer,South,large,26074
+2018,summer,South,medium,1053
+2018,summer,South,small,149
+2018,summer,West,large,22058
+2018,summer,West,medium,1009
+2018,summer,West,small,159
+2018,winter,Alaska,large,184
+2018,winter,Alaska,medium,101
+2018,winter,Alaska,small,99
+2018,winter,Hawaii,large,1499
+2018,winter,Hawaii,medium,141
+2018,winter,Midwest,large,13672
+2018,winter,Midwest,medium,1210
+2018,winter,Midwest,small,237
+2018,winter,Non-contiguous territory,large,321
+2018,winter,Non-contiguous territory,medium,46
+2018,winter,Non-contiguous territory,small,67
+2018,winter,Northeast,large,10492
+2018,winter,Northeast,medium,415
+2018,winter,Northeast,small,64
+2018,winter,South,large,29761
+2018,winter,South,medium,1406
+2018,winter,South,small,182
+2018,winter,West,large,23244
+2018,winter,West,medium,1253
+2018,winter,West,small,206
+2019,fall,Alaska,large,182
+2019,fall,Alaska,medium,115
+2019,fall,Alaska,small,89
+2019,fall,Hawaii,large,1227
+2019,fall,Hawaii,medium,115
+2019,fall,Midwest,large,14046
+2019,fall,Midwest,medium,1441
+2019,fall,Midwest,small,293
+2019,fall,Non-contiguous territory,large,241
+2019,fall,Non-contiguous territory,medium,47
+2019,fall,Non-contiguous territory,small,24
+2019,fall,Northeast,large,10995
+2019,fall,Northeast,medium,470
+2019,fall,Northeast,small,62
+2019,fall,South,large,31852
+2019,fall,South,medium,1838
+2019,fall,South,small,307
+2019,fall,West,large,22262
+2019,fall,West,medium,1128
+2019,fall,West,small,212
+2019,spring,Alaska,large,207
+2019,spring,Alaska,medium,114
+2019,spring,Alaska,small,103
+2019,spring,Hawaii,large,1178
+2019,spring,Hawaii,medium,91
+2019,spring,Midwest,large,14070
+2019,spring,Midwest,medium,1370
+2019,spring,Midwest,small,270
+2019,spring,Non-contiguous territory,large,293
+2019,spring,Non-contiguous territory,medium,80
+2019,spring,Non-contiguous territory,small,32
+2019,spring,Northeast,large,11458
+2019,spring,Northeast,medium,471
+2019,spring,Northeast,small,87
+2019,spring,South,large,33609
+2019,spring,South,medium,1772
+2019,spring,South,small,369
+2019,spring,West,large,22228
+2019,spring,West,medium,1167
+2019,spring,West,small,179
+2019,summer,Alaska,large,305
+2019,summer,Alaska,medium,155
+2019,summer,Alaska,small,129
+2019,summer,Hawaii,large,1395
+2019,summer,Hawaii,medium,101
+2019,summer,Midwest,large,15152
+2019,summer,Midwest,medium,1575
+2019,summer,Midwest,small,302
+2019,summer,Non-contiguous territory,large,356
+2019,summer,Non-contiguous territory,medium,69
+2019,summer,Non-contiguous territory,small,39
+2019,summer,Northeast,large,11716
+2019,summer,Northeast,medium,506
+2019,summer,Northeast,small,118
+2019,summer,South,large,34281
+2019,summer,South,medium,1833
+2019,summer,South,small,307
+2019,summer,West,large,23860
+2019,summer,West,medium,1335
+2019,summer,West,small,225
+2019,winter,Alaska,large,161
+2019,winter,Alaska,medium,122
+2019,winter,Alaska,small,92
+2019,winter,Hawaii,large,1147
+2019,winter,Hawaii,medium,112
+2019,winter,Midwest,large,12905
+2019,winter,Midwest,medium,1216
+2019,winter,Midwest,small,281
+2019,winter,Non-contiguous territory,large,344
+2019,winter,Non-contiguous territory,medium,74
+2019,winter,Non-contiguous territory,small,34
+2019,winter,Northeast,large,10533
+2019,winter,Northeast,medium,437
+2019,winter,Northeast,small,84
+2019,winter,South,large,30983
+2019,winter,South,medium,1713
+2019,winter,South,small,273
+2019,winter,West,large,21236
+2019,winter,West,medium,1198
+2019,winter,West,small,236

@@ -6,8 +6,47 @@ import pytest
 from notebooks.select_weather_sample import (
     NEAR_MIDNIGHT_MINUTES, is_dst_transition_departure, load_airport_timezones,
     minutes_from_midnight_distance)
-from notebooks.fetch_weather_sample import compute_prediction_at
+from notebooks.fetch_weather_sample import cache_path_for, compute_prediction_at, validate_cached_window
 from notebooks.join_weather_sample import load_observations
+
+
+# ---- validate_cached_window: cache schema/station validation before reuse ----
+
+def test_validate_cached_window_returns_none_when_nothing_cached(tmp_path, monkeypatch):
+    from notebooks import fetch_weather_sample as mod
+    monkeypatch.setattr(mod, 'CACHE_DIR', tmp_path)
+    start, end = pd.Timestamp('2019-01-01T00:00Z'), pd.Timestamp('2019-01-01T08:00Z')
+    assert validate_cached_window('ATL', start, end) is None
+
+
+def test_validate_cached_window_accepts_a_well_formed_cache_file(tmp_path, monkeypatch):
+    from notebooks import fetch_weather_sample as mod
+    monkeypatch.setattr(mod, 'CACHE_DIR', tmp_path)
+    start, end = pd.Timestamp('2019-01-01T00:00Z'), pd.Timestamp('2019-01-01T08:00Z')
+    cache_path_for('ATL', start, end).write_text('station,valid,tmpf\nATL,2019-01-01 00:52,50\n')
+    result = validate_cached_window('ATL', start, end)
+    assert result == cache_path_for('ATL', start, end)
+
+
+def test_validate_cached_window_rejects_a_file_missing_required_columns(tmp_path, monkeypatch):
+    from notebooks import fetch_weather_sample as mod
+    monkeypatch.setattr(mod, 'CACHE_DIR', tmp_path)
+    start, end = pd.Timestamp('2019-01-01T00:00Z'), pd.Timestamp('2019-01-01T08:00Z')
+    cache_path_for('ATL', start, end).write_text('not,the,expected,schema\n1,2,3,4\n')
+    with pytest.raises(ValueError, match='expected archive schema'):
+        validate_cached_window('ATL', start, end)
+
+
+def test_validate_cached_window_rejects_a_file_from_the_wrong_station(tmp_path, monkeypatch):
+    from notebooks import fetch_weather_sample as mod
+    monkeypatch.setattr(mod, 'CACHE_DIR', tmp_path)
+    start, end = pd.Timestamp('2019-01-01T00:00Z'), pd.Timestamp('2019-01-01T08:00Z')
+    # same cache path a mismatched request would compute -- simulates a foreign/corrupted file
+    # sitting at the expected path, which must never be silently trusted as this station's evidence
+    path = cache_path_for('ATL', start, end)
+    path.write_text('station,valid,tmpf\nORD,2019-01-01 00:52,50\n')
+    with pytest.raises(ValueError, match='does not match requested station'):
+        validate_cached_window('ATL', start, end)
 
 
 def test_select_weather_sample_never_reads_a_target_or_outcome_column():

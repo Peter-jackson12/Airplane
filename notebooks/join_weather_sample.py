@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 from pathlib import Path
 
@@ -37,7 +38,16 @@ def load_observations(fetch_manifest: dict) -> pd.DataFrame:
         if digest(path) != entry['sha256']:
             raise ValueError(f'{path} content changed since it was fetched')
         frames.append(pd.read_csv(path, comment='#', na_values=['M'], keep_default_na=False))
-    obs = pd.concat(frames, ignore_index=True)
+    if not frames:
+        # every station/day group failed or nothing was ever attempted (e.g. an all-not_collectible
+        # selection): a reasoned EMPTY observation set, not a pd.concat([]) crash. Routed through the
+        # SAME read_csv call as a real fetch so its columns get identical dtypes (a hand-built empty
+        # DataFrame previously mismatched pandas' string-dtype inference and made merge_asof raise
+        # MergeError downstream instead of producing a clean, fully-unmatched join).
+        header = ','.join(['station', 'valid'] + WEATHER_FIELDS) + '\n'
+        obs = pd.read_csv(io.StringIO(header), comment='#', na_values=['M'], keep_default_na=False)
+    else:
+        obs = pd.concat(frames, ignore_index=True)
     before = len(obs)
     # Overlapping fetch windows (adjacent dates share a lookback/lookahead
     # buffer) can re-download the exact same METAR line twice. An identical

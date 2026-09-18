@@ -113,7 +113,13 @@ def fetch_network(network: str) -> dict:
             cache.write_bytes(body)
         time.sleep(1)  # be polite between metadata requests
     data = json.loads(cache.read_text(encoding='utf-8'))
-    by_sid = {f['id']: f['properties'] for f in data.get('features', [])}
+    by_sid = {}
+    for f in data.get('features', []):
+        props = dict(f['properties'])
+        coords = (f.get('geometry') or {}).get('coordinates')
+        if coords and len(coords) == 2:
+            props['iem_lon'], props['iem_lat'] = coords[0], coords[1]
+        by_sid[f['id']] = props
     return {'url': url, 'cache_file': str(cache.relative_to(ROOT)), 'sha256': digest(cache),
             'stations': by_sid}
 
@@ -121,10 +127,81 @@ def fetch_network(network: str) -> dict:
 PERIOD_START = pd.Timestamp('2018-01-01')
 PERIOD_END = pd.Timestamp('2019-12-31')
 
+# What verification_tier actually checks -- and, just as importantly, what it does NOT. It is an
+# IEM-metadata-only evidence level: station id present in the CURRENT network listing, that listing's
+# own archive_begin/archive_end brackets the period, and the tzname STRING matches mwgg's. It says
+# nothing about whether the airport was at the same physical location, was the same facility, or had
+# no relocation/renaming history during 2018-2019 -- that is a separate axis (location_distance_km /
+# historical_identity_note below), left explicitly unconfirmed unless this round specifically
+# investigated it (see PRIORITY_INVESTIGATION_TIERS / the *_priority_investigation.csv output).
+EVIDENCE_BASIS = ('IEM network-metadata lookup only: station id presence + archive period coverage + '
+                  'tzname string match. Does NOT by itself confirm physical location, facility '
+                  'identity, or absence of a mid-period relocation/rename.')
+PRIORITY_INVESTIGATION_TIERS = {'tz_conflict_needs_resolution', 'unconfirmed', 'confirmed_current_only'}
+
+
+def haversine_km(lat1, lon1, lat2, lon2) -> float | None:
+    """Great-circle distance in km, or None if any coordinate is missing --
+    used only as a location-identity SIGNAL (a large distance between mwgg's
+    and IEM's coordinates for the same candidate station id is a red flag),
+    never as proof of identity by itself."""
+    if any(v is None or (isinstance(v, float) and pd.isna(v)) for v in (lat1, lon1, lat2, lon2)):
+        return None
+    from math import asin, cos, radians, sin, sqrt
+    lat1, lon1, lat2, lon2 = map(radians, (lat1, lon1, lat2, lon2))
+    dlat, dlon = lat2 - lat1, lon2 - lon1
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+    return 2 * 6371.0088 * asin(sqrt(a))
+
+
+def utc_offsets_match_over_period(tz_a: str, tz_b: str, start: pd.Timestamp, end: pd.Timestamp) -> bool | None:
+    """Whether two IANA zone names produce the IDENTICAL UTC offset at every
+    sampled wall-clock moment across [start, end] -- distinguishes a genuine
+    UTC-offset disagreement (e.g. one side observes DST, the other does not)
+    from two different IANA names that have been substantively equivalent
+    (same offsets, same transition dates) throughout the period. A tzname
+    STRING mismatch is never silently treated as harmless just because the
+    strings differ; this only reports whether it ALSO differs in effect.
+    Returns None if either name cannot be resolved (never assumed True/False).
+    """
+    from datetime import datetime, timedelta
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+    try:
+        za, zb = ZoneInfo(tz_a), ZoneInfo(tz_b)
+    except (ZoneInfoNotFoundError, ValueError):
+        return None
+    day = start.normalize()
+    end = end.normalize()
+    while day <= end:
+        for hour in (0, 6, 12, 18):  # sample across the day to catch transition-hour edge effects
+            naive = datetime(day.year, day.month, day.day, hour)
+            if naive.replace(tzinfo=za).utcoffset() != naive.replace(tzinfo=zb).utcoffset():
+                return False
+        day += timedelta(days=1)
+    return True
+
+
+def subperiod_overlap(begin, end, period_start: pd.Timestamp, period_end: pd.Timestamp):
+    """Intersection of [begin, end] (either bound may be None/open-ended)
+    with [period_start, period_end], as (start, end) date strings, or
+    (None, None) if there is no overlap at all -- a station that does not
+    cover the FULL 2018-2019 window may still be a valid mapping for
+    individual rows whose own date falls inside the part it does cover;
+    confirmed_current_only must not be read as 'never usable'.
+    """
+    lo = max(begin, period_start) if begin is not None else period_start
+    hi = min(end, period_end) if end is not None else period_end
+    if lo > hi:
+        return None, None
+    return str(lo.date()), str(hi.date())
+
 
 def classify(entry: dict, network_result: dict | None) -> dict:
+    base = {'evidence_basis': EVIDENCE_BASIS, 'location_distance_km': None,
+           'valid_subperiod_start': None, 'valid_subperiod_end': None,
+           'utc_offset_equivalent_2018_2019': None}
     if network_result is None:
-        return {'found_in_iem_network': False, 'verification_tier': 'unconfirmed',
+        return {**base, 'found_in_iem_network': False, 'verification_tier': 'unconfirmed',
                 'iem_tzname': None, 'archive_begin': None, 'archive_end': None,
                 'period_covers_2018_2019': None, 'tz_matches_mwgg': None}
     props = network_result
@@ -132,18 +209,29 @@ def classify(entry: dict, network_result: dict | None) -> dict:
     end = pd.to_datetime(props.get('archive_end')) if props.get('archive_end') else None
     covers = bool(begin is not None and begin <= PERIOD_START and (end is None or end >= PERIOD_END))
     tz_match = props.get('tzname') == entry['mwgg_tz']
+    offset_equivalent = None
+    if not tz_match and props.get('tzname') and entry.get('mwgg_tz'):
+        # A different IANA NAME is not automatically a different UTC-offset SCHEDULE -- check both,
+        # report both, and let the tier stay conservative (tz_conflict) either way (see EVIDENCE_BASIS).
+        offset_equivalent = utc_offsets_match_over_period(props['tzname'], entry['mwgg_tz'],
+                                                          PERIOD_START, PERIOD_END)
     if not tz_match:
         # The two sources disagree on which IANA zone applies (e.g. one has
         # DST, the other does not) -- this is a correctness risk, not a
         # cosmetic difference, so it is NOT allowed to pass as "confirmed"
-        # regardless of archive coverage. Resolving it is a follow-up task.
+        # regardless of archive coverage. Resolving it is a follow-up task,
+        # regardless of whether utc_offset_equivalent_2018_2019 comes back True.
         tier = 'tz_conflict_needs_resolution'
     else:
         tier = 'confirmed_period' if covers else 'confirmed_current_only'
-    return {'found_in_iem_network': True, 'verification_tier': tier,
+    distance = haversine_km(entry.get('lat'), entry.get('lon'), props.get('iem_lat'), props.get('iem_lon'))
+    sub_start, sub_end = subperiod_overlap(begin, end, PERIOD_START, PERIOD_END)
+    return {**base, 'found_in_iem_network': True, 'verification_tier': tier,
             'iem_tzname': props.get('tzname'), 'archive_begin': props.get('archive_begin'),
             'archive_end': props.get('archive_end'), 'period_covers_2018_2019': covers,
-            'tz_matches_mwgg': tz_match}
+            'tz_matches_mwgg': tz_match, 'location_distance_km': distance,
+            'valid_subperiod_start': sub_start, 'valid_subperiod_end': sub_end,
+            'utc_offset_equivalent_2018_2019': offset_equivalent}
 
 
 def main() -> None:
@@ -183,9 +271,7 @@ def main() -> None:
         if icao is None:
             rows.append({**base, 'state': None, 'country': None, 'candidate_networks': None,
                         'candidate_sid': None, 'mwgg_tz': None, 'lat': None, 'lon': None,
-                        'found_in_iem_network': False, 'verification_tier': 'unconfirmed',
-                        'iem_tzname': None, 'archive_begin': None, 'archive_end': None,
-                        'period_covers_2018_2019': None, 'tz_matches_mwgg': None,
+                        **classify({'mwgg_tz': None}, None),
                         'note': 'not found in mwgg/Airports dataset'})
             continue
         entry = mwgg[icao]
@@ -219,6 +305,19 @@ def main() -> None:
     tz_mismatches = table.loc[table.tz_matches_mwgg.eq(False), ['iata', 'iem_tzname', 'mwgg_tz']]
     tz_mismatches.to_csv(out / f'{args.name}_mapping_tz_mismatches.csv', index=False)
 
+    # Priority investigation subset (task-flagged): the 8 tz_conflict + 9 unconfirmed + 3
+    # confirmed_current_only airports from the previous round, plus any new ones this round finds in
+    # the same tiers. This is NOT a claim that historical identity/location is now confirmed for all
+    # 375 airports -- it surfaces exactly what location_distance_km / utc_offset_equivalent_2018_2019 /
+    # valid_subperiod_* could establish from already-cached IEM+mwgg metadata alone, with no new
+    # official source consulted, so historical_identity_confirmed stays explicitly unconfirmed (None).
+    priority_cols = ['iata', 'icao', 'state', 'country', 'verification_tier', 'iem_tzname', 'mwgg_tz',
+                     'tz_matches_mwgg', 'utc_offset_equivalent_2018_2019', 'archive_begin', 'archive_end',
+                     'valid_subperiod_start', 'valid_subperiod_end', 'location_distance_km', 'note']
+    priority = table.loc[table.verification_tier.isin(PRIORITY_INVESTIGATION_TIERS), priority_cols]
+    priority = priority.assign(historical_identity_confirmed=None)  # explicit, separate, unconfirmed axis
+    priority.to_csv(out / f'{args.name}_mapping_priority_investigation.csv', index=False)
+
     network_sources = [{'network': n, 'url': r['url'], 'cache_file': r['cache_file'],
                         'sha256': r['sha256'], 'stations_in_network': len(r['stations'])}
                        for n, r in sorted(fetched_networks.items())]
@@ -235,8 +334,35 @@ def main() -> None:
         'verification_tier_counts': tier_counts,
         'tz_mismatches': int(len(tz_mismatches)),
         'mapping_table': str((out / f'{args.name}_mapping_table.csv').relative_to(ROOT)),
+        'priority_investigation_table': str(
+            (out / f'{args.name}_mapping_priority_investigation.csv').relative_to(ROOT)),
         'period_checked': [str(PERIOD_START.date()), str(PERIOD_END.date())],
+        'evidence_basis': EVIDENCE_BASIS,
         'limitations': [
+            'verification_tier is an IEM-metadata-only evidence level (station id presence + archive '
+            'period + tzname string match). It does NOT confirm the airport\'s physical location, '
+            'facility identity, or relocation/rename history at the time -- those are separate, largely '
+            'uninvestigated axes for the full 375-airport set. Do not read "confirmed_period" as '
+            '"historically verified identical airport"; read it as the narrower claim EVIDENCE_BASIS '
+            'states.',
+            'location_distance_km is a great-circle distance between mwgg\'s and IEM\'s coordinates for '
+            'the SAME candidate station id; a large value is a red flag worth investigating, a small '
+            'value is a supporting signal, and neither is proof of identity by itself. It is populated '
+            'only when both sources report coordinates.',
+            'utc_offset_equivalent_2018_2019 distinguishes a genuine UTC-offset disagreement between two '
+            'differently-named IANA zones from two names that happened to be substantively equivalent '
+            '(identical offsets/transitions) throughout 2018-2019; it does NOT reclassify a tz_conflict '
+            'row out of that tier -- a name mismatch still blocks confirmed status regardless of this '
+            'value, per the tz_conflict_needs_resolution policy.',
+            'valid_subperiod_start/end is the overlap between a station\'s own archive window and '
+            '2018-01-01..2019-12-31; a confirmed_current_only station whose archive window partially '
+            'overlaps the period may still be a valid mapping for individual rows whose OWN date falls '
+            'inside that overlap -- confirmed_current_only should not be read as "never usable".',
+            'historical_identity_confirmed (in the priority-investigation output) is deliberately left '
+            'unconfirmed (None) for every row this round: no new official per-airport source (e.g. FAA '
+            'historical facility records) was consulted, only already-cached IEM network metadata and '
+            'the hash-pinned mwgg dataset. Completing full 355-airport historical-identity verification '
+            'was explicitly out of scope for this round.',
             'confirmed_current_only means the station exists in IEM\'s CURRENT network listing with a '
             'timezone match, but its recorded archive window does not (or is not known to) cover '
             '2018-2019 -- this is a present-day mapping, not evidence it held at the time.',

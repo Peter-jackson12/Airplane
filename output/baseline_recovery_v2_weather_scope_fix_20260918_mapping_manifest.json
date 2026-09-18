@@ -1,0 +1,410 @@
+{
+  "name": "baseline_recovery_v2_weather_scope_fix_20260918",
+  "attribution_run": "baseline_recovery_v2_row_date_attribution_20260918",
+  "attribution_row_sha256": "9c679535e59666bfb2de8a4460fd0c0a8b433f29900b704d0de4ff21e712421a",
+  "code_sha256": "5b8874c1ad3cd85c3d115cd59209f97d4faa248d850f7f0c4a5a1b2798332575",
+  "fits_any_model": false,
+  "uses_external_data": true,
+  "target_columns_used": [],
+  "mwgg_source_sha256": "f369eaa1c2944280d9678a96d5b477cedea0417f3c12a333c39834bf1c035739",
+  "airports_covered": 375,
+  "networks_fetched": 53,
+  "network_sources": [
+    {
+      "network": "AK_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/AK_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\AK_ASOS.geojson",
+      "sha256": "d0ea201a81a405d393060ee8eb315b2111a08e8bcc2c9e8b77d4335d75f45628",
+      "stations_in_network": 196
+    },
+    {
+      "network": "AL_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/AL_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\AL_ASOS.geojson",
+      "sha256": "b3999a7f98eb66ac3ceb9364b06be77a74ee6665725cb3dda54c7979e8d0ea17",
+      "stations_in_network": 53
+    },
+    {
+      "network": "AR_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/AR_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\AR_ASOS.geojson",
+      "sha256": "327538e4a3ce04e13b40cd1ebdb272258ebb611c19f3deb773f164f3aa1b77d7",
+      "stations_in_network": 43
+    },
+    {
+      "network": "AS_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/AS_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\AS_ASOS.geojson",
+      "sha256": "dd275f26f4451c20c38b925cb930d4ceeb24c08ec9b161fb8a18828ee20909da",
+      "stations_in_network": 1
+    },
+    {
+      "network": "AZ_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/AZ_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\AZ_ASOS.geojson",
+      "sha256": "0ab6692440059467a65ddc9cd9c4159d15a77180709a9e26d86e970fa57b2ee5",
+      "stations_in_network": 50
+    },
+    {
+      "network": "CA_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/CA_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\CA_ASOS.geojson",
+      "sha256": "2830fe35b91025978580543c0fb062bca6552bebc73e2a77ebc0bebead859bb7",
+      "stations_in_network": 161
+    },
+    {
+      "network": "CO_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/CO_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\CO_ASOS.geojson",
+      "sha256": "0e1a4891f7b650bd3aa900ad5f6b8913e08e85fef17c75fd762e1049de441329",
+      "stations_in_network": 76
+    },
+    {
+      "network": "CT_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/CT_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\CT_ASOS.geojson",
+      "sha256": "a5825a84815c849b5714eb2f194eb469afcf3da190c4b41bc2b57ad8f14156d6",
+      "stations_in_network": 11
+    },
+    {
+      "network": "FL_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/FL_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\FL_ASOS.geojson",
+      "sha256": "3061709942835b1b75e1e735f195050ffeda865e5617f5132b12efc5953eca79",
+      "stations_in_network": 113
+    },
+    {
+      "network": "GA_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/GA_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\GA_ASOS.geojson",
+      "sha256": "7a916734a8c379826682a0c56416582ddf9779451fc2b7c52660f6d2d2b1c453",
+      "stations_in_network": 93
+    },
+    {
+      "network": "GU_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/GU_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\GU_ASOS.geojson",
+      "sha256": "0459babeddd97d16faececac67a484f25c68954dc8136bc0aa3f7d1dc4eaf1d4",
+      "stations_in_network": 5
+    },
+    {
+      "network": "HI_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/HI_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\HI_ASOS.geojson",
+      "sha256": "98806d5a7e47a368fd821f1d595e1f7d260e6923a1fbfc3c94be75c1d41cb0c6",
+      "stations_in_network": 17
+    },
+    {
+      "network": "IA_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/IA_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\IA_ASOS.geojson",
+      "sha256": "4b7484d74d3ec7fc49fca22a4f032f3f09fdbbe9fbfa7db2f33cfc686e7d0113",
+      "stations_in_network": 62
+    },
+    {
+      "network": "ID_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/ID_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\ID_ASOS.geojson",
+      "sha256": "90080d88d59fac388ae21e479d1c8ab1f340637f47d26edfb2db5221fa7dc0e6",
+      "stations_in_network": 30
+    },
+    {
+      "network": "IL_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/IL_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\IL_ASOS.geojson",
+      "sha256": "06d7841bb0e5b7c4802ce5afc386485ce2bbf4a07a80107c56109ab6101e9e98",
+      "stations_in_network": 61
+    },
+    {
+      "network": "IN_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/IN_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\IN_ASOS.geojson",
+      "sha256": "15db8f25c0fc130ac2ec52cdfdf0c93aadc703c7915eb9fa8ebc65bdbf5b8193",
+      "stations_in_network": 54
+    },
+    {
+      "network": "KS_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/KS_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\KS_ASOS.geojson",
+      "sha256": "fd5d3db25cc2315ac5054feb2f16b1eac3b57ed915be0a0f7753be8520091f90",
+      "stations_in_network": 68
+    },
+    {
+      "network": "KY_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/KY_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\KY_ASOS.geojson",
+      "sha256": "97b083f6068734715b1203acd763a3d1ec5447a665c33822583ae792683a4229",
+      "stations_in_network": 47
+    },
+    {
+      "network": "LA_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/LA_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\LA_ASOS.geojson",
+      "sha256": "45b310ab0e5b2e339dff064f4764bdc4d977fbcd5d96d45e58665e4f874c2b48",
+      "stations_in_network": 108
+    },
+    {
+      "network": "MA_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/MA_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\MA_ASOS.geojson",
+      "sha256": "00d9a109dcd90481e47a089b7a4a392fae3e1234993ebd4c164976561dacc493",
+      "stations_in_network": 24
+    },
+    {
+      "network": "MD_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/MD_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\MD_ASOS.geojson",
+      "sha256": "7520a7427b4408b73356ea804847693b573f341d9dfb1e92339ab01c5744446a",
+      "stations_in_network": 26
+    },
+    {
+      "network": "ME_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/ME_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\ME_ASOS.geojson",
+      "sha256": "9fcd1149a1c1301f394d18fc333f5ccbbf91980a05890ea3cf65db9074460b1b",
+      "stations_in_network": 22
+    },
+    {
+      "network": "MI_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/MI_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\MI_ASOS.geojson",
+      "sha256": "c484799d692ddc25a3b125d0d0dee39150e17747d8c42e7bec4fc4c726615070",
+      "stations_in_network": 79
+    },
+    {
+      "network": "MN_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/MN_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\MN_ASOS.geojson",
+      "sha256": "912ba26f4584dc418e475fced845e761e5e07c1c5006c01eaad61f893aec06ed",
+      "stations_in_network": 105
+    },
+    {
+      "network": "MO_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/MO_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\MO_ASOS.geojson",
+      "sha256": "00579c2c030844f3e21ebf469b880f81cbf80d764dafbf501f09024367da32d9",
+      "stations_in_network": 48
+    },
+    {
+      "network": "MS_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/MS_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\MS_ASOS.geojson",
+      "sha256": "f9a65dbe3d7f5381f6bdff6766ad6bcf7b8ac6c9ac66b04e0421413de51dc249",
+      "stations_in_network": 46
+    },
+    {
+      "network": "MT_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/MT_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\MT_ASOS.geojson",
+      "sha256": "3b73c5945914aea32f1ef737d97f62b0e7913fb8b5374054e95f9bcb54254fe2",
+      "stations_in_network": 60
+    },
+    {
+      "network": "NC_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/NC_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\NC_ASOS.geojson",
+      "sha256": "5bcdd908f7abe7136495a2f142e45076b5ba9fc0d947568919e31c71babd29a2",
+      "stations_in_network": 81
+    },
+    {
+      "network": "ND_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/ND_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\ND_ASOS.geojson",
+      "sha256": "9662b5726144a403c88a30c9519428803dc096fd619d5587c107e6425b0edcd2",
+      "stations_in_network": 45
+    },
+    {
+      "network": "NE_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/NE_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\NE_ASOS.geojson",
+      "sha256": "7aa873d7cedb026953a04827f5a47dbcd37d80834f9dbf6859428ab92e37f96c",
+      "stations_in_network": 47
+    },
+    {
+      "network": "NH_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/NH_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\NH_ASOS.geojson",
+      "sha256": "152801fce764fe6d5e0091a5e22637cd4443fd5e82e6a45d010e9d9f606e34bd",
+      "stations_in_network": 13
+    },
+    {
+      "network": "NJ_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/NJ_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\NJ_ASOS.geojson",
+      "sha256": "359a3ce7468fe429db30a670e47a1a2336c89d8b9a2146fdb2b4036879784f85",
+      "stations_in_network": 18
+    },
+    {
+      "network": "NM_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/NM_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\NM_ASOS.geojson",
+      "sha256": "8a68fce4ebedd6228a93505d79b9d30282be42a4d2b63ed80d50972a3c6b7a75",
+      "stations_in_network": 44
+    },
+    {
+      "network": "NV_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/NV_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\NV_ASOS.geojson",
+      "sha256": "ce739ec8a1ca62f491a4c8e605907302d94d65a95828a082f369d98156ded349",
+      "stations_in_network": 29
+    },
+    {
+      "network": "NY_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/NY_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\NY_ASOS.geojson",
+      "sha256": "582e8a0d186baaa2816d764f0671500b620874b82ef25d7b933db472d5ebe6fb",
+      "stations_in_network": 53
+    },
+    {
+      "network": "OH_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/OH_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\OH_ASOS.geojson",
+      "sha256": "e9d929744da80df83b4b8917585454db5849bf41a5073dfff061dc0e432dcaf1",
+      "stations_in_network": 65
+    },
+    {
+      "network": "OK_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/OK_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\OK_ASOS.geojson",
+      "sha256": "29879fe2f67637a40c4c2b6791bd6373a72045c269d088adc0254863a7f59cc4",
+      "stations_in_network": 58
+    },
+    {
+      "network": "OR_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/OR_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\OR_ASOS.geojson",
+      "sha256": "e578895b177547637d820588123bbc9f37b8a9d8ad814485e7a2b2cab1d59223",
+      "stations_in_network": 44
+    },
+    {
+      "network": "PA_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/PA_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\PA_ASOS.geojson",
+      "sha256": "20fd394f1b6cbbf917184d8c4352f2612272df0152a31f5cbc71306af5fead41",
+      "stations_in_network": 54
+    },
+    {
+      "network": "PR_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/PR_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\PR_ASOS.geojson",
+      "sha256": "18dfac3fd658384def8314a1aff2261527a41d5059b640e91c78eb1547bb6e53",
+      "stations_in_network": 7
+    },
+    {
+      "network": "RI_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/RI_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\RI_ASOS.geojson",
+      "sha256": "d1c336fc999a678112f97dfd37b4cb9b7891286dcf2a0f5451bdabc0f795e1dc",
+      "stations_in_network": 6
+    },
+    {
+      "network": "SC_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/SC_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\SC_ASOS.geojson",
+      "sha256": "1dc05cf4e02e175d7c2300ad9dde5cd162ffb7da2d497f3c3f9a45a0a3bcea82",
+      "stations_in_network": 48
+    },
+    {
+      "network": "SD_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/SD_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\SD_ASOS.geojson",
+      "sha256": "8b7be2210f90b1f610a69198e395770fdf03b1b27ebee93e2c6955be63570d70",
+      "stations_in_network": 35
+    },
+    {
+      "network": "TN_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/TN_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\TN_ASOS.geojson",
+      "sha256": "3324a1ead1d31402d7e03d02fd54b1e1ef2cb1a0791ab6fc01fbc6825b532e95",
+      "stations_in_network": 55
+    },
+    {
+      "network": "TX_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/TX_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\TX_ASOS.geojson",
+      "sha256": "ba4e9685ee375613db140d3b5fce7900c7f27bb70d14a5f268662921dcfa0a56",
+      "stations_in_network": 238
+    },
+    {
+      "network": "UT_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/UT_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\UT_ASOS.geojson",
+      "sha256": "e9911e4bc05a0aafbce62f785b6fd585177c683780ee6207a329118c43a35882",
+      "stations_in_network": 45
+    },
+    {
+      "network": "VA_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/VA_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\VA_ASOS.geojson",
+      "sha256": "d981c572d5f4d2a4c4d3def5c220f75313ae078160fc66127852db0867258215",
+      "stations_in_network": 71
+    },
+    {
+      "network": "VI_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/VI_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\VI_ASOS.geojson",
+      "sha256": "ebf2ce861022ce7d6173c59c81a24e31587f9adf8596f1ba5821f37ac41b0e15",
+      "stations_in_network": 2
+    },
+    {
+      "network": "VT_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/VT_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\VT_ASOS.geojson",
+      "sha256": "1e97d808d043443ca2abd2a16132eb3ddf4ba45bac8bf63ba0226473841f2690",
+      "stations_in_network": 11
+    },
+    {
+      "network": "WA_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/WA_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\WA_ASOS.geojson",
+      "sha256": "9539885fd6eb49f668018f2f0c38bca57b78563ec96dca09f1f2acb62b000ce5",
+      "stations_in_network": 54
+    },
+    {
+      "network": "WI_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/WI_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\WI_ASOS.geojson",
+      "sha256": "17b495079f90a8900cd3a7fbae9fde185688e39aa2f486b441558dfc2de12db4",
+      "stations_in_network": 70
+    },
+    {
+      "network": "WV_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/WV_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\WV_ASOS.geojson",
+      "sha256": "7ceb0d6d3166288f0c9287a3e56c52a8183b488acac5bcadade9e76d78983d02",
+      "stations_in_network": 17
+    },
+    {
+      "network": "WY_ASOS",
+      "url": "https://mesonet.agron.iastate.edu/geojson/network/WY_ASOS.geojson",
+      "cache_file": "data\\weather_probe\\networks\\WY_ASOS.geojson",
+      "sha256": "d9631a0ef8ebdd83ff30e1b8e8a0cd118b12a159d5433d500542023d98878931",
+      "stations_in_network": 68
+    }
+  ],
+  "verification_tier_counts": {
+    "confirmed_period": 355,
+    "unconfirmed": 9,
+    "tz_conflict_needs_resolution": 8,
+    "confirmed_current_only": 3
+  },
+  "tz_mismatches": 8,
+  "mapping_table": "output\\baseline_recovery_v2_weather_scope_fix_20260918_mapping_table.csv",
+  "priority_investigation_table": "output\\baseline_recovery_v2_weather_scope_fix_20260918_mapping_priority_investigation.csv",
+  "period_checked": [
+    "2018-01-01",
+    "2019-12-31"
+  ],
+  "evidence_basis": "IEM network-metadata lookup only: station id presence + archive period coverage + tzname string match. Does NOT by itself confirm physical location, facility identity, or absence of a mid-period relocation/rename.",
+  "limitations": [
+    "verification_tier is an IEM-metadata-only evidence level (station id presence + archive period + tzname string match). It does NOT confirm the airport's physical location, facility identity, or relocation/rename history at the time -- those are separate, largely uninvestigated axes for the full 375-airport set. Do not read \"confirmed_period\" as \"historically verified identical airport\"; read it as the narrower claim EVIDENCE_BASIS states.",
+    "location_distance_km is a great-circle distance between mwgg's and IEM's coordinates for the SAME candidate station id; a large value is a red flag worth investigating, a small value is a supporting signal, and neither is proof of identity by itself. It is populated only when both sources report coordinates.",
+    "utc_offset_equivalent_2018_2019 distinguishes a genuine UTC-offset disagreement between two differently-named IANA zones from two names that happened to be substantively equivalent (identical offsets/transitions) throughout 2018-2019; it does NOT reclassify a tz_conflict row out of that tier -- a name mismatch still blocks confirmed status regardless of this value, per the tz_conflict_needs_resolution policy.",
+    "valid_subperiod_start/end is the overlap between a station's own archive window and 2018-01-01..2019-12-31; a confirmed_current_only station whose archive window partially overlaps the period may still be a valid mapping for individual rows whose OWN date falls inside that overlap -- confirmed_current_only should not be read as \"never usable\".",
+    "historical_identity_confirmed (in the priority-investigation output) is deliberately left unconfirmed (None) for every row this round: no new official per-airport source (e.g. FAA historical facility records) was consulted, only already-cached IEM network metadata and the hash-pinned mwgg dataset. Completing full 355-airport historical-identity verification was explicitly out of scope for this round.",
+    "confirmed_current_only means the station exists in IEM's CURRENT network listing with a timezone match, but its recorded archive window does not (or is not known to) cover 2018-2019 -- this is a present-day mapping, not evidence it held at the time.",
+    "confirmed_period means IEM's own archive_begin/archive_end brackets 2018-01-01..2019-12-31.",
+    "unconfirmed airports are NOT silently assigned a nearby station; they stay excluded from any weather request until resolved.",
+    "IEM groups Saipan/Rota (CNMI) under the GU_ASOS network, not a separate MP_ASOS (verified empirically: MP_ASOS returns 0 stations as of 2026-09-18)."
+  ]
+}

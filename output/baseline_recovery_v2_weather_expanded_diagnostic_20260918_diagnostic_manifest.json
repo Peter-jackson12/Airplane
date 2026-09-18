@@ -1,0 +1,47 @@
+{
+  "name": "baseline_recovery_v2_weather_expanded_diagnostic_20260918",
+  "source_run": "baseline_recovery_v2_weather_expanded_20260918",
+  "mapping_name": "baseline_recovery_v2_weather_scope_20260918",
+  "code_sha256": "aebd42bc4d1df43323029dcaa607d42f8c8171f58517d514e1dfab56b3d1b136",
+  "fits_any_model": false,
+  "uses_external_data": false,
+  "target_columns_used": [],
+  "id_row_count_order_preserved_across_all_scenarios": true,
+  "denominators_table": "output\\baseline_recovery_v2_weather_expanded_diagnostic_20260918_diagnostic_denominators.csv",
+  "match_rates_table": "output\\baseline_recovery_v2_weather_expanded_diagnostic_20260918_diagnostic_match_rates.csv",
+  "age_distribution_table": "output\\baseline_recovery_v2_weather_expanded_diagnostic_20260918_diagnostic_age_distribution.csv",
+  "unmatched_reasons_table": "output\\baseline_recovery_v2_weather_expanded_diagnostic_20260918_diagnostic_unmatched_reasons.csv",
+  "year_season_airport_table": "output\\baseline_recovery_v2_weather_expanded_diagnostic_20260918_diagnostic_year_season_airport.csv",
+  "field_quality_table": "output\\baseline_recovery_v2_weather_expanded_diagnostic_20260918_diagnostic_field_quality.csv",
+  "refined_collection_size_estimate": {
+    "basis": "534 REAL station-day groups actually collected in baseline_recovery_v2_weather_expanded_20260918 (both the 21-row probe scale and this 300-row expanded run), using EACH group's own recorded window length in hours -- not a single flat bytes-per-request average applied uniformly to short (21-row) and long (full-population) windows alike.",
+    "measured_groups": 534,
+    "measured_total_window_hours": 4325.0,
+    "measured_total_raw_bytes": 1378717,
+    "measured_bytes_per_window_hour": 318.7784971098266,
+    "measured_raw_bytes_per_observation_row": 258.38024737631184,
+    "measured_normalized_pandas_bytes_per_observation_row": 771.2820464767616,
+    "note_raw_vs_normalized": "raw = bytes of the downloaded CSV as stored; normalized = in-memory pandas footprint per parsed observation row (deep=True) -- these differ and neither should be read as \"storage needed on disk after processing\".",
+    "full_population_reestimate": {
+      "station_day_groups_from_scope_run": 142574,
+      "assumption": "full-population groups have the SAME average window-hours as the 300-row run's real groups (not re-derived per-row here); this is a documented assumption, not a new measurement at full scale.",
+      "avg_hours_per_group_from_300_row_run": 8.099250936329588,
+      "estimated_total_hours_full_population": 1154742.6029962546,
+      "estimated_bytes_full_population": 368107111.5318352,
+      "previous_scope_run_flat_estimate_bytes": 348062341.85
+    }
+  },
+  "existing_cache_coverage": {
+    "distinct_station_day_groups_already_cached_locally": 574,
+    "source_runs_checked": [
+      "baseline_recovery_v2_weather_expanded_20260918",
+      "baseline_recovery_v2_weather_sample_20260918"
+    ],
+    "limitation": "This counts groups already cached from prior VALIDATION runs only (21-row + 300-row); it is not a claim about coverage of the full 142,574-group population, which was never attempted at that scale."
+  },
+  "limitations": [
+    "This is a re-diagnosis of ALREADY-COLLECTED data (no new fetch, no new selection); it cannot recover information about requests that were never made.",
+    "unmatched_reasons splits collectible-and-resolved-but-unmatched rows into \"collection_failed_or_not_attempted\" (its station appears in the fetch manifest's failed list) vs \"no_report_within_max_age\" (the station WAS queried successfully but no report fell within the max_age window at that prediction_at) -- for this particular run, failed was empty, so any unmatched rows here are the latter category, not a collection failure.",
+    "trace_T_values counts IEM's literal \"T\" (trace precipitation) encoding in p01i, distinct from \"M\" (missing) -- neither is a numeric 0, and a feature pipeline treating \"T\" as missing or as 0.0 would be making two different, unverified modeling choices."
+  ]
+}

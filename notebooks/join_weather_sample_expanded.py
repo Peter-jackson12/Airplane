@@ -38,6 +38,26 @@ def run_join(requests: pd.DataFrame, obs: pd.DataFrame, prefix: str) -> pd.DataF
     return joined.add_prefix(f'{prefix}_')
 
 
+def build_requests(selection: pd.DataFrame, mapping: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """station is populated ONLY for rows eligible to be joined (collectible
+    AND a resolvable prediction_at); every other row gets an explicitly
+    missing station so join_weather_asof's own eligibility filter (station
+    notna & prediction_at notna) excludes it from the asof match BY
+    CONSTRUCTION, rather than allowing it to match and catching the mistake
+    only after the fact with an assertion. Filling the station in
+    unconditionally risked an accidental match: if some OTHER collectible row
+    happens to need the same station on the same UTC day, that cached
+    observation could silently join onto a row this pipeline explicitly could
+    not (or should not) have collected weather for.
+    """
+    eligible = selection.collectible & selection.prediction_at.notna()
+    origin_req = selection[['ID', 'prediction_at']].copy()
+    origin_req['station'] = selection.Origin_Airport.map(mapping.candidate_sid).where(eligible)
+    dest_req = selection[['ID', 'prediction_at']].copy()
+    dest_req['station'] = selection.Destination_Airport.map(mapping.candidate_sid).where(eligible)
+    return origin_req, dest_req
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument('--name', required=True)
@@ -59,11 +79,7 @@ def main() -> None:
         raise ValueError('Target/actual-outcome columns must not reach the weather join')
 
     raw_obs, dropped_exact_duplicates = load_observations(fetch_manifest)
-
-    origin_req = selection[['ID', 'prediction_at']].copy()
-    origin_req['station'] = selection.Origin_Airport.map(mapping.candidate_sid)
-    dest_req = selection[['ID', 'prediction_at']].copy()
-    dest_req['station'] = selection.Destination_Airport.map(mapping.candidate_sid)
+    origin_req, dest_req = build_requests(selection, mapping)
 
     local.mkdir(parents=True)
     sensitivity_rows = []
