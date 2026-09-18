@@ -60,6 +60,44 @@ human-authored text tied to the fetched evidence, not derived by string matching
 This script also does not prove that official sources are complete: an airport left
 `unconfirmed` here may simply mean this round found no linking record, not that no
 such record exists anywhere.
+
+Third round (this revision). No new external data was fetched; only the existing
+cache and the second round's own text were reviewed again. Two fixes:
+  - Current-identifier vs. historical-continuity separation. The second round's
+    `_TZ_ALIAS_CONFIRMED` group (IMT/KTN/SDF/SIT) gave all four the SAME
+    `facility_continuity_confirmed_tz_string_conflict_unchanged` determination on the
+    strength of a CURRENT ASOS platform entry and ACU-coordinate remark plus a POR
+    that happens to say "to Present" -- none of which is dated evidence that the
+    2018-2019 window specifically was unchanged. Only KTN's fetched record carries an
+    explicitly dated pre-period event (the 1997 "compatible station move" remark);
+    IMT/SDF/SIT carry no dated event at all, only current metadata. This round keeps
+    KTN's determination (with the 1997 event named as what it actually is: dated but
+    pre-period, not itself proof of the 2018-2019 window) and downgrades IMT/SDF/SIT
+    to a determination that confirms the CURRENT facility/identifier mapping and
+    ASOS program linkage, while leaving 2018-2019 continuity explicitly unconfirmed
+    rather than folding it into "confirmed". The same current-vs-period distinction
+    is now recorded (new `historical_continuity_2018_2019` field) for all 20 rows,
+    including the identifier-mismatch group, where `inference_and_unresolved` no
+    longer reads "none" for airports whose only basis is an unbroken POR plus the
+    absence of a relocation remark -- that absence is now stated as what it is (an
+    inference from silence, not a positive record), separately from the 2 airports
+    (FCA, PBI) that do carry a dated or explicit record of the identifier's history.
+  - Raw-record verification wired into the actual generation path, not just into
+    tests reading the cache separately. `main()` now loads each fetched HOMR
+    response's `stationCollection.stations`, selects the exact `ncdcStnId` each
+    FINDINGS entry's judgment relies on (`EXPECTED_RECORD` below), and checks that
+    record's `platforms` against what that judgment requires or forbids (e.g. IMT
+    requires ASOS; WRG/PSG forbid ASOS/AWOS; AZA's two records are selected and
+    checked separately by ncdcStnId so the AWOS record is never conflated with the
+    NEXRAD one; YUM's FAA:YUM and ICAO:KNYL records are checked separately). It also
+    requires every non-SPN `IEM_FEATURE_CHECK` entry to be `found=True` -- SPN's
+    expected miss is the one allowed exception, matching FINDINGS['SPN'] already
+    being `unconfirmed`. Any mismatch (missing station, wrong/missing platform,
+    missing IEM feature) raises `RuntimeError` and aborts before any evidence file is
+    written, instead of silently printing the fixed FINDINGS text against raw
+    evidence that no longer supports it. This makes "the cache file exists" and "the
+    cited record actually says what FINDINGS claims" two different, both-required
+    conditions.
 """
 from __future__ import annotations
 
@@ -164,6 +202,7 @@ FINDINGS = {
             'IEM archive_end, 2024-02-27 HOMR record end) are not the same kind of date and are not '
             'reconciled here.'),
         identity_determination='relocation_confirmed_partial_subperiod',
+        historical_continuity_2018_2019='direct_evidence_partial_window_dated_relocation',
         remaining_gap=(
             'Exact FAA facility closure date not independently cross-checked against an FAA 5010 '
             'record this round.'),
@@ -183,6 +222,7 @@ FINDINGS = {
             'differ by 13 days; not resolved this round. Rows dated in this 13-day gap should not be '
             'treated as confirmed under either source without further check.'),
         identity_determination='relocation_confirmed_new_facility_partial_subperiod',
+        historical_continuity_2018_2019='direct_evidence_partial_window_dated_new_station',
         remaining_gap='The 13-day IEM/HOMR boundary discrepancy above is unresolved.',
     ),
     'YUM': dict(
@@ -218,6 +258,7 @@ FINDINGS = {
             'conflict, is that "NYL" is the id that continuously covers 2018-2019 at the airport this '
             'pipeline flies into/out of.'),
         identity_determination='identifier_mismatch_partially_resolved_source_conflict',
+        historical_continuity_2018_2019='unconfirmed_source_conflict_between_homr_and_iem',
         remaining_gap=(
             'The HOMR-vs-IEM coordinate conflict on the closed "YUM" identifier above is unresolved. '
             'Flagged as a candidate_network_and_sid() bug in notebooks/map_weather_stations.py '
@@ -239,10 +280,13 @@ FINDINGS = {
             'utc_offset_equivalent_2018_2019=False finding for this pair. This inference does NOT '
             'upgrade the tz_conflict_needs_resolution tier.'),
         identity_determination='facility_continuous_tz_string_conflict_leans_mwgg',
+        historical_continuity_2018_2019='unconfirmed_current_metadata_only',
         remaining_gap=(
             'No primary US federal document (e.g. a Federal Register notice) fetched to state VI\'s '
             'DST exemption directly. tz_conflict_needs_resolution tier NOT upgraded by this finding, '
-            'per existing project policy.'),
+            'per existing project policy. Per this round\'s current-vs-historical distinction, the POR '
+            'reaching "Present" plus the absence of a relocation remark confirms the current facility, '
+            'not specifically the 2018-2019 window.'),
     ),
     'STX': dict(
         current_identifier_mapping='FAA STX / ICAO TISX, NOAA HOMR ncdcStnId 10012328 (Henry E. Rohlsen Airport, St. Croix VI).',
@@ -253,7 +297,8 @@ FINDINGS = {
             'the study period.'),
         inference_and_unresolved='Same secondary-source-only DST reasoning as STT applies; tier not upgraded.',
         identity_determination='facility_continuous_tz_string_conflict_leans_mwgg',
-        remaining_gap='Same as STT.',
+        historical_continuity_2018_2019='unconfirmed_current_metadata_only',
+        remaining_gap='Same as STT, including the current-vs-historical caveat above.',
     ),
     'SPN': dict(
         current_identifier_mapping=(
@@ -274,6 +319,7 @@ FINDINGS = {
             'serves this station under a different network name was not determined this round (would '
             'require a new IEM query, out of scope for this cache-only round).'),
         identity_determination='unconfirmed_pipeline_coverage_gap',
+        historical_continuity_2018_2019='unconfirmed_network_coverage_gap',
         remaining_gap=(
             'Needs a targeted IEM network query beyond GU_ASOS to find station GSN; out of scope for '
             'this cache-only round (would be new data collection beyond the 20-airport metadata check).'),
@@ -288,22 +334,24 @@ _IDENTIFIER_MISMATCH = {
                 other_records=(
                     'The same HOMR query (ICAO:KIWA) also returns a SECOND, unrelated record: '
                     'ncdcStnId 30001870, platform NEXRAD, POR 1994-04-27 to Present. That NEXRAD '
-                    'record is not used for this finding -- only ncdcStnId 10000826 (AWOS) is.')),
+                    'record is not used for this finding -- only ncdcStnId 10000826 (AWOS) is.'),
+                continuity_basis='undated_remark'),
     'BKG': dict(real_id='BBG', icao='KBBG', net='MO_ASOS', ncdc_stn_id='30083225', wban=None,
                 name='Branson Airport, MO', platform='AWOS',
                 remark='No relocation remark; station opened with the airport. POR 2008-10-01 to Present.',
-                other_records=None),
+                other_records=None, continuity_basis='absence_of_remark'),
     'FCA': dict(real_id='GPI', icao='KGPI', net='MT_ASOS', ncdc_stn_id='20012742', wban=None,
                 name='Glacier Park International / Kalispell Glacier Airport, MT', platform='ASOS',
                 remark='"STATION ID CHANGED FROM FCA TO GPI AT 14Z (7AM MST) ON OCTOBER 25, 2005." POR 1896-06-29 to Present.',
-                other_records=None),
+                other_records=None, continuity_basis='dated_remark_predates_window'),
     'HHH': dict(real_id='HXD', icao='KHXD', net='SC_ASOS', ncdc_stn_id='20017315', wban=None,
                 name='Hilton Head Airport, SC', platform='AWOS',
-                remark='No relocation remark found. POR 1972-08-01 to Present.', other_records=None),
+                remark='No relocation remark found. POR 1972-08-01 to Present.', other_records=None,
+                continuity_basis='absence_of_remark'),
     'MQT': dict(real_id='SAW', icao='KSAW', net='MI_ASOS', ncdc_stn_id='10005416', wban=None,
                 name='Sawyer International Airport (fmr K.I. Sawyer AFB), MI', platform='AWOS',
                 remark='No relocation remark found (AFB->civilian transition 1995, before archive continuity). POR 1956-10-01 to Present.',
-                other_records=None),
+                other_records=None, continuity_basis='absence_of_remark'),
     'PBI': dict(real_id='DJT (current); NWSLI retains PBI', icao='KDJT (current); was KPBI', net='FL_ASOS',
                 ncdc_stn_id='20004306', wban=None,
                 name='West Palm Beach -> Donald J. Trump International Airport, FL', platform='COOP+ASOS',
@@ -311,13 +359,45 @@ _IDENTIFIER_MISMATCH = {
                         'station since 1938-07-01, no relocation remark. Airport was officially "Palm Beach '
                         'International Airport" during 2018-2019; the FAA/NOAA identifier and legal name '
                         'changed to Donald J. Trump International Airport / DJT after the study period.'),
-                other_records=None),
+                other_records=None, continuity_basis='explicit_statement_change_postdates_window'),
     'SCE': dict(real_id='UNV', icao='KUNV', net='PA_ASOS', ncdc_stn_id='20016919', wban=None,
                 name='State College Regional / University Park Airport, PA', platform='AWOS',
-                remark='No relocation remark found. POR 1972-04-01 to Present.', other_records=None),
+                remark='No relocation remark found. POR 1972-04-01 to Present.', other_records=None,
+                continuity_basis='absence_of_remark'),
     'USA': dict(real_id='JQF', icao='KJQF', net='NC_ASOS', ncdc_stn_id='30002219', wban=None,
                 name='Concord Regional Airport, NC', platform='AWOS',
-                remark='No relocation remark found. POR 1995-09-01 to Present.', other_records=None),
+                remark='No relocation remark found. POR 1995-09-01 to Present.', other_records=None,
+                continuity_basis='absence_of_remark'),
+}
+# Third round: `inference_and_unresolved` used to read the same fixed 'none beyond
+# remaining_gap below.' for all 8 airports, regardless of what kind of evidence
+# each one actually has. `current_identifier_mapping`/`program_location_linkage`
+# above only establish that the CURRENT alternate id maps to the same facility;
+# separately from that, `continuity_basis` distinguishes airports with a dated (or
+# explicitly time-bounded) HOMR remark (FCA, PBI) from those whose only basis is an
+# unbroken POR plus the absence of a relocation remark (AZA -- whose own remark is
+# undated -- and BKG/HHH/MQT/SCE/USA). Absence of a remark is evidence of silence,
+# not a positive record of no change, and is now stated as such instead of left
+# blank.
+_CONTINUITY_TEXT = {
+    'dated_remark_predates_window': (
+        'The identifier-change remark above is explicitly DATED and predates 2018-2019, so the CURRENT '
+        'id was already in place going into the study window. This does not independently confirm no '
+        'further change happened between that date and 2018-2019 -- only that no such change is recorded '
+        'in this fetched response.'),
+    'explicit_statement_change_postdates_window': (
+        'The remark above explicitly states the facility was continuous through 2018-2019 under the OLD '
+        'identifier, with the id/name change recorded as happening AFTER the study period -- the most '
+        'directly time-bounded evidence among these 8, though still resting on this record\'s own remark '
+        'rather than an independently dated source.'),
+    'undated_remark': (
+        'The identifier-change remark above gives no date ("DATE UNKNOWN"), so it cannot bracket the '
+        'change against 2018-2019 either way. Current-identifier resolution (AZA=IWA) does not by itself '
+        'establish when that resolution became true.'),
+    'absence_of_remark': (
+        'No relocation or renaming remark was found in this record. That is an absence of contrary '
+        'evidence, not a positive record confirming continuity specifically through 2018-2019 -- the POR '
+        'reaching "Present" is a metadata boundary, not a per-year confirmation.'),
 }
 for _iata, _d in _IDENTIFIER_MISMATCH.items():
     FINDINGS[_iata] = dict(
@@ -327,46 +407,99 @@ for _iata, _d in _IDENTIFIER_MISMATCH.items():
         period_2018_2019_evidence=f'NOAA HOMR ({_d["icao"]}): {_d["remark"]}',
         program_location_linkage=(
             f'Platform: {_d["platform"]}.' + (f' {_d["other_records"]}' if _d.get('other_records') else '')),
-        inference_and_unresolved='none beyond remaining_gap below.',
+        inference_and_unresolved=_CONTINUITY_TEXT[_d['continuity_basis']],
         identity_determination='identifier_mismatch_resolved_same_facility',
+        historical_continuity_2018_2019=_d['continuity_basis'],
         remaining_gap=(
             'Flagged for a follow-up code check to candidate_network_and_sid() in '
             'notebooks/map_weather_stations.py, which currently assumes IATA==IEM station sid for '
-            'ordinary US states; not changed automatically this round.'),
+            'ordinary US states; not changed automatically this round. Current-identifier resolution is '
+            'confirmed; 2018-2019 historical continuity beyond that, where continuity_basis is '
+            '"absence_of_remark" or "undated_remark", is not independently confirmed this round.'),
     )
 
 _TZ_ALIAS_CONFIRMED = {
     'IMT': dict(icao='KIMT', ncdc_stn_id='20010418', name='Ford Airport, Iron Mountain/Kingsford, MI',
                 remark='No relocation remark found. ASOS platform on this record. POR 1949-12-01 to Present.'),
-    'KTN': dict(icao='PAKT', ncdc_stn_id='10000202', name='Ketchikan International Airport, AK',
-                remark=('"THIS WAS A COMPATIBLE STATION MOVE TO RELOCATE 50-4590 KETCHIKAN, TO THE ASOS '
-                        'WHICH WAS COMMISSIONED MAY 23, 1997. STATION MOVED NW 5110 YARDS." -- an explicit '
-                        '"compatible" equipment/site consolidation in 1997, well before 2018-2019, and '
-                        'explicitly distinguished by NOAA from an incompatible relocation (contrast with '
-                        'ISN/XWA above). "ASOS COMMISSIONED MAY 23, 1997" remark and ASOS ACU-coordinate '
-                        'remark both on this record. POR 1973-10-03 to Present.')),
     'SDF': dict(icao='KSDF', ncdc_stn_id='10004692', name='Louisville International / Standiford Field, KY',
                 remark='No relocation remark found. ASOS ACU-coordinate remark on this record. POR 1947-11-15 to Present.'),
     'SIT': dict(icao='PASI', ncdc_stn_id='20021837', name='Sitka Rocky Gutierrez Airport, AK',
                 remark='"REVIEWED. NO KNOWN CHANGES." ASOS ACU-coordinate remark on this record. POR 1930-08-01 to Present.'),
 }
+# IMT/SDF/SIT: the fetched HOMR record confirms the CURRENT facility/identifier and
+# that its platform list includes ASOS today, but carries no dated event at all --
+# only current metadata (ACU coordinates, an undated "reviewed, no known changes"
+# note, or the absence of a relocation remark). None of that is dated evidence that
+# specifically the 2018-2019 window was unchanged; a POR ending "Present" is a
+# metadata boundary, not a per-year confirmation (same caveat this script already
+# applies to ISN/XWA's HOMR record-end dates). Third round: this is recorded as
+# current-facility-confirmed with historical continuity for 2018-2019 left
+# unconfirmed, instead of folded into one "facility continuity confirmed" category.
 for _iata, _d in _TZ_ALIAS_CONFIRMED.items():
     FINDINGS[_iata] = dict(
         current_identifier_mapping=(
             f'IEM sid = {_iata} directly ({_d["icao"]}, {_d["name"]}, NOAA HOMR ncdcStnId '
             f'{_d["ncdc_stn_id"]}); issue is tzname STRING mismatch (already '
             'utc_offset_equivalent_2018_2019=True in prior work), not identifier lookup.'),
-        period_2018_2019_evidence=f'NOAA HOMR ({_d["icao"]}): {_d["remark"]}',
+        period_2018_2019_evidence=(
+            f'NOAA HOMR ({_d["icao"]}): {_d["remark"]} This is CURRENT metadata (an undated remark and/or '
+            'a POR ending "Present"), not a dated event bracketing 2018-2019 specifically -- unlike KTN '
+            'below, this record has no dated pre-period event to point to either.'),
         program_location_linkage=(
-            'This record itself lists an ASOS platform with ASOS-specific remarks (commission date '
-            'and/or ACU coordinates), directly linking the observing program to this site -- unlike '
-            'PSG/WRG below, whose fetched HOMR record carries no ASOS platform entry at all.'),
-        inference_and_unresolved='none beyond remaining_gap below.',
-        identity_determination='facility_continuity_confirmed_tz_string_conflict_unchanged',
+            'This record itself lists an ASOS platform with ASOS-specific remarks (ACU coordinates or an '
+            'undated review note), directly linking the CURRENT observing program to this site -- unlike '
+            'PSG/WRG below, whose fetched HOMR record carries no ASOS platform entry at all. This confirms '
+            'program linkage today; it does not by itself confirm the linkage held throughout 2018-2019.'),
+        inference_and_unresolved=(
+            'Current ASOS platform + ACU coordinates/metadata + a POR that reaches "Present" do not, by '
+            'themselves, confirm 2018-2019 continuity -- they confirm the current record, and the study '
+            'window falls somewhere inside an open-ended POR with no dated remark either way. Unlike KTN, '
+            'no dated event was found in this record to bracket the study period against.'),
+        identity_determination='current_facility_confirmed_historical_continuity_unconfirmed_tz_string_conflict_unchanged',
+        historical_continuity_2018_2019='unconfirmed_current_metadata_only',
         remaining_gap=(
             'tzname STRING conflict vs mwgg intentionally left at tz_conflict_needs_resolution per '
-            'existing policy; this round only adds facility-continuity confirmation.'),
+            'existing policy. This round confirms the current facility/identifier and program linkage, '
+            'but explicitly leaves 2018-2019 historical continuity unconfirmed for lack of a dated record; '
+            'a future round would need a dated remark or an FAA 5010 record covering that window.'),
     )
+
+# KTN: unlike IMT/SDF/SIT above, this record carries an explicitly DATED event --
+# the 1997 "compatible station move" that commissioned the ASOS -- kept as explicit
+# historical evidence per this round's review. That date is still 21 years before
+# 2018-2019, so it is not itself proof the 2018-2019 window was unchanged either;
+# it only establishes that, as of 1997, this was a deliberate "compatible" (not
+# climatologically disruptive) consolidation, distinguished by NOAA from ISN/XWA's
+# incompatible relocation. Recorded as its own category rather than merged with
+# IMT/SDF/SIT's current-metadata-only evidence or overstated as full-period proof.
+FINDINGS['KTN'] = dict(
+    current_identifier_mapping=(
+        'IEM sid = KTN directly (PAKT, Ketchikan International Airport, AK, NOAA HOMR ncdcStnId '
+        '10000202); issue is tzname STRING mismatch (already utc_offset_equivalent_2018_2019=True in '
+        'prior work), not identifier lookup.'),
+    period_2018_2019_evidence=(
+        '"THIS WAS A COMPATIBLE STATION MOVE TO RELOCATE 50-4590 KETCHIKAN, TO THE ASOS WHICH WAS '
+        'COMMISSIONED MAY 23, 1997. STATION MOVED NW 5110 YARDS." -- an explicit, DATED "compatible" '
+        'equipment/site consolidation in 1997, 21 years before 2018-2019, explicitly distinguished by '
+        'NOAA from an incompatible relocation (contrast with ISN/XWA above). This is dated evidence about '
+        '1997, not direct evidence about 2018-2019 itself -- the gap between 1997 and the study window is '
+        'still bridged only by the POR reaching "Present" and the absence of any later relocation remark.'),
+    program_location_linkage=(
+        '"ASOS COMMISSIONED MAY 23, 1997" remark and an ASOS ACU-coordinate remark are both on this '
+        'record, tying the ASOS program to this specific site from 1997 onward. POR 1973-10-03 to Present.'),
+    inference_and_unresolved=(
+        'The 1997 event is real, dated evidence -- but it predates the study period by 21 years. Nothing '
+        'in this record dates a change (or confirms no change) between 1997 and 2018-2019; that gap is '
+        'bridged only by an open-ended POR and the absence of a later remark, the same limitation as '
+        'IMT/SDF/SIT, just with one additional dated fact from before the window.'),
+    identity_determination='facility_continuity_supported_by_dated_1997_event_tz_string_conflict_unchanged',
+    historical_continuity_2018_2019='indirect_dated_pre_period_event_not_direct_2018_2019_confirmation',
+    remaining_gap=(
+        'tzname STRING conflict vs mwgg intentionally left at tz_conflict_needs_resolution per existing '
+        'policy. The 1997 dated event is kept as explicit historical evidence, but does not by itself '
+        'confirm the 2018-2019 window; a future round would still need a remark or record dated closer to '
+        'or within 2018-2019 to close that gap.'),
+)
 
 # PSG and WRG: the HOMR record this script fetches for both is COOP-only -- no ASOS
 # platform entry appears anywhere in the response. Downgraded from the confirmed
@@ -403,12 +536,58 @@ for _iata, _d in _TZ_ALIAS_UNLINKED.items():
             'about the separate automated platform this pipeline uses in 2018-2019. Treating this COOP '
             'record as confirming that automated platform\'s continuity would be an unsupported leap.'),
         identity_determination='unconfirmed_program_linkage_insufficient',
+        historical_continuity_2018_2019='unconfirmed_program_linkage_insufficient',
         remaining_gap=(
             'Needs a HOMR query or other official record that actually returns this airport\'s ASOS/'
             'AWOS platform entry (this ICAO query only returned the COOP thread); not found this round.'),
     )
 
 assert set(FINDINGS) == set(HOMR_QUERY) == set(ISSUE_GROUP), 'FINDINGS/HOMR_QUERY/ISSUE_GROUP must cover the same 20 airports'
+
+# Structured record selection + program-linkage checks that main() actually runs
+# against the fetched HOMR JSON, so a FINDINGS entry's claim about a specific
+# ncdcStnId/platform is checked against the live response, not just asserted in
+# prose. 'source' is 'primary' (the HOMR_QUERY cache file) or 'extra' (the
+# HOMR_EXTRA_QUERY[iata][extra_index] cache file). 'requires'/'forbids' are the
+# platform strings that selected station's `platforms` list must/must not contain.
+EXPECTED_RECORD: dict[str, list[dict]] = {
+    'ISN': [dict(source='primary', ncdc_stn_id='10007500', requires={'ASOS'}, forbids=set())],
+    'XWA': [dict(source='primary', ncdc_stn_id='30121192', requires={'ASOS'}, forbids=set())],
+    'YUM': [
+        dict(source='primary', ncdc_stn_id='20000933', requires=set(), forbids={'ASOS', 'AWOS'}),
+        dict(source='extra', extra_index=0, ncdc_stn_id='20000934', requires={'ASOS'}, forbids=set()),
+    ],
+    'STT': [dict(source='primary', ncdc_stn_id='20024073', requires={'ASOS'}, forbids=set())],
+    'STX': [dict(source='primary', ncdc_stn_id='10012328', requires={'ASOS'}, forbids=set())],
+    'SPN': [dict(source='primary', ncdc_stn_id='30158921', requires={'ASOS'}, forbids=set())],
+    # AZA: ICAO:KIWA returns two unrelated records in the same response; both are
+    # selected and checked separately by ncdcStnId so the AWOS record this finding
+    # relies on is never conflated with the NEXRAD one.
+    'AZA': [
+        dict(source='primary', ncdc_stn_id='10000826', requires={'AWOS'}, forbids={'NEXRAD'}),
+        dict(source='primary', ncdc_stn_id='30001870', requires={'NEXRAD'}, forbids={'AWOS', 'ASOS'}),
+    ],
+}
+for _iata, _d in _IDENTIFIER_MISMATCH.items():
+    if _iata == 'AZA':
+        continue
+    EXPECTED_RECORD[_iata] = [dict(
+        source='primary', ncdc_stn_id=_d['ncdc_stn_id'], requires=set(_d['platform'].split('+')), forbids=set())]
+for _iata, _d in _TZ_ALIAS_CONFIRMED.items():
+    EXPECTED_RECORD[_iata] = [dict(source='primary', ncdc_stn_id=_d['ncdc_stn_id'], requires={'ASOS'}, forbids=set())]
+EXPECTED_RECORD['KTN'] = [dict(source='primary', ncdc_stn_id='10000202', requires={'ASOS'}, forbids=set())]
+for _iata, _d in _TZ_ALIAS_UNLINKED.items():
+    EXPECTED_RECORD[_iata] = [dict(
+        source='primary', ncdc_stn_id=_d['ncdc_stn_id'], requires=set(), forbids={'ASOS', 'AWOS'})]
+
+assert set(EXPECTED_RECORD) == set(FINDINGS), 'EXPECTED_RECORD must cover the same 20 airports as FINDINGS'
+
+# Non-SPN entries in IEM_FEATURE_CHECK must be found=True for the corresponding
+# FINDINGS determination to hold (e.g. YUM's judgment needs both the YUM and NYL
+# AZ_ASOS features; AZA needs its IWA feature). SPN's expected miss is the one
+# allowed exception -- FINDINGS['SPN'] is already 'unconfirmed_pipeline_coverage_gap'
+# and does not depend on a found feature.
+IEM_FEATURE_REQUIRED_FOUND = {iata for iata in IEM_FEATURE_CHECK if iata != 'SPN'}
 
 
 def digest(path: Path) -> str:
@@ -444,7 +623,7 @@ def fetch_homr(id_type: str, id_value: str, cache_dir: Path, allow_network: bool
     fetch_dt = datetime.fromtimestamp(cache.stat().st_mtime, tz=timezone.utc)
     return {
         'url': url,
-        'cache_file': str(cache.relative_to(ROOT)),
+        'cache_file': str(cache.relative_to(ROOT)) if cache.is_relative_to(ROOT) else str(cache),
         'sha256': digest(cache),
         # The cache file's own filesystem mtime is the best available proxy for when
         # it was first fetched -- this project keeps no separate per-request fetch
@@ -475,6 +654,64 @@ def iem_feature_check(network: str, sid: str) -> dict:
         f'archive_begin={p.get("archive_begin")} archive_end={p.get("archive_end")} '
         f'online={p.get("online")} coords={coords}')
     return {'network': network, 'sid': sid, 'file': rel, 'sha256': sha, 'found': True, 'summary': summary}
+
+
+def load_station_collection(cache_file: Path) -> list[dict]:
+    """Parse a fetched HOMR response and return its stations, or raise ValueError.
+
+    Fetching and hashing a cache file (fetch_homr) is not the same as confirming the
+    response actually contains a usable station record -- an empty cache ({} or a
+    stationCollection with no stations) hashes and caches fine but carries nothing
+    for select_expected_station() to select from.
+    """
+    obj = json.loads(cache_file.read_text(encoding='utf-8'))
+    stations = obj.get('stationCollection', {}).get('stations')
+    if not stations:
+        raise ValueError(f'{cache_file}: stationCollection.stations is missing or empty')
+    return stations
+
+
+def select_expected_station(stations: list[dict], ncdc_stn_id: str) -> dict | None:
+    for stn in stations:
+        if str(stn.get('ncdcStnId')) == str(ncdc_stn_id):
+            return stn
+    return None
+
+
+def verify_expected_record(iata: str, cache_files: dict[str, Path], checks: list[dict]) -> list[str]:
+    """Check EXPECTED_RECORD[iata] against the actually fetched HOMR JSON.
+
+    cache_files maps 'primary' and 'extra:<index>' to the cache file main() fetched
+    for that source. Returns a list of failure strings (empty if every check in
+    `checks` selected its ncdcStnId and that station's platforms satisfied
+    requires/forbids); never raises for a normal mismatch, so callers can collect
+    failures across all 20 airports before deciding whether to abort.
+    """
+    failures = []
+    for chk in checks:
+        key = 'primary' if chk['source'] == 'primary' else f"extra:{chk['extra_index']}"
+        cache_file = cache_files[key]
+        try:
+            stations = load_station_collection(cache_file)
+        except ValueError as exc:
+            failures.append(f'{iata}: {exc}')
+            continue
+        stn = select_expected_station(stations, chk['ncdc_stn_id'])
+        if stn is None:
+            failures.append(f"{iata}: ncdcStnId {chk['ncdc_stn_id']} not selectable in {cache_file.name}")
+            continue
+        platforms = {p.get('platform') for p in stn.get('platforms', [])}
+        missing = chk['requires'] - platforms
+        if missing:
+            failures.append(
+                f"{iata}: ncdcStnId {chk['ncdc_stn_id']} in {cache_file.name} is missing required "
+                f'platform(s) {sorted(missing)}; record has {sorted(platforms)}')
+        blocked = chk['forbids'] & platforms
+        if blocked:
+            failures.append(
+                f"{iata}: ncdcStnId {chk['ncdc_stn_id']} in {cache_file.name} carries forbidden "
+                f'platform(s) {sorted(blocked)}; record has {sorted(platforms)}')
+    return failures
 
 
 def stratafix_membership() -> dict[str, bool]:
@@ -542,14 +779,45 @@ def main(argv: list[str] | None = None) -> None:
         for iata, checks in IEM_FEATURE_CHECK.items()
     }
 
+    # Connect raw-record verification to this actual generation path: select each
+    # FINDINGS judgment's cited ncdcStnId from the JSON just fetched above and check
+    # its platforms, instead of only hashing the cache file's bytes. A cache file
+    # existing and hashing is not evidence that the record it contains still says
+    # what FINDINGS claims; both are required, and record_verification_failures
+    # below is empty only when both hold for every one of the 20 airports.
+    record_verification_failures: list[str] = []
+    record_verification_checks: dict[str, list[str]] = {}
+    for iata in sorted(HOMR_QUERY):
+        id_type, id_value = HOMR_QUERY[iata]
+        cache_files = {'primary': cache_dir / f'{id_type}_{id_value}.json'}
+        for i, (t, v) in enumerate(HOMR_EXTRA_QUERY.get(iata, [])):
+            cache_files[f'extra:{i}'] = cache_dir / f'{t}_{v}.json'
+        checks = EXPECTED_RECORD[iata]
+        record_verification_failures.extend(verify_expected_record(iata, cache_files, checks))
+        record_verification_checks[iata] = [
+            f"ncdcStnId={c['ncdc_stn_id']} requires={sorted(c['requires'])} forbids={sorted(c['forbids'])}"
+            for c in checks
+        ]
+    for iata in sorted(IEM_FEATURE_REQUIRED_FOUND):
+        for r in iem_results[iata]:
+            if not r['found']:
+                record_verification_failures.append(
+                    f"{iata}: required IEM feature {r['network']}:{r['sid']} not found in {r['file']} "
+                    "(SPN is the only allowed miss)")
+    if record_verification_failures:
+        raise RuntimeError(
+            'Raw-record verification failed against the fetched HOMR/IEM cache; refusing to write '
+            'evidence that would print FINDINGS text the raw evidence no longer supports:\n  - '
+            + '\n  - '.join(record_verification_failures))
+
     columns = [
         'iata', 'prior_verification_tier', 'issue_category', 'appears_in_stratafix_sample',
         'current_identifier_mapping', 'period_2018_2019_evidence', 'program_location_linkage',
-        'inference_and_unresolved', 'identity_determination', 'remaining_gap',
-        'evidence_agency', 'evidence_source_url', 'evidence_record_ref',
+        'historical_continuity_2018_2019', 'inference_and_unresolved', 'identity_determination',
+        'remaining_gap', 'evidence_agency', 'evidence_source_url', 'evidence_record_ref',
         'raw_evidence_file', 'raw_evidence_sha256',
         'raw_evidence_fetch_date_estimate', 'raw_evidence_fetch_date_basis',
-        'extra_raw_evidence', 'iem_cross_check', 'evidence_reviewed_date',
+        'extra_raw_evidence', 'iem_cross_check', 'record_verification_checks', 'evidence_reviewed_date',
     ]
     evidence_path = out / f'{args.name}_evidence.csv'
     with open(evidence_path, 'w', newline='', encoding='utf-8') as f:
@@ -572,6 +840,7 @@ def main(argv: list[str] | None = None) -> None:
                 'current_identifier_mapping': fnd['current_identifier_mapping'],
                 'period_2018_2019_evidence': fnd['period_2018_2019_evidence'],
                 'program_location_linkage': fnd['program_location_linkage'],
+                'historical_continuity_2018_2019': fnd['historical_continuity_2018_2019'],
                 'inference_and_unresolved': fnd['inference_and_unresolved'],
                 'identity_determination': fnd['identity_determination'],
                 'remaining_gap': fnd['remaining_gap'],
@@ -584,6 +853,7 @@ def main(argv: list[str] | None = None) -> None:
                 'raw_evidence_fetch_date_basis': hr['fetch_date_basis'],
                 'extra_raw_evidence': extra,
                 'iem_cross_check': iem,
+                'record_verification_checks': '; '.join(record_verification_checks[iata]),
                 'evidence_reviewed_date': reviewed,
             })
 
@@ -611,6 +881,17 @@ def main(argv: list[str] | None = None) -> None:
         },
         'evidence_table': str(evidence_path.relative_to(ROOT)),
         'evidence_table_sha256': digest(evidence_path),
+        'record_verification': {
+            'passed': True,
+            'checks_run': sum(len(v) for v in record_verification_checks.values()),
+            'iem_features_required_found': sorted(IEM_FEATURE_REQUIRED_FOUND),
+            'note': (
+                'True here means every EXPECTED_RECORD check for all 20 airports selected its configured '
+                'ncdcStnId from the fetched response and matched its required/forbidden platforms, and '
+                'every non-SPN IEM_FEATURE_CHECK entry was found=True -- main() raises RuntimeError before '
+                'writing any evidence file if that is not the case, so a run that reached this point and '
+                'wrote output always has passed=True.'),
+        },
         'row_count': len(HOMR_QUERY),
         'stratafix_membership_count': sum(strata.values()),
         'population_note': (
@@ -653,6 +934,21 @@ def main(argv: list[str] | None = None) -> None:
             'own assembly date and is not backdated to look like an original fetch date.',
             'No new weather time series collection, no stratafix real collection, no model retraining, '
             'and no changes to any baseline_recovery_v2_weather_* production output were made.',
+            'Third round: identity_determination for IMT/SDF/SIT was downgraded from '
+            'facility_continuity_confirmed_tz_string_conflict_unchanged to '
+            'current_facility_confirmed_historical_continuity_unconfirmed_tz_string_conflict_unchanged -- '
+            'their fetched HOMR record confirms the CURRENT facility/ASOS-program linkage but carries no '
+            'dated event, so 2018-2019 continuity specifically is left unconfirmed rather than folded into '
+            '"confirmed". KTN keeps a separate determination because its record does carry a dated (1997) '
+            'pre-period event, itself not proof of 2018-2019 either. All 20 rows now carry a '
+            'historical_continuity_2018_2019 field distinguishing this from current-identifier/program '
+            'confirmation; for the identifier-mismatch group, inference_and_unresolved no longer reads '
+            '"none" where the only basis is an unbroken POR plus the absence of a relocation remark.',
+            'Third round: EXPECTED_RECORD + verify_expected_record() connect the fetched HOMR JSON\'s '
+            'actual stationCollection.stations to each judgment\'s cited ncdcStnId and required/forbidden '
+            'platforms inside this run itself (record_verification above), not only in a separate test '
+            'suite reading the cache independently -- a cache file existing is checked separately from the '
+            'record it contains still matching what FINDINGS claims.',
         ],
     }
     manifest_path = out / f'{args.name}_manifest.json'

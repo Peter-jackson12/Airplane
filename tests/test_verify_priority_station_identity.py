@@ -1,5 +1,6 @@
 import csv
 import json
+import shutil
 
 import pytest
 
@@ -111,7 +112,51 @@ def test_imt_ktn_sdf_sit_do_carry_an_asos_platform_in_their_raw_homr_record(iata
     stn = json.loads(cache.read_text(encoding='utf-8'))['stationCollection']['stations'][0]
     platforms = {p['platform'] for p in stn.get('platforms', [])}
     assert 'ASOS' in platforms
-    assert vpsi.FINDINGS[iata]['identity_determination'] == 'facility_continuity_confirmed_tz_string_conflict_unchanged'
+
+
+# ---- third round: current-identifier vs. historical-continuity separation ----
+
+def test_every_finding_carries_a_historical_continuity_field_distinct_from_identity_determination():
+    for iata, fnd in vpsi.FINDINGS.items():
+        assert 'historical_continuity_2018_2019' in fnd, iata
+        assert fnd['historical_continuity_2018_2019']
+
+
+def test_ktn_keeps_its_own_determination_naming_the_dated_1997_event():
+    assert vpsi.FINDINGS['KTN']['identity_determination'] == (
+        'facility_continuity_supported_by_dated_1997_event_tz_string_conflict_unchanged')
+    assert vpsi.FINDINGS['KTN']['historical_continuity_2018_2019'] == (
+        'indirect_dated_pre_period_event_not_direct_2018_2019_confirmation')
+    assert '1997' in vpsi.FINDINGS['KTN']['period_2018_2019_evidence']
+
+
+@pytest.mark.parametrize('iata', ['IMT', 'SDF', 'SIT'])
+def test_imt_sdf_sit_are_downgraded_to_current_facility_confirmed_not_historical_continuity(iata):
+    fnd = vpsi.FINDINGS[iata]
+    assert fnd['identity_determination'] == (
+        'current_facility_confirmed_historical_continuity_unconfirmed_tz_string_conflict_unchanged')
+    assert fnd['historical_continuity_2018_2019'] == 'unconfirmed_current_metadata_only'
+    # no dated pre-period event exists for these three, unlike KTN
+    assert '1997' not in fnd['period_2018_2019_evidence']
+
+
+def test_imt_sdf_sit_no_longer_share_ktns_confirmed_determination():
+    assert vpsi.FINDINGS['KTN']['identity_determination'] != vpsi.FINDINGS['IMT']['identity_determination']
+
+
+def test_identifier_mismatch_inference_is_not_generically_none():
+    for iata in vpsi._IDENTIFIER_MISMATCH:
+        text = vpsi.FINDINGS[iata]['inference_and_unresolved']
+        assert text.strip().lower() != 'none beyond remaining_gap below.', iata
+        assert text.strip() != '', iata
+
+
+def test_fca_and_pbi_have_dated_or_time_bounded_continuity_evidence_unlike_the_absence_only_group():
+    assert vpsi.FINDINGS['FCA']['historical_continuity_2018_2019'] == 'dated_remark_predates_window'
+    assert vpsi.FINDINGS['PBI']['historical_continuity_2018_2019'] == 'explicit_statement_change_postdates_window'
+    for iata in ('BKG', 'HHH', 'MQT', 'SCE', 'USA'):
+        assert vpsi.FINDINGS[iata]['historical_continuity_2018_2019'] == 'absence_of_remark'
+    assert vpsi.FINDINGS['AZA']['historical_continuity_2018_2019'] == 'undated_remark'
 
 
 # ---- YUM: downgraded from a confident distinct-facility claim to a flagged conflict ----
@@ -164,3 +209,156 @@ def test_main_refuses_a_nonexistent_cache_dir_without_allow_network(tmp_path):
     with pytest.raises(FileNotFoundError):
         vpsi.main(['--name', fresh_name, '--cache-dir', str(missing_cache)])
     assert not (ROOT / f'output/{fresh_name}_evidence.csv').exists()
+
+
+# ---- third round: raw-record verification wired into the generation path ----
+
+def test_load_station_collection_rejects_empty_object(tmp_path):
+    cache = tmp_path / 'empty.json'
+    cache.write_text('{}', encoding='utf-8')
+    with pytest.raises(ValueError):
+        vpsi.load_station_collection(cache)
+
+
+def test_load_station_collection_rejects_empty_stations_list(tmp_path):
+    cache = tmp_path / 'empty_stations.json'
+    cache.write_text(json.dumps({'stationCollection': {'stations': []}}), encoding='utf-8')
+    with pytest.raises(ValueError):
+        vpsi.load_station_collection(cache)
+
+
+def test_select_expected_station_returns_none_when_ncdc_stn_id_absent():
+    stations = [{'ncdcStnId': '111', 'platforms': []}]
+    assert vpsi.select_expected_station(stations, '222') is None
+    assert vpsi.select_expected_station(stations, '111') is stations[0]
+
+
+def test_verify_expected_record_flags_missing_required_platform(tmp_path):
+    cache = tmp_path / 'ICAO_KIMT.json'
+    cache.write_text(json.dumps(
+        {'stationCollection': {'stations': [{'ncdcStnId': '20010418', 'platforms': [{'platform': 'COOP'}]}]}}),
+        encoding='utf-8')
+    checks = [dict(source='primary', ncdc_stn_id='20010418', requires={'ASOS'}, forbids=set())]
+    failures = vpsi.verify_expected_record('IMT', {'primary': cache}, checks)
+    assert failures and 'missing required platform' in failures[0]
+
+
+def test_verify_expected_record_flags_forbidden_platform_present(tmp_path):
+    cache = tmp_path / 'ICAO_PAWG.json'
+    cache.write_text(json.dumps(
+        {'stationCollection': {'stations': [{'ncdcStnId': '10000446', 'platforms': [{'platform': 'ASOS'}]}]}}),
+        encoding='utf-8')
+    checks = [dict(source='primary', ncdc_stn_id='10000446', requires=set(), forbids={'ASOS', 'AWOS'})]
+    failures = vpsi.verify_expected_record('WRG', {'primary': cache}, checks)
+    assert failures and 'forbidden platform' in failures[0]
+
+
+def test_verify_expected_record_flags_missing_ncdc_stn_id(tmp_path):
+    cache = tmp_path / 'ICAO_KIWA.json'
+    cache.write_text(json.dumps(
+        {'stationCollection': {'stations': [{'ncdcStnId': '99999999', 'platforms': [{'platform': 'AWOS'}]}]}}),
+        encoding='utf-8')
+    checks = [dict(source='primary', ncdc_stn_id='10000826', requires={'AWOS'}, forbids=set())]
+    failures = vpsi.verify_expected_record('AZA', {'primary': cache}, checks)
+    assert failures and 'not selectable' in failures[0]
+
+
+def test_verify_expected_record_passes_against_the_real_default_cache_for_every_airport():
+    for iata, checks in vpsi.EXPECTED_RECORD.items():
+        id_type, id_value = vpsi.HOMR_QUERY[iata]
+        cache_files = {'primary': vpsi.DEFAULT_CACHE_DIR / f'{id_type}_{id_value}.json'}
+        for i, (t, v) in enumerate(vpsi.HOMR_EXTRA_QUERY.get(iata, [])):
+            cache_files[f'extra:{i}'] = vpsi.DEFAULT_CACHE_DIR / f'{t}_{v}.json'
+        assert vpsi.verify_expected_record(iata, cache_files, checks) == [], iata
+
+
+def _copy_default_cache(tmp_path):
+    tmp_cache = tmp_path / 'homr_cache'
+    shutil.copytree(vpsi.DEFAULT_CACHE_DIR, tmp_cache)
+    return tmp_cache
+
+
+def test_main_raises_and_writes_nothing_when_a_cached_record_loses_its_required_platform(tmp_path):
+    tmp_cache = _copy_default_cache(tmp_path)
+    imt_file = tmp_cache / 'ICAO_KIMT.json'
+    obj = json.loads(imt_file.read_text(encoding='utf-8'))
+    obj['stationCollection']['stations'][0]['platforms'] = [{'platform': 'COOP'}]
+    imt_file.write_text(json.dumps(obj), encoding='utf-8')
+
+    fresh_name = 'baseline_recovery_v2_station_identity_pytest_tmp3_20260918'
+    with pytest.raises(RuntimeError, match='missing required platform'):
+        vpsi.main(['--name', fresh_name, '--cache-dir', str(tmp_cache)])
+    assert not (ROOT / f'output/{fresh_name}_evidence.csv').exists()
+    assert not (ROOT / f'output/{fresh_name}_manifest.json').exists()
+
+
+def test_main_raises_when_a_required_programs_platform_is_replaced_by_a_different_one(tmp_path):
+    tmp_cache = _copy_default_cache(tmp_path)
+    wrg_file = tmp_cache / 'ICAO_PAWG.json'
+    obj = json.loads(wrg_file.read_text(encoding='utf-8'))
+    obj['stationCollection']['stations'][0]['platforms'] = [{'platform': 'COOP'}, {'platform': 'ASOS'}]
+    wrg_file.write_text(json.dumps(obj), encoding='utf-8')
+
+    fresh_name = 'baseline_recovery_v2_station_identity_pytest_tmp4_20260918'
+    with pytest.raises(RuntimeError, match='forbidden platform'):
+        vpsi.main(['--name', fresh_name, '--cache-dir', str(tmp_cache)])
+    assert not (ROOT / f'output/{fresh_name}_evidence.csv').exists()
+
+
+def test_main_raises_when_a_cached_response_has_no_stations(tmp_path):
+    tmp_cache = _copy_default_cache(tmp_path)
+    isn_file = tmp_cache / 'ICAO_KISN.json'
+    isn_file.write_text(json.dumps({'stationCollection': {'stations': []}}), encoding='utf-8')
+
+    fresh_name = 'baseline_recovery_v2_station_identity_pytest_tmp5_20260918'
+    with pytest.raises(RuntimeError, match='stationCollection.stations is missing or empty'):
+        vpsi.main(['--name', fresh_name, '--cache-dir', str(tmp_cache)])
+    assert not (ROOT / f'output/{fresh_name}_evidence.csv').exists()
+
+
+def test_main_raises_when_a_required_non_spn_iem_feature_goes_missing(tmp_path, monkeypatch):
+    real_check = vpsi.iem_feature_check
+
+    def fake_check(network, sid):
+        if network == 'AZ_ASOS' and sid == 'IWA':
+            return {'network': network, 'sid': sid, 'file': 'fake', 'sha256': 'fake',
+                     'found': False, 'summary': 'forced miss for test'}
+        return real_check(network, sid)
+
+    monkeypatch.setattr(vpsi, 'iem_feature_check', fake_check)
+    fresh_name = 'baseline_recovery_v2_station_identity_pytest_tmp6_20260918'
+    with pytest.raises(RuntimeError, match='required IEM feature'):
+        vpsi.main(['--name', fresh_name])
+    assert not (ROOT / f'output/{fresh_name}_evidence.csv').exists()
+
+
+def test_main_still_allows_spns_expected_iem_miss(tmp_path):
+    # SPN's GU_ASOS features are genuinely not found in the real cache (see
+    # test_spn_is_not_found_in_any_tried_id_in_the_cached_gu_asos_network above);
+    # main() must still succeed because SPN is excluded from
+    # IEM_FEATURE_REQUIRED_FOUND, unlike the forced-miss case above for AZA.
+    assert 'SPN' not in vpsi.IEM_FEATURE_REQUIRED_FOUND
+    fresh_name = 'baseline_recovery_v2_station_identity_pytest_tmp7_20260918'
+    try:
+        vpsi.main(['--name', fresh_name])
+        assert (ROOT / f'output/{fresh_name}_evidence.csv').exists()
+    finally:
+        (ROOT / f'output/{fresh_name}_evidence.csv').unlink(missing_ok=True)
+        (ROOT / f'output/{fresh_name}_manifest.json').unlink(missing_ok=True)
+
+
+def test_main_cache_only_reproduction_carries_the_new_columns_and_verification_summary(tmp_path):
+    fresh_name = 'baseline_recovery_v2_station_identity_pytest_tmp8_20260918'
+    try:
+        vpsi.main(['--name', fresh_name])
+        with open(ROOT / f'output/{fresh_name}_evidence.csv', newline='', encoding='utf-8') as f:
+            rows = list(csv.DictReader(f))
+        assert 'historical_continuity_2018_2019' in rows[0]
+        assert 'record_verification_checks' in rows[0]
+        assert all(row['historical_continuity_2018_2019'] for row in rows)
+        manifest = json.loads((ROOT / f'output/{fresh_name}_manifest.json').read_text(encoding='utf-8'))
+        assert manifest['record_verification']['passed'] is True
+        assert manifest['record_verification']['checks_run'] > 20
+    finally:
+        (ROOT / f'output/{fresh_name}_evidence.csv').unlink(missing_ok=True)
+        (ROOT / f'output/{fresh_name}_manifest.json').unlink(missing_ok=True)
