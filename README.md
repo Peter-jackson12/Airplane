@@ -1097,7 +1097,7 @@ uv run --offline python -u notebooks/summarize_bts_marketing_months.py --name ba
 
 ### 우선 조사 대상 20개 공항 역사적 매핑 대조
 
-기본은 **캐시 전용**입니다. 먼저 이전 실행의 `data/weather_probe/baseline_recovery_v2_station_identity_investigation_20260918_homr_raw/`(HOMR 원본 21개)와 `data/weather_probe/networks/`의 필요한 IEM GeoJSON 9개을 복원해야 합니다. 이 파일들은 `.gitignore`의 `data/` 규칙으로 Git 추적에서 제외되어 **GitHub clone/pull만으로 확보되지 않습니다.** 필요한 HOMR 파일명·해시는 최신 증거표의 `raw_evidence_file`/`raw_evidence_sha256`·`extra_raw_evidence`, IEM 파일명·해시는 최신 manifest의 `iem_feature_checks`에서 확인합니다. 복원본을 이 해시와 대조한 뒤 실행해야 이전 증거와 같은 입력의 재현이라고 할 수 있습니다. 이번 환경에는 해당 캐시가 없어 아래 재현을 완료하지 못했습니다.
+기본은 **캐시 전용**입니다. 먼저 이전 실행의 `data/weather_probe/baseline_recovery_v2_station_identity_investigation_20260918_homr_raw/`(HOMR 원본 21개)와 `data/weather_probe/networks/`의 필요한 IEM GeoJSON 9개를 복원해야 합니다. 이 파일들은 `.gitignore`의 `data/` 규칙으로 Git 추적에서 제외되어 **GitHub clone/pull만으로 확보되지 않습니다.** 필요한 HOMR 파일명·해시는 최신 증거표의 `raw_evidence_file`/`raw_evidence_sha256`·`extra_raw_evidence`, IEM 파일명·해시는 최신 manifest의 `iem_feature_checks`에서 확인합니다. 복원본을 이 해시와 대조한 뒤 실행해야 이전 증거와 같은 입력의 재현이라고 할 수 있습니다. 이번 환경에는 해당 캐시가 없어 아래 재현을 완료하지 못했습니다.
 
 ```powershell
 .venv/Scripts/python.exe -u -m notebooks.verify_priority_station_identity --name baseline_recovery_v2_station_identity_recheck_<새-접미사>
