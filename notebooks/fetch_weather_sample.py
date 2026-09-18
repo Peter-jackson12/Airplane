@@ -59,13 +59,14 @@ def http_get_once(url: str, *, timeout: float, out_path: Path, max_bytes: int | 
     returncode = None
     error = None
     try:
-        result = subprocess.run(cmd, capture_output=True, timeout=timeout + 5, check=False)
+        result = subprocess.run(cmd, capture_output=True,
+                               timeout=timeout + SUBPROCESS_TERMINATION_GRACE_SECONDS, check=False)
         returncode = result.returncode
         if returncode != 0:
             error = f'curl exit {returncode}: {result.stderr.decode(errors="replace")[:500]}'
     except subprocess.TimeoutExpired:
         timed_out = True
-        error = f'curl exceeded {timeout + 5}s wall-clock timeout for {url}'
+        error = f'curl exceeded {timeout + SUBPROCESS_TERMINATION_GRACE_SECONDS}s wall-clock timeout for {url}'
     seconds = time.monotonic() - start
     bytes_received = out_path.stat().st_size if out_path.exists() else None
     return {'success': returncode == 0 and not timed_out, 'bytes_received': bytes_received,
@@ -77,6 +78,11 @@ PREDICTION_OFFSET_MINUTES = 60  # fixed contract: 60 minutes before scheduled de
 LOOKBACK_HOURS = 6  # window padding before the earliest prediction_at in a group
 LOOKAHEAD_HOURS = 2  # window padding after the latest prediction_at in a group
 MAX_RESPONSE_BYTES = 2_000_000
+# subprocess.run's own timeout is `timeout + this` (below), so curl gets a short grace window to shut
+# down cleanly instead of racing a hard kill at exactly `timeout`. A caller bounding an attempt against a
+# remaining time budget must reserve this on top of `timeout`, since real wall-clock time for one attempt
+# can exceed `timeout` by up to this much in the worst case.
+SUBPROCESS_TERMINATION_GRACE_SECONDS = 5.0
 
 
 def digest(path: Path) -> str:
@@ -122,18 +128,29 @@ def fetch_attempt(station: str, start: pd.Timestamp, end: pd.Timestamp, *, timeo
     retries internally. The caller owns retry/backoff/budget accounting so
     every attempt -- successful or not -- can be charged against the request
     budget, and partial bytes from a failed attempt are still reported.
+
+    The in-transit size limit is min(MAX_RESPONSE_BYTES, max_bytes_remaining):
+    a single attempt is never allowed to exceed the fixed per-request cap even
+    when the caller's overall byte budget still has room left, and it is
+    tightened further once the overall budget has less than that much left.
+    Both curl's own --max-filesize cutoff and the post-download validation use
+    this SAME effective cap, so a response cannot pass one and fail the other.
     """
     url = build_request_url(station, start, end)
     cache = cache_path_for(station, start, end)
     part = cache.with_name(cache.name + '.part')
-    outcome = http_get_once(url, timeout=timeout, out_path=part,
-                            max_bytes=max_bytes_remaining if max_bytes_remaining and max_bytes_remaining > 0 else None)
+    effective_cap = (MAX_RESPONSE_BYTES if max_bytes_remaining is None
+                     else min(MAX_RESPONSE_BYTES, max_bytes_remaining))
+    if effective_cap <= 0:
+        return {'success': False, 'bytes_received': None, 'seconds': 0.0,
+               'error': 'no remaining byte budget for this attempt', 'url': url}
+    outcome = http_get_once(url, timeout=timeout, out_path=part, max_bytes=effective_cap)
     if not outcome['success']:
         if part.exists():
             part.unlink()
         return {'success': False, 'bytes_received': outcome['bytes_received'], 'seconds': outcome['seconds'],
                'error': outcome['error'], 'url': url}
-    if outcome['bytes_received'] is not None and outcome['bytes_received'] > MAX_RESPONSE_BYTES:
+    if outcome['bytes_received'] is not None and outcome['bytes_received'] > effective_cap:
         part.unlink(missing_ok=True)
         return {'success': False, 'bytes_received': outcome['bytes_received'], 'seconds': outcome['seconds'],
                'error': 'response exceeds bounded size', 'url': url}

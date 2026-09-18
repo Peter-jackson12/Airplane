@@ -30,7 +30,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from notebooks.fetch_weather_sample import (LOOKAHEAD_HOURS, LOOKBACK_HOURS, compute_prediction_at,
+from notebooks.fetch_weather_sample import (LOOKAHEAD_HOURS, LOOKBACK_HOURS,
+                                            SUBPROCESS_TERMINATION_GRACE_SECONDS, compute_prediction_at,
                                             digest, fetch_attempt, validate_cached_window)
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,7 +40,10 @@ DEFAULT_ATTEMPT_TIMEOUT_SECONDS = 15.0
 MAX_ATTEMPTS_PER_GROUP = 3
 MAX_CONSECUTIVE_FAILURES = 8  # a persistent block (e.g. sustained rate-limit) should stop, not spin
 BACKOFF_BASE_SECONDS = 10.0
-ATTEMPT_LOG_LIMIT = 500  # cap the checkpoint's attempt log so it can't grow without bound
+ATTEMPT_LOG_LIMIT = 500  # caps only the rolling cross-group activity log; each group's OWN
+                        # attempts_detail (the accounting/audit basis) is never truncated by this
+SUCCESS_PAUSE_SECONDS = 3.0  # be polite to the free public archive between successful requests,
+                            # matching fetch_weather_sample.py's fetch_window; charged against the time budget
 
 
 def build_station_day_groups(collectible: pd.DataFrame) -> dict[tuple[str, str], list[pd.Timestamp]]:
@@ -56,7 +60,36 @@ def build_station_day_groups(collectible: pd.DataFrame) -> dict[tuple[str, str],
 def new_checkpoint_state() -> dict:
     return {'schema_version': CHECKPOINT_SCHEMA_VERSION, 'requests_used': 0, 'bytes_used': 0,
            'unmeasured_byte_attempts': 0, 'seconds_used': 0.0, 'groups': {}, 'attempts_log': [],
-           'cap_hit': None}
+           'cap_hit': None, 'plan_fingerprint': None}
+
+
+def recover_interrupted_attempts(state: dict) -> None:
+    """A crash between the pre-call reservation persist and the post-call
+    resolution persist (see execute_with_caps) leaves a group's checkpoint
+    entry holding an 'in_flight' marker for an attempt whose outcome was
+    never recorded. requests_used already counts it -- it was persisted
+    BEFORE the network call was made -- so resuming must not drop it, must
+    not re-issue it as a free retry, and must not silently assume it used 0
+    bytes/seconds. It is resolved here into a single 'interrupted, outcome
+    unknown' attempt entry, with the time budget conservatively charged the
+    full timeout that attempt was allotted (the real elapsed time cannot be
+    recovered, and a strict upper bound is safer than treating it as free).
+    """
+    for key, rec in list(state.get('groups', {}).items()):
+        in_flight = rec.get('in_flight') if isinstance(rec, dict) else None
+        if not in_flight:
+            continue
+        attempts = list(rec.get('attempts_detail', []))
+        attempts.append({'attempt': in_flight.get('attempt', len(attempts) + 1), 'success': False,
+                         'bytes_received': None, 'seconds': None,
+                         'error': 'interrupted mid-attempt (process ended before the outcome was '
+                                  'recorded); request budget was already reserved before the network '
+                                  'call and is not re-issued on resume'})
+        state['unmeasured_byte_attempts'] = state.get('unmeasured_byte_attempts', 0) + 1
+        reserved_timeout = in_flight.get('timeout')
+        if reserved_timeout:
+            state['seconds_used'] = state.get('seconds_used', 0.0) + reserved_timeout
+        state['groups'][key] = {'status': 'in_progress', 'attempts_detail': attempts}
 
 
 def load_checkpoint(path: Path) -> dict:
@@ -65,6 +98,8 @@ def load_checkpoint(path: Path) -> dict:
     state = json.loads(path.read_text())
     if state.get('schema_version') != CHECKPOINT_SCHEMA_VERSION:
         raise ValueError(f'{path} has an incompatible checkpoint schema; use a fresh --name')
+    state.setdefault('plan_fingerprint', None)
+    recover_interrupted_attempts(state)
     return state
 
 
@@ -76,12 +111,45 @@ def save_checkpoint(path: Path, state: dict) -> None:
     tmp.replace(path)
 
 
+def compute_plan_fingerprint(selection_sha256: str, mapping_sha256: str,
+                             groups: dict[tuple[str, str], list[pd.Timestamp]], options: dict) -> str:
+    """Fingerprints the input selection, the mapping table, the NORMALIZED
+    per-(station, day) request windows actually planned, and the request
+    options (caps, padding hours, per-request size limit) that this run was
+    built from. Two runs with the same station/day keys but different query
+    windows -- or the same windows but a different selection/mapping/option
+    set -- must never be treated as the same completed work."""
+    normalized_groups = sorted(
+        (station, day, min(ts).isoformat(), max(ts).isoformat())
+        for (station, day), ts in groups.items())
+    payload = {'selection_sha256': selection_sha256, 'mapping_sha256': mapping_sha256,
+              'groups': normalized_groups, 'options': options}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()
+
+
+def verify_plan_fingerprint(checkpoint: dict, fingerprint: str, *, name: str) -> None:
+    """Raises if this checkpoint was already built from a DIFFERENT plan than
+    the one about to run under the same --name; records the fingerprint the
+    first time a fresh checkpoint sees one. A mismatch stops explicitly --
+    it never silently overwrites or extends the prior evidence with
+    incompatible new work."""
+    prior = checkpoint.get('plan_fingerprint')
+    if prior is not None and prior != fingerprint:
+        raise ValueError(
+            f'{name} checkpoint was built from a different input selection/mapping/request plan '
+            f'(recorded fingerprint {prior}, current {fingerprint}). Resuming under the same --name '
+            'would silently mix incompatible evidence. Use a fresh --name for the changed plan, or '
+            'restore the exact selection/mapping/options this checkpoint was created from.')
+    checkpoint['plan_fingerprint'] = fingerprint
+
+
 def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
                       cache_exists_fn, attempt_fn, digest_fn, now_fn, checkpoint,
                       checkpoint_path=None, sleep_fn=lambda s: None, progress_every=10,
                       max_attempts_per_group=MAX_ATTEMPTS_PER_GROUP,
                       max_consecutive_failures=MAX_CONSECUTIVE_FAILURES,
-                      default_attempt_timeout=DEFAULT_ATTEMPT_TIMEOUT_SECONDS):
+                      default_attempt_timeout=DEFAULT_ATTEMPT_TIMEOUT_SECONDS,
+                      attempt_overhead_seconds=0.0, success_pause_seconds=0.0):
     """Resumable, budget-aware fetch loop.
 
     `checkpoint` is a mutable dict carrying CUMULATIVE state across resumed
@@ -94,11 +162,23 @@ def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
     bytes_received, seconds, error, ...}` exactly once and is charged one
     request unit plus whatever bytes/seconds it actually used (bytes may be
     None for a genuinely unmeasurable attempt; such attempts are counted
-    separately in unmeasured_byte_attempts, never assumed to be 0). Each
-    attempt's timeout is bounded by the remaining time budget, and time spent
-    in the loop's own backoff sleeps also counts against that budget. The
-    checkpoint is persisted after every attempt so a crash mid-run loses at
-    most the in-flight attempt, not prior progress.
+    separately in unmeasured_byte_attempts, never assumed to be 0). The
+    request-budget unit is reserved and persisted BEFORE the network call, not
+    after it returns, so a crash mid-attempt cannot make that attempt vanish
+    from accounting or be re-issued for free on resume (see
+    recover_interrupted_attempts). Each attempt's timeout is bounded by the
+    remaining time budget MINUS attempt_overhead_seconds (the worst-case extra
+    wall time an attempt can take beyond its own timeout, e.g. a subprocess's
+    own termination grace period) so a single attempt's worst case can never
+    overshoot max_seconds; it is never inflated above what is actually left,
+    even when that is under a second. Time spent in the loop's own backoff
+    sleeps, and in success_pause_seconds after a genuinely new (non-cached)
+    successful fetch, also counts against that budget. The checkpoint is
+    persisted after every state change so a crash loses at most the
+    in-flight attempt, not prior progress. This function makes no claim of
+    "exactly once" delivery for an attempt whose true remote outcome could
+    not be observed (e.g. an interrupted attempt) -- only that it is never
+    dropped from budget accounting and never silently re-run for free.
     """
     fetched, skipped_cap, failed = [], [], []
     session_start = now_fn()
@@ -124,24 +204,51 @@ def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
                  f'cumulative_bytes={checkpoint["bytes_used"]} '
                  f'cumulative_seconds={checkpoint["seconds_used"]:.0f}', flush=True)
 
+        timestamps = groups[(station, day)]
+        window_start = min(timestamps) - pd.Timedelta(hours=LOOKBACK_HOURS)
+        window_end = max(timestamps) + pd.Timedelta(hours=LOOKAHEAD_HOURS)
+        current_window = (window_start.isoformat(), window_end.isoformat())
+
         prior = checkpoint['groups'].get(key)
         if prior and prior.get('status') == 'fetched':
-            fetched.append({**prior, 'station': station, 'day': day})
+            # A resumed "fetched" checkpoint is re-validated, not trusted blindly: the SAME station/day
+            # under a DIFFERENT query window is different work, not the same completed request, and the
+            # recorded cache evidence must still exist on disk with unchanged content.
+            prior_window = (prior.get('window_start_utc'), prior.get('window_end_utc'))
+            if prior_window[0] is not None and prior_window != current_window:
+                raise ValueError(
+                    f'{key} was already fetched for window {prior_window[0]}..{prior_window[1]}, but '
+                    f'the current plan asks for a different window {current_window[0]}..{current_window[1]} '
+                    '-- this is a different request under the same station/day, not the same completed '
+                    'work. Resolve the plan mismatch (e.g. a fresh --name) before resuming; existing '
+                    'evidence is never silently overwritten or re-collected.')
+            revalidated = cache_exists_fn(station, window_start, window_end)
+            if revalidated is None:
+                raise ValueError(
+                    f'checkpoint records {key} as already fetched, but its cache file is now missing or '
+                    'fails schema validation; resolve (restore the file, or start a fresh --name) before '
+                    'resuming -- a missing cache is never silently re-fetched under the same recorded '
+                    'evidence.')
+            actual_sha = digest_fn(revalidated)
+            if prior.get('sha256') and actual_sha != prior['sha256']:
+                raise ValueError(
+                    f'{revalidated} content ({actual_sha}) no longer matches the checkpoint\'s recorded '
+                    f'evidence ({prior["sha256"]}) for {key}; the cache file appears to have changed '
+                    'since it was fetched. Existing evidence is never silently trusted again after it '
+                    'changes -- resolve the mismatch before resuming.')
+            fetched.append({**prior, 'station': station, 'day': day, 'cache_file': str(revalidated)})
             continue
         if prior and prior.get('status') == 'failed' and prior.get('permanent'):
             failed.append({**prior, 'station': station, 'day': day})
             continue
 
-        timestamps = groups[(station, day)]
-        window_start = min(timestamps) - pd.Timedelta(hours=LOOKBACK_HOURS)
-        window_end = max(timestamps) + pd.Timedelta(hours=LOOKAHEAD_HOURS)
-
-        # A cache hit found here has NO prior record in this checkpoint -- it is either evidence left
-        # over from a different run (the original 21-row sample, an interrupted prior attempt under a
-        # different --name, etc.) or a foreign/corrupted file. cache_exists_fn already validated its
-        # schema; a recorded hash (if this exact key was ever fetched under THIS run before, e.g. the
-        # checkpoint was reset but the file survived) is still cross-checked so stale/foreign evidence
-        # is never silently substituted for what this run believes it already fetched.
+        # A cache hit found here has NO prior 'fetched' record in this checkpoint -- it is either
+        # evidence left over from a different run (the original 21-row sample, an interrupted prior
+        # attempt under a different --name, etc.) or a foreign/corrupted file. cache_exists_fn already
+        # validated its schema; a recorded hash (if this exact key was ever fetched under THIS run
+        # before, e.g. the checkpoint was reset but the file survived) is still cross-checked so
+        # stale/foreign evidence is never silently substituted for what this run believes it already
+        # fetched.
         cached = cache_exists_fn(station, window_start, window_end)
         if cached is not None:
             recorded_sha = prior.get('sha256') if prior else None
@@ -177,13 +284,27 @@ def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
             if remaining <= 0:
                 cap_hit = f'max_seconds={max_seconds} reached'
                 break
+            usable = remaining - attempt_overhead_seconds
+            if usable <= 0:
+                cap_hit = (f'max_seconds={max_seconds} reached (remaining {remaining:.1f}s does not '
+                          f'leave room for the {attempt_overhead_seconds}s worst-case per-attempt '
+                          'overhead)')
+                break
+            timeout = min(default_attempt_timeout, usable)  # never inflated above what is actually left
 
-            timeout = max(1.0, min(default_attempt_timeout, remaining))
+            # Reserve THIS attempt's request-budget unit and persist BEFORE the network call: if the
+            # process dies mid-attempt, the reservation survives on disk and is never re-issued as a
+            # free request when this run is resumed (recover_interrupted_attempts resolves it).
+            checkpoint['requests_used'] += 1
+            checkpoint['groups'][key] = {'status': 'in_progress', 'attempts_detail': attempts_this_group,
+                                         'in_flight': {'attempt': len(attempts_this_group) + 1,
+                                                      'timeout': timeout}}
+            persist()
+
             t0 = now_fn()
             outcome = attempt_fn(station, window_start, window_end, timeout=timeout,
                                  max_bytes_remaining=max_bytes - checkpoint['bytes_used'])
             elapsed = now_fn() - t0
-            checkpoint['requests_used'] += 1  # every attempt -- success, retry, or failure -- charges the budget
             checkpoint['seconds_used'] += elapsed
             session_requests += 1
             if outcome.get('bytes_received') is not None:
@@ -203,6 +324,13 @@ def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
             if outcome.get('success'):
                 group_outcome = outcome
                 consecutive_failures = 0
+                # Be polite to the provider between successful requests; this pause is bounded by
+                # whatever time budget remains and is charged against it, not free.
+                pause = min(success_pause_seconds, max(remaining_seconds(), 0.0))
+                if pause > 0:
+                    sleep_fn(pause)
+                    checkpoint['seconds_used'] += pause
+                    persist()
                 break
             consecutive_failures += 1
             print(f'  FAILED {station} {day} (attempt {len(attempts_this_group)}): {outcome.get("error")}',
@@ -227,7 +355,8 @@ def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
                      'window_end_utc': window_end.isoformat(), 'url': group_outcome.get('url'),
                      'cache_file': group_outcome.get('cache_file'), 'sha256': group_outcome.get('sha256'),
                      'rows': group_outcome.get('n_rows'), 'was_already_cached': False,
-                     'attempts': len(attempts_this_group), 'status': 'fetched'}
+                     'attempts': len(attempts_this_group), 'attempts_detail': attempts_this_group,
+                     'status': 'fetched'}
             checkpoint['groups'][key] = record
             fetched.append(record)
         elif not attempts_this_group and cap_hit:
@@ -271,7 +400,8 @@ def main() -> None:
         raise FileNotFoundError(f'Run select_weather_sample_expanded.py --name {args.name} first')
 
     selection = pd.read_csv(selection_path)
-    mapping = pd.read_csv(out / f'{args.mapping_name}_mapping_table.csv').set_index('iata')
+    mapping_path = out / f'{args.mapping_name}_mapping_table.csv'
+    mapping = pd.read_csv(mapping_path).set_index('iata')
 
     selection['prediction_at'] = compute_prediction_at(selection)
     unresolved = selection.loc[selection.prediction_at.isna()]
@@ -295,11 +425,22 @@ def main() -> None:
              f'cumulative_bytes={checkpoint["bytes_used"]} '
              f'cumulative_seconds={checkpoint["seconds_used"]:.0f}', flush=True)
 
+    plan_fingerprint = compute_plan_fingerprint(
+        digest(selection_path), digest(mapping_path), groups,
+        {'lookback_hours': LOOKBACK_HOURS, 'lookahead_hours': LOOKAHEAD_HOURS,
+         'max_requests': args.max_requests, 'max_bytes': args.max_bytes, 'max_seconds': args.max_seconds,
+         'max_attempts_per_group': MAX_ATTEMPTS_PER_GROUP,
+         'subprocess_termination_grace_seconds': SUBPROCESS_TERMINATION_GRACE_SECONDS,
+         'success_pause_seconds': SUCCESS_PAUSE_SECONDS})
+    verify_plan_fingerprint(checkpoint, plan_fingerprint, name=args.name)
+
     result = execute_with_caps(
         planned, groups, max_requests=args.max_requests, max_bytes=args.max_bytes,
         max_seconds=args.max_seconds, cache_exists_fn=validate_cached_window,
         attempt_fn=fetch_attempt, digest_fn=digest, now_fn=time.monotonic,
-        checkpoint=checkpoint, checkpoint_path=checkpoint_path, sleep_fn=time.sleep)
+        checkpoint=checkpoint, checkpoint_path=checkpoint_path, sleep_fn=time.sleep,
+        attempt_overhead_seconds=SUBPROCESS_TERMINATION_GRACE_SECONDS,
+        success_pause_seconds=SUCCESS_PAUSE_SECONDS)
     fetched, skipped_cap, failed = result['fetched'], result['skipped_cap'], result['failed']
 
     selection.to_csv(out / f'{args.name}_selection_with_prediction_at.csv', index=False)
@@ -308,7 +449,10 @@ def main() -> None:
         'code_sha256': hashlib.sha256(
             Path(__file__).read_bytes().replace(b'\r\n', b'\n')).hexdigest(),
         'caps': {'max_requests': args.max_requests, 'max_bytes': args.max_bytes,
-                'max_seconds': args.max_seconds},
+                'max_seconds': args.max_seconds,
+                'subprocess_termination_grace_seconds': SUBPROCESS_TERMINATION_GRACE_SECONDS,
+                'success_pause_seconds': SUCCESS_PAUSE_SECONDS},
+        'plan_fingerprint': plan_fingerprint,
         'resumed_from_checkpoint': resuming,
         'planned_station_day_groups': len(planned),
         'fetched_groups': len(fetched), 'skipped_due_to_cap': len(skipped_cap),
@@ -342,6 +486,35 @@ def main() -> None:
             'Cache reuse validates the cached file\'s schema/station and, when the checkpoint already '
             'recorded a hash for that group, its content hash too; a mismatch raises rather than '
             'silently overwriting or trusting unverified existing evidence.',
+            'A group already marked fetched in the checkpoint is RE-validated on every resume, not '
+            'trusted blindly: a deleted/corrupted cache file, tampered content, or a changed query '
+            'window for the same station/day all raise explicitly instead of silently re-fetching or '
+            'keeping stale evidence.',
+            'plan_fingerprint ties this checkpoint to the exact input selection file, mapping table, '
+            'normalized per-(station, day) request windows, and request options (caps, padding hours, '
+            'grace/pause seconds) it was built from; resuming the same --name after any of those '
+            'change raises rather than silently mixing incompatible evidence.',
+            'The request-budget unit for each HTTP attempt is reserved and persisted BEFORE the '
+            'network call, not after; an attempt interrupted by a process crash is never re-issued as '
+            'a free retry on resume, and its unknown byte/time cost is charged conservatively '
+            '(unmeasured bytes, and the full reserved timeout added to elapsed time) rather than '
+            'assumed to be zero.',
+            'Exact-once delivery of a network request is never claimed: an interrupted attempt\'s true '
+            'remote outcome may be unknown (it could have succeeded or failed on the server side before '
+            'the process died); only the budget accounting and evidence-preservation guarantees above '
+            'are made.',
+            'Each attempt\'s bounded timeout reserves subprocess_termination_grace_seconds on top of '
+            'the nominal timeout (matching fetch_attempt\'s underlying subprocess kill grace), so a '
+            'single attempt\'s worst-case wall time cannot overshoot max_seconds; when the remaining '
+            'budget cannot cover even that reserved grace, collection stops rather than attempting a '
+            'request it cannot safely bound.',
+            'success_pause_seconds is applied (and charged against max_seconds) after every genuinely '
+            'new network fetch, not after a cache hit, so this path is polite to the provider between '
+            'successive real requests the same way fetch_weather_sample.py\'s fetch_window already is.',
+            'Per-attempt logs (attempts_detail) are kept on the group\'s own record for both failed AND '
+            'successful groups; only the separate rolling attempts_log (capped at '
+            f'{ATTEMPT_LOG_LIMIT} entries, a cross-group activity feed) is truncated -- truncating it '
+            'never erases the per-group evidence that cumulative_* is accounted from.',
         ],
     }
     (out / f'{args.name}_fetch_manifest.json').write_text(json.dumps(manifest, indent=2, default=str))

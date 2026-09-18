@@ -1,11 +1,15 @@
+import json
 from pathlib import Path
 
 import pandas as pd
 import pytest
 
-from notebooks.fetch_weather_sample_expanded import (build_station_day_groups, execute_with_caps,
+from notebooks.fetch_weather_sample_expanded import (LOOKAHEAD_HOURS, LOOKBACK_HOURS,
+                                                      build_station_day_groups,
+                                                      compute_plan_fingerprint, execute_with_caps,
                                                       load_checkpoint, new_checkpoint_state,
-                                                      save_checkpoint)
+                                                      recover_interrupted_attempts, save_checkpoint,
+                                                      verify_plan_fingerprint)
 from notebooks.join_weather_sample import load_observations
 from notebooks.join_weather_sample_expanded import build_requests
 from src.weather import join_weather_asof
@@ -261,10 +265,11 @@ def test_group_cut_off_by_cap_is_retried_first_on_resume_via_cache():
     first, checkpoint = run(planned, groups, attempt_fn, max_requests=1, max_bytes=10**9, max_seconds=10**9)
     assert len(first['skipped_cap']) == 1  # B was cut off before any attempt
 
-    # on resume, B is now satisfiable purely from cache (e.g. another process fetched it meanwhile)
+    # on resume, B is now satisfiable purely from cache (e.g. another process fetched it meanwhile);
+    # A's own already-fetched cache file is also still there and unchanged, matching a real filesystem
     attempt_fn2 = make_attempt_fn({})
     second, checkpoint = run(planned, groups, attempt_fn2, checkpoint=checkpoint,
-                             cache_exists_fn=lambda s, a, b: Path(f'/fake/{s}.csv') if s == 'B' else None,
+                             cache_exists_fn=lambda s, a, b: Path(f'/fake/{s}.csv'),
                              max_requests=10**9, max_bytes=10**9, max_seconds=10**9)
     assert len(second['fetched']) == 2
     assert attempt_fn2.calls == []  # B was served from cache, never re-attempted over the network
@@ -408,3 +413,318 @@ def test_build_requests_with_no_resolvable_prediction_at_produces_reasoned_missi
     assert len(joined) == 2
     assert joined.observed_at.isna().all()
     assert dropped == 0
+
+
+# ---- resumed "fetched" checkpoints are RE-VALIDATED, not trusted blindly ----
+
+def _window_for(planned_key):
+    station, day = planned_key
+    ts = [pd.Timestamp(f'{day}T00:00Z')]
+    start = min(ts) - pd.Timedelta(hours=LOOKBACK_HOURS)
+    end = max(ts) + pd.Timedelta(hours=LOOKAHEAD_HOURS)
+    return start, end
+
+
+def test_resumed_fetched_checkpoint_raises_if_cache_file_deleted():
+    planned = [('A', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    start, end = _window_for(planned[0])
+    checkpoint = new_checkpoint_state()
+    checkpoint['groups']['A|2019-01-01'] = {
+        'station': 'A', 'day': '2019-01-01', 'status': 'fetched', 'sha256': 'abc',
+        'window_start_utc': start.isoformat(), 'window_end_utc': end.isoformat(),
+        'cache_file': '/fake/gone.csv'}
+    with pytest.raises(ValueError, match='missing or fails schema validation'):
+        execute_with_caps(planned, groups, max_requests=10, max_bytes=10**9, max_seconds=10**9,
+                          cache_exists_fn=lambda s, a, b: None,  # simulates a deleted/invalid cache file
+                          attempt_fn=make_attempt_fn({}), digest_fn=lambda p: 'abc',
+                          now_fn=fake_clock(), checkpoint=checkpoint)
+
+
+def test_resumed_fetched_checkpoint_raises_if_content_tampered():
+    planned = [('A', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    start, end = _window_for(planned[0])
+    checkpoint = new_checkpoint_state()
+    checkpoint['groups']['A|2019-01-01'] = {
+        'station': 'A', 'day': '2019-01-01', 'status': 'fetched', 'sha256': 'recorded-hash',
+        'window_start_utc': start.isoformat(), 'window_end_utc': end.isoformat(),
+        'cache_file': '/fake/A.csv'}
+    with pytest.raises(ValueError, match='no longer matches'):
+        execute_with_caps(planned, groups, max_requests=10, max_bytes=10**9, max_seconds=10**9,
+                          cache_exists_fn=lambda s, a, b: Path('/fake/A.csv'),  # file still there, still parses
+                          attempt_fn=make_attempt_fn({}), digest_fn=lambda p: 'tampered-hash',
+                          now_fn=fake_clock(), checkpoint=checkpoint)
+
+
+def test_resumed_fetched_checkpoint_raises_if_query_window_changed():
+    """The SAME station/day key but a different query start/end (e.g. the
+    underlying selection changed) must never be treated as the same
+    completed work, even though the cache file itself is intact."""
+    planned = [('A', '2019-01-01')]
+    groups = one_ts_groups(planned)  # implies a DIFFERENT window than the one recorded below
+    checkpoint = new_checkpoint_state()
+    checkpoint['groups']['A|2019-01-01'] = {
+        'station': 'A', 'day': '2019-01-01', 'status': 'fetched', 'sha256': 'abc',
+        'window_start_utc': '2019-01-01T00:00:00+00:00', 'window_end_utc': '2019-01-01T01:00:00+00:00',
+        'cache_file': '/fake/A.csv'}
+    with pytest.raises(ValueError, match='different window'):
+        execute_with_caps(planned, groups, max_requests=10, max_bytes=10**9, max_seconds=10**9,
+                          cache_exists_fn=lambda s, a, b: Path('/fake/A.csv'), attempt_fn=make_attempt_fn({}),
+                          digest_fn=lambda p: 'abc', now_fn=fake_clock(), checkpoint=checkpoint)
+
+
+def test_resumed_fetched_checkpoint_with_matching_window_and_hash_is_trusted():
+    """The negative control: an intact, unchanged cache under the SAME window
+    resumes cleanly without any error and without spending any budget."""
+    planned = [('A', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    start, end = _window_for(planned[0])
+    checkpoint = new_checkpoint_state()
+    checkpoint['groups']['A|2019-01-01'] = {
+        'station': 'A', 'day': '2019-01-01', 'status': 'fetched', 'sha256': 'abc',
+        'window_start_utc': start.isoformat(), 'window_end_utc': end.isoformat(),
+        'cache_file': '/fake/A.csv'}
+    result = execute_with_caps(planned, groups, max_requests=10, max_bytes=10**9, max_seconds=10**9,
+                               cache_exists_fn=lambda s, a, b: Path('/fake/A.csv'), attempt_fn=make_attempt_fn({}),
+                               digest_fn=lambda p: 'abc', now_fn=fake_clock(), checkpoint=checkpoint)
+    assert len(result['fetched']) == 1
+    assert result['cumulative_requests'] == 0
+
+
+# ---- plan fingerprint: ties a checkpoint to its input selection/mapping/options ----
+
+def test_plan_fingerprint_changes_when_selection_or_mapping_or_options_change():
+    groups = one_ts_groups([('A', '2019-01-01')])
+    base = compute_plan_fingerprint('sel-A', 'map-A', groups, {'k': 1})
+    assert compute_plan_fingerprint('sel-B', 'map-A', groups, {'k': 1}) != base
+    assert compute_plan_fingerprint('sel-A', 'map-B', groups, {'k': 1}) != base
+    assert compute_plan_fingerprint('sel-A', 'map-A', groups, {'k': 2}) != base
+    assert compute_plan_fingerprint('sel-A', 'map-A', groups, {'k': 1}) == base
+
+
+def test_plan_fingerprint_changes_when_the_normalized_request_plan_changes():
+    """Same selection/mapping/options hash, but a different actual request
+    window for the same station/day, must still change the fingerprint."""
+    groups_a = {('A', '2019-01-01'): [pd.Timestamp('2019-01-01T09:00Z')]}
+    groups_b = {('A', '2019-01-01'): [pd.Timestamp('2019-01-01T15:00Z')]}
+    fp_a = compute_plan_fingerprint('sel', 'map', groups_a, {})
+    fp_b = compute_plan_fingerprint('sel', 'map', groups_b, {})
+    assert fp_a != fp_b
+
+
+def test_verify_plan_fingerprint_raises_on_mismatch_and_records_when_absent():
+    checkpoint = new_checkpoint_state()
+    verify_plan_fingerprint(checkpoint, 'fp1', name='some_run')
+    assert checkpoint['plan_fingerprint'] == 'fp1'
+    verify_plan_fingerprint(checkpoint, 'fp1', name='some_run')  # same plan again: no error
+    with pytest.raises(ValueError, match='different input selection/mapping/request plan'):
+        verify_plan_fingerprint(checkpoint, 'fp2', name='some_run')
+    assert checkpoint['plan_fingerprint'] == 'fp1'  # a rejected mismatch never overwrites the recorded one
+
+
+# ---- budget/interrupt boundaries: reservation-before-call, conservative crash recovery ----
+
+def test_request_budget_is_reserved_before_the_network_call_not_after():
+    """A crash that happens mid-attempt (simulated here by an attempt_fn that
+    raises) must still leave the request charged in the checkpoint, since it
+    was reserved and persisted BEFORE attempt_fn was ever called."""
+    planned = [('A', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    checkpoint = new_checkpoint_state()
+
+    def crashing_attempt_fn(station, start, end, *, timeout, max_bytes_remaining):
+        raise RuntimeError('simulated process crash mid-attempt')
+
+    with pytest.raises(RuntimeError):
+        execute_with_caps(planned, groups, max_requests=10, max_bytes=10**9, max_seconds=10**9,
+                          cache_exists_fn=lambda s, a, b: None, attempt_fn=crashing_attempt_fn,
+                          digest_fn=lambda p: 'x', now_fn=fake_clock(), checkpoint=checkpoint)
+    assert checkpoint['requests_used'] == 1  # charged before the call, survives the crash
+    assert checkpoint['groups']['A|2019-01-01']['in_flight'] is not None
+
+
+def test_recover_interrupted_attempts_charges_conservative_time_and_marks_unmeasured():
+    state = new_checkpoint_state()
+    state['groups']['A|2019-01-01'] = {'status': 'in_progress', 'attempts_detail': [],
+                                       'in_flight': {'attempt': 1, 'timeout': 12.5}}
+    recover_interrupted_attempts(state)
+    rec = state['groups']['A|2019-01-01']
+    assert rec['status'] == 'in_progress'
+    assert 'in_flight' not in rec
+    assert len(rec['attempts_detail']) == 1
+    assert rec['attempts_detail'][0]['success'] is False
+    assert rec['attempts_detail'][0]['bytes_received'] is None
+    assert state['unmeasured_byte_attempts'] == 1
+    assert state['seconds_used'] == 12.5  # conservative upper bound, not left at 0
+
+
+def test_recover_interrupted_attempts_is_a_noop_when_nothing_is_in_flight():
+    state = new_checkpoint_state()
+    state['groups']['A|2019-01-01'] = {'status': 'fetched', 'sha256': 'x'}
+    before = json.loads(json.dumps(state, default=str))
+    recover_interrupted_attempts(state)
+    assert state == before
+
+
+def test_load_checkpoint_recovers_an_in_flight_attempt_from_disk(tmp_path):
+    """End-to-end: a checkpoint saved mid-attempt (as save_checkpoint would
+    leave it if the process died right after the pre-call persist) is
+    recovered on load, and the recovered request is never re-issued as free
+    on the next run -- the group simply gets one more real attempt."""
+    checkpoint_path = tmp_path / 'ckpt.json'
+    crashed = new_checkpoint_state()
+    crashed['requests_used'] = 1
+    crashed['groups']['A|2019-01-01'] = {'status': 'in_progress', 'attempts_detail': [],
+                                         'in_flight': {'attempt': 1, 'timeout': 15.0}}
+    save_checkpoint(checkpoint_path, crashed)
+
+    resumed = load_checkpoint(checkpoint_path)
+    assert resumed['requests_used'] == 1  # the crashed reservation is preserved, not lost or reset
+    assert resumed['seconds_used'] == 15.0
+    assert resumed['unmeasured_byte_attempts'] == 1
+
+    planned = [('A', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    attempt_fn = make_attempt_fn({'A': [success()]})
+    result, checkpoint = run(planned, groups, attempt_fn, checkpoint=resumed,
+                             checkpoint_path=checkpoint_path, max_requests=10**9, max_bytes=10**9,
+                             max_seconds=10**9)
+    assert len(result['fetched']) == 1
+    assert result['fetched'][0]['attempts'] == 2  # the recovered interrupted attempt + this real one
+    assert result['cumulative_requests'] == 1 + 1  # the crashed attempt's charge is kept, plus the new one
+
+
+def test_timeout_is_never_inflated_above_remaining_seconds_even_when_below_one():
+    planned = [('A', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    seen = []
+
+    def attempt_fn(station, start, end, *, timeout, max_bytes_remaining):
+        seen.append(timeout)
+        return success()
+
+    checkpoint = new_checkpoint_state()
+    checkpoint['seconds_used'] = 19.7  # only 0.3s left of a 20s budget
+    run(planned, groups, attempt_fn, checkpoint=checkpoint, max_requests=10**9, max_bytes=10**9, max_seconds=20)
+    assert seen == [pytest.approx(0.3)]  # never bumped up to a 1.0s floor
+
+
+def test_attempt_overhead_reserves_worst_case_subprocess_grace_before_starting():
+    planned = [('A', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    attempt_fn = make_attempt_fn({'A': [success()]})
+    checkpoint = new_checkpoint_state()
+    checkpoint['seconds_used'] = 17.0  # 3.0s left of a 20s budget
+    result, checkpoint = run(planned, groups, attempt_fn, checkpoint=checkpoint,
+                             max_requests=10**9, max_bytes=10**9, max_seconds=20,
+                             attempt_overhead_seconds=5.0)  # bigger than what remains
+    assert result['fetched'] == []
+    assert result['skipped_cap'][0]['reason'].startswith('max_seconds')
+    assert attempt_fn.calls == []  # never attempted: not enough room for the worst-case overhead
+
+
+def test_attempt_overhead_zero_preserves_prior_exact_timeout_behavior():
+    """Regression guard for the default (attempt_overhead_seconds=0): the
+    pre-existing bound-by-remaining-time behavior is unchanged."""
+    planned = [('A', '2019-01-01'), ('B', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    state = {'t': 0.0}
+
+    def now():
+        return state['t']
+
+    seen_timeouts = []
+
+    def attempt_fn(station, start, end, *, timeout, max_bytes_remaining):
+        seen_timeouts.append(timeout)
+        state['t'] += timeout
+        return success()
+
+    run(planned, groups, attempt_fn, clock=now, max_requests=10**9, max_bytes=10**9, max_seconds=20,
+       default_attempt_timeout=15)
+    assert seen_timeouts == [15, 5]
+
+
+def test_success_pause_applies_after_a_new_fetch_and_counts_against_time_budget():
+    planned = [('A', '2019-01-01'), ('B', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    attempt_fn = make_attempt_fn({'A': [success()], 'B': [success()]})
+    sleeps = []
+    result, checkpoint = run(planned, groups, attempt_fn, sleep_fn=lambda s: sleeps.append(s),
+                             max_requests=10**9, max_bytes=10**9, max_seconds=10**9,
+                             success_pause_seconds=3.0)
+    assert sleeps == [3.0, 3.0]
+    assert checkpoint['seconds_used'] >= 6.0  # both pauses counted, not free
+
+
+def test_success_pause_not_applied_to_cache_hits():
+    planned = [('A', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    attempt_fn = make_attempt_fn({})
+    sleeps = []
+    result, checkpoint = run(planned, groups, attempt_fn, sleep_fn=lambda s: sleeps.append(s),
+                             cache_exists_fn=lambda s, a, b: Path(f'/fake/{s}.csv'),
+                             max_requests=10**9, max_bytes=10**9, max_seconds=10**9, success_pause_seconds=3.0)
+    assert sleeps == []
+
+
+def test_successful_fetch_record_preserves_per_attempt_log():
+    planned = [('A', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    attempt_fn = make_attempt_fn({'A': [failure(), success()]})
+    result, checkpoint = run(planned, groups, attempt_fn, max_requests=10**9, max_bytes=10**9, max_seconds=10**9)
+    detail = result['fetched'][0]['attempts_detail']
+    assert len(detail) == 2
+    assert detail[0]['success'] is False
+    assert detail[1]['success'] is True
+
+
+# ---- fetch_attempt: the in-transit size limit is min(per-request cap, remaining budget) ----
+
+def test_fetch_attempt_uses_min_of_per_request_cap_and_remaining_budget(tmp_path, monkeypatch):
+    from notebooks import fetch_weather_sample as mod
+    seen = {}
+
+    def fake_http_get_once(url, *, timeout, out_path, max_bytes=None):
+        seen['max_bytes'] = max_bytes
+        out_path.write_text('station,valid\nXXX,2019-01-01 00:00\n')
+        return {'success': True, 'bytes_received': out_path.stat().st_size, 'seconds': 0.1,
+               'returncode': 0, 'error': None, 'timed_out': False}
+
+    monkeypatch.setattr(mod, 'http_get_once', fake_http_get_once)
+    monkeypatch.setattr(mod, 'CACHE_DIR', tmp_path)
+    monkeypatch.setattr(mod, 'ROOT', tmp_path)
+    mod.fetch_attempt('XXX', pd.Timestamp('2019-01-01', tz='UTC'), pd.Timestamp('2019-01-02', tz='UTC'),
+                      timeout=5, max_bytes_remaining=100)  # far smaller than MAX_RESPONSE_BYTES
+    assert seen['max_bytes'] == 100  # min(MAX_RESPONSE_BYTES, 100) == 100, not the flat per-request constant
+
+
+def test_fetch_attempt_rejects_response_exceeding_the_tightened_remaining_budget(tmp_path, monkeypatch):
+    """A response bigger than the remaining OVERALL budget but smaller than
+    the flat per-request constant must still be rejected -- the two caps are
+    no longer checked inconsistently (curl cutoff vs. post-hoc validation)."""
+    from notebooks import fetch_weather_sample as mod
+
+    def fake_http_get_once(url, *, timeout, out_path, max_bytes=None):
+        out_path.write_text('x' * 150)
+        return {'success': True, 'bytes_received': 150, 'seconds': 0.1,
+               'returncode': 0, 'error': None, 'timed_out': False}
+
+    monkeypatch.setattr(mod, 'http_get_once', fake_http_get_once)
+    monkeypatch.setattr(mod, 'CACHE_DIR', tmp_path)
+    outcome = mod.fetch_attempt('XXX', pd.Timestamp('2019-01-01', tz='UTC'), pd.Timestamp('2019-01-02', tz='UTC'),
+                                timeout=5, max_bytes_remaining=100)
+    assert outcome['success'] is False
+    assert 'exceeds bounded size' in outcome['error']
+
+
+def test_fetch_attempt_refuses_to_start_with_no_remaining_byte_budget(tmp_path, monkeypatch):
+    from notebooks import fetch_weather_sample as mod
+    called = []
+    monkeypatch.setattr(mod, 'http_get_once', lambda *a, **k: called.append(1))
+    monkeypatch.setattr(mod, 'CACHE_DIR', tmp_path)
+    outcome = mod.fetch_attempt('XXX', pd.Timestamp('2019-01-01', tz='UTC'), pd.Timestamp('2019-01-02', tz='UTC'),
+                                timeout=5, max_bytes_remaining=0)
+    assert outcome['success'] is False
+    assert called == []  # no network call is made once the byte budget is already exhausted

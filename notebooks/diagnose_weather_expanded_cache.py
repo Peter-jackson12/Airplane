@@ -48,15 +48,79 @@ def age_percentiles(series: pd.Series) -> dict:
            'p75': float(q[0.75]), 'p90': float(q[0.90]), 'max': float(s.max())}
 
 
+def diagnose_stale_vs_unavailable_vs_absent(station_col: pd.Series, prediction_at: pd.Series,
+                                            obs: pd.DataFrame, latency_minutes: float,
+                                            max_age_minutes: float = 90) -> pd.Series:
+    """For rows that are collectible, resolved, not a collection failure, and
+    still unmatched, distinguishes WHY by looking at the actual cached
+    observations for that station -- ignoring the join's own availability and
+    max-age filters, to find the most recent report with observed_at <=
+    prediction_at:
+      - no report exists with observed_at <= prediction_at at all in the
+        cached window -> a genuine absence, not a latency or staleness issue.
+      - such a report exists but (observed_at + latency_minutes) >
+        prediction_at -> it exists and is not stale, but is not yet
+        AVAILABLE under this specific latency ASSUMPTION (a different, larger
+        assumed latency would still exclude it; a smaller one might not).
+      - such a report exists and is available under this latency, but its
+        age (prediction_at - observed_at) exceeds max_age_minutes -> genuinely
+        stale/aged out.
+    Lumping these into one "no report" bucket would blur an assumption
+    artifact (latency) with a real data-absence fact and a real staleness fact.
+    """
+    reason = pd.Series('no_report_observed_before_prediction_time', index=station_col.index, dtype=object)
+    valid = station_col.notna() & prediction_at.notna()
+    if not valid.any() or not len(obs):
+        return reason
+
+    # pd.merge_asof (like a regular merge) does NOT preserve the left frame's index in its output -- the
+    # original row labels are carried through as an explicit column instead, then restored via set_index
+    # after the merge, so alignment back into `reason` never depends on row order surviving the merge/sort.
+    req = pd.DataFrame({'station': station_col.loc[valid].astype(object),
+                        'prediction_at': prediction_at.loc[valid]}).reset_index(names='__orig_index')
+    obs_sorted = obs[['station', 'observed_at']].dropna().assign(
+        station=lambda d: d.station.astype(object)).sort_values('observed_at')
+    left = req.sort_values('prediction_at')
+    matched = pd.merge_asof(left, obs_sorted, by='station', left_on='prediction_at',
+                            right_on='observed_at', direction='backward').set_index('__orig_index')
+
+    has_candidate = matched.observed_at.notna()
+    observed_at = pd.to_datetime(matched.observed_at, utc=True)
+    pred = pd.to_datetime(matched.prediction_at, utc=True)
+    available_at = observed_at + pd.Timedelta(minutes=latency_minutes)
+    age_minutes = (pred - observed_at).dt.total_seconds() / 60
+    not_yet_available = has_candidate & (available_at > pred)
+    stale = has_candidate & ~not_yet_available & (age_minutes > max_age_minutes)
+    would_have_matched = has_candidate & ~not_yet_available & ~stale
+
+    out = pd.Series('no_report_observed_before_prediction_time', index=matched.index, dtype=object)
+    out[not_yet_available] = 'not_yet_available_under_latency_assumption'
+    out[stale] = 'stale_beyond_max_age'
+    # should never occur -- a candidate that is both available and within max_age should have matched
+    # in the join itself; surfaced explicitly rather than silently mislabeled as an absence
+    out[would_have_matched] = 'unexpected_unmatched_despite_available_report'
+    reason.loc[out.index] = out
+    return reason
+
+
 def classify_unmatched(row_matched: pd.Series, collectible: pd.Series, unresolved: pd.Series,
-                       failed_stations: set, station_col: pd.Series) -> pd.Series:
-    """Reasoned category for every request, not just a match/no-match bit."""
+                       failed_keys: set, station_col: pd.Series, day_col: pd.Series,
+                       prediction_at: pd.Series, obs: pd.DataFrame, latency_minutes: float) -> pd.Series:
+    """Reasoned category for every request, not just a match/no-match bit.
+    A collection failure is connected to the SPECIFIC (station, day) that
+    failed, not propagated to every row that happens to share the same
+    station on a different, successfully-collected day."""
     reason = pd.Series('matched', index=row_matched.index)
     reason[~collectible] = 'not_collectible_mapping'
     reason[unresolved & collectible] = 'unresolved_prediction_at'
-    never_attempted = collectible & ~unresolved & station_col.isin(failed_stations) & ~row_matched
+    station_day = pd.Series(list(zip(station_col, day_col)), index=row_matched.index)
+    never_attempted = collectible & ~unresolved & station_day.isin(failed_keys) & ~row_matched
     reason[never_attempted] = 'collection_failed_or_not_attempted'
-    reason[collectible & ~unresolved & ~row_matched & ~never_attempted] = 'no_report_within_max_age'
+    remaining = collectible & ~unresolved & ~row_matched & ~never_attempted
+    if remaining.any():
+        detailed = diagnose_stale_vs_unavailable_vs_absent(
+            station_col.loc[remaining], prediction_at.loc[remaining], obs, latency_minutes)
+        reason.loc[remaining] = detailed
     reason[row_matched] = 'matched'
     return reason
 
@@ -74,9 +138,21 @@ def main() -> None:
 
     selection = pd.read_csv(out / f'{args.name}_selection_with_prediction_at.csv')
     fetch_manifest = json.loads((out / f'{args.name}_fetch_manifest.json').read_text())
-    failed_stations = {f['station'] for f in fetch_manifest.get('failed', [])}
+    # connected to the SPECIFIC (station, day) that failed, not the station alone -- a failure on one
+    # day must not be propagated to every other, successfully-collected day for that same station
+    failed_keys = {(f['station'], f['day']) for f in fetch_manifest.get('failed', [])}
     unresolved = selection.prediction_at.isna()
     collectible = selection.collectible.astype(bool)
+
+    # ---- 0. load the ACTUAL cached observations once, reused for both the unmatched-reason
+    # diagnosis below and the field-quality section further down ----
+    cache_files = sorted({ROOT / e['cache_file'] for e in fetch_manifest['requests']})
+    obs_frames = [pd.read_csv(p, comment='#', na_values=['M'], keep_default_na=False) for p in cache_files]
+    obs = pd.concat(obs_frames, ignore_index=True) if obs_frames else pd.DataFrame(columns=WEATHER_FIELDS)
+    if {'station', 'valid'}.issubset(obs.columns):
+        obs_for_diag = obs.assign(observed_at=pd.to_datetime(obs['valid'], utc=True))[['station', 'observed_at']]
+    else:
+        obs_for_diag = pd.DataFrame(columns=['station', 'observed_at'])
 
     # ---- 1. denominators: fixed 300 vs collectible-only, side by side ----
     denominators = pd.DataFrame([{
@@ -91,6 +167,8 @@ def main() -> None:
     match_rows, age_rows, reason_rows, year_season_airport_rows = [], [], [], []
     for latency in LATENCIES:
         joined = pd.read_csv(ROOT / 'data/weather_probe' / f'{args.name}_joined' / f'joined_latency{latency}min.csv')
+        prediction_at = pd.to_datetime(joined.prediction_at, utc=True)
+        day_col = prediction_at.dt.strftime('%Y-%m-%d')
         for role in ('origin', 'destination'):
             matched = joined[f'{role}_observed_at'].notna()
             station_col = joined[f'{role}_station'] if f'{role}_station' in joined else pd.Series(
@@ -104,7 +182,8 @@ def main() -> None:
             })
             age_rows.append({'latency_minutes': latency, 'role': role,
                              **age_percentiles(joined[f'{role}_weather_age_minutes'])})
-            reason = classify_unmatched(matched, collectible, unresolved, failed_stations, station_col)
+            reason = classify_unmatched(matched, collectible, unresolved, failed_keys, station_col, day_col,
+                                        prediction_at, obs_for_diag, latency)
             for cat, count in reason.value_counts().items():
                 reason_rows.append({'latency_minutes': latency, 'role': role, 'reason': cat, 'rows': int(count)})
         both_matched = joined.origin_observed_at.notna() & joined.destination_observed_at.notna()
@@ -121,9 +200,6 @@ def main() -> None:
         out / f'{args.out_name}_diagnostic_year_season_airport.csv', index=False)
 
     # ---- 4. field-level missing/trace/quality flags on the ACTUAL cached observations ----
-    cache_files = sorted({ROOT / e['cache_file'] for e in fetch_manifest['requests']})
-    obs_frames = [pd.read_csv(p, comment='#', na_values=['M'], keep_default_na=False) for p in cache_files]
-    obs = pd.concat(obs_frames, ignore_index=True) if obs_frames else pd.DataFrame(columns=WEATHER_FIELDS)
     field_rows = []
     for field in WEATHER_FIELDS:
         if field not in obs.columns:
@@ -148,12 +224,18 @@ def main() -> None:
     field_quality.to_csv(out / f'{args.out_name}_diagnostic_field_quality.csv', index=False)
 
     # ---- 5. ID/row-count/order integrity across scenarios ----
+    # A failure here is a data-integrity precondition for every table already written above being
+    # comparable across scenarios; it is raised immediately, not recorded as a boolean and left for the
+    # manifest reader to notice a normal-looking exit.
     base_ids = selection.ID.tolist()
-    integrity_ok = True
     for latency in LATENCIES:
         joined = pd.read_csv(ROOT / 'data/weather_probe' / f'{args.name}_joined' / f'joined_latency{latency}min.csv')
-        if joined.ID.tolist() != base_ids or len(joined) != len(selection):
-            integrity_ok = False
+        if joined.ID.tolist() != base_ids:
+            raise ValueError(f'joined_latency{latency}min.csv row ID/order does not match the selection; '
+                             'refusing to report comparable-looking tables across scenarios')
+        if len(joined) != len(selection):
+            raise ValueError(f'joined_latency{latency}min.csv has {len(joined)} rows, expected {len(selection)}')
+    integrity_ok = True
 
     # ---- 6. refined collection-size estimate using REAL per-group window hours, not a flat per-request average ----
     manifest_scope = json.loads((out / f'{args.mapping_name}_scope_manifest.json').read_text()) \
@@ -247,10 +329,18 @@ def main() -> None:
             'This is a re-diagnosis of ALREADY-COLLECTED data (no new fetch, no new selection); it '
             'cannot recover information about requests that were never made.',
             'unmatched_reasons splits collectible-and-resolved-but-unmatched rows into '
-            '"collection_failed_or_not_attempted" (its station appears in the fetch manifest\'s failed '
-            'list) vs "no_report_within_max_age" (the station WAS queried successfully but no report '
-            'fell within the max_age window at that prediction_at) -- for this particular run, failed '
-            'was empty, so any unmatched rows here are the latter category, not a collection failure.',
+            '"collection_failed_or_not_attempted" (that SPECIFIC (station, day) appears in the fetch '
+            'manifest\'s failed list -- a failure is never propagated to other, successfully-collected '
+            'days for the same station), then, among the rest, three further categories computed by '
+            'looking at the actual cached observations rather than only the join output: '
+            '"no_report_observed_before_prediction_time" (no report at all with observed_at <= '
+            'prediction_at exists in the cache for that station), '
+            '"not_yet_available_under_latency_assumption" (a report DOES exist and is not stale, but '
+            'observed_at + this scenario\'s assumed latency is still after prediction_at -- an artifact '
+            'of the latency ASSUMPTION, not a fact about data availability or age), and '
+            '"stale_beyond_max_age" (a report exists and is available under this latency, but its age '
+            'exceeds the 90-minute cap). For this particular run, failed was empty, so no unmatched row '
+            'here is a collection failure.',
             'trace_T_values counts IEM\'s literal "T" (trace precipitation) encoding in p01i, distinct '
             'from "M" (missing) -- neither is a numeric 0, and a feature pipeline treating "T" as missing '
             'or as 0.0 would be making two different, unverified modeling choices.',

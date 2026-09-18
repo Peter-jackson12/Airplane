@@ -2,7 +2,7 @@
 
 **이 README가 프로젝트 전체 설명과 최신 상태의 기준 문서입니다.** 발표는 1~6절 순서로 진행하고, 세부 수치·실행 코드는 마지막 문서 안내에서 확인할 수 있습니다.
 
-작성: Peter-jackson12 TF · 갱신: 2026-09-18 · 문서 버전: v0.17
+작성: Peter-jackson12 TF · 갱신: 2026-09-18 · 문서 버전: v0.18
 
 > **현재 결론:** 불확실한 결측 대치와 시간 피처의 의미를 바로잡고, 검증 라벨이 모델 선택에 유입되지 않도록 파이프라인을 수정했습니다. P4/P6 및 개별 변경 조건을 전체 데이터에서 3시드로 재학습한 결과, 새 전처리의 성능 향상은 확인되지 않았습니다. 확률 보정기를 outer-train 내부에서 적합해 독립 outer-valid에서 비교한 결과, 확률의 계통 오차는 줄었지만 분류 성능(Macro F1)의 향상은 확인되지 않았습니다. 데이터 처리의 타당성, 확률의 정확성, 분류 성능은 각각 따로 평가합니다.
 
@@ -21,7 +21,8 @@
 | 행별 날짜 귀속 규칙 고정·적용 | 2018·2019년 Marketing Carrier 12개월 전체 대조 기반, 완전 지문 706,759행(70.68%) 채택·나머지 293,241행 보류 |
 | 예측 시점·날씨 가용성 규칙 고정·검증 | 예정 출발 60분 전 계약 고정, 21행 경계 검증(20/21 결합) + 375개 공항 매핑·수집 범위 산정 + 300행 확대 표본 실수집·지연 민감도 검증(수집 가능 271행 중 10분 가정 기준 99~100% 결합) |
 | 확대 검증 구현 결함·증거 과장·집계 오류 수정 | 수집 예산·재개, 결합 전 매핑 게이팅, 매핑 등급-역사적 유효성 분리, 300행 선정 편향, 기존 캐시 재진단·비용 재추정을 코드·서술로 수정(298개 테스트) |
-| 미완료·범위 밖 | 독립 미래 테스트, 최종 모델 서빙, 전체 Phase의 최신 프로토콜 성능 비교, 706,759행 전체 날씨 결합·재학습, 355개 공항 공식 자료 기반 역사적 신원 확인 |
+| 재개 검증·예산 경계 마무리, 실제 캐시 재결합, 수집 범위 재산정 | 체크포인트 재검증·`plan_fingerprint`·요청 사전 예약, 21/300행 실제 재결합 비교(21행 완전 동일, 300행 의미 차이 0건), station별 구간 병합·차감 기반 재산정(531~1,049MB), 미결합 사유 3분리(323개 테스트) |
+| 미완료·범위 밖 | 독립 미래 테스트, 최종 모델 서빙, 전체 Phase의 최신 프로토콜 성능 비교, 706,759행 전체 날씨 결합·재학습, 355개 공항 공식 자료 기반 역사적 신원 확인, 새 stratafix 표본 실제 수집 |
 
 **목차:** [1. 목적](#1-목적과문제정의) · [2. 데이터](#2-데이터와분석범위) · [3. 전처리](#3-전처리결정과근거) · [4. 파이프라인](#4-현재파이프라인) · [5. 결과](#5-최신검증결과) · [6. 한계](#6-한계와다음단계) · [7. 재현](#7-코드구조와재현) · [8. 문서안내](#8-문서안내)
 
@@ -456,6 +457,56 @@ BTS는 IATA 코드가 시기에 따라 다른 항공사에 재배정될 수 있�
 
 이 수정 관련 새 테스트는 **36개**(항목별 상세 목록은 아래 재현 절)이며, 기존 262개에 더해 전체 회귀 테스트가 **298개 통과**합니다. 매핑 등급 분포·10분 조건 결합률(269/300, 271/300)·양쪽 confirmed_period 행 수(691,386)·2.18% 등 기존 21/300행 결과의 핵심 수치는 이번 수정 전후로 **바뀌지 않았음을 재확인**했습니다 — 바뀐 것은 구현의 견고성(재개·결합 차단·빈 입력 처리)과 서술의 정확성(매핑 증거 범위, 캐시 출처, 비용 산정 근거)이지 이미 보고된 결합률·매핑 등급 수치가 아닙니다.
 
+### 재개 검증·예산 경계 마무리, 실제 캐시 재결합, 수집 범위 재산정, 진단 표현 정리 (2026-09-18, 3차 검증)
+
+앞 절(2차 검증)이 남긴 두 가지 빈틈을 마무리했습니다. 새 날씨 다운로드·전체 결합·재학습·새 stratafix 표본 수집은 이번에도 하지 않았고, 기존 21행·300행 캐시와 manifest만 사용했습니다.
+
+**1) 재개 시 "이미 수집됨" 체크포인트를 더 이상 무조건 신뢰하지 않습니다.** 기존 `execute_with_caps`는 `prior.status == 'fetched'`이면 캐시 파일을 다시 확인하지 않고 즉시 그 값을 썼습니다 — 캐시 파일이 지워지거나 변조돼도, 또는 선정·매핑이 바뀌어 같은 station/day에 다른 조회 구간이 필요해져도 감지되지 않았습니다. [notebooks/fetch_weather_sample_expanded.py](notebooks/fetch_weather_sample_expanded.py)를 고쳐, "fetched" 기록을 재사용하기 전에 매번 (a) 현재 계획의 조회 구간이 기록된 구간과 같은지, (b) 캐시 파일이 실제로 존재하고 스키마를 통과하는지, (c) 내용 해시가 기록과 일치하는지를 다시 확인합니다. 셋 중 하나라도 어긋나면 조용히 재수집하거나 기존 증거를 덮어쓰지 않고 예외로 중단합니다. 체크포인트 전체는 이제 입력 선정 파일·매핑 테이블·정규화된 station/day별 조회 구간·요청 옵션(패딩 시간, 상한, 유예·대기초)을 묶은 `plan_fingerprint`에 연결되어 있어, 같은 `--name`을 다른 계획으로 재개하면 즉시 중단됩니다. 캐시 파일 삭제·내용 변조·같은 station/day의 다른 조회 구간·바뀐 선정/매핑/옵션 네 가지 모두를 상태 변경 없이 재현하는 테스트를 추가했습니다.
+
+**2) 요청 예산을 네트워크 호출 "이전"에 예약합니다.** 기존 코드는 `attempt_fn` 반환 후에만 `requests_used`를 늘려, 요청 도중 프로세스가 죽으면 그 시도가 예산에서 빠질 수 있었습니다. 이제 매 시도 직전에 요청 수를 증가시키고 `in_flight` 표식과 함께 체크포인트를 원자적으로 저장한 뒤 호출합니다. 재개 시 `recover_interrupted_attempts`가 남아 있는 `in_flight` 표식을 찾아 "결과를 알 수 없는 시도 1회"로 확정합니다 — 이미 차감된 요청 수는 그대로 유지하고(공짜 재시도로 만들지 않음), 실제 걸린 시간을 복구할 수 없으므로 그 시도에 예약됐던 timeout 전체를 보수적으로 시간 예산에 더합니다. 바이트 역시 미측정으로 남기며 0으로 가정하지 않습니다. "정확히 한 번" 전달을 보장한다고 쓰지 않았습니다 — 죽은 시도가 실제로 서버에 도달했는지는 알 수 없고, 보장하는 것은 예산 회계와 증거 보존뿐입니다.
+- 남은 시간이 1초 미만이어도 더 이상 `max(1.0, remaining)`으로 늘리지 않습니다. 대신 `attempt_overhead_seconds`(subprocess의 강제 종료 유예, 기본값을 curl 경로의 5초로 지정)를 남은 시간에서 미리 빼, 한 시도의 최악 소요 시간이 `max_seconds`를 넘지 못하게 합니다.
+- 전송 중 크기 상한을 `min(요청당 MAX_RESPONSE_BYTES, 남은 전체 바이트)`로 통일했습니다 — 이전에는 curl의 `--max-filesize`는 남은 전체 바이트로, 사후 검증은 고정 2MB 상수로 서로 다른 기준을 썼습니다.
+- expanded 경로가 `fetch_attempt`를 직접 호출해 기존 `fetch_window`의 성공 후 대기(3초)를 건너뛰던 문제를 고쳐, 새로 성공한 요청마다 동일한 대기를 적용하고 그 시간도 예산에 포함시켰습니다(`success_pause_seconds`, 캐시 적중에는 적용 안 함).
+- 시도별 로그(`attempts_detail`)를 성공한 그룹의 최종 기록에도 남겨, 회전 로그(`attempts_log`, 최근 500건 절단)가 잘려도 그룹별 누적 회계의 근거가 사라지지 않게 했습니다.
+
+네트워크 없는 장애 주입 테스트로 요청 직전/도중 중단 후 재개, 남은 시간이 1초 미만인 경우, 요청당 크기 상한의 이중 기준 통일, 성공 후 대기의 예산 반영, 재개된 fetched 체크포인트의 4가지 불일치를 검증했습니다. `tests/test_weather_expanded_pipeline.py`에 **20개**, `tests/test_weather_expanded_diagnostics.py`에 **5개** 테스트를 추가해 전체 회귀 테스트가 298개에서 **323개 통과**로 늘었습니다.
+
+**3) 수정된 코드로 기존 21행·300행 캐시를 실제로 다시 결합해 비교했습니다.** `diagnose_weather_expanded_cache.py`의 재집계는 이미 결합된 CSV를 다시 읽을 뿐, 수정된 `src/weather.py`·`build_requests`가 실제 데이터에서 같은 결과를 낸다는 증거가 아니었습니다. 새 [notebooks/reconcile_weather_cache_recombination.py](notebooks/reconcile_weather_cache_recombination.py)가 `baseline_recovery_v2_weather_recombination_20260918` 실행명으로:
+- 21행·300행의 캐시 파일과 기존 결합 결과 CSV의 해시를 전부 재확인(579건, 실패 시 즉시 중단)
+- `subprocess.run`·`urllib.request.urlopen`을 감시해 네트워크 함수가 호출되면 즉시 실패하도록 구성한 뒤, 캐시만으로 21행을 재결합하고 300행을 0·10·30·60분 네 조건 모두 재결합
+- 새 결과를 원본 결합 코드와 동일한 `to_csv`/`read_csv` 왕복을 거쳐 바이트 단위로 비교하고, 차이가 있는 열만 정규화(시각→UTC, 수치→허용오차 비교)해 포맷 차이와 의미 차이를 분리
+
+**21행 표본은 원본과 바이트 단위로 완전히 동일했습니다.** 300행 확대 표본은 네 조건 전부에서 원본과 바이트가 달랐지만, 실제 열별 비교 결과 **날씨 값·관측 시각·관측 나이·결합 여부에는 의미 차이가 전혀 없었습니다.** 유일한 의미 차이는 `origin_station`/`destination_station` 열로, 수집 불가(매핑 미확인 등) 29행에서 원본(2차 검증 이전 코드로 만들어진 커밋된 CSV)은 실제 관측소 코드를 잘못 채운 채였고, 수정된 코드는 이를 올바르게 결측으로 둡니다 — 이는 2차 검증에서 고친 결함(수집 불가 행에 station을 채우지 않도록 한 변경)이 실제 데이터에서도 그대로 작동함을 보여주는 **의도된** 차이이며 회귀가 아닙니다. 이 29행 자체가 실제로 우연히 결합됐는지도 함께 검증했으나(같은 관측소·시각에 진짜 관측이 있었다면 결합됐을 것), 이번 캐시에서는 해당 29행의 관측 시각·나이 열 모두 원본·재결합 양쪽에서 결측으로 일치해 **우연한 오결합은 발생하지 않았습니다.** 나머지 raw 텍스트 차이(예: `not_collectible_reason`, 관측 나이 등 일부 결측 표현)는 개별 파일을 독립적으로 CSV 왕복하며 pandas가 결측값을 다르게 문자열화한 포맷 차이로 확인했고 의미 차이는 0건입니다. [비교 결과](output/baseline_recovery_v2_weather_recombination_20260918_reconciliation_comparisons.json), [실행 manifest](output/baseline_recovery_v2_weather_recombination_20260918_reconciliation_manifest.json), [재현 코드](notebooks/reconcile_weather_cache_recombination.py)
+
+**뜻하는 것과 뜻하지 않는 것.** 이번 재결합은 이미 캐시된 574개 요청에 대해서만 수정 코드를 다시 실행한 것이며, 전체 706,759행 결합이나 새 네트워크 수집이 아닙니다. 269/300·271/300 등 기존에 보고된 10분 조건 결합 수치는 그대로 유효합니다.
+
+**4) 전체 조회 구간을 실측 병합·차감 기준으로 다시 산정했습니다.** 기존 348MB/368MB 추정식 `(표본 총 바이트/표본 총 시간) × (표본 총 시간/표본 그룹 수) × 전체 그룹 수`는 대수적으로 "표본 평균 바이트/그룹 × 전체 그룹 수"와 같아, 짧은 창(21행)과 긴 창(전체)의 차이를 실제로 풀어낸 적이 없습니다. 새 [notebooks/scope_weather_collection_refined.py](notebooks/scope_weather_collection_refined.py)가 `baseline_recovery_v2_weather_scope_refined_20260918` 실행명으로 다음을 실측·계산합니다.
+
+| 분모 | 행 수 |
+|---|---:|
+| 전체 채택 행 | 706,759 |
+| 매핑 자격 충족(양쪽 confirmed_period) | 691,386 |
+| UTC 시각까지 해결됨(수집 대상) | 691,385 |
+
+이 691,385행에서 station별로 필요한 고정 패딩 구간(`prediction_at`−6시간 ~ +2시간)을 개별로 나열한 뒤 **station별로 겹치는 구간을 병합**했습니다.
+
+| 구간 | 시간 합계 |
+|---|---:|
+| 원래(패딩 그대로, 병합 전) | 11,062,160시간 |
+| station별 합집합(병합 후) | 2,206,880.1시간 |
+| 기존 21행·300행 캐시로 이미 충족(구간 실측 차감) | 4,645.0시간 |
+| **신규로 필요한 구간** | **2,202,235.1시간** |
+
+캐시 충족분은 "같은 station/day 키가 있으면 그날 전체가 캐시됐다"고 가정하지 않고, 기존 fetch manifest에 기록된 실제 `window_start_utc`~`window_end_utc`와의 **실제 겹침**만큼만 뺐습니다(구간 차감, 키 매칭 아님). 신규 필요 구간을 IEM 요청 하나의 실질 상한(`MAX_RESPONSE_BYTES` 2MB, 실측 관측소·시간당 바이트의 중앙값 기준 요청당 최대 약 7,392시간)에 맞춰 분할하면 **요청 132,783건**이 필요합니다(기존의 "station-day 1건당 1요청" 가정 142,574건과 다른 값이며, 병합 덕분에 하루 단위로 쪼개지 않는 만큼 줄고 초장기 병합 구간의 분할만큼 늘어난 순효과입니다).
+
+바이트는 두 기존 실행(21행+300행)의 실측 574개 그룹(30분 미만인 극단값 제외) bytes/시간 비율의 p10~p90 범위를 신규 필요 시간에 곱해 **약 531MB(p10)~1,049MB(p90), 중앙값 약 596MB**로 제시합니다 — 이전 348MB/368MB보다 큰 범위이며, 새로 필요한 station 355곳 중 **185곳은 이번 캐시에 실측 표본이 전혀 없어** 전체 station 공통 비율로 외삽한 값이라는 한계를 그대로 남깁니다. 디스크 원본 바이트(관측 행당 약 258.7바이트)와 pandas 메모리 사용량(행당 약 771.3바이트)은 구분해 보고합니다. 실행 시간은 검증된 요청별 타이밍 로그가 이 규모에서 없으므로, 21행 프로브의 실측 3.21초/요청을 기준으로 대기 정책 미포함 시 약 42.6만 초, 성공 후 3초 대기를 포함하면 약 82.5만 초의 **가정 기반 범위**로만 남깁니다. 이 단계는 로컬 범위 산정이며 전체 날씨 수집을 수행하지 않았습니다. [재현 코드](notebooks/scope_weather_collection_refined.py), [station별 상세](output/baseline_recovery_v2_weather_scope_refined_20260918_refined_scope_per_station.csv), [실행 manifest](output/baseline_recovery_v2_weather_scope_refined_20260918_refined_scope_manifest.json)
+
+**5) 진단 표현을 실제 데이터로 세분화했습니다.** 기존 `diagnose_weather_expanded_cache.py`의 `no_report_within_max_age`는 관측이 없는 경우와 지연 가정상 아직 미가용인 경우를 한 항목에 섞었고, 수집 실패도 station 단위로만 연결해 다른 날짜까지 실패로 몰 위험이 있었습니다. 두 가지를 고쳤습니다.
+- 실패는 이제 `(station, day)` 단위로만 연결됩니다 — 같은 station의 다른(성공한) 날짜까지 실패로 전파되지 않습니다.
+- 나머지 미결합 행은 실제 캐시 관측을 다시 조회해 **관측 존재·가용 시각·관측 나이**를 확인 후 세 가지로 분리합니다: `no_report_observed_before_prediction_time`(그 시각까지 보고 자체가 없음), `not_yet_available_under_latency_assumption`(보고는 있고 나이도 상한 이내지만, 이번 지연 가정으로 계산한 가용 시각이 예측 시점보다 늦음 — 가정의 산물), `stale_beyond_max_age`(보고는 가용하지만 나이가 90분을 넘음). 세 조건을 모두 만족하는데도 미결합인 경우는 `unexpected_unmatched_despite_available_report`로 별도 표시해(발생 시 코드 결함 신호) 조용히 다른 범주에 묻히지 않게 했습니다.
+
+새 실행명 `baseline_recovery_v2_weather_expanded_diagnostic_v2_20260918`으로 기존 300행 캐시를 재진단한 결과, 10분 조건에서 미결합 원인은 origin 2건 모두 `stale_beyond_max_age`(진짜 노후)였고, 60분 조건에서는 origin 115건·destination 113건이 `not_yet_available_under_latency_assumption`으로 재분류됐습니다 — 즉 지연을 늘릴수록 결합률이 떨어지는 원인은 대부분 데이터 부재가 아니라 지연 가정 자체임이 실측으로 확인됐습니다. `no_report_observed_before_prediction_time`과 `unexpected_unmatched_despite_available_report`는 0건이었습니다. 269/300·271/300 등 기존 10분 조건 결합 수치는 바뀌지 않았습니다. 데이터 정합성 검사(ID·행수·순서 일치)도 실패 시 더 이상 `False`만 기록하고 정상 종료하지 않고 즉시 예외를 던지도록 고쳤습니다. 매핑의 역사적 유효성 미완료, stratafix 표본 선정만 완료, 지연 가정 전부 미검증이라는 기존 경계는 그대로 유지하며, 이번에 공항 조사 범위를 추가로 넓히지 않았습니다. [세분화된 미결합 사유표](output/baseline_recovery_v2_weather_expanded_diagnostic_v2_20260918_diagnostic_unmatched_reasons.csv), [실행 manifest](output/baseline_recovery_v2_weather_expanded_diagnostic_v2_20260918_diagnostic_manifest.json)
+
 ## 3. 전처리 결정과 근거
 
 <a id="3-전처리결정과근거"></a>
@@ -664,7 +715,8 @@ P6_clean은 실제 지연 45,000행 중 **24,895행을 세 시드 모두에서 F
 - **예측 시점·날씨 가용성 규칙 고정과 소규모 실측 검증 — 완료.** 기본 계약을 **예정 출발 60분 전**으로 고정했고(성능을 보고 바꾸지 않음), `src/weather.py`의 기존 `local_hhmm_to_utc`/`join_weather_asof`를 **수정 없이** 재사용해 채택된 706,759행 중 8개 공항(6개 IANA 시간대)으로 제한한 21행 표본에 실제 IEM ASOS 관측을 결합했습니다. 20/21행이 출발·도착 양쪽에서 결합됐고, 나머지 1행(2019-11-03 LAS 01:40 출발)은 그 시각이 서머타임 종료로 실제 두 번 존재하는 시각이라 `local_hhmm_to_utc`의 기존 정책대로 `NaT`가 되어 날씨를 임의로 채우지 않고 결합에서 제외했습니다. 세부 내용은 아래 새 절에서 다룹니다.
 - **수집 범위 산정·매핑 검증·확대 표본 검증 — 완료(2026-09-18).** 706,759행 전체를 실제로 결합하기 전에 규모부터 쟀습니다 — 375개 공항 전부의 관측소 매핑을 IEM 공식 메타데이터로 검증(97.83%가 `confirmed_period`, 나머지는 시간대 충돌·미확인·기간 밖으로 구분), 전체 결합 시 필요한 관측소·일 조합 142,574개와 예상 규모(재추정 약 368MB, 아래 참고)를 실측값으로 추정했습니다. 그 다음 **300행 확대 표본**(341개 층, 8개가 아닌 375개 전체 공항 대상)을 결정적으로 선정해 실제 수집·결합했고(534개 관측소·일 조합, 275건 신규 요청, 약 690KB, 실패 0건), 0·10·30·60분 네 가지 지연 가정으로 민감도까지 비교했습니다(10분 기준 수집 가능 271행 중 출발 99.26%·도착 100% 결합, 60분 가정에서는 관측 나이 상한에 걸려 56~58%로 떨어짐). 어떤 지연값도 "맞는 값"으로 선택하지 않았습니다.
 - **확대 검증의 구현 결함·증거 과장·집계 오류 수정 — 완료(2026-09-18, 2차 검증).** 전체 수집 전에 위 두 항목의 구현을 다시 검토했습니다: 수집 한도·재개 로직이 HTTP 시도가 아니라 그룹 단위로만 예산을 셌던 결함, 결합 전 매핑 자격을 사후 assertion으로만 걸러 우연한 오결합 위험이 있던 결함, 매핑 등급이 위치·신원·이전 이력을 확인한 것처럼 읽힐 수 있던 서술, 300행 표본 선정이 알파벳 정렬 때문에 특정 연도·계절 지역이 통째로 빠지던 편향, 21행 실측치를 그대로 곱한 수집량 재추정의 한계를 각각 코드·서술로 고쳤습니다. 259건의 캐시 적중을 "21행과의 중복"이라 부르지 않고 출처 미확인으로 재정정했으며, 매핑 등급 분포·10분 조건 결합률(269/300, 271/300)·691,386행 등 기존 핵심 수치는 재확인 결과 바뀌지 않았습니다. 전체 회귀 테스트가 262개에서 **298개**로 늘었습니다. 세부는 위 2절의 새 소절과 아래 재현 절을 참고하세요.
-- **남은 것.** 채택된 706,759행 전체에 대한 날씨 실수집과 재학습은 이번에도 수행하지 않았습니다. **12개월을 모두 검사한 뒤 날짜 귀속을 보류한 293,241행**(결측 키 292,683행 + 완전 지문이지만 후보 연도 0개·2개인 558행)은 "검사하지 않은 행"이 아니라 "검사했지만 채택 조건을 충족하지 못해 보류한 행"입니다 — 미검사 월은 이제 없습니다. 매핑 미확인·시간대 충돌 15,373행(2.09%)은 원인을 먼저 해결해야 전체 결합 대상에 넣을 수 있습니다. 전체 결합 전에 이번 검증에서 확인한 경계 규칙(같은 컷오프, 동일 관측 나이 제한, DST 정책)을 그대로 확장 적용해야 합니다. **355개 `confirmed_period` 공항의 공식 자료 기반 역사적 신원(위치·동일 시설·이전 이력) 확인은 여전히 하지 않았습니다** — 이번에 20개 우선 조사 대상의 좌표거리·UTC 오프셋 동치성만 기존 캐시로 확인했습니다. **새 규칙으로 다시 선정한 300행 표본(`baseline_recovery_v2_weather_expanded_stratafix_20260918`)은 이번에 실제로 수집·결합하지 않았습니다** — 선정만 했고, 비교 기준은 여전히 기존 300행입니다. [기상 결합 재검토(2026-09-16)](output/weather_recovery_review.md), [달력 분석](notebooks/analyze_calendar_signature.py)
+- **재개 검증·예산 경계 마무리, 실제 캐시 재결합, 수집 범위 재산정, 진단 표현 정리 — 완료(2026-09-18, 3차 검증).** 2차 검증이 남긴 빈틈 두 가지를 닫았습니다. (1) 재개 시 "이미 수집됨" 체크포인트를 캐시 삭제·내용 변조·조회 구간 변경·`plan_fingerprint` 불일치에 대해 재검증하고, 요청 예산을 네트워크 호출 전에 예약해 중단된 시도를 공짜 재시도로 만들지 않으며, 남은 시간을 1초 미만에서도 부풀리지 않고, 요청당 크기 상한을 하나로 통일했습니다. (2) `diagnose_weather_expanded_cache.py`의 재집계만으로는 수정된 `src/weather.py`·`build_requests`가 실제 데이터에서 같은 결과를 낸다고 주장할 수 없었으므로, 기존 21행·300행 캐시를 수정된 코드로 실제 재결합해 원본과 비교했습니다 — **21행은 원본과 바이트 단위로 완전히 동일**했고, 300행은 수집 불가 29행의 station 표기(의도된 수정)만 다를 뿐 **날씨 값·결합 여부에는 의미 차이가 0건**이었습니다. 전체 조회 구간도 station별 실제 겹침 병합·차감으로 다시 산정해 **바이트 추정이 약 531~1,049MB(중앙값 약 596MB)로 상향**됐고(기존 348MB/368MB는 표본 평균 바이트 × 전체 그룹 수와 대수적으로 같은 식이었음을 확인), 미결합 사유도 "노후/미가용/부재"로 세분화했습니다. 회귀 테스트가 298개에서 **323개**로 늘었습니다. 세부는 위 2절의 새 소절을 참고하세요.
+- **남은 것.** 채택된 706,759행 전체에 대한 날씨 실수집과 재학습은 이번에도 수행하지 않았습니다. **12개월을 모두 검사한 뒤 날짜 귀속을 보류한 293,241행**(결측 키 292,683행 + 완전 지문이지만 후보 연도 0개·2개인 558행)은 "검사하지 않은 행"이 아니라 "검사했지만 채택 조건을 충족하지 못해 보류한 행"입니다 — 미검사 월은 이제 없습니다. 매핑 미확인·시간대 충돌 15,373행(2.09%)은 원인을 먼저 해결해야 전체 결합 대상에 넣을 수 있습니다. 전체 결합 전에 이번 검증에서 확인한 경계 규칙(같은 컷오프, 동일 관측 나이 제한, DST 정책)을 그대로 확장 적용해야 합니다. **355개 `confirmed_period` 공항의 공식 자료 기반 역사적 신원(위치·동일 시설·이전 이력) 확인은 여전히 하지 않았습니다** — 이번에 20개 우선 조사 대상의 좌표거리·UTC 오프셋 동치성만 기존 캐시로 확인했습니다. **새 규칙으로 다시 선정한 300행 표본(`baseline_recovery_v2_weather_expanded_stratafix_20260918`)은 이번에도 실제로 수집·결합하지 않았습니다** — 선정만 했고, 비교 기준은 여전히 기존 300행입니다. 신규로 필요한 구간(약 220만 station-시간)의 실제 수집도 이번 범위에서는 하지 않았습니다. [기상 결합 재검토(2026-09-16)](output/weather_recovery_review.md), [달력 분석](notebooks/analyze_calendar_signature.py)
 
 **다음 비교 설계(모델 재학습 없음, 설계만).** 날씨 유무 성능을 비교할 때는 다음을 지켜야 합니다.
 1. **같은 라벨 평가 행·같은 분할·같은 시드·같은 프로토콜**에서 비교합니다 — `src/cv.py`의 기존 nested grid, inner 경계 TE, outer-valid 채점 구조를 그대로 씁니다.
@@ -708,7 +760,9 @@ P6_clean은 실제 지연 45,000행 중 **24,895행을 세 시드 모두에서 F
 | `notebooks/select_weather_sample_expanded.py` | 연도·계절·지역/시간대·공항 규모로 층화한 300행 확대 표본 선정. `broad_inclusion_order`로 네 차원을 고르게 우선 포함 |
 | `notebooks/fetch_weather_sample_expanded.py` | 확대 표본의 관측소·일 조합을 요청·바이트·시간 상한 안에서 수집. HTTP 시도마다 예산을 차감하고 체크포인트로 재개 |
 | `notebooks/join_weather_sample_expanded.py` | 확대 표본을 0/10/30/60분 지연 가정 네 가지로 결합·민감도 비교. `build_requests`가 수집 불가 행을 결합 후보에서 사전 제외 |
-| `notebooks/diagnose_weather_expanded_cache.py` | 기존 300행 캐시·결합 결과만으로 분모·연령분포·미결합 사유·필드 품질·수집 규모를 재진단(새 수집 없음) |
+| `notebooks/diagnose_weather_expanded_cache.py` | 기존 300행 캐시·결합 결과만으로 분모·연령분포·미결합 사유(노후/미가용/부재 3분리)·필드 품질·수집 규모를 재진단(새 수집 없음) |
+| `notebooks/reconcile_weather_cache_recombination.py` | 기존 21행·300행 캐시를 수정된 `src/weather.py`·`join_weather_sample[_expanded].py`로 다시 결합해 원본과 열별로 비교(포맷 차이/의미 차이 분리, 네트워크 호출 시 실패하도록 감시) |
+| `notebooks/scope_weather_collection_refined.py` | station별 실제 조회 구간을 병합·기존 캐시로 차감해 신규 필요 구간·요청 수·바이트 범위를 재산정(표본 평균 곱 방식 대체) |
 | `notebooks/` | 재현 가능한 진단·실험 집계·실행 노트북 |
 | `tests/` | 정보 경계·전처리·저장 회귀 검사 |
 | `output/` | 실행 증거 및 작성 시점별 보고서 |
@@ -927,6 +981,24 @@ uv run --offline python -u notebooks/summarize_bts_marketing_months.py --name ba
 .venv/Scripts/python.exe -u -m pytest -q
 ```
 
+### 재개 검증·예산 경계, 실제 캐시 재결합, 수집 범위 재산정 (3차 검증)
+
+전부 기존 21행·300행 캐시와 매핑·귀속 결과만 사용하며 새 네트워크 수집이 없습니다(`uses_external_data: false`, 재결합 스크립트는 `subprocess.run`/`urllib.request.urlopen`을 감시해 네트워크 호출 시도 시 예외를 던집니다).
+
+```powershell
+.venv/Scripts/python.exe -u -m notebooks.reconcile_weather_cache_recombination --name baseline_recovery_v2_weather_recombination_20260918
+.venv/Scripts/python.exe -u -m notebooks.scope_weather_collection_refined --name baseline_recovery_v2_weather_scope_refined_20260918 --mapping-name baseline_recovery_v2_weather_scope_20260918
+.venv/Scripts/python.exe -u notebooks/diagnose_weather_expanded_cache.py --name baseline_recovery_v2_weather_expanded_20260918 --out-name baseline_recovery_v2_weather_expanded_diagnostic_v2_20260918 --mapping-name baseline_recovery_v2_weather_scope_20260918
+```
+
+기존 300행의 실제 재수집·재결합은 여전히 새 체크포인트·검증 코드로 다시 실행하지 않았습니다(캐시 574개와 기존 결합 결과 보존 목적) — 새 코드 경로 자체는 위 재결합 스크립트가 캐시만으로 실제로 호출해 검증하고, 아래 회귀 테스트가 별도로 커버합니다. 새 stratafix 표본(`baseline_recovery_v2_weather_expanded_stratafix_20260918`)의 실제 수집도 이번 범위에서 하지 않았습니다.
+
+이번 수정의 코드 검증은 위 298개에 **25개를 더한 323개 테스트 한 번의 실행에서 전부 통과**합니다. 추가 검사는 재개된 "fetched" 체크포인트의 캐시 삭제·내용 변조·조회 구간 변경 3가지 불일치 거부, `plan_fingerprint`가 선정·매핑·요청 옵션 변경을 감지, 네트워크 호출 전 요청 예산 사전 예약과 중단 시 재개(공짜 재시도 없음, 결과 불명 시도의 보수적 시간 계상), 남은 시간이 1초 미만이어도 부풀리지 않음, subprocess 종료 유예를 반영한 timeout 축소, 요청당 크기 상한의 이중 기준 통일, 성공 후 대기 정책과 예산 반영, 성공 그룹의 시도별 로그 보존, `(station, day)` 단위로만 연결된 수집 실패, 노후/미가용/부재 3분리 진단 함수를 포함합니다.
+
+```powershell
+.venv/Scripts/python.exe -u -m pytest -q
+```
+
 ### 오분류 기술 분석
 
 저장된 행별 OOF와 원본만 있으면 되고 재학습이 없습니다. 실행에는 로컬에 보관된 `output/<run>_seed<seed>_oof/*.csv.gz`가 필요하며, 파일 해시·ID·행 위치·정답·결측 플래그를 먼저 대조한 뒤 분석합니다.
@@ -974,6 +1046,9 @@ uv run --offline python -u notebooks/summarize_bts_marketing_months.py --name ba
 | 행별 날짜 귀속 규칙과 12개월 결과는 무엇인가 | [상태 집계](output/baseline_recovery_v2_row_date_attribution_20260918_status_summary.csv), [마스킹 진단](output/baseline_recovery_v2_row_date_attribution_20260918_masking_diagnostic.csv), [실행 manifest](output/baseline_recovery_v2_row_date_attribution_20260918_manifest.json), [재현 코드](notebooks/assign_row_dates.py) |
 | 날씨 결합 규칙을 어떻게 정의·검증했는가 | [표본 선정 manifest](output/baseline_recovery_v2_weather_sample_20260918_selection_manifest.json), [결합 manifest](output/baseline_recovery_v2_weather_sample_20260918_join_manifest.json), [결합 요약](output/baseline_recovery_v2_weather_sample_20260918_join_summary.csv), [재현 코드](notebooks/join_weather_sample.py) |
 | 전체 날씨 수집 범위·공항 매핑·확대 표본 결과는 무엇인가 | [매핑 manifest](output/baseline_recovery_v2_weather_scope_20260918_mapping_manifest.json), [범위 산정 manifest](output/baseline_recovery_v2_weather_scope_20260918_scope_manifest.json), [확대 표본 선정 manifest](output/baseline_recovery_v2_weather_expanded_20260918_selection_manifest.json), [확대 표본 결합 manifest](output/baseline_recovery_v2_weather_expanded_20260918_join_manifest.json), [지연 민감도](output/baseline_recovery_v2_weather_expanded_20260918_latency_sensitivity.csv), [재현 코드](notebooks/map_weather_stations.py) · [notebooks/scope_weather_collection.py](notebooks/scope_weather_collection.py) |
+| 수정 코드로 실제 재결합했을 때 원본과 같은가 | [비교 결과](output/baseline_recovery_v2_weather_recombination_20260918_reconciliation_comparisons.json), [실행 manifest](output/baseline_recovery_v2_weather_recombination_20260918_reconciliation_manifest.json), [재현 코드](notebooks/reconcile_weather_cache_recombination.py) |
+| 전체 조회 구간·바이트를 병합·차감 기준으로 다시 재면 얼마인가 | [station별 상세](output/baseline_recovery_v2_weather_scope_refined_20260918_refined_scope_per_station.csv), [실행 manifest](output/baseline_recovery_v2_weather_scope_refined_20260918_refined_scope_manifest.json), [재현 코드](notebooks/scope_weather_collection_refined.py) |
+| 미결합 사유가 노후·미가용·부재 중 무엇인가 | [세분화된 미결합 사유표](output/baseline_recovery_v2_weather_expanded_diagnostic_v2_20260918_diagnostic_unmatched_reasons.csv), [실행 manifest](output/baseline_recovery_v2_weather_expanded_diagnostic_v2_20260918_diagnostic_manifest.json), [재현 코드](notebooks/diagnose_weather_expanded_cache.py) |
 | 처음 전처리 문제를 어떻게 발견했는가 | [설명 노트북](notebooks/preprocessing_walkthrough.ipynb) — 수정 전 진단임에 유의 |
 
 ### 과거 계획과 진단 — 현행 성능 근거로 사용하지 않음

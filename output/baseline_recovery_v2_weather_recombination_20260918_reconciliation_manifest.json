@@ -1,0 +1,23 @@
+{
+  "name": "baseline_recovery_v2_weather_recombination_20260918",
+  "sample21_run": "baseline_recovery_v2_weather_sample_20260918",
+  "expanded300_run": "baseline_recovery_v2_weather_expanded_20260918",
+  "expanded300_mapping_run": "baseline_recovery_v2_weather_scope_20260918",
+  "code_sha256": "03c4c4843706902d015ca9a3e292ad738bfd43a3c7e980ed5fa226fcf3db555d",
+  "fits_any_model": false,
+  "uses_external_data": false,
+  "target_columns_used": [],
+  "network_guard_active": true,
+  "manifest_hash_checks_passed": 579,
+  "sample21_dropped_exact_duplicate_reports": 0,
+  "expanded300_dropped_exact_duplicate_reports": 0,
+  "comparisons_table": "output\\baseline_recovery_v2_weather_recombination_20260918_reconciliation_comparisons.json",
+  "all_scenarios_byte_identical_to_original": false,
+  "any_meaning_level_difference_found": true,
+  "characterization": "differs from the original with at least one MEANING-level (not merely formatting) difference -- see comparisons_table",
+  "limitations": [
+    "This re-runs the CURRENT join code (src/weather.py, join_weather_sample[_expanded].py) against the SAME cached observations already on disk; it proves the fixed code reproduces the previously reported result from real cached data, not that a full re-collection would match (no new network collection is performed here).",
+    "A network guard monkeypatches subprocess.run and urllib.request.urlopen for the duration of the re-join; a NetworkCallAttempted error means the cache-only assumption was violated and the comparison is invalid, not that new data was collected.",
+    "The per-column format-vs-meaning split is only computed for a column whose CSV-text representation actually differs between the fresh and original result; a byte-identical file skips this entirely and is reported as such."
+  ]
+}
