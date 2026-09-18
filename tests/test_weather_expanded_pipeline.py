@@ -127,15 +127,44 @@ def test_partial_response_bytes_counted_even_though_attempt_failed():
     assert checkpoint['unmeasured_byte_attempts'] == 0
 
 
-def test_unmeasurable_bytes_are_never_assumed_to_be_zero():
+def test_unmeasurable_bytes_are_conservatively_charged_not_assumed_zero():
+    """The budget-enforcement field (bytes_used) must never treat an
+    unmeasurable attempt as free: each one is charged the same
+    min(per-request cap, remaining budget) reservation a measured attempt
+    would settle to, and that charge is never refunded. bytes_measured (the
+    separate, real-usage-only field) stays 0 since nothing was ever actually
+    measured -- the two fields are never conflated."""
+    from notebooks.fetch_weather_sample import MAX_RESPONSE_BYTES
     planned = [('A', '2019-01-01')]
     groups = one_ts_groups(planned)
     attempt_fn = make_attempt_fn({'A': [failure(bytes_received=None), failure(bytes_received=None),
                                         failure(bytes_received=None)]})
     result, checkpoint = run(planned, groups, attempt_fn,
                              max_requests=10**9, max_bytes=10**9, max_seconds=10**9)
-    assert checkpoint['bytes_used'] == 0
+    assert checkpoint['bytes_used'] == 3 * MAX_RESPONSE_BYTES
+    assert checkpoint['bytes_measured'] == 0
     assert checkpoint['unmeasured_byte_attempts'] == 3  # tracked as "unknown", not folded into a 0 total
+
+
+def test_next_attempt_sees_reduced_budget_after_an_unmeasured_failure():
+    """A single unmeasured failure must eat into the remaining byte budget
+    seen by the NEXT attempt -- not leave it at the full amount, which would
+    let repeated unmeasured attempts spend an unbounded number of bytes
+    while reporting 0 against the cap."""
+    from notebooks.fetch_weather_sample import MAX_RESPONSE_BYTES
+    planned = [('A', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    seen = []
+
+    def attempt_fn(station, start, end, *, timeout, max_bytes_remaining):
+        seen.append(max_bytes_remaining)
+        if len(seen) == 1:
+            return failure(bytes_received=None)
+        return success(bytes_received=100)
+
+    run(planned, groups, attempt_fn, max_requests=10, max_bytes=3_000_000, max_seconds=10**9)
+    assert seen[0] == 3_000_000  # nothing spent yet
+    assert seen[1] == 3_000_000 - MAX_RESPONSE_BYTES  # the unmeasured failure's reservation already spent
 
 
 def test_size_exceeded_response_is_charged_as_a_failed_attempt():
@@ -232,6 +261,27 @@ def test_does_not_count_cache_hits_against_request_cap():
     assert len(result['fetched']) == 2
     assert len(result['skipped_cap']) == 0
     assert attempt_fn.calls == []  # cache-only work never calls attempt_fn at all
+
+
+def test_cached_group_is_still_served_after_an_earlier_cap_hit_in_the_same_run():
+    """Even once a cap has been hit and is blocking NEW network attempts,
+    validated cache processing for a LATER group in the same invocation must
+    still go through -- cache-only work and new network work are budgeted
+    separately, so a cap on one must never block the other. D (right after
+    A/B exhaust the request cap) triggers and records the cap hit; C (cached)
+    comes after D in iteration order and must still succeed."""
+    planned = [('A', '2019-01-01'), ('B', '2019-01-01'), ('D', '2019-01-01'), ('C', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    attempt_fn = make_attempt_fn({'A': [success()], 'B': [success()], 'D': [success()]})
+    result, checkpoint = run(
+        planned, groups, attempt_fn,
+        cache_exists_fn=lambda s, a, b: Path(f'/fake/{s}.csv') if s == 'C' else None,
+        max_requests=2, max_bytes=10**9, max_seconds=10**9)
+    assert result['cap_hit'] is not None  # the request cap was hit while processing D
+    assert result['skipped_cap'] == [{'station': 'D', 'day': '2019-01-01',
+                                      'reason': 'max_requests=2 reached'}]
+    fetched_stations = {f['station'] for f in result['fetched']}
+    assert fetched_stations == {'A', 'B', 'C'}  # C still served from cache despite D's cap hit
 
 
 def test_interrupted_then_resumed_run_does_not_reset_cumulative_budget(tmp_path):
@@ -542,6 +592,8 @@ def test_request_budget_is_reserved_before_the_network_call_not_after():
                           digest_fn=lambda p: 'x', now_fn=fake_clock(), checkpoint=checkpoint)
     assert checkpoint['requests_used'] == 1  # charged before the call, survives the crash
     assert checkpoint['groups']['A|2019-01-01']['in_flight'] is not None
+    assert checkpoint['bytes_used'] > 0  # the byte reservation is charged before the call too
+    assert checkpoint['groups']['A|2019-01-01']['in_flight']['bytes_reserved'] == checkpoint['bytes_used']
 
 
 def test_recover_interrupted_attempts_charges_conservative_time_and_marks_unmeasured():
@@ -557,6 +609,40 @@ def test_recover_interrupted_attempts_charges_conservative_time_and_marks_unmeas
     assert rec['attempts_detail'][0]['bytes_received'] is None
     assert state['unmeasured_byte_attempts'] == 1
     assert state['seconds_used'] == 12.5  # conservative upper bound, not left at 0
+
+
+def test_recover_interrupted_attempts_includes_attempt_overhead_seconds_when_present():
+    """A real interrupted attempt's in_flight marker also carries
+    attempt_overhead_seconds (the worst-case subprocess-termination grace
+    reserved on top of the timeout, see execute_with_caps). Recovery must
+    charge timeout + overhead, not timeout alone -- the real wall-clock
+    worst case an attempt could have taken."""
+    state = new_checkpoint_state()
+    state['groups']['A|2019-01-01'] = {
+        'status': 'in_progress', 'attempts_detail': [],
+        'in_flight': {'attempt': 1, 'timeout': 12.5, 'attempt_overhead_seconds': 5.0,
+                      'bytes_reserved': 2_000_000}}
+    recover_interrupted_attempts(state)
+    assert state['seconds_used'] == 17.5  # 12.5 timeout + 5.0 worst-case termination grace
+    assert state['unmeasured_byte_attempts'] == 1
+    # bytes_used is untouched by recovery -- the reservation was already applied at persist time
+    assert state['bytes_used'] == 0
+
+
+def test_recover_interrupted_attempts_never_refunds_the_byte_reservation():
+    """The reservation for an interrupted attempt is added to bytes_used at
+    the SAME persist point as the in_flight marker (before the network
+    call), so recovery must leave bytes_used exactly as it already is --
+    never adding to it (double-charging) and never subtracting from it
+    (refunding a byte cost that is, in fact, unknown)."""
+    state = new_checkpoint_state()
+    state['bytes_used'] = 2_000_000  # as if the reservation was already persisted before the crash
+    state['groups']['A|2019-01-01'] = {
+        'status': 'in_progress', 'attempts_detail': [],
+        'in_flight': {'attempt': 1, 'timeout': 10.0, 'attempt_overhead_seconds': 5.0,
+                      'bytes_reserved': 2_000_000}}
+    recover_interrupted_attempts(state)
+    assert state['bytes_used'] == 2_000_000  # unchanged: neither refunded nor double-charged
 
 
 def test_recover_interrupted_attempts_is_a_noop_when_nothing_is_in_flight():
@@ -593,6 +679,71 @@ def test_load_checkpoint_recovers_an_in_flight_attempt_from_disk(tmp_path):
     assert len(result['fetched']) == 1
     assert result['fetched'][0]['attempts'] == 2  # the recovered interrupted attempt + this real one
     assert result['cumulative_requests'] == 1 + 1  # the crashed attempt's charge is kept, plus the new one
+
+
+def test_resumed_run_cannot_exceed_max_bytes_after_an_unmeasured_interruption(tmp_path):
+    """End-to-end: a process crashes mid-attempt near-exhausting the byte
+    budget; on resume, the cumulative byte cap must reflect that reservation
+    -- the next attempt must NOT be handed the full original max_bytes as if
+    the interrupted attempt used nothing."""
+    checkpoint_path = tmp_path / 'ckpt.json'
+    planned = [('A', '2019-01-01'), ('B', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    checkpoint = new_checkpoint_state()
+
+    def crashing_attempt_fn(station, start, end, *, timeout, max_bytes_remaining):
+        raise RuntimeError('simulated process crash mid-attempt')
+
+    max_bytes = 3_000_000  # bigger than one attempt's cap, so B still gets SOME (but reduced) room
+    with pytest.raises(RuntimeError):
+        execute_with_caps([planned[0]], groups, max_requests=10, max_bytes=max_bytes, max_seconds=10**9,
+                          cache_exists_fn=lambda s, a, b: None, attempt_fn=crashing_attempt_fn,
+                          digest_fn=lambda p: 'x', now_fn=fake_clock(), checkpoint=checkpoint,
+                          checkpoint_path=checkpoint_path)
+    reserved_after_crash = checkpoint['bytes_used']
+    assert reserved_after_crash > 0
+
+    resumed = load_checkpoint(checkpoint_path)
+    assert resumed['bytes_used'] == reserved_after_crash  # survives the crash, not reset to 0
+    assert resumed['unmeasured_byte_attempts'] == 1
+
+    seen = {}
+
+    def attempt_fn_b(station, start, end, *, timeout, max_bytes_remaining):
+        seen['max_bytes_remaining'] = max_bytes_remaining
+        return success(bytes_received=100)
+
+    execute_with_caps([('B', '2019-01-01')], groups, max_requests=10, max_bytes=max_bytes,
+                      max_seconds=10**9, cache_exists_fn=lambda s, a, b: None, attempt_fn=attempt_fn_b,
+                      digest_fn=lambda p: 'x', now_fn=fake_clock(), checkpoint=resumed)
+    assert seen['max_bytes_remaining'] == max_bytes - reserved_after_crash
+    assert seen['max_bytes_remaining'] < max_bytes  # the crash's reservation already ate into the budget
+
+
+def test_repeated_interrupt_and_resume_charges_each_reservation_exactly_once(tmp_path):
+    """Interrupting and resuming the SAME group's attempts twice in a row
+    must charge exactly two reservations -- never double-charging the first
+    one on resume, and never dropping the second."""
+    checkpoint_path = tmp_path / 'ckpt.json'
+    planned = [('A', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    checkpoint = new_checkpoint_state()
+
+    def crashing_attempt_fn(station, start, end, *, timeout, max_bytes_remaining):
+        raise RuntimeError('simulated process crash mid-attempt')
+
+    for _ in range(2):
+        with pytest.raises(RuntimeError):
+            execute_with_caps(planned, groups, max_requests=10, max_bytes=10**9, max_seconds=10**9,
+                              cache_exists_fn=lambda s, a, b: None, attempt_fn=crashing_attempt_fn,
+                              digest_fn=lambda p: 'x', now_fn=fake_clock(), checkpoint=checkpoint,
+                              checkpoint_path=checkpoint_path)
+        checkpoint = load_checkpoint(checkpoint_path)
+
+    assert checkpoint['requests_used'] == 2
+    assert checkpoint['unmeasured_byte_attempts'] == 2
+    from notebooks.fetch_weather_sample import MAX_RESPONSE_BYTES
+    assert checkpoint['bytes_used'] == 2 * MAX_RESPONSE_BYTES
 
 
 def test_timeout_is_never_inflated_above_remaining_seconds_even_when_below_one():

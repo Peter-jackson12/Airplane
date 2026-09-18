@@ -45,6 +45,13 @@ LATENCIES_MINUTES = [0, 10, 30, 60]
 DATETIME_SUFFIXES = ('_observed_at', '_available_at')
 NUMERIC_SUFFIXES = ('_weather_age_minutes', '_tmpf', '_dwpf', '_relh', '_sknt', '_gust', '_vsby',
                     '_p01i', '_snowdepth')
+# The ONLY approved semantic change for this comparison: a not_collectible row's station column
+# flipping from a (wrongly-filled, pre-2nd-verification) value to correctly-missing. Anything else --
+# including this SAME change on a collectible row -- is an unexpected regression.
+STATION_COLUMN_ROLE = {'origin_station': 'origin', 'destination_station': 'destination'}
+ROLE_WEATHER_SUFFIXES = ('_observed_at', '_available_at', '_tmpf', '_dwpf', '_relh', '_sknt', '_gust',
+                        '_vsby', '_p01i', '_skyc1', '_wxcodes', '_snowdepth', '_metar',
+                        '_weather_age_minutes')
 
 
 def digest(path: Path) -> str:
@@ -199,34 +206,93 @@ def _semantic_mismatch(old: pd.Series, new: pd.Series, kind: str) -> pd.Series:
     return ~both_na & (o != n)
 
 
+def _role_all_missing(frame: pd.DataFrame, role: str) -> pd.Series:
+    """True for rows where EVERY weather-value column for this role
+    (observed_at/available_at/all measurements) is missing in `frame`."""
+    cols = [f'{role}{suf}' for suf in ROLE_WEATHER_SUFFIXES if f'{role}{suf}' in frame.columns]
+    if not cols:
+        return pd.Series(True, index=frame.index)
+    return frame[cols].isna().all(axis=1)
+
+
 def compare_to_original(new_result: pd.DataFrame, original_path: Path, label: str,
-                        work_dir: Path) -> dict:
+                        persist_dir: Path) -> dict:
     """Round-trips the FRESH result through the exact same to_csv/read_csv
     cycle as the original so that in-memory-dtype-vs-CSV-text is never itself
-    counted as a difference; only mismatches surviving that round trip are
-    inspected further."""
-    tmp_csv = work_dir / f'_tmp_{label}.csv'
-    new_result.to_csv(tmp_csv, index=False)
-    raw_identical = digest(tmp_csv) == digest(original_path)
-    report = {'label': label, 'raw_byte_identical': raw_identical, 'column_diffs': []}
+    counted as a difference. The fresh result is PERSISTED (not written to a
+    throwaway temp file and deleted) so this run's own re-combined evidence
+    stays on disk and is linked into the manifest by path and hash.
+
+    Returns a report with an explicit `regression_pass` verdict: a structural
+    mismatch (row count, ID uniqueness/order, or column set) is ALWAYS a
+    failure with no per-cell diff attempted; otherwise every meaning-level
+    cell mismatch is classified as either the ONE approved policy change
+    (not_collectible row, station column value -> missing, with that row's
+    weather columns missing on BOTH sides) or an unexpected regression.
+    `any_meaning_level_difference_found` in the caller's manifest is computed
+    from expected_policy_changes + unexpected_meaning_diffs together, so an
+    approved change is never hidden by reporting it as "no difference"."""
+    persist_dir.mkdir(parents=True, exist_ok=True)
+    rejoined_path = persist_dir / f'{label}.csv'
+    new_result.to_csv(rejoined_path, index=False)
+    raw_identical = digest(rejoined_path) == digest(original_path)
+    try:
+        rejoined_file = str(rejoined_path.relative_to(ROOT))
+    except ValueError:
+        rejoined_file = str(rejoined_path)  # outside ROOT, e.g. a test's tmp_path
+    report = {'label': label, 'raw_byte_identical': raw_identical,
+             'rejoined_file': rejoined_file, 'rejoined_sha256': digest(rejoined_path),
+             'structural_pass': True, 'structural_failures': [], 'column_diffs': [],
+             'expected_policy_change_cells': 0, 'unexpected_meaning_mismatch_cells': 0}
     if raw_identical:
-        tmp_csv.unlink()
+        report['regression_pass'] = True
         return report
 
     old = pd.read_csv(original_path)
-    new = pd.read_csv(tmp_csv)
-    tmp_csv.unlink()
-    report['same_row_count'] = len(old) == len(new)
-    report['same_id_order'] = ('ID' in old and 'ID' in new
-                               and old.ID.tolist() == new.ID.tolist())
-    if not (report['same_row_count'] and report['same_id_order']):
-        report['column_diffs'] = 'row count or ID order differs; per-column diff skipped'
+    new = pd.read_csv(rejoined_path)
+
+    failures = []
+    same_row_count = len(old) == len(new)
+    if not same_row_count:
+        failures.append(f'row count differs: old={len(old)} new={len(new)}')
+    id_in_both = 'ID' in old.columns and 'ID' in new.columns
+    if not id_in_both:
+        failures.append('ID column missing from the original or the fresh result')
+    old_id_unique = id_in_both and old.ID.is_unique
+    new_id_unique = id_in_both and new.ID.is_unique
+    if id_in_both and not old_id_unique:
+        failures.append('duplicate ID values in the ORIGINAL result')
+    if id_in_both and not new_id_unique:
+        failures.append('duplicate ID values in the FRESH result')
+    same_id_order = bool(id_in_both and same_row_count and old_id_unique and new_id_unique
+                         and old.ID.tolist() == new.ID.tolist())
+    if id_in_both and same_row_count and old_id_unique and new_id_unique and not same_id_order:
+        failures.append('ID order differs between the original and the fresh result')
+    old_cols, new_cols = set(old.columns), set(new.columns)
+    missing_in_new = sorted(old_cols - new_cols)
+    added_in_new = sorted(new_cols - old_cols)
+    if missing_in_new:
+        failures.append(f'columns present in the original but missing from the fresh result: {missing_in_new}')
+    if added_in_new:
+        failures.append(f'columns present in the fresh result but absent from the original: {added_in_new}')
+
+    report['same_row_count'] = same_row_count
+    report['same_id_order'] = same_id_order
+    report['structural_pass'] = not failures
+    report['structural_failures'] = failures
+    if failures:
+        # A structural mismatch makes per-column comparison meaningless (rows/columns cannot be
+        # aligned); it is itself an unexpected regression, never silently skipped or treated as pass.
+        report['unexpected_meaning_mismatch_cells'] = 1
+        report['regression_pass'] = False
         return report
 
-    for col in old.columns:
-        if col not in new.columns:
-            report['column_diffs'].append({'column': col, 'kind': 'missing_in_new'})
-            continue
+    not_collectible = (~old['collectible'].astype(bool) if 'collectible' in old.columns
+                       else pd.Series(False, index=old.index))
+    role_all_missing_old = {role: _role_all_missing(old, role) for role in set(STATION_COLUMN_ROLE.values())}
+    role_all_missing_new = {role: _role_all_missing(new, role) for role in set(STATION_COLUMN_ROLE.values())}
+
+    for col in sorted(old_cols):
         kind = _column_kind(col)
         raw_diff = old[col].astype(str) != new[col].astype(str)
         raw_n = int(raw_diff.sum())
@@ -234,13 +300,24 @@ def compare_to_original(new_result: pd.DataFrame, original_path: Path, label: st
             continue
         semantic_diff = _semantic_mismatch(old[col], new[col], kind)
         semantic_n = int(semantic_diff.sum())
+        expected_n = 0
+        if semantic_n and col in STATION_COLUMN_ROLE:
+            role = STATION_COLUMN_ROLE[col]
+            allowed_mask = (semantic_diff & not_collectible & old[col].notna() & new[col].isna()
+                           & role_all_missing_old[role] & role_all_missing_new[role])
+            expected_n = int(allowed_mask.sum())
+        unexpected_n = semantic_n - expected_n
+        report['expected_policy_change_cells'] += expected_n
+        report['unexpected_meaning_mismatch_cells'] += unexpected_n
         report['column_diffs'].append({
             'column': col, 'kind': kind, 'raw_mismatch_cells': raw_n,
-            'meaning_mismatch_cells': semantic_n,
+            'meaning_mismatch_cells': semantic_n, 'expected_policy_change_cells': expected_n,
+            'unexpected_meaning_mismatch_cells': unexpected_n,
             'format_only_mismatch_cells': raw_n - semantic_n,
             'example_old': old.loc[raw_diff, col].head(3).tolist(),
             'example_new': new.loc[raw_diff, col].head(3).tolist(),
         })
+    report['regression_pass'] = report['unexpected_meaning_mismatch_cells'] == 0
     return report
 
 
@@ -261,21 +338,26 @@ def main() -> None:
         sample21_result, sample21_dropped = rejoin_sample21(out)
         expanded300_results, expanded300_dropped = rejoin_expanded300(out)
 
+    # The fresh re-combined result for EVERY scenario is persisted here (not written to a throwaway
+    # temp file and deleted), so this run's own evidence stays on disk and is linked by path/hash below.
+    persist_dir = ROOT / 'data/weather_probe' / f'{args.name}_rejoined'
     comparisons = [compare_to_original(
         sample21_result, ROOT / 'data/weather_probe' / f'{SAMPLE21_RUN}_joined/joined_sample.csv',
-        'sample21', out)]
+        'sample21', persist_dir)]
     for lat in LATENCIES_MINUTES:
         comparisons.append(compare_to_original(
             expanded300_results[lat],
             ROOT / 'data/weather_probe' / f'{EXPANDED300_RUN}_joined' / f'joined_latency{lat}min.csv',
-            f'expanded300_latency{lat}min', out))
+            f'expanded300_latency{lat}min', persist_dir))
 
     all_identical = all(c['raw_byte_identical'] for c in comparisons)
-    any_meaning_diff = any(
-        isinstance(c.get('column_diffs'), list)
-        and any(d.get('meaning_mismatch_cells', 0) > 0 or d.get('kind') == 'missing_in_new'
-               for d in c['column_diffs'])
-        for c in comparisons)
+    structural_pass_all = all(c.get('structural_pass', False) for c in comparisons)
+    expected_total = sum(c.get('expected_policy_change_cells', 0) for c in comparisons)
+    unexpected_total = sum(c.get('unexpected_meaning_mismatch_cells', 0) for c in comparisons)
+    # Any meaning-level difference at all -- approved policy change OR unexpected regression -- is
+    # reported here; an approved change is never hidden by folding it into "no difference found".
+    any_meaning_diff = (expected_total + unexpected_total) > 0
+    overall_regression_pass = all(c.get('regression_pass', False) for c in comparisons)
 
     pd.DataFrame(comparisons).to_json(out / f'{args.name}_reconciliation_comparisons.json',
                                       orient='records', indent=2)
@@ -289,14 +371,23 @@ def main() -> None:
         'sample21_dropped_exact_duplicate_reports': sample21_dropped,
         'expanded300_dropped_exact_duplicate_reports': expanded300_dropped,
         'comparisons_table': str((out / f'{args.name}_reconciliation_comparisons.json').relative_to(ROOT)),
+        'rejoined_results_dir': str(persist_dir.relative_to(ROOT)),
         'all_scenarios_byte_identical_to_original': all_identical,
+        'structural_comparison_passed': structural_pass_all,
+        'expected_policy_change_cells_total': expected_total,
+        'unexpected_meaning_mismatch_cells_total': unexpected_total,
         'any_meaning_level_difference_found': any_meaning_diff,
+        'final_regression_verdict': 'PASS' if overall_regression_pass else 'FAIL',
         'characterization': (
             'byte-identical to the original' if all_identical else
-            'differs from the original at the byte level; see comparisons_table for the format-vs-meaning '
-            'breakdown per column' if not any_meaning_diff else
-            'differs from the original with at least one MEANING-level (not merely formatting) difference '
-            '-- see comparisons_table'),
+            'structural comparison FAILED (row count, ID uniqueness/order, or column set mismatch); '
+            'see comparisons_table for structural_failures' if not structural_pass_all else
+            'differs from the original at the byte level with no meaning-level difference (format-only) '
+            '-- see comparisons_table' if not any_meaning_diff else
+            f'differs from the original with {expected_total} approved policy-change cell(s) and 0 '
+            'unexpected meaning-level differences -- see comparisons_table' if unexpected_total == 0 else
+            f'differs from the original with {unexpected_total} UNEXPECTED meaning-level difference '
+            'cell(s) beyond the approved policy change -- see comparisons_table'),
         'limitations': [
             'This re-runs the CURRENT join code (src/weather.py, join_weather_sample[_expanded].py) '
             'against the SAME cached observations already on disk; it proves the fixed code reproduces '
@@ -308,10 +399,22 @@ def main() -> None:
             'The per-column format-vs-meaning split is only computed for a column whose CSV-text '
             'representation actually differs between the fresh and original result; a byte-identical '
             'file skips this entirely and is reported as such.',
+            'The ONLY approved semantic change is a not_collectible row\'s origin_station/'
+            'destination_station flipping from a filled value to correctly-missing, with that row\'s '
+            'weather columns missing on BOTH sides; the SAME station change on a collectible row, any '
+            'actual weather value/observed-time/station change, or a structural mismatch is always an '
+            'unexpected regression regardless of any_meaning_level_difference_found.',
         ],
     }
     (out / f'{args.name}_reconciliation_manifest.json').write_text(json.dumps(manifest, indent=2, default=str))
     print(json.dumps({k: v for k, v in manifest.items() if k != 'limitations'}, indent=2, default=str))
+
+    if not overall_regression_pass:
+        raise RuntimeError(
+            f'{args.name}: reconciliation regression FAILED (structural_comparison_passed='
+            f'{structural_pass_all}, unexpected_meaning_mismatch_cells_total={unexpected_total}); '
+            f'the failure report was saved to output/{args.name}_reconciliation_manifest.json and '
+            f'{args.name}_reconciliation_comparisons.json for inspection.')
 
 
 if __name__ == '__main__':

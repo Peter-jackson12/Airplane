@@ -1,0 +1,29 @@
+{
+  "name": "baseline_recovery_v2_weather_recombination_fix_20260918",
+  "sample21_run": "baseline_recovery_v2_weather_sample_20260918",
+  "expanded300_run": "baseline_recovery_v2_weather_expanded_20260918",
+  "expanded300_mapping_run": "baseline_recovery_v2_weather_scope_20260918",
+  "code_sha256": "e83cce018a4c1f511cb9efcc37d1a23df8c6a8257e50b9d89754c11121b3cdad",
+  "fits_any_model": false,
+  "uses_external_data": false,
+  "target_columns_used": [],
+  "network_guard_active": true,
+  "manifest_hash_checks_passed": 579,
+  "sample21_dropped_exact_duplicate_reports": 0,
+  "expanded300_dropped_exact_duplicate_reports": 0,
+  "comparisons_table": "output\\baseline_recovery_v2_weather_recombination_fix_20260918_reconciliation_comparisons.json",
+  "rejoined_results_dir": "data\\weather_probe\\baseline_recovery_v2_weather_recombination_fix_20260918_rejoined",
+  "all_scenarios_byte_identical_to_original": false,
+  "structural_comparison_passed": true,
+  "expected_policy_change_cells_total": 232,
+  "unexpected_meaning_mismatch_cells_total": 0,
+  "any_meaning_level_difference_found": true,
+  "final_regression_verdict": "PASS",
+  "characterization": "differs from the original with 232 approved policy-change cell(s) and 0 unexpected meaning-level differences -- see comparisons_table",
+  "limitations": [
+    "This re-runs the CURRENT join code (src/weather.py, join_weather_sample[_expanded].py) against the SAME cached observations already on disk; it proves the fixed code reproduces the previously reported result from real cached data, not that a full re-collection would match (no new network collection is performed here).",
+    "A network guard monkeypatches subprocess.run and urllib.request.urlopen for the duration of the re-join; a NetworkCallAttempted error means the cache-only assumption was violated and the comparison is invalid, not that new data was collected.",
+    "The per-column format-vs-meaning split is only computed for a column whose CSV-text representation actually differs between the fresh and original result; a byte-identical file skips this entirely and is reported as such.",
+    "The ONLY approved semantic change is a not_collectible row's origin_station/destination_station flipping from a filled value to correctly-missing, with that row's weather columns missing on BOTH sides; the SAME station change on a collectible row, any actual weather value/observed-time/station change, or a structural mismatch is always an unexpected regression regardless of any_meaning_level_difference_found."
+  ]
+}

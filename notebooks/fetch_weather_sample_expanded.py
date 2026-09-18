@@ -6,10 +6,13 @@ constant, since the expanded sample deliberately spans many more airports.
 
 Hard resource caps for THIS step (not a performance target -- a resource
 boundary for this validation round): at most --max-requests HTTP ATTEMPTS
-(successes, retries and failures all charge one unit each), --max-bytes of
-measured response bytes, and --max-seconds of active fetch time. Already
-validated cached (station, day) windows never touch these caps -- cache-only
-work and new network work are accounted separately.
+(successes, retries and failures all charge one unit each), --max-bytes
+conservatively enforced against every attempt's response (a measured outcome
+counts its real bytes; an unmeasurable one is charged its full per-request
+cap rather than 0, so the cumulative cap can never be silently bypassed), and
+--max-seconds of active fetch time. Already validated cached (station, day)
+windows never touch these caps -- cache-only work and new network work are
+accounted separately.
 
 Progress is checkpointed to disk after every single attempt
 (<name>_fetch_checkpoint.json, written atomically via a temp file + rename).
@@ -30,7 +33,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from notebooks.fetch_weather_sample import (LOOKAHEAD_HOURS, LOOKBACK_HOURS,
+from notebooks.fetch_weather_sample import (LOOKAHEAD_HOURS, LOOKBACK_HOURS, MAX_RESPONSE_BYTES,
                                             SUBPROCESS_TERMINATION_GRACE_SECONDS, compute_prediction_at,
                                             digest, fetch_attempt, validate_cached_window)
 
@@ -59,21 +62,29 @@ def build_station_day_groups(collectible: pd.DataFrame) -> dict[tuple[str, str],
 
 def new_checkpoint_state() -> dict:
     return {'schema_version': CHECKPOINT_SCHEMA_VERSION, 'requests_used': 0, 'bytes_used': 0,
-           'unmeasured_byte_attempts': 0, 'seconds_used': 0.0, 'groups': {}, 'attempts_log': [],
-           'cap_hit': None, 'plan_fingerprint': None}
+           'bytes_measured': 0, 'unmeasured_byte_attempts': 0, 'seconds_used': 0.0, 'groups': {},
+           'attempts_log': [], 'cap_hit': None, 'plan_fingerprint': None}
 
 
 def recover_interrupted_attempts(state: dict) -> None:
     """A crash between the pre-call reservation persist and the post-call
     resolution persist (see execute_with_caps) leaves a group's checkpoint
     entry holding an 'in_flight' marker for an attempt whose outcome was
-    never recorded. requests_used already counts it -- it was persisted
-    BEFORE the network call was made -- so resuming must not drop it, must
-    not re-issue it as a free retry, and must not silently assume it used 0
+    never recorded. requests_used AND bytes_used already count it -- both
+    were persisted BEFORE the network call was made, bytes_used with a
+    conservative reservation (min(MAX_RESPONSE_BYTES, remaining budget) at
+    the time of that call, stored as in_flight['bytes_reserved']) rather than
+    0 -- so resuming must not drop either charge, must not re-issue the
+    attempt as a free retry, and must not silently assume it used 0
     bytes/seconds. It is resolved here into a single 'interrupted, outcome
-    unknown' attempt entry, with the time budget conservatively charged the
-    full timeout that attempt was allotted (the real elapsed time cannot be
-    recovered, and a strict upper bound is safer than treating it as free).
+    unknown' attempt entry. bytes_used is left exactly as it already is (the
+    reservation stands permanently uncharged-back, since the real byte usage
+    can never be recovered and a strict upper bound is safer than treating it
+    as free). The time budget is conservatively charged the full timeout that
+    attempt was allotted PLUS the worst-case subprocess-termination grace it
+    reserved on top of that timeout (in_flight['attempt_overhead_seconds']) --
+    the real elapsed time cannot be recovered, and the worst case is the only
+    safe upper bound.
     """
     for key, rec in list(state.get('groups', {}).items()):
         in_flight = rec.get('in_flight') if isinstance(rec, dict) else None
@@ -82,13 +93,17 @@ def recover_interrupted_attempts(state: dict) -> None:
         attempts = list(rec.get('attempts_detail', []))
         attempts.append({'attempt': in_flight.get('attempt', len(attempts) + 1), 'success': False,
                          'bytes_received': None, 'seconds': None,
+                         'bytes_charged_conservatively': in_flight.get('bytes_reserved'),
                          'error': 'interrupted mid-attempt (process ended before the outcome was '
-                                  'recorded); request budget was already reserved before the network '
-                                  'call and is not re-issued on resume'})
+                                  'recorded); request and byte budget were already reserved before '
+                                  'the network call and are not re-issued or refunded on resume'})
         state['unmeasured_byte_attempts'] = state.get('unmeasured_byte_attempts', 0) + 1
         reserved_timeout = in_flight.get('timeout')
         if reserved_timeout:
-            state['seconds_used'] = state.get('seconds_used', 0.0) + reserved_timeout
+            overhead = in_flight.get('attempt_overhead_seconds') or 0.0
+            state['seconds_used'] = state.get('seconds_used', 0.0) + reserved_timeout + overhead
+        # bytes_used is NOT touched here: the reservation was already added to it at the same persist
+        # point as this in_flight marker, before the network call, so it survives the crash unchanged.
         state['groups'][key] = {'status': 'in_progress', 'attempts_detail': attempts}
 
 
@@ -99,6 +114,7 @@ def load_checkpoint(path: Path) -> dict:
     if state.get('schema_version') != CHECKPOINT_SCHEMA_VERSION:
         raise ValueError(f'{path} has an incompatible checkpoint schema; use a fresh --name')
     state.setdefault('plan_fingerprint', None)
+    state.setdefault('bytes_measured', 0)
     recover_interrupted_attempts(state)
     return state
 
@@ -153,20 +169,28 @@ def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
     """Resumable, budget-aware fetch loop.
 
     `checkpoint` is a mutable dict carrying CUMULATIVE state across resumed
-    runs of the same logical --name: requests_used/bytes_used/seconds_used
-    are never reset just because this process restarted. `cache_exists_fn(
-    station, start, end) -> path-or-None` looks up and validates an existing
-    cache file for exactly this request; a cache hit costs nothing. Every
-    other HTTP try -- success, failure, or retry -- calls `attempt_fn(
-    station, start, end, timeout=..., max_bytes_remaining=...) -> {success,
-    bytes_received, seconds, error, ...}` exactly once and is charged one
-    request unit plus whatever bytes/seconds it actually used (bytes may be
-    None for a genuinely unmeasurable attempt; such attempts are counted
-    separately in unmeasured_byte_attempts, never assumed to be 0). The
-    request-budget unit is reserved and persisted BEFORE the network call, not
-    after it returns, so a crash mid-attempt cannot make that attempt vanish
-    from accounting or be re-issued for free on resume (see
-    recover_interrupted_attempts). Each attempt's timeout is bounded by the
+    runs of the same logical --name: requests_used/bytes_used/bytes_measured/
+    seconds_used are never reset just because this process restarted.
+    `cache_exists_fn(station, start, end) -> path-or-None` looks up and
+    validates an existing cache file for exactly this request; a cache hit
+    costs nothing. Every other HTTP try -- success, failure, or retry --
+    calls `attempt_fn(station, start, end, timeout=..., max_bytes_remaining=
+    ...) -> {success, bytes_received, seconds, error, ...}` exactly once and
+    is charged one request unit plus whatever bytes/seconds it actually used.
+    Bytes are accounted in TWO separate fields: bytes_used is a CONSERVATIVE
+    reservation -- min(a fixed per-request cap, the remaining budget) is
+    added to it BEFORE the call, a measured outcome (bytes_received is not
+    None) replaces that reservation with the real count, and a genuinely
+    unmeasurable outcome (bytes_received is None) leaves the reservation
+    standing rather than refunding it to 0 -- so bytes_used is always an
+    upper bound the max_bytes cap can actually rely on. bytes_measured is the
+    separate, real-usage-only total; unmeasured_byte_attempts counts how many
+    attempts never got a real measurement. The request-budget unit AND the
+    byte reservation are both reserved and persisted BEFORE the network call,
+    not after it returns, so a crash mid-attempt cannot make that attempt
+    vanish from accounting, be re-issued for free, or have its byte cost
+    silently assumed to be zero on resume (see recover_interrupted_attempts).
+    Each attempt's timeout is bounded by the
     remaining time budget MINUS attempt_overhead_seconds (the worst-case extra
     wall time an attempt can take beyond its own timeout, e.g. a subprocess's
     own termination grace period) so a single attempt's worst case can never
@@ -201,7 +225,8 @@ def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
         key = f'{station}|{day}'
         if i % progress_every == 0:
             print(f'[{i}/{len(planned)}] cumulative_requests={checkpoint["requests_used"]} '
-                 f'cumulative_bytes={checkpoint["bytes_used"]} '
+                 f'cumulative_bytes_reserved={checkpoint["bytes_used"]} '
+                 f'cumulative_bytes_measured={checkpoint.get("bytes_measured", 0)} '
                  f'cumulative_seconds={checkpoint["seconds_used"]:.0f}', flush=True)
 
         timestamps = groups[(station, day)]
@@ -292,25 +317,44 @@ def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
                 break
             timeout = min(default_attempt_timeout, usable)  # never inflated above what is actually left
 
-            # Reserve THIS attempt's request-budget unit and persist BEFORE the network call: if the
-            # process dies mid-attempt, the reservation survives on disk and is never re-issued as a
-            # free request when this run is resumed (recover_interrupted_attempts resolves it).
+            # This attempt can transfer at most effective_cap bytes (the SAME bound fetch_attempt itself
+            # enforces via curl's --max-filesize), so that amount -- not 0 -- is reserved against bytes_used
+            # BEFORE the call. A crash mid-attempt therefore leaves bytes_used already conservatively
+            # charged; a resolved-but-unmeasurable outcome (bytes_received is None) keeps that charge
+            # standing instead of being refunded, so the cumulative byte cap can never be bypassed by
+            # attempts whose real usage is unknown. Only a MEASURED outcome replaces the reservation with
+            # the actual bytes transferred.
+            bytes_remaining_before = max_bytes - checkpoint['bytes_used']
+            effective_cap = min(MAX_RESPONSE_BYTES, bytes_remaining_before)
+
+            # Reserve THIS attempt's request AND byte budget and persist BEFORE the network call: if the
+            # process dies mid-attempt, both reservations survive on disk and are never re-issued as a
+            # free request, nor refunded as if 0 bytes were used, when this run is resumed
+            # (recover_interrupted_attempts resolves it).
             checkpoint['requests_used'] += 1
+            checkpoint['bytes_used'] += effective_cap
             checkpoint['groups'][key] = {'status': 'in_progress', 'attempts_detail': attempts_this_group,
                                          'in_flight': {'attempt': len(attempts_this_group) + 1,
-                                                      'timeout': timeout}}
+                                                      'timeout': timeout,
+                                                      'attempt_overhead_seconds': attempt_overhead_seconds,
+                                                      'bytes_reserved': effective_cap}}
             persist()
 
             t0 = now_fn()
             outcome = attempt_fn(station, window_start, window_end, timeout=timeout,
-                                 max_bytes_remaining=max_bytes - checkpoint['bytes_used'])
+                                 max_bytes_remaining=bytes_remaining_before)
             elapsed = now_fn() - t0
             checkpoint['seconds_used'] += elapsed
             session_requests += 1
             if outcome.get('bytes_received') is not None:
-                checkpoint['bytes_used'] += outcome['bytes_received']
+                # Settle: replace the conservative reservation with the ACTUAL measured amount (which may
+                # be smaller OR larger than effective_cap, e.g. the bounded-size-exceeded failure path).
+                checkpoint['bytes_used'] += outcome['bytes_received'] - effective_cap
+                checkpoint['bytes_measured'] = checkpoint.get('bytes_measured', 0) + outcome['bytes_received']
                 session_bytes += outcome['bytes_received']
             else:
+                # Genuinely unmeasurable: the reservation already charged above is left standing, never
+                # assumed to be 0 -- this is what makes the cumulative max_bytes cap actually enforceable.
                 checkpoint['unmeasured_byte_attempts'] += 1
             attempts_this_group.append({
                 'attempt': len(attempts_this_group) + 1, 'success': bool(outcome.get('success')),
@@ -379,7 +423,13 @@ def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
     return {
         'fetched': fetched, 'skipped_cap': skipped_cap, 'failed': failed,
         'new_requests': session_requests, 'new_bytes': session_bytes,
-        'cumulative_requests': checkpoint['requests_used'], 'cumulative_bytes': checkpoint['bytes_used'],
+        'cumulative_requests': checkpoint['requests_used'],
+        # cumulative_bytes_reserved is the CONSERVATIVE value the max_bytes cap is actually enforced
+        # against (measured bytes replace their attempt's reservation; an unmeasurable attempt's
+        # reservation stands permanently) -- it is always >= real bytes downloaded. cumulative_bytes_measured
+        # is the separate, real-usage-only figure; the two are never conflated.
+        'cumulative_bytes_reserved': checkpoint['bytes_used'],
+        'cumulative_bytes_measured': checkpoint.get('bytes_measured', 0),
         'cumulative_seconds': checkpoint['seconds_used'],
         'unmeasured_byte_attempts': checkpoint['unmeasured_byte_attempts'],
         'elapsed_seconds': now_fn() - session_start, 'cap_hit': cap_hit,
@@ -422,7 +472,8 @@ def main() -> None:
     resuming = checkpoint['requests_used'] > 0 or checkpoint['groups']
     if resuming:
         print(f'resuming from checkpoint: cumulative_requests={checkpoint["requests_used"]} '
-             f'cumulative_bytes={checkpoint["bytes_used"]} '
+             f'cumulative_bytes_reserved={checkpoint["bytes_used"]} '
+             f'cumulative_bytes_measured={checkpoint.get("bytes_measured", 0)} '
              f'cumulative_seconds={checkpoint["seconds_used"]:.0f}', flush=True)
 
     plan_fingerprint = compute_plan_fingerprint(
@@ -460,7 +511,8 @@ def main() -> None:
         'this_run_http_attempts': result['new_requests'], 'this_run_bytes_downloaded': result['new_bytes'],
         'this_run_elapsed_seconds': result['elapsed_seconds'],
         'cumulative_http_attempts': result['cumulative_requests'],
-        'cumulative_bytes_downloaded': result['cumulative_bytes'],
+        'cumulative_bytes_downloaded': result['cumulative_bytes_measured'],
+        'cumulative_bytes_reserved_against_budget': result['cumulative_bytes_reserved'],
         'cumulative_active_fetch_seconds': result['cumulative_seconds'],
         'unmeasured_byte_attempts': result['unmeasured_byte_attempts'],
         'cache_hit_groups': sum(1 for f in fetched if f.get('was_already_cached')),
@@ -477,9 +529,16 @@ def main() -> None:
             'read from the checkpoint and never reset by a restart.',
             'cumulative_http_attempts counts every HTTP try -- successes, retries, and failures -- '
             'not just successful new fetches, and a cache hit costs none of it.',
-            'unmeasured_byte_attempts counts attempts whose byte count could not be determined at '
-            'all (e.g. the response file was never created); these are reported separately and are '
-            'NOT assumed to be 0 bytes, so cumulative_bytes_downloaded is a lower bound when this is > 0.',
+            'cumulative_bytes_downloaded is the REAL measured total (only attempts with a known '
+            'bytes_received count toward it); cumulative_bytes_reserved_against_budget is the separate, '
+            'CONSERVATIVE figure the max_bytes cap is actually enforced against -- every attempt reserves '
+            'min(a fixed per-request cap, the remaining budget) before the network call, a measured '
+            'outcome replaces that reservation with the real byte count, and an unmeasurable outcome '
+            '(bytes_received unknown, e.g. the response file was never created or the process was '
+            'interrupted mid-attempt) leaves the reservation standing rather than refunding it to 0. '
+            'unmeasured_byte_attempts counts how many attempts fall in that last category. The two '
+            'cumulative_bytes_* fields are therefore never conflated: reserved is always >= measured, '
+            'and only measured claims to reflect bytes actually transferred.',
             'A cap hit preserves everything fetched so far in the checkpoint; re-running with the '
             'SAME --name resumes without losing or re-spending prior budget, and any group that was '
             'cut off mid-retry or never attempted is retried first.',
@@ -494,11 +553,11 @@ def main() -> None:
             'normalized per-(station, day) request windows, and request options (caps, padding hours, '
             'grace/pause seconds) it was built from; resuming the same --name after any of those '
             'change raises rather than silently mixing incompatible evidence.',
-            'The request-budget unit for each HTTP attempt is reserved and persisted BEFORE the '
+            'The request AND byte budget for each HTTP attempt are reserved and persisted BEFORE the '
             'network call, not after; an attempt interrupted by a process crash is never re-issued as '
-            'a free retry on resume, and its unknown byte/time cost is charged conservatively '
-            '(unmeasured bytes, and the full reserved timeout added to elapsed time) rather than '
-            'assumed to be zero.',
+            'a free retry on resume, and its unknown byte/time cost is charged conservatively (the '
+            'reserved min(per-request cap, remaining budget) bytes and the reserved timeout plus '
+            'subprocess-termination-grace seconds added to elapsed time) rather than assumed to be zero.',
             'Exact-once delivery of a network request is never claimed: an interrupted attempt\'s true '
             'remote outcome may be unknown (it could have succeeded or failed on the server side before '
             'the process died); only the budget accounting and evidence-preservation guarantees above '
