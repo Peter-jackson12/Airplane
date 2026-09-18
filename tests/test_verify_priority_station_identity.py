@@ -151,12 +151,41 @@ def test_identifier_mismatch_inference_is_not_generically_none():
         assert text.strip() != '', iata
 
 
-def test_fca_and_pbi_have_dated_or_time_bounded_continuity_evidence_unlike_the_absence_only_group():
+def test_fca_has_a_dated_predating_remark_unlike_the_absence_only_group():
     assert vpsi.FINDINGS['FCA']['historical_continuity_2018_2019'] == 'dated_remark_predates_window'
-    assert vpsi.FINDINGS['PBI']['historical_continuity_2018_2019'] == 'explicit_statement_change_postdates_window'
     for iata in ('BKG', 'HHH', 'MQT', 'SCE', 'USA'):
         assert vpsi.FINDINGS[iata]['historical_continuity_2018_2019'] == 'absence_of_remark'
     assert vpsi.FINDINGS['AZA']['historical_continuity_2018_2019'] == 'undated_remark'
+
+
+# ---- fourth round: PBI's raw-record boundary -- current ids vs. an undated rename ----
+
+def test_pbi_continuity_reflects_current_ids_confirmed_but_no_dated_rename_remark():
+    # Fourth round fix: the raw FAA_PBI.json record has no dated statement about when
+    # the FAA/legal rename happened or that PBI was in use throughout 2018-2019 --
+    # only current identifiers and an undated ad hoc metadata update. This must not be
+    # confused with FCA's genuinely dated 2005 rename remark.
+    fnd = vpsi.FINDINGS['PBI']
+    assert fnd['historical_continuity_2018_2019'] == 'rename_confirmed_by_current_ids_undated_in_record'
+    assert fnd['historical_continuity_2018_2019'] != vpsi.FINDINGS['FCA']['historical_continuity_2018_2019']
+    assert 'background' in fnd['inference_and_unresolved'].lower() or 'outside' in fnd['inference_and_unresolved'].lower()
+
+
+def test_pbi_raw_record_carries_no_dated_rename_or_2018_2019_statement():
+    # Guards against re-attributing an outside/background-knowledge claim to the raw
+    # HOMR remark: none of FAA_PBI.json's `remarks` mention DJT, TRUMP, or a rename,
+    # and the only identifier-name-change entry anywhere on the record is the undated
+    # "updates" block, not a dated remark.
+    cache = vpsi.DEFAULT_CACHE_DIR / 'FAA_PBI.json'
+    stn = json.loads(cache.read_text(encoding='utf-8'))['stationCollection']['stations'][0]
+    remark_text = ' '.join(r.get('remark', '') for r in stn.get('remarks', [])).upper()
+    for banned in ('DJT', 'TRUMP', 'RENAME', 'RENAMED', 'CHANGED FROM PBI'):
+        assert banned not in remark_text, f'{banned} unexpectedly found in FAA_PBI.json remarks'
+    updates = stn.get('updates', [])
+    assert any('NAME' in u.get('description', '').upper() for u in updates)
+    assert all('effectiveDate' in u or 'enteredDate' in u for u in updates)
+    ids = {i['idType']: i['id'] for i in stn.get('identifiers', [])}
+    assert ids['FAA'] == 'DJT' and ids['ICAO'] == 'KDJT' and ids['NWSLI'] == 'PBI'
 
 
 # ---- YUM: downgraded from a confident distinct-facility claim to a flagged conflict ----
@@ -263,6 +292,44 @@ def test_verify_expected_record_flags_missing_ncdc_stn_id(tmp_path):
     assert failures and 'not selectable' in failures[0]
 
 
+def test_verify_expected_record_flags_missing_required_identifier(tmp_path):
+    cache = tmp_path / 'FAA_PBI.json'
+    cache.write_text(json.dumps({'stationCollection': {'stations': [{
+        'ncdcStnId': '20004306',
+        'platforms': [{'platform': 'COOP'}, {'platform': 'ASOS'}],
+        'identifiers': [{'idType': 'FAA', 'id': 'DJT'}, {'idType': 'ICAO', 'id': 'KDJT'}],
+        # NWSLI dropped entirely
+    }]}}), encoding='utf-8')
+    checks = [dict(source='primary', ncdc_stn_id='20004306', requires={'COOP', 'ASOS'}, forbids=set(),
+                    expected_ids=[('FAA', 'DJT'), ('ICAO', 'KDJT'), ('NWSLI', 'PBI')])]
+    failures = vpsi.verify_expected_record('PBI', {'primary': cache}, checks)
+    assert failures and 'missing required identifier' in failures[0]
+    assert "('NWSLI', 'PBI')" in failures[0]
+
+
+def test_verify_expected_record_flags_changed_identifier_value(tmp_path):
+    cache = tmp_path / 'FAA_PBI.json'
+    cache.write_text(json.dumps({'stationCollection': {'stations': [{
+        'ncdcStnId': '20004306',
+        'platforms': [{'platform': 'COOP'}, {'platform': 'ASOS'}],
+        'identifiers': [
+            {'idType': 'FAA', 'id': 'ZZZ'},  # changed away from DJT
+            {'idType': 'ICAO', 'id': 'KDJT'},
+            {'idType': 'NWSLI', 'id': 'PBI'},
+        ],
+    }]}}), encoding='utf-8')
+    checks = [dict(source='primary', ncdc_stn_id='20004306', requires={'COOP', 'ASOS'}, forbids=set(),
+                    expected_ids=[('FAA', 'DJT'), ('ICAO', 'KDJT'), ('NWSLI', 'PBI')])]
+    failures = vpsi.verify_expected_record('PBI', {'primary': cache}, checks)
+    assert failures and 'missing required identifier' in failures[0]
+    assert "('FAA', 'DJT')" in failures[0]
+
+
+def test_expected_identifiers_covers_exactly_the_ncdc_stn_ids_in_expected_record():
+    all_ids = {chk['ncdc_stn_id'] for checks in vpsi.EXPECTED_RECORD.values() for chk in checks}
+    assert all_ids == set(vpsi.EXPECTED_IDENTIFIERS)
+
+
 def test_verify_expected_record_passes_against_the_real_default_cache_for_every_airport():
     for iata, checks in vpsi.EXPECTED_RECORD.items():
         id_type, id_value = vpsi.HOMR_QUERY[iata]
@@ -301,6 +368,41 @@ def test_main_raises_when_a_required_programs_platform_is_replaced_by_a_differen
 
     fresh_name = 'baseline_recovery_v2_station_identity_pytest_tmp4_20260918'
     with pytest.raises(RuntimeError, match='forbidden platform'):
+        vpsi.main(['--name', fresh_name, '--cache-dir', str(tmp_cache)])
+    assert not (ROOT / f'output/{fresh_name}_evidence.csv').exists()
+
+
+def test_main_raises_and_writes_nothing_when_identifiers_are_deleted_but_platforms_are_untouched(tmp_path):
+    # Fourth round regression: before EXPECTED_IDENTIFIERS existed, a cache file whose
+    # `identifiers` were dropped entirely -- while ncdcStnId and platforms stayed the
+    # same -- would still pass verify_expected_record() and print FINDINGS unflagged.
+    tmp_cache = _copy_default_cache(tmp_path)
+    pbi_file = tmp_cache / 'FAA_PBI.json'
+    obj = json.loads(pbi_file.read_text(encoding='utf-8'))
+    stn = obj['stationCollection']['stations'][0]
+    assert stn['ncdcStnId'] == '20004306'
+    stn['identifiers'] = []  # platforms/ncdcStnId left untouched
+    pbi_file.write_text(json.dumps(obj), encoding='utf-8')
+
+    fresh_name = 'baseline_recovery_v2_station_identity_pytest_tmp9_20260918'
+    with pytest.raises(RuntimeError, match='missing required identifier'):
+        vpsi.main(['--name', fresh_name, '--cache-dir', str(tmp_cache)])
+    assert not (ROOT / f'output/{fresh_name}_evidence.csv').exists()
+    assert not (ROOT / f'output/{fresh_name}_manifest.json').exists()
+
+
+def test_main_raises_when_an_identifier_value_is_changed_but_platforms_are_untouched(tmp_path):
+    tmp_cache = _copy_default_cache(tmp_path)
+    pbi_file = tmp_cache / 'FAA_PBI.json'
+    obj = json.loads(pbi_file.read_text(encoding='utf-8'))
+    stn = obj['stationCollection']['stations'][0]
+    for ident in stn['identifiers']:
+        if ident['idType'] == 'FAA':
+            ident['id'] = 'ZZZ'  # DJT -> a different FAA id, platforms untouched
+    pbi_file.write_text(json.dumps(obj), encoding='utf-8')
+
+    fresh_name = 'baseline_recovery_v2_station_identity_pytest_tmp10_20260918'
+    with pytest.raises(RuntimeError, match='missing required identifier'):
         vpsi.main(['--name', fresh_name, '--cache-dir', str(tmp_cache)])
     assert not (ROOT / f'output/{fresh_name}_evidence.csv').exists()
 

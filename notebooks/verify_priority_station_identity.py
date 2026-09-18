@@ -98,6 +98,33 @@ cache and the second round's own text were reviewed again. Two fixes:
     evidence that no longer supports it. This makes "the cache file exists" and "the
     cited record actually says what FINDINGS claims" two different, both-required
     conditions.
+
+Fourth round (this revision). No new external data was fetched; only the existing
+cache and this file's own text were reviewed again. Two fixes:
+  - PBI's `_IDENTIFIER_MISMATCH['PBI']` remark and `continuity_basis` used to say the
+    fetched HOMR record itself states the FAA/legal rename to Donald J. Trump
+    International Airport happened AFTER 2018-2019. Re-reading the raw response
+    (`data/weather_probe/.../FAA_PBI.json`) shows no such dated statement anywhere in
+    its `remarks` -- only the record's CURRENT identifiers (FAA=DJT, ICAO=KDJT,
+    NWSLI=PBI retained) and an undated ad hoc metadata update renaming the station per
+    FAA/AIRNAV. The claim that the rename postdates the study window is real-world
+    background knowledge, not something this fetched record says, and was blended in
+    as if it were record-sourced -- the same kind of over-claim the second round
+    already fixed for WRG/PSG and YUM. `continuity_basis` for PBI is now
+    `rename_confirmed_by_current_ids_undated_in_record`, distinguished from FCA's
+    actual dated 2005 rename remark and KTN's actual dated 1997 event, neither of
+    which is touched by this fix.
+  - `EXPECTED_RECORD`'s per-airport checks previously verified only `ncdcStnId`
+    selection and `platforms`; a raw cache file whose `identifiers` were deleted or
+    swapped to different FAA/ICAO/NWSLI/NEXRAD values, while `ncdcStnId` and
+    `platforms` stayed untouched, would still pass and print the fixed FINDINGS text.
+    A new `EXPECTED_IDENTIFIERS` table (keyed by `ncdcStnId`) and a matching check
+    inside `verify_expected_record()` now require each judgment's cited identifiers
+    to actually be present on the selected record. This does not force every
+    `HOMR_QUERY` lookup key to also appear among the record's own current
+    identifiers -- PBI is looked up by `FAA:PBI` (a key NOAA's search index still
+    resolves) even though the record's own current FAA identifier is DJT; the lookup
+    key and the record's present-day identifiers are allowed to differ.
 """
 from __future__ import annotations
 
@@ -355,11 +382,16 @@ _IDENTIFIER_MISMATCH = {
     'PBI': dict(real_id='DJT (current); NWSLI retains PBI', icao='KDJT (current); was KPBI', net='FL_ASOS',
                 ncdc_stn_id='20004306', wban=None,
                 name='West Palm Beach -> Donald J. Trump International Airport, FL', platform='COOP+ASOS',
-                remark=('NWSLI field = "PBI" (retained); FAA id now "DJT"; single continuous ASOS/COOP '
-                        'station since 1938-07-01, no relocation remark. Airport was officially "Palm Beach '
-                        'International Airport" during 2018-2019; the FAA/NOAA identifier and legal name '
-                        'changed to Donald J. Trump International Airport / DJT after the study period.'),
-                other_records=None, continuity_basis='explicit_statement_change_postdates_window'),
+                remark=('NWSLI field = "PBI" (retained); current FAA id = "DJT", current ICAO id = "KDJT"; '
+                        'single continuous ASOS/COOP station since 1938-07-01, no relocation remark. The '
+                        'fetched record carries no remark stating WHEN the FAA identifier changed from PBI '
+                        'to DJT, or that the airport used "PBI"/"Palm Beach International" specifically '
+                        'throughout 2018-2019 -- the only identifier-related entry is an ad hoc metadata '
+                        'update ("UPDATING STATION NAME PER FAA (AIRNAV)", enteredDate 2026-07-15), which is '
+                        'a metadata-edit date, not a rename date. That the FAA/legal rename to Donald J. '
+                        'Trump International Airport postdates the 2018-2019 study window is background '
+                        'knowledge from outside this HOMR record, not a statement this remark makes.'),
+                other_records=None, continuity_basis='rename_confirmed_by_current_ids_undated_in_record'),
     'SCE': dict(real_id='UNV', icao='KUNV', net='PA_ASOS', ncdc_stn_id='20016919', wban=None,
                 name='State College Regional / University Park Airport, PA', platform='AWOS',
                 remark='No relocation remark found. POR 1972-04-01 to Present.', other_records=None,
@@ -385,11 +417,12 @@ _CONTINUITY_TEXT = {
         'id was already in place going into the study window. This does not independently confirm no '
         'further change happened between that date and 2018-2019 -- only that no such change is recorded '
         'in this fetched response.'),
-    'explicit_statement_change_postdates_window': (
-        'The remark above explicitly states the facility was continuous through 2018-2019 under the OLD '
-        'identifier, with the id/name change recorded as happening AFTER the study period -- the most '
-        'directly time-bounded evidence among these 8, though still resting on this record\'s own remark '
-        'rather than an independently dated source.'),
+    'rename_confirmed_by_current_ids_undated_in_record': (
+        'The current identifiers (FAA=DJT, ICAO=KDJT, NWSLI retaining PBI) and the absence of a relocation '
+        'remark are confirmed directly from this record -- but unlike FCA, this record carries no DATED '
+        'remark for the identifier change itself, only an undated ad hoc metadata-name-update entry. That '
+        'the rename postdates 2018-2019 is background/outside knowledge, not a claim this fetched HOMR '
+        'response makes; do not attribute that timing claim to the record\'s own remarks.'),
     'undated_remark': (
         'The identifier-change remark above gives no date ("DATE UNKNOWN"), so it cannot bracket the '
         'change against 2018-2019 either way. Current-identifier resolution (AZA=IWA) does not by itself '
@@ -415,7 +448,9 @@ for _iata, _d in _IDENTIFIER_MISMATCH.items():
             'notebooks/map_weather_stations.py, which currently assumes IATA==IEM station sid for '
             'ordinary US states; not changed automatically this round. Current-identifier resolution is '
             'confirmed; 2018-2019 historical continuity beyond that, where continuity_basis is '
-            '"absence_of_remark" or "undated_remark", is not independently confirmed this round.'),
+            '"absence_of_remark", "undated_remark", or "rename_confirmed_by_current_ids_undated_in_record" '
+            '(PBI: current ids confirmed, but no dated rename remark in this record), is not independently '
+            'confirmed this round.'),
     )
 
 _TZ_ALIAS_CONFIRMED = {
@@ -582,6 +617,50 @@ for _iata, _d in _TZ_ALIAS_UNLINKED.items():
 
 assert set(EXPECTED_RECORD) == set(FINDINGS), 'EXPECTED_RECORD must cover the same 20 airports as FINDINGS'
 
+# Fourth round (this revision): the platform-only checks above catch a record whose
+# platforms list changes, but not one whose `identifiers` are deleted or swapped to a
+# different FAA/ICAO/NWSLI/NEXRAD value while ncdcStnId and platforms stay untouched --
+# every FINDINGS/EXPECTED_RECORD claim about "current identifier X" was, until now,
+# asserted in prose only. Keyed by ncdcStnId (unique across all 22 checks above, per the
+# assertion below). This intentionally does NOT require every HOMR_QUERY lookup key to
+# also appear in the selected record's own identifiers -- PBI is queried by FAA:PBI (the
+# key NOAA's search index still resolves), but the record's OWN current identifiers are
+# FAA=DJT/ICAO=KDJT/NWSLI=PBI; the lookup key and the record's current identifiers are
+# allowed to differ, and only the identifiers this pipeline's judgment actually depends
+# on are checked here.
+EXPECTED_IDENTIFIERS: dict[str, list[tuple[str, str]]] = {
+    '10007500': [('FAA', 'ISN'), ('ICAO', 'KISN')],
+    '30121192': [('FAA', 'XWA'), ('ICAO', 'KXWA'), ('NWSLI', 'XWA')],
+    '20000933': [('FAA', 'YUM'), ('ICAO', 'KYUM')],
+    '20000934': [('FAA', 'NYL'), ('ICAO', 'KNYL'), ('NWSLI', 'NYL')],
+    '20024073': [('FAA', 'STT'), ('ICAO', 'TIST'), ('NWSLI', 'STT')],
+    '10012328': [('FAA', 'STX'), ('ICAO', 'TISX'), ('NWSLI', 'STX')],
+    '30158921': [('FAA', 'GSN'), ('ICAO', 'PGSN')],
+    '10000826': [('FAA', 'IWA'), ('ICAO', 'KIWA')],
+    '30001870': [('ICAO', 'KIWA'), ('NEXRAD', 'KIWA')],
+    '30083225': [('FAA', 'BBG'), ('ICAO', 'KBBG')],
+    '20012742': [('FAA', 'GPI'), ('ICAO', 'KGPI'), ('NWSLI', 'GPI')],
+    '20017315': [('FAA', 'HXD'), ('ICAO', 'KHXD')],
+    '10005416': [('FAA', 'SAW'), ('ICAO', 'KSAW')],
+    '20004306': [('FAA', 'DJT'), ('ICAO', 'KDJT'), ('NWSLI', 'PBI')],
+    '20016919': [('FAA', 'UNV'), ('ICAO', 'KUNV')],
+    '30002219': [('FAA', 'JQF'), ('ICAO', 'KJQF')],
+    '20010418': [('FAA', 'IMT'), ('ICAO', 'KIMT')],
+    '10000202': [('FAA', 'KTN'), ('ICAO', 'PAKT'), ('NWSLI', 'KTN')],
+    '20021826': [('FAA', 'PSG'), ('ICAO', 'PAPG'), ('NWSLI', 'APGA2')],
+    '10004692': [('FAA', 'SDF'), ('ICAO', 'KSDF'), ('NWSLI', 'SDF')],
+    '20021837': [('FAA', 'SIT'), ('ICAO', 'PASI'), ('NWSLI', 'SIT')],
+    '10000446': [('FAA', 'WRG'), ('ICAO', 'PAWG')],
+}
+_all_expected_ncdc_stn_ids = {chk['ncdc_stn_id'] for checks in EXPECTED_RECORD.values() for chk in checks}
+assert _all_expected_ncdc_stn_ids == set(EXPECTED_IDENTIFIERS), (
+    'EXPECTED_IDENTIFIERS must cover exactly the ncdcStnIds referenced by EXPECTED_RECORD: '
+    f'missing={_all_expected_ncdc_stn_ids - set(EXPECTED_IDENTIFIERS)} '
+    f'extra={set(EXPECTED_IDENTIFIERS) - _all_expected_ncdc_stn_ids}')
+for _checks in EXPECTED_RECORD.values():
+    for _chk in _checks:
+        _chk['expected_ids'] = EXPECTED_IDENTIFIERS[_chk['ncdc_stn_id']]
+
 # Non-SPN entries in IEM_FEATURE_CHECK must be found=True for the corresponding
 # FINDINGS determination to hold (e.g. YUM's judgment needs both the YUM and NYL
 # AZ_ASOS features; AZA needs its IWA feature). SPN's expected miss is the one
@@ -683,9 +762,10 @@ def verify_expected_record(iata: str, cache_files: dict[str, Path], checks: list
 
     cache_files maps 'primary' and 'extra:<index>' to the cache file main() fetched
     for that source. Returns a list of failure strings (empty if every check in
-    `checks` selected its ncdcStnId and that station's platforms satisfied
-    requires/forbids); never raises for a normal mismatch, so callers can collect
-    failures across all 20 airports before deciding whether to abort.
+    `checks` selected its ncdcStnId, that station's platforms satisfied
+    requires/forbids, AND its identifiers included every pair in `expected_ids`);
+    never raises for a normal mismatch, so callers can collect failures across all
+    20 airports before deciding whether to abort.
     """
     failures = []
     for chk in checks:
@@ -711,6 +791,12 @@ def verify_expected_record(iata: str, cache_files: dict[str, Path], checks: list
             failures.append(
                 f"{iata}: ncdcStnId {chk['ncdc_stn_id']} in {cache_file.name} carries forbidden "
                 f'platform(s) {sorted(blocked)}; record has {sorted(platforms)}')
+        actual_ids = {(i.get('idType'), i.get('id')) for i in stn.get('identifiers', [])}
+        missing_ids = [pair for pair in chk.get('expected_ids', []) if pair not in actual_ids]
+        if missing_ids:
+            failures.append(
+                f"{iata}: ncdcStnId {chk['ncdc_stn_id']} in {cache_file.name} is missing required "
+                f'identifier(s) {missing_ids}; record has identifiers {sorted(actual_ids)}')
     return failures
 
 
@@ -795,7 +881,8 @@ def main(argv: list[str] | None = None) -> None:
         checks = EXPECTED_RECORD[iata]
         record_verification_failures.extend(verify_expected_record(iata, cache_files, checks))
         record_verification_checks[iata] = [
-            f"ncdcStnId={c['ncdc_stn_id']} requires={sorted(c['requires'])} forbids={sorted(c['forbids'])}"
+            f"ncdcStnId={c['ncdc_stn_id']} requires={sorted(c['requires'])} forbids={sorted(c['forbids'])} "
+            f"expected_ids={sorted(c.get('expected_ids', []))}"
             for c in checks
         ]
     for iata in sorted(IEM_FEATURE_REQUIRED_FOUND):
@@ -887,10 +974,11 @@ def main(argv: list[str] | None = None) -> None:
             'iem_features_required_found': sorted(IEM_FEATURE_REQUIRED_FOUND),
             'note': (
                 'True here means every EXPECTED_RECORD check for all 20 airports selected its configured '
-                'ncdcStnId from the fetched response and matched its required/forbidden platforms, and '
-                'every non-SPN IEM_FEATURE_CHECK entry was found=True -- main() raises RuntimeError before '
-                'writing any evidence file if that is not the case, so a run that reached this point and '
-                'wrote output always has passed=True.'),
+                'ncdcStnId from the fetched response and matched its required/forbidden platforms AND its '
+                'required identifiers (EXPECTED_IDENTIFIERS, fourth round), and every non-SPN '
+                'IEM_FEATURE_CHECK entry was found=True -- main() raises RuntimeError before writing any '
+                'evidence file if that is not the case, so a run that reached this point and wrote output '
+                'always has passed=True.'),
         },
         'row_count': len(HOMR_QUERY),
         'stratafix_membership_count': sum(strata.values()),
@@ -912,10 +1000,12 @@ def main(argv: list[str] | None = None) -> None:
             'This is a cache-only reproduction of a manual judgment, not an automated proof of official '
             '-source completeness: an airport left unconfirmed here may mean this round found no '
             'linking record, not that no such record exists anywhere.',
-            'PSG and WRG were downgraded to unconfirmed_program_linkage_insufficient this round: their '
-            'fetched HOMR record is COOP-only, with no ASOS/AWOS platform entry, unlike IMT/KTN/SDF/SIT '
-            'which retain facility_continuity_confirmed because their own HOMR record does carry an '
-            'ASOS platform entry with ASOS-specific remarks.',
+            'PSG and WRG were downgraded to unconfirmed_program_linkage_insufficient: their fetched HOMR '
+            'record is COOP-only, with no ASOS/AWOS platform entry, unlike IMT/KTN/SDF/SIT whose own HOMR '
+            'record does carry an ASOS platform entry with ASOS-specific remarks. That ASOS-platform-linkage '
+            'contrast is unaffected by the later current-vs-historical split (see the "Third round" bullet '
+            'below): IMT/SDF/SIT no longer carry facility_continuity_confirmed themselves -- only KTN keeps '
+            'a distinct confirmed-with-caveat determination.',
             'YUM was downgraded to identifier_mismatch_partially_resolved_source_conflict this round: '
             'this project\'s own cached IEM AZ_ASOS network file disagrees with NOAA HOMR about the '
             'closed "YUM" identifier\'s coordinates (see FINDINGS[\'YUM\'][\'inference_and_unresolved\']), '
@@ -949,6 +1039,20 @@ def main(argv: list[str] | None = None) -> None:
             'platforms inside this run itself (record_verification above), not only in a separate test '
             'suite reading the cache independently -- a cache file existing is checked separately from the '
             'record it contains still matching what FINDINGS claims.',
+            'Fourth round (this revision): PBI\'s remark text and continuity_basis previously attributed a '
+            'dated "rename postdates 2018-2019" claim to the fetched HOMR record; the raw record (FAA_PBI. '
+            'json) carries no such dated statement, only current identifiers (FAA=DJT, ICAO=KDJT, '
+            'NWSLI=PBI) and an undated ad hoc metadata-name-update entry. PBI\'s historical_continuity_2018 '
+            '_2019 was downgraded from explicit_statement_change_postdates_window to '
+            'rename_confirmed_by_current_ids_undated_in_record; FCA\'s and KTN\'s actual dated remarks (2005 '
+            'rename, 1997 station move) are unaffected. Separately, EXPECTED_IDENTIFIERS + the identifier '
+            'check inside verify_expected_record() now require each judgment\'s cited FAA/ICAO/NWSLI/NEXRAD '
+            'identifiers to actually be present on the selected ncdcStnId\'s record -- previously only '
+            'ncdcStnId selection and platforms were checked, so a record that kept the same ncdcStnId and '
+            'platforms but had its identifiers deleted or swapped would still have printed the fixed '
+            'FINDINGS text unflagged. This check does not require every HOMR_QUERY lookup key (e.g. '
+            'FAA:PBI) to itself appear among the record\'s current identifiers, since some lookups '
+            '(PBI) are intentionally keyed by a historical id the record no longer carries as its own.',
         ],
     }
     manifest_path = out / f'{args.name}_manifest.json'
