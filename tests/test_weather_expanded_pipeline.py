@@ -6,8 +6,10 @@ import pytest
 
 from notebooks.fetch_weather_sample_expanded import (CHECKPOINT_SCHEMA_VERSION, LOOKAHEAD_HOURS,
                                                       LOOKBACK_HOURS, build_station_day_groups,
+                                                      compute_fetch_plan_fingerprint,
                                                       compute_plan_fingerprint, execute_with_caps,
-                                                      load_checkpoint, new_checkpoint_state,
+                                                      fetch_plan_options, load_checkpoint,
+                                                      new_checkpoint_state, record_budget_limits,
                                                       recover_interrupted_attempts, save_checkpoint,
                                                       validate_checkpoint_schema, verify_plan_fingerprint)
 from notebooks.join_weather_sample import load_observations
@@ -573,6 +575,30 @@ def test_verify_plan_fingerprint_raises_on_mismatch_and_records_when_absent():
     assert checkpoint['plan_fingerprint'] == 'fp1'  # a rejected mismatch never overwrites the recorded one
 
 
+def test_production_fetch_plan_fingerprint_excludes_resumable_total_budget_ceilings():
+    groups = one_ts_groups([('A', '2019-01-01')])
+    options = fetch_plan_options()
+    assert {'max_requests', 'max_bytes', 'max_seconds'}.isdisjoint(options)
+    assert compute_fetch_plan_fingerprint('sel', 'map', groups) == compute_plan_fingerprint(
+        'sel', 'map', groups, options)
+
+
+def test_budget_limit_history_records_cap_changes_without_resetting_cumulative_usage():
+    checkpoint = new_checkpoint_state()
+    checkpoint['requests_used'] = 7
+    checkpoint['bytes_used'] = 1234
+    checkpoint['seconds_used'] = 56.0
+
+    first = record_budget_limits(checkpoint, max_requests=10, max_bytes=2000, max_seconds=60.0)
+    record_budget_limits(checkpoint, max_requests=10, max_bytes=2000, max_seconds=60.0)
+    second = record_budget_limits(checkpoint, max_requests=20, max_bytes=4000, max_seconds=120.0)
+
+    assert checkpoint['budget_limit_history'] == [first, second]
+    assert checkpoint['requests_used'] == 7
+    assert checkpoint['bytes_used'] == 1234
+    assert checkpoint['seconds_used'] == 56.0
+
+
 # ---- budget/interrupt boundaries: reservation-before-call, conservative crash recovery ----
 
 def test_request_budget_is_reserved_before_the_network_call_not_after():
@@ -933,6 +959,20 @@ def test_old_schema_checkpoint_is_explicitly_rejected(tmp_path, build_old_checkp
     assert checkpoint_path.read_text() == original_text
 
 
+def test_v2_checkpoint_is_explicitly_rejected_after_fingerprint_semantics_change(tmp_path):
+    checkpoint_path = tmp_path / 'ckpt.json'
+    state = new_checkpoint_state()
+    state['schema_version'] = 2
+    state.pop('budget_limit_history')
+    original_text = json.dumps(state, indent=2)
+    checkpoint_path.write_text(original_text)
+
+    with pytest.raises(ValueError, match='schema_version'):
+        load_checkpoint(checkpoint_path)
+
+    assert checkpoint_path.read_text() == original_text
+
+
 def test_current_schema_checkpoint_missing_a_required_top_level_field_is_rejected(tmp_path):
     """A file that already CLAIMS schema_version=CHECKPOINT_SCHEMA_VERSION but is missing a required
     accounting field (e.g. truncated or hand-edited) must not be silently defaulted."""
@@ -948,8 +988,8 @@ def test_current_schema_checkpoint_missing_a_required_top_level_field_is_rejecte
 
 def test_current_schema_checkpoint_with_incomplete_in_flight_is_rejected(tmp_path):
     """An in_flight marker under the CURRENT schema must carry
-    bytes_reserved/attempt_overhead_seconds; a v2-labeled checkpoint missing
-    them is not silently completed with defaults."""
+    bytes_reserved/attempt_overhead_seconds; a current-version checkpoint
+    missing them is not silently completed with defaults."""
     checkpoint_path = tmp_path / 'ckpt.json'
     state = new_checkpoint_state()
     state['groups']['A|2019-01-01'] = {'status': 'in_progress', 'attempts_detail': [],
