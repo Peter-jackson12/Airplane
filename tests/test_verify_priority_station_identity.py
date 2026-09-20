@@ -39,6 +39,7 @@ def test_20_priority_airports_are_disjoint_from_the_355_confirmed_period_airport
 
 # ---- raw evidence: every cited file exists and hashes, extra evidence is wired up ----
 
+@pytest.mark.local_data
 def test_every_primary_raw_evidence_file_exists_in_the_default_cache():
     for iata, (id_type, id_value) in vpsi.HOMR_QUERY.items():
         cache = vpsi.DEFAULT_CACHE_DIR / f'{id_type}_{id_value}.json'
@@ -46,6 +47,7 @@ def test_every_primary_raw_evidence_file_exists_in_the_default_cache():
         json.loads(cache.read_text(encoding='utf-8'))  # must be valid JSON
 
 
+@pytest.mark.local_data
 def test_yum_links_both_the_faa_and_icao_raw_records():
     assert vpsi.HOMR_EXTRA_QUERY.get('YUM') == [('ICAO', 'KNYL')]
     cache = vpsi.DEFAULT_CACHE_DIR / 'ICAO_KNYL.json'
@@ -63,6 +65,7 @@ def test_fetch_homr_cache_only_mode_refuses_network_fallback_when_missing(tmp_pa
         vpsi.fetch_homr('ICAO', 'KISN', empty_cache, allow_network=False)
 
 
+@pytest.mark.local_data
 def test_fetch_homr_cache_only_mode_succeeds_against_the_real_cache():
     result = vpsi.fetch_homr('ICAO', 'KISN', vpsi.DEFAULT_CACHE_DIR, allow_network=False)
     assert result['sha256'] == vpsi.digest(vpsi.DEFAULT_CACHE_DIR / 'ICAO_KISN.json')
@@ -71,6 +74,7 @@ def test_fetch_homr_cache_only_mode_succeeds_against_the_real_cache():
 
 # ---- IEM cross-checks: exact file/feature used, not just a network name ----
 
+@pytest.mark.local_data
 def test_iem_feature_checks_reference_real_cached_geojson_files():
     for iata, checks in vpsi.IEM_FEATURE_CHECK.items():
         for network, sid in checks:
@@ -80,11 +84,13 @@ def test_iem_feature_checks_reference_real_cached_geojson_files():
             assert result['sha256'] == vpsi.digest(path)
 
 
+@pytest.mark.local_data
 def test_spn_is_not_found_in_any_tried_id_in_the_cached_gu_asos_network():
     results = {sid: vpsi.iem_feature_check('GU_ASOS', sid) for _, sid in vpsi.IEM_FEATURE_CHECK['SPN']}
     assert all(not r['found'] for r in results.values())
 
 
+@pytest.mark.local_data
 def test_yum_and_nyl_are_both_present_in_the_cached_az_asos_network():
     for sid in ('YUM', 'NYL'):
         result = vpsi.iem_feature_check('AZ_ASOS', sid)
@@ -94,6 +100,7 @@ def test_yum_and_nyl_are_both_present_in_the_cached_az_asos_network():
 # ---- WRG/PSG downgrade: no ASOS platform in their fetched HOMR record ----
 
 @pytest.mark.parametrize('iata,icao', [('WRG', 'PAWG'), ('PSG', 'PAPG')])
+@pytest.mark.local_data
 def test_wrg_and_psg_have_no_asos_or_awos_platform_in_their_raw_homr_record(iata, icao):
     id_type, id_value = vpsi.HOMR_QUERY[iata]
     assert (id_type, id_value) == ('ICAO', icao)
@@ -105,6 +112,7 @@ def test_wrg_and_psg_have_no_asos_or_awos_platform_in_their_raw_homr_record(iata
 
 
 @pytest.mark.parametrize('iata,icao', [('IMT', 'KIMT'), ('KTN', 'PAKT'), ('SDF', 'KSDF'), ('SIT', 'PASI')])
+@pytest.mark.local_data
 def test_imt_ktn_sdf_sit_do_carry_an_asos_platform_in_their_raw_homr_record(iata, icao):
     id_type, id_value = vpsi.HOMR_QUERY[iata]
     assert (id_type, id_value) == ('ICAO', icao)
@@ -171,6 +179,7 @@ def test_pbi_continuity_reflects_current_ids_confirmed_but_no_dated_rename_remar
     assert 'background' in fnd['inference_and_unresolved'].lower() or 'outside' in fnd['inference_and_unresolved'].lower()
 
 
+@pytest.mark.local_data
 def test_pbi_raw_record_carries_no_dated_rename_or_2018_2019_statement():
     # Guards against re-attributing an outside/background-knowledge claim to the raw
     # HOMR remark: none of FAA_PBI.json's `remarks` mention DJT, TRUMP, or a rename,
@@ -205,6 +214,7 @@ def test_aza_finding_names_the_specific_ncdc_stn_id_and_excludes_the_nexrad_reco
 
 # ---- cache-only reproduction end to end: fresh name, no network, originals untouched ----
 
+@pytest.mark.local_data
 def test_main_cache_only_reproduction_leaves_existing_evidence_untouched(tmp_path):
     original_evidence = ROOT / 'output/baseline_recovery_v2_station_identity_investigation_20260918_evidence.csv'
     original_manifest = ROOT / 'output/baseline_recovery_v2_station_identity_investigation_20260918_manifest.json'
@@ -330,6 +340,7 @@ def test_expected_identifiers_covers_exactly_the_ncdc_stn_ids_in_expected_record
     assert all_ids == set(vpsi.EXPECTED_IDENTIFIERS)
 
 
+@pytest.mark.local_data
 def test_verify_expected_record_passes_against_the_real_default_cache_for_every_airport():
     for iata, checks in vpsi.EXPECTED_RECORD.items():
         id_type, id_value = vpsi.HOMR_QUERY[iata]
@@ -345,6 +356,7 @@ def _copy_default_cache(tmp_path):
     return tmp_cache
 
 
+@pytest.mark.local_data
 def test_main_raises_and_writes_nothing_when_a_cached_record_loses_its_required_platform(tmp_path):
     tmp_cache = _copy_default_cache(tmp_path)
     imt_file = tmp_cache / 'ICAO_KIMT.json'
@@ -359,6 +371,7 @@ def test_main_raises_and_writes_nothing_when_a_cached_record_loses_its_required_
     assert not (ROOT / f'output/{fresh_name}_manifest.json').exists()
 
 
+@pytest.mark.local_data
 def test_main_raises_when_a_required_programs_platform_is_replaced_by_a_different_one(tmp_path):
     tmp_cache = _copy_default_cache(tmp_path)
     wrg_file = tmp_cache / 'ICAO_PAWG.json'
@@ -372,6 +385,7 @@ def test_main_raises_when_a_required_programs_platform_is_replaced_by_a_differen
     assert not (ROOT / f'output/{fresh_name}_evidence.csv').exists()
 
 
+@pytest.mark.local_data
 def test_main_raises_and_writes_nothing_when_identifiers_are_deleted_but_platforms_are_untouched(tmp_path):
     # Fourth round regression: before EXPECTED_IDENTIFIERS existed, a cache file whose
     # `identifiers` were dropped entirely -- while ncdcStnId and platforms stayed the
@@ -391,6 +405,7 @@ def test_main_raises_and_writes_nothing_when_identifiers_are_deleted_but_platfor
     assert not (ROOT / f'output/{fresh_name}_manifest.json').exists()
 
 
+@pytest.mark.local_data
 def test_main_raises_when_an_identifier_value_is_changed_but_platforms_are_untouched(tmp_path):
     tmp_cache = _copy_default_cache(tmp_path)
     pbi_file = tmp_cache / 'FAA_PBI.json'
@@ -407,6 +422,7 @@ def test_main_raises_when_an_identifier_value_is_changed_but_platforms_are_untou
     assert not (ROOT / f'output/{fresh_name}_evidence.csv').exists()
 
 
+@pytest.mark.local_data
 def test_main_raises_when_a_cached_response_has_no_stations(tmp_path):
     tmp_cache = _copy_default_cache(tmp_path)
     isn_file = tmp_cache / 'ICAO_KISN.json'
@@ -418,6 +434,7 @@ def test_main_raises_when_a_cached_response_has_no_stations(tmp_path):
     assert not (ROOT / f'output/{fresh_name}_evidence.csv').exists()
 
 
+@pytest.mark.local_data
 def test_main_raises_when_a_required_non_spn_iem_feature_goes_missing(tmp_path, monkeypatch):
     real_check = vpsi.iem_feature_check
 
@@ -434,6 +451,7 @@ def test_main_raises_when_a_required_non_spn_iem_feature_goes_missing(tmp_path, 
     assert not (ROOT / f'output/{fresh_name}_evidence.csv').exists()
 
 
+@pytest.mark.local_data
 def test_main_still_allows_spns_expected_iem_miss(tmp_path):
     # SPN's GU_ASOS features are genuinely not found in the real cache (see
     # test_spn_is_not_found_in_any_tried_id_in_the_cached_gu_asos_network above);
@@ -449,6 +467,7 @@ def test_main_still_allows_spns_expected_iem_miss(tmp_path):
         (ROOT / f'output/{fresh_name}_manifest.json').unlink(missing_ok=True)
 
 
+@pytest.mark.local_data
 def test_main_cache_only_reproduction_carries_the_new_columns_and_verification_summary(tmp_path):
     fresh_name = 'baseline_recovery_v2_station_identity_pytest_tmp8_20260918'
     try:
