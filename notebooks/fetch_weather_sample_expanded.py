@@ -20,8 +20,12 @@ Re-running with the SAME --name resumes the same logical run: cumulative
 requests/bytes/seconds carry over from the checkpoint rather than resetting,
 already-fetched or permanently-failed groups are skipped without spending any
 more budget, and a group that was merely cut off by a cap (never attempted,
-or mid-retry when the cap hit) is retried on the next run. Nothing already
-fetched is discarded or silently re-requested.
+or mid-retry when the cap hit) is retried on the next run. The three run-level
+resource ceilings (--max-requests/--max-bytes/--max-seconds) may change between
+resumed invocations: increasing them can grant additional headroom without
+changing the fetch plan, while lowering them never erases cumulative usage.
+Every distinct ceiling set is recorded in the checkpoint/manifest budget
+history. Nothing already fetched is discarded or silently re-requested.
 """
 from __future__ import annotations
 
@@ -38,16 +42,20 @@ from notebooks.fetch_weather_sample import (LOOKAHEAD_HOURS, LOOKBACK_HOURS, MAX
                                             digest, fetch_attempt, validate_cached_window)
 
 ROOT = Path(__file__).resolve().parents[1]
-# v1 checkpoints (including ones written by the pre-reservation-accounting code that ALSO stamped
-# itself schema_version=1) never reserved bytes_reserved/attempt_overhead_seconds on an in_flight
-# attempt before the network call, and never carried bytes_measured -- the accounting semantics
-# execute_with_caps/recover_interrupted_attempts now depend on. Bumping to 2 makes load_checkpoint's
-# existing version check actually reject that older accounting shape instead of silently accepting
-# it as if it were the same schema.
-CHECKPOINT_SCHEMA_VERSION = 2
+# v1 checkpoints lacked the reservation accounting fields that v2 made explicit.
+# v2 then folded mutable total run ceilings (max requests/bytes/seconds) into plan_fingerprint,
+# even though execute_with_caps intentionally supports resuming the SAME logical run with a larger
+# ceiling after a cap hit. That made the CLI path self-contradictory: the only change that could
+# grant more budget also changed the fingerprint and was rejected before resume.
+#
+# v3 separates those concerns. plan_fingerprint covers immutable input/request/fetch-policy identity,
+# while budget_limit_history records each distinct invocation-level ceiling set. Because a v2 hash
+# cannot be decomposed safely to prove that only its ceilings changed, v2 is rejected rather than
+# guessed or auto-migrated under the new semantics.
+CHECKPOINT_SCHEMA_VERSION = 3
 REQUIRED_CHECKPOINT_FIELDS = ('schema_version', 'requests_used', 'bytes_used', 'bytes_measured',
                              'unmeasured_byte_attempts', 'seconds_used', 'groups', 'attempts_log',
-                             'cap_hit', 'plan_fingerprint')
+                             'cap_hit', 'plan_fingerprint', 'budget_limit_history')
 REQUIRED_IN_FLIGHT_FIELDS = ('attempt', 'timeout', 'attempt_overhead_seconds', 'bytes_reserved')
 DEFAULT_ATTEMPT_TIMEOUT_SECONDS = 15.0
 MAX_ATTEMPTS_PER_GROUP = 3
@@ -73,7 +81,8 @@ def build_station_day_groups(collectible: pd.DataFrame) -> dict[tuple[str, str],
 def new_checkpoint_state() -> dict:
     return {'schema_version': CHECKPOINT_SCHEMA_VERSION, 'requests_used': 0, 'bytes_used': 0,
            'bytes_measured': 0, 'unmeasured_byte_attempts': 0, 'seconds_used': 0.0, 'groups': {},
-           'attempts_log': [], 'cap_hit': None, 'plan_fingerprint': None}
+           'attempts_log': [], 'cap_hit': None, 'plan_fingerprint': None,
+           'budget_limit_history': []}
 
 
 def recover_interrupted_attempts(state: dict) -> None:
@@ -148,9 +157,9 @@ def load_checkpoint(path: Path) -> dict:
     if schema_version != CHECKPOINT_SCHEMA_VERSION:
         raise ValueError(
             f'{path} has checkpoint schema_version={schema_version!r}, but this code requires '
-            f'schema_version={CHECKPOINT_SCHEMA_VERSION} (the accounting semantics changed: every '
-            'in_flight attempt must pre-reserve bytes_reserved/attempt_overhead_seconds before the '
-            'network call, and bytes_measured is tracked separately from the conservative reservation). '
+            f'schema_version={CHECKPOINT_SCHEMA_VERSION} (the checkpoint semantics changed: v3 keeps '
+            'mutable run-level resource ceilings out of plan_fingerprint and records them separately in '
+            'budget_limit_history; it also retains the v2 reservation accounting fields). '
             'An older checkpoint is never auto-migrated, and its cumulative counters are never reset or '
             'assumed continued under a reused name -- resolve it explicitly (e.g. inspect it manually) '
             'or start a fresh --name for a new logical run. No network call is made and the original '
@@ -170,18 +179,54 @@ def save_checkpoint(path: Path, state: dict) -> None:
 
 def compute_plan_fingerprint(selection_sha256: str, mapping_sha256: str,
                              groups: dict[tuple[str, str], list[pd.Timestamp]], options: dict) -> str:
-    """Fingerprints the input selection, the mapping table, the NORMALIZED
-    per-(station, day) request windows actually planned, and the request
-    options (caps, padding hours, per-request size limit) that this run was
-    built from. Two runs with the same station/day keys but different query
-    windows -- or the same windows but a different selection/mapping/option
-    set -- must never be treated as the same completed work."""
+    """Fingerprints immutable logical-plan inputs.
+
+    `options` is deliberately generic so tests can exercise the hashing rule,
+    but the production caller uses fetch_plan_options() below. Run-level
+    cumulative resource ceilings do NOT belong here: they can be raised or
+    lowered on resume without changing which observations are requested.
+    """
     normalized_groups = sorted(
         (station, day, min(ts).isoformat(), max(ts).isoformat())
         for (station, day), ts in groups.items())
     payload = {'selection_sha256': selection_sha256, 'mapping_sha256': mapping_sha256,
               'groups': normalized_groups, 'options': options}
     return hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()
+
+
+def fetch_plan_options() -> dict:
+    """Immutable fetch-policy settings that make checkpointed work comparable.
+
+    Total invocation ceilings (--max-requests/--max-bytes/--max-seconds) are
+    intentionally absent. They only bound how much of this same plan one
+    invocation may advance.
+    """
+    return {
+        'lookback_hours': LOOKBACK_HOURS,
+        'lookahead_hours': LOOKAHEAD_HOURS,
+        'max_response_bytes_per_attempt': MAX_RESPONSE_BYTES,
+        'default_attempt_timeout_seconds': DEFAULT_ATTEMPT_TIMEOUT_SECONDS,
+        'max_attempts_per_group': MAX_ATTEMPTS_PER_GROUP,
+        'max_consecutive_failures': MAX_CONSECUTIVE_FAILURES,
+        'backoff_base_seconds': BACKOFF_BASE_SECONDS,
+        'subprocess_termination_grace_seconds': SUBPROCESS_TERMINATION_GRACE_SECONDS,
+        'success_pause_seconds': SUCCESS_PAUSE_SECONDS,
+    }
+
+
+def compute_fetch_plan_fingerprint(selection_sha256: str, mapping_sha256: str,
+                                   groups: dict[tuple[str, str], list[pd.Timestamp]]) -> str:
+    return compute_plan_fingerprint(selection_sha256, mapping_sha256, groups, fetch_plan_options())
+
+
+def record_budget_limits(checkpoint: dict, *, max_requests: int, max_bytes: int,
+                         max_seconds: float) -> dict:
+    """Record changed invocation ceilings without touching cumulative usage."""
+    caps = {'max_requests': max_requests, 'max_bytes': max_bytes, 'max_seconds': max_seconds}
+    history = checkpoint['budget_limit_history']
+    if not history or history[-1] != caps:
+        history.append(caps)
+    return caps
 
 
 def verify_plan_fingerprint(checkpoint: dict, fingerprint: str, *, name: str) -> None:
@@ -517,14 +562,13 @@ def main() -> None:
              f'cumulative_bytes_measured={checkpoint.get("bytes_measured", 0)} '
              f'cumulative_seconds={checkpoint["seconds_used"]:.0f}', flush=True)
 
-    plan_fingerprint = compute_plan_fingerprint(
-        digest(selection_path), digest(mapping_path), groups,
-        {'lookback_hours': LOOKBACK_HOURS, 'lookahead_hours': LOOKAHEAD_HOURS,
-         'max_requests': args.max_requests, 'max_bytes': args.max_bytes, 'max_seconds': args.max_seconds,
-         'max_attempts_per_group': MAX_ATTEMPTS_PER_GROUP,
-         'subprocess_termination_grace_seconds': SUBPROCESS_TERMINATION_GRACE_SECONDS,
-         'success_pause_seconds': SUCCESS_PAUSE_SECONDS})
+    plan_fingerprint = compute_fetch_plan_fingerprint(
+        digest(selection_path), digest(mapping_path), groups)
     verify_plan_fingerprint(checkpoint, plan_fingerprint, name=args.name)
+    current_caps = record_budget_limits(
+        checkpoint, max_requests=args.max_requests, max_bytes=args.max_bytes, max_seconds=args.max_seconds)
+    # Persist plan identity and this invocation's budget before any network call.
+    save_checkpoint(checkpoint_path, checkpoint)
 
     result = execute_with_caps(
         planned, groups, max_requests=args.max_requests, max_bytes=args.max_bytes,
@@ -540,10 +584,10 @@ def main() -> None:
         'name': args.name, 'mapping_name': args.mapping_name,
         'code_sha256': hashlib.sha256(
             Path(__file__).read_bytes().replace(b'\r\n', b'\n')).hexdigest(),
-        'caps': {'max_requests': args.max_requests, 'max_bytes': args.max_bytes,
-                'max_seconds': args.max_seconds,
+        'caps': {**current_caps,
                 'subprocess_termination_grace_seconds': SUBPROCESS_TERMINATION_GRACE_SECONDS,
                 'success_pause_seconds': SUCCESS_PAUSE_SECONDS},
+        'budget_limit_history': checkpoint['budget_limit_history'],
         'plan_fingerprint': plan_fingerprint,
         'resumed_from_checkpoint': resuming,
         'planned_station_day_groups': len(planned),
@@ -591,9 +635,12 @@ def main() -> None:
             'window for the same station/day all raise explicitly instead of silently re-fetching or '
             'keeping stale evidence.',
             'plan_fingerprint ties this checkpoint to the exact input selection file, mapping table, '
-            'normalized per-(station, day) request windows, and request options (caps, padding hours, '
-            'grace/pause seconds) it was built from; resuming the same --name after any of those '
-            'change raises rather than silently mixing incompatible evidence.',
+            'normalized per-(station, day) request windows, and immutable fetch-policy options '
+            '(padding, per-attempt response/timeout/retry policy, grace/pause seconds). The cumulative '
+            'run-level ceilings max_requests/max_bytes/max_seconds are intentionally NOT part of that '
+            'identity: they may change on resume, while budget_limit_history records every distinct '
+            'ceiling set and cumulative usage is never reset. Input/request/fixed-policy changes still '
+            'raise rather than silently mixing incompatible evidence.',
             'The request AND byte budget for each HTTP attempt are reserved and persisted BEFORE the '
             'network call, not after; an attempt interrupted by a process crash is never re-issued as '
             'a free retry on resume, and its unknown byte/time cost is charged conservatively (the '

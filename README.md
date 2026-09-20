@@ -2,7 +2,7 @@
 
 **이 README가 프로젝트 전체 설명과 최신 상태의 기준 문서입니다.** 발표는 1~6절 순서로 진행하고, 세부 수치·실행 코드는 마지막 문서 안내에서 확인할 수 있습니다.
 
-작성: Peter-jackson12 TF · 갱신: 2026-09-18 · 문서 버전: v0.23
+작성: Peter-jackson12 TF · 갱신: 2026-09-20 · 문서 버전: v0.24
 
 **작업 목표·제출 방식(사용자 결정, 2026-09-18):** 기존 전처리 분석에서 종료하지 않고, 날씨 정보를 추가해 성능 향상을 시도하고 날씨 유무의 효과를 동일 평가 조건에서 검증하는 단계까지 진행합니다. 최종 제출물은 **GitHub 저장소의 README와 연결된 코드·실행 근거**이며, DOCX 양식 작성은 필수가 아닙니다. 성능 향상은 아직 확인되지 않은 실험 목표입니다. 향상 여부와 관계없이 비교 결과·정보 경계·한계를 정직하게 기록하며, 좋은 결과가 나올 때까지 평가 조건을 바꾸는 것을 완료 기준으로 삼지 않습니다.
 
@@ -28,6 +28,7 @@
 | 재개 검증·예산 경계 마무리, 실제 캐시 재결합, 수집 범위 재산정 | 체크포인트 재검증·`plan_fingerprint`·요청 사전 예약, 21/300행 실제 재결합 비교(21행 완전 동일, 300행 의미 차이 0건), station별 구간 병합·차감 기반 재산정(531~1,049MB 시나리오 범위), 미결합 사유 3분리(323개 테스트) |
 | 미측정 바이트 예산 우회·재결합 판정 모호성 수정 | 중단된 시도의 바이트도 사전 예약·정산해 누적 상한을 보장, 재결합 비교를 구조 검사+승인된 station 마스킹 예외만 통과시키는 명시적 PASS/FAIL로 교체, 산정·타이밍 표현 정정(341개 테스트, `..._recombination_fix_20260918` 재검증 PASS) |
 | 체크포인트 스키마 경계·재결합 구조 우회·입력 지문 누락 수정 | 회계 의미가 바뀐 체크포인트 스키마를 버전 2로 분리해 구버전을 네트워크 호출 전에 명시적으로 거부, 바이트 동일 경로에서도 구조 검사(ID 존재·유일성·행수·순서·열 집합)를 먼저 수행하도록 재배치, 재결합이 읽는 selection_with_prediction_at.csv 2개·mapping_table.csv의 SHA-256과 재결합 코드 지문 범위를 새 manifest에 연결(354개 테스트, `..._recombination_provenance_20260918` 재검증 PASS) |
+| 날씨 수집 재개 시 총예산-계획 지문 충돌 수정 | 동일 체크포인트의 누적 요청·바이트·시간 사용량은 유지하면서 후속 실행의 총예산 상한을 조정할 수 있도록 불변 수집 계획 지문과 실행별 예산 이력을 분리. 스키마 v3에서 `budget_limit_history` 기록, v2 체크포인트는 추측 이관하지 않고 명시적으로 거부. 새 날씨 수집·재학습 없음 |
 | 우선 조사 대상 20개 공항의 역사적 매핑을 공식 자료로 대조 | NOAA/NCEI HOMR(Historical Observing Metadata Repository) 대조로 ISN→XWA 시설 이전·YUM의 두 별개 관측소 확인, 9개 식별자 불일치 중 8개는 IEM 현재 목록의 실제 사용 ID(예: FCA→GPI 2005-10-25 개명)로 해소, STT/STX 시간대 충돌은 미해결 유지, SPN은 파이프라인 수집 공백으로 재확인 |
 | 위 20개 조사의 증거 해석·연결 재검토 | 335→355개 표기 오류 정정, WRG·PSG를 COOP 전용 레코드(ASOS/AWOS 항목 없음)로 재확인해 `unconfirmed_program_linkage_insufficient`로 하향, YUM을 HOMR·IEM 자체 캐시 간 좌표 불일치가 남은 `identifier_mismatch_partially_resolved_source_conflict`로 하향(2021-12-16 ASOS 메타데이터 추가일을 설치일로 단정하지 않음), AZA의 실제 사용 ncdcStnId(AWOS 10000826, NEXRAD 30001870 제외)를 명시, 캐시 전용 재현·기존 캐시 재사용·새 출력명을 지원하도록 `verify_priority_station_identity.py` 수정(374개 테스트, 새 [증거표](output/baseline_recovery_v2_station_identity_review_20260918_evidence.csv)) |
 | 위 20개 조사의 현재 매핑/역사적 연속성 분리, 원자료 검증을 생성 경로에 연결 | IMT·SDF·SIT를 KTN(날짜 명시 1997년 사건 보유)과 분리해 `current_facility_confirmed_historical_continuity_unconfirmed_...`로 하향, 식별자 불일치 8곳의 `inference_and_unresolved`를 "none"에서 근거 종류별(날짜 명시 FCA/PBI vs remark 부재 5곳 vs 날짜 불명 AZA)로 구체화, `main()`이 fetched HOMR JSON에서 각 판단이 인용하는 ncdcStnId·platforms를 실제로 선택·대조하고(AZA 2레코드·YUM 2파일 포함) 불일치·필수 IEM feature 누락 시 `RuntimeError`로 증거표 작성 자체를 막도록 수정(395개 테스트, 새 [증거표](output/baseline_recovery_v2_station_identity_verification_20260918_evidence.csv)) |
@@ -558,6 +559,14 @@ BTS는 IATA 코드가 시기에 따라 다른 항공사에 재배정될 수 있�
 .venv/Scripts/python.exe -u -m notebooks.reconcile_weather_cache_recombination --name baseline_recovery_v2_weather_recombination_provenance_20260918
 .venv/Scripts/python.exe -u -m pytest -q
 ```
+
+### 수집 재개 총예산과 계획 지문 분리 (2026-09-20)
+
+stratafix 300행의 실제 수집에 들어가기 전에 재개 경로를 다시 점검해, `fetch_weather_sample_expanded.py`의 CLI와 내부 재개 계약이 충돌하는 문제를 수정했습니다. 내부 `execute_with_caps`는 누적 사용량을 보존한 채 후속 실행에서 더 큰 `--max-requests`·`--max-bytes`·`--max-seconds` 상한을 줄 수 있도록 설계돼 있었지만, 실제 CLI의 `plan_fingerprint`에는 이 세 **총예산 상한 자체**가 포함돼 있었습니다. 따라서 한 번 상한에 도달하면 같은 상한으로는 추가 진행할 수 없고, 상한을 늘리면 지문 불일치로 재개가 거부되는 모순이 있었습니다.
+
+현재 체크포인트 스키마는 **v3**입니다. `plan_fingerprint`는 selection·mapping·정규화된 station/day 조회 구간과 요청당 크기·timeout·retry·padding·grace/pause처럼 **수집 결과의 정체성을 바꾸는 불변 정책**만 묶습니다. 반면 세 누적 총예산 상한은 `budget_limit_history`에 실행별로 기록하며 지문에서는 제외합니다. 따라서 예산을 늘려 같은 계획을 이어가도 기존 요청·바이트·시간 누계는 초기화되지 않고, 예산을 줄여도 이미 사용한 누계를 지우지 않습니다. 입력·조회 구간·불변 수집 정책이 바뀌면 기존처럼 재개를 거부합니다.
+
+v2 체크포인트의 지문은 예산과 계획이 한 해시에 섞여 있어 어느 부분만 달라졌는지 안전하게 복원할 수 없으므로 자동 이관하지 않습니다. v2는 네트워크 호출 전에 명시적으로 거부하고 기존 파일을 보존하며, 새 논리 실행은 새 체크포인트로 시작합니다. 이 수정은 **Git-only 코드·회귀 계약 보완**이며, 이 절에서 새 날씨 다운로드·stratafix 실수집·전체 결합·모델 재학습 결과를 주장하지 않습니다. 실제 수집 전 우선순위는 아래와 같이 기존 HOMR/IEM 원본 캐시 복원·해시 대조 → 근거 부족 매핑은 보류 유지 → 수정된 stratafix 300행 실제 수집·결합 순서입니다.
 
 ### 우선 조사 대상 20개 공항의 매핑: 최신 판정과 근거 (2026-09-18)
 
