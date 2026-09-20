@@ -866,12 +866,33 @@ P6_clean은 실제 지연 45,000행 중 **24,895행을 세 시드 모두에서 F
 
 ### 환경과 빠른 확인
 
-Python 3.14 이상과 `uv`를 사용합니다. 프로젝트 루트에서 실행합니다. 실제 원본 `data/train.csv`는 별도로 필요하며 저장소에 포함되지 않습니다.
+Python 3.14 이상과 `uv`를 사용합니다(CI는 Python 3.14). 프로젝트 루트에서 실행합니다. 아래 Git-only 회귀 검사는 원본 데이터 없이 실행할 수 있습니다. 학습·실제 데이터 분석에는 저장소에 포함되지 않은 `data/train.csv`와 해당 분석의 입력이 별도로 필요합니다.
 
 ```powershell
-uv sync --locked
-uv run --offline python -u -m pytest -q
+uv sync --locked --python 3.14 --dev
+uv run --locked --offline python -m pytest -q
 ```
+
+### GitHub Actions와 테스트 범위
+
+[CI 워크플로](.github/workflows/ci.yml)는 push/PR마다 새 Ubuntu 환경에서 Python 3.14와 `uv.lock`의 개발 의존성을 설치하고 `uv run --locked --offline python -m pytest -q --strict-markers -m "not local_data"`를 실행합니다. 잠금 파일이 선언과 다르면 설치 단계에서 실패합니다. 데이터 다운로드·HOMR/IEM 캐시 복원은 하지 않으며, `--offline`은 uv의 패키지 네트워크 접근만 제한합니다. 테스트의 외부 호출은 임시 입력·대체 함수로 검증합니다.
+
+`pyproject.toml`의 기본 선택도 `not local_data`입니다. Git 파일과 테스트가 만드는 임시 입력만 사용하는 **379개 회귀 검사**를 실행하며, 실제 로컬 입력이 필요한 **24개 검사는 선택 해제(deselected)**됩니다. 이는 전체 실데이터 검증 통과를 뜻하지 않습니다. 기존 관측소 검사 23개(19개 함수의 매개변수 사례)는 `tests/test_verify_priority_station_identity.py`의 개별 `local_data` 표시로 보존했고, 같은 파일의 순수 회귀 검사는 CI에 포함합니다. 날짜 귀속 검사의 로컬 `output/label_coverage/schema.csv` 검증은 파일이 없으면 조용히 생략하던 조건문에서 별도의 `local_data` 검사 1개로 분리했습니다. 총 수집 대상은 403개입니다.
+
+원본 입력을 복원한 뒤 로컬 검사를 명시적으로 실행합니다. 입력이 없거나 잘못되면 실패하며 자동 skip·다운로드·성공 처리하지 않습니다.
+
+```powershell
+# 로컬 입력 검사만 실행
+uv run --locked --offline python -m pytest -q -m local_data
+# Git-only + 로컬 입력 검사 전체 실행 (기본 marker 선택을 덮어씀)
+uv run --locked --offline python -m pytest -q -m "local_data or not local_data"
+```
+
+관측소 검사에는 아래 재현 절의 **HOMR 원본 JSON 21개와 IEM GeoJSON 9개**가 필요합니다. 파일·해시의 기준은 [최신 증거표](output/baseline_recovery_v2_station_identity_verification_fix_20260918_evidence.csv)와 [manifest](output/baseline_recovery_v2_station_identity_verification_fix_20260918_manifest.json)입니다. 날짜 귀속의 로컬 스키마 검사는 실제 `data/train.csv`로 생성한 `output/label_coverage/schema.csv`가 필요합니다(아래 라벨 분포 진단 명령). 이 경로들도 Git 추적 대상이 아닙니다.
+
+새 테스트는 기본적으로 Git-only 계약을 따라야 합니다. 무시된 데이터·원본 캐시가 필요하면 해당 검사에 `@pytest.mark.local_data`를 붙이고 필요한 입력을 이 절에 명시합니다. 모듈 전체 제외나 파일 존재 여부에 따른 조용한 생략으로 순수 회귀 검사를 줄이지 않습니다. marker 오타는 `--strict-markers`로 오류 처리합니다.
+
+에이전트 작업은 `AGENTS.md`와 이 README 확인 → 브랜치에서 코드/테스트 수정 → push/PR → GitHub Actions의 실패 단계·로그 확인 → 수정·재실행 순서로 진행할 수 있습니다. CI 로그는 PR의 Checks와 저장소 Actions에서 확인합니다. CI 성공은 Git-only 계약의 검증이며, 데이터 분석·재학습·원본 증거 재현은 위 로컬 계약을 별도로 충족해야 합니다.
 
 모델 재학습 없이 결과를 읽으려면 위 결과표와 아래 실행 노트북을 열면 됩니다. 원본의 라벨 분포 진단을 재현하는 명령은 다음과 같습니다. 노트북 생성에는 현재 분석 환경의 `nbformat`, `nbclient`, `nbconvert`, `ipykernel`이 추가로 필요합니다(현재 pyproject 선언에 포함되지 않음).
 

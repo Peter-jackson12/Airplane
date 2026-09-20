@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from notebooks.assign_row_dates import (ADOPTED_STATUSES, KEYS, STATUS_COMPLETE_MULTI,
                                         STATUS_COMPLETE_NONE, STATUS_COMPLETE_SINGLE,
@@ -30,14 +31,18 @@ def test_volatile_keys_are_the_only_keys_ever_missing_in_the_source():
     calendar date is always known; only these three keys can ever be absent."""
     assert set(VOLATILE_KEYS) < set(KEYS)
     assert len(VOLATILE_KEYS) == 3
+
+
+@pytest.mark.local_data
+def test_volatile_keys_match_the_local_source_schema():
+    """Validate the original-data profile explicitly, never silently omit it."""
     schema_path = ROOT / 'output/label_coverage/schema.csv'
-    if schema_path.exists():
-        schema = pd.read_csv(schema_path).set_index('column')['missing_n']
-        never_missing = [k for k in KEYS if k not in VOLATILE_KEYS]
-        for column in never_missing:
-            assert schema.loc[column] == 0, column
-        for column in VOLATILE_KEYS:
-            assert schema.loc[column] > 0, column
+    schema = pd.read_csv(schema_path).set_index('column')['missing_n']
+    never_missing = [k for k in KEYS if k not in VOLATILE_KEYS]
+    for column in never_missing:
+        assert schema.loc[column] == 0, column
+    for column in VOLATILE_KEYS:
+        assert schema.loc[column] > 0, column
 
 
 def test_classify_complete_distinguishes_zero_one_two_candidate_years():
