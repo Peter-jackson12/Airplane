@@ -85,6 +85,17 @@ def new_checkpoint_state() -> dict:
            'budget_limit_history': []}
 
 
+def checkpoint_has_prior_progress(checkpoint: dict) -> bool:
+    """Return a stable boolean for whether this logical run is being resumed.
+
+    Do not return checkpoint['groups'] directly: an empty dict is a mutable
+    object, so keeping it in the manifest and then filling the checkpoint
+    during execute_with_caps would serialize the whole groups mapping instead
+    of the intended True/False audit flag.
+    """
+    return bool(checkpoint['requests_used'] > 0 or checkpoint['groups'])
+
+
 def recover_interrupted_attempts(state: dict) -> None:
     """A crash between the pre-call reservation persist and the post-call
     resolution persist (see execute_with_caps) leaves a group's checkpoint
@@ -555,7 +566,7 @@ def main() -> None:
 
     checkpoint_path = out / f'{args.name}_fetch_checkpoint.json'
     checkpoint = load_checkpoint(checkpoint_path)
-    resuming = checkpoint['requests_used'] > 0 or checkpoint['groups']
+    resuming = checkpoint_has_prior_progress(checkpoint)
     if resuming:
         print(f'resuming from checkpoint: cumulative_requests={checkpoint["requests_used"]} '
              f'cumulative_bytes_reserved={checkpoint["bytes_used"]} '
