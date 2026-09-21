@@ -281,7 +281,7 @@ Git에 있는 현재 `confirmed_period` 매핑만으로 계산한 구조적 상�
 
 기존 21행/300행/stratafix 캐시는 그대로 보존합니다. 이들은 특정 station의 일부 시각 창에 대한 증거이므로 **월 전체 bulk 요청을 이미 수집했다는 근거로 재사용하지 않습니다.** 최신 전체 실행 입력은 `baseline_recovery_v2_weather_scope_fix_20260918` 매핑을 명시적으로 사용합니다.
 
-전체 네트워크 실행은 아직 하지 않았습니다. 먼저 로컬 원본으로 plan만 생성해 분모·station-month·bulk request 수·shard 수를 검토하고, 그 다음 첫 shard도 **5번의 신규 HTTP attempt까지만** pilot으로 실행해 실제 응답 바이트·시간·실패/503/422 여부를 확인합니다. pilot 근거를 검토하기 전 전체 shard 반복 실행으로 넘어가지 않습니다.
+전체 27-shard 네트워크 실행은 아직 완료되지 않았습니다. 2026-09-21 로컬 실행에서는 stress-first shard 0의 50개 request group이 최종 `complete=true`, `successful=true`로 끝났고, 누적 HTTP attempt 51회 중 503 1회가 재시도로 복구됐습니다. 해당 shard-local checkpoint/manifest/cache는 Git-ignored 로컬 실행 증거이며, 전체 수집이 끝나기 전의 중간 결과입니다. 다음 단계는 한 shard씩 순차 실행하고 어떤 shard라도 미완료·실패하면 즉시 멈추는 [run_weather_full_collection](notebooks/run_weather_full_collection.py) 경로를 사용합니다.
 
 ```powershell
 $Full = "baseline_recovery_v2_weather_full_bulk_20260921"
@@ -294,7 +294,18 @@ uv run --locked --offline python -u -m notebooks.fetch_weather_full_sharded --na
 uv run --locked --offline python -u -m notebooks.fetch_weather_full_sharded --name $Full --mapping-name $Mapping --shard-index 0 --shard-size 50 --max-stations-per-request 20 --max-requests 5 --max-bytes 100000000 --max-seconds 900
 
 # pilot 검토 후 같은 shard를 재개할 때만 누적 cap을 올린다.
-# 모든 shard가 성공한 뒤에만 --finalize를 실행한다.
+# shard 0은 로컬에서 50/50 완료 검증됨.
+
+# 네트워크 없이 현재 shard evidence 상태만 검사
+uv run --locked --offline python -u -m notebooks.run_weather_full_collection --name $Full --mapping-name $Mapping --start-shard 1 --end-shard 26 --status-only
+
+# shard 1~26을 순차 실행. 각 shard는 기존 cumulative usage 위에
+# pending group + retry headroom 10회, 300MB, 5400초의 추가 headroom만 받는다.
+# 한 shard라도 complete/successful이 아니면 즉시 중단하고 뒤 shard는 시작하지 않는다.
+uv run --locked --offline python -u -m notebooks.run_weather_full_collection --name $Full --mapping-name $Mapping --start-shard 1 --end-shard 26 --retry-headroom 10 --additional-max-bytes 300000000 --additional-max-seconds 5400
+
+# runner는 finalize를 자동 실행하지 않는다.
+# 27개 shard 전부 successful을 검증한 뒤에만 별도로 --finalize를 실행한다.
 ```
 
 `--prepare-only` 결과가 기존 142,574 station-day 또는 132,783 merged-interval 산정과 일치한다고 주장하지 않습니다. 두 숫자는 과거 sizing 정의이고, 새 plan manifest의 `bulk_request_groups`가 현재 transport 실행 계약입니다. 수집 완료·finalize·row-level join 검증 전에는 weather-on 모델 학습으로 넘어가지 않습니다.
@@ -320,6 +331,7 @@ uv run --locked --offline python -u -m notebooks.fetch_weather_full_sharded --na
 | [diagnose_weather_expanded_cache](notebooks/diagnose_weather_expanded_cache.py), [reconcile_weather_cache_recombination](notebooks/reconcile_weather_cache_recombination.py) | 캐시 진단·수정 코드 재결합과 명시적 PASS/FAIL |
 | [scope_weather_collection](notebooks/scope_weather_collection.py), [scope_weather_collection_refined](notebooks/scope_weather_collection_refined.py) | 초기 산정·실제 구간 병합/차감 재산정 |
 | [fetch_weather_full_sharded](notebooks/fetch_weather_full_sharded.py) | 전체 adopted weather의 network×월×station-batch bulk plan·50요청 shard·checkpoint/cache/finalize |
+| [run_weather_full_collection](notebooks/run_weather_full_collection.py) | full-weather shard를 순차 resume하고 성공 shard를 재검증하며 첫 미완료/실패에서 fail-closed 중단 |
 | `notebooks/`, `tests/`, `output/` | 재현·회귀·실행 증거. 루트의 다른 `run_*.py`는 과거 경로일 수 있음 |
 
 <a id="8-문서안내"></a>
