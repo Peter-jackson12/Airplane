@@ -1067,3 +1067,116 @@ def test_new_schema_resume_after_two_interrupts_reserves_and_charges_grace_witho
                              max_seconds=10**9)
     assert len(result['fetched']) == 1
     assert result['fetched'][0]['attempts'] == 3  # 2 recovered-interrupted + 1 real success
+
+
+
+# ---- Windows checkpoint replace resilience / post-fetch crash provenance ----
+
+def test_save_checkpoint_retries_transient_permission_error(tmp_path, monkeypatch):
+    checkpoint_path = tmp_path / 'checkpoint.json'
+    state = new_checkpoint_state()
+    original_replace = Path.replace
+    attempts = []
+    sleeps = []
+
+    def flaky_replace(self, target):
+        attempts.append((self, target))
+        if len(attempts) < 3:
+            raise PermissionError('simulated transient Windows access denial')
+        return original_replace(self, target)
+
+    monkeypatch.setattr(Path, 'replace', flaky_replace)
+    save_checkpoint(
+        checkpoint_path,
+        state,
+        max_replace_attempts=3,
+        replace_retry_seconds=0.01,
+        sleep_fn=sleeps.append,
+    )
+
+    assert len(attempts) == 3
+    assert sleeps == [0.01, 0.01]
+    assert json.loads(checkpoint_path.read_text()) == state
+    assert not checkpoint_path.with_name(checkpoint_path.name + '.tmp').exists()
+
+
+def test_save_checkpoint_exhausted_permission_error_preserves_old_checkpoint_and_tmp(
+    tmp_path, monkeypatch
+):
+    checkpoint_path = tmp_path / 'checkpoint.json'
+    old_state = new_checkpoint_state()
+    old_state['requests_used'] = 7
+    save_checkpoint(checkpoint_path, old_state)
+    old_text = checkpoint_path.read_text()
+
+    new_state = json.loads(json.dumps(old_state))
+    new_state['requests_used'] = 8
+    sleeps = []
+
+    def always_denied(self, target):
+        raise PermissionError('simulated persistent Windows access denial')
+
+    monkeypatch.setattr(Path, 'replace', always_denied)
+    with pytest.raises(PermissionError, match='persistent Windows access denial'):
+        save_checkpoint(
+            checkpoint_path,
+            new_state,
+            max_replace_attempts=3,
+            replace_retry_seconds=0.01,
+            sleep_fn=sleeps.append,
+        )
+
+    tmp = checkpoint_path.with_name(checkpoint_path.name + '.tmp')
+    assert checkpoint_path.read_text() == old_text
+    assert json.loads(tmp.read_text()) == new_state
+    assert sleeps == [0.01, 0.01]
+
+
+def test_resume_adopts_valid_cache_without_network_and_preserves_prior_attempt_history():
+    planned = [('A', '2019-01-01')]
+    groups = one_ts_groups(planned)
+    checkpoint = new_checkpoint_state()
+    attempt = {
+        'attempt': 1,
+        'success': True,
+        'bytes_received': 321,
+        'seconds': 1.5,
+        'error': None,
+    }
+    checkpoint['requests_used'] = 1
+    checkpoint['bytes_used'] = 321
+    checkpoint['bytes_measured'] = 321
+    checkpoint['seconds_used'] = 2.75
+    checkpoint['attempts_log'] = [
+        {'station': 'A', 'day': '2019-01-01', **attempt}
+    ]
+    checkpoint['groups']['A|2019-01-01'] = {
+        'status': 'in_progress',
+        'attempts_detail': [attempt],
+    }
+
+    attempt_fn = make_attempt_fn({})
+    result, resumed = run(
+        planned,
+        groups,
+        attempt_fn,
+        checkpoint=checkpoint,
+        cache_exists_fn=lambda s, a, b: Path('/fake/A.csv'),
+        max_requests=1,
+        max_bytes=321,
+        max_seconds=100,
+    )
+
+    assert attempt_fn.calls == []
+    assert result['new_requests'] == 0
+    assert result['new_bytes'] == 0
+    assert result['cumulative_requests'] == 1
+    assert result['cumulative_bytes_measured'] == 321
+    record = result['fetched'][0]
+    assert record['was_already_cached'] is False
+    assert record['attempts'] == 1
+    assert record['attempts_detail'] == [attempt]
+    assert record['recovered_from_existing_cache_after_incomplete_checkpoint'] is True
+    assert resumed['groups']['A|2019-01-01']['status'] == 'fetched'
+    assert resumed['groups']['A|2019-01-01']['attempts'] == 1
+    assert resumed['groups']['A|2019-01-01']['attempts_detail'] == [attempt]

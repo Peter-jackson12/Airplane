@@ -65,6 +65,8 @@ ATTEMPT_LOG_LIMIT = 500  # caps only the rolling cross-group activity log; each 
                         # attempts_detail (the accounting/audit basis) is never truncated by this
 SUCCESS_PAUSE_SECONDS = 3.0  # be polite to the free public archive between successful requests,
                             # matching fetch_weather_sample.py's fetch_window; charged against the time budget
+CHECKPOINT_REPLACE_MAX_ATTEMPTS = 5
+CHECKPOINT_REPLACE_RETRY_SECONDS = 0.1
 
 
 def build_station_day_groups(collectible: pd.DataFrame) -> dict[tuple[str, str], list[pd.Timestamp]]:
@@ -180,12 +182,39 @@ def load_checkpoint(path: Path) -> dict:
     return state
 
 
-def save_checkpoint(path: Path, state: dict) -> None:
-    """Atomic write: a crash between these two lines leaves either the old
-    checkpoint or the new one intact, never a half-written file."""
+def save_checkpoint(
+    path: Path,
+    state: dict,
+    *,
+    max_replace_attempts: int = CHECKPOINT_REPLACE_MAX_ATTEMPTS,
+    replace_retry_seconds: float = CHECKPOINT_REPLACE_RETRY_SECONDS,
+    sleep_fn=time.sleep,
+) -> None:
+    """Atomically replace a checkpoint, retrying only transient access denial.
+
+    Windows can briefly deny a replace even after the temp file was written
+    successfully (for example while another process has a short-lived handle).
+    Keep the already-written temp evidence intact and retry the *replace only*;
+    never rewrite state between attempts. If the bounded retries are exhausted,
+    re-raise PermissionError and leave both the prior checkpoint and temp file
+    available for audit/recovery.
+    """
+    if max_replace_attempts <= 0:
+        raise ValueError('max_replace_attempts must be > 0')
+    if replace_retry_seconds < 0:
+        raise ValueError('replace_retry_seconds must be >= 0')
+
     tmp = path.with_name(path.name + '.tmp')
     tmp.write_text(json.dumps(state, indent=2, default=str))
-    tmp.replace(path)
+    for attempt in range(1, max_replace_attempts + 1):
+        try:
+            tmp.replace(path)
+            return
+        except PermissionError:
+            if attempt >= max_replace_attempts:
+                raise
+            if replace_retry_seconds > 0:
+                sleep_fn(replace_retry_seconds)
 
 
 def compute_plan_fingerprint(selection_sha256: str, mapping_sha256: str,
@@ -386,10 +415,18 @@ def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
                     f'{cached} content ({actual_sha}) does not match the checkpoint\'s recorded '
                     f'evidence ({recorded_sha}) for {key}; existing evidence is not overwritten '
                     'automatically -- resolve the mismatch before resuming')
+            prior_attempts = list(prior.get('attempts_detail', [])) if prior else []
+            recovered_incomplete = bool(
+                prior and prior.get('status') not in {None, 'fetched'} and prior_attempts
+            )
+            prior_had_success = any(bool(a.get('success')) for a in prior_attempts)
             record = {'station': station, 'day': day, 'window_start_utc': window_start.isoformat(),
                      'window_end_utc': window_end.isoformat(), 'cache_file': str(cached),
                      'sha256': actual_sha, 'rows': prior.get('rows') if prior else None,
-                     'was_already_cached': True, 'attempts': 0, 'status': 'fetched'}
+                     'was_already_cached': not prior_had_success, 'attempts': len(prior_attempts),
+                     'attempts_detail': prior_attempts,
+                     'recovered_from_existing_cache_after_incomplete_checkpoint': recovered_incomplete,
+                     'status': 'fetched'}
             checkpoint['groups'][key] = record
             fetched.append(record)
             persist()

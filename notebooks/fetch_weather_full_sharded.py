@@ -798,16 +798,23 @@ def execute_shard(
     for rec in result["fetched"]:
         request_id = str(rec["station"])
         req = requests[request_id]
+        normalized_cache_file = _normalize_cache_file(rec["cache_file"])
+        rows = rec.get("rows")
+        if rows is None:
+            rows = _validate_bulk_file(ROOT / normalized_cache_file, req)
         item = {
             **req,
             "window_start_utc": req["window_start_utc"].isoformat(),
             "window_end_utc": req["window_end_utc"].isoformat(),
-            "cache_file": _normalize_cache_file(rec["cache_file"]),
+            "cache_file": normalized_cache_file,
             "sha256": rec["sha256"],
-            "rows": rec.get("rows"),
+            "rows": rows,
             "was_already_cached": bool(rec.get("was_already_cached")),
             "attempts": int(rec.get("attempts", 0)),
             "attempts_detail": rec.get("attempts_detail", []),
+            "recovered_from_existing_cache_after_incomplete_checkpoint": bool(
+                rec.get("recovered_from_existing_cache_after_incomplete_checkpoint")
+            ),
             "status": "fetched",
         }
         fetched.append(item)
@@ -845,6 +852,13 @@ def execute_shard(
         "cumulative_active_fetch_seconds": float(result["cumulative_seconds"]),
         "unmeasured_byte_attempts": int(result["unmeasured_byte_attempts"]),
         "cache_hit_groups": int(sum(1 for f in fetched if f["was_already_cached"])),
+        "recovered_incomplete_checkpoint_groups": int(
+            sum(
+                1
+                for f in fetched
+                if f["recovered_from_existing_cache_after_incomplete_checkpoint"]
+            )
+        ),
         "new_fetch_groups": int(sum(1 for f in fetched if not f["was_already_cached"])),
         "checkpoint_file": _as_root_relative(checkpoint_file),
         "cache_directory": _as_root_relative(cache_dir),

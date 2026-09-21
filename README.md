@@ -279,6 +279,8 @@ Git에 있는 현재 `confirmed_period` 매핑만으로 계산한 구조적 상�
 
 전체 plan은 station 수가 많은 요청부터 결정적으로 정렬해 첫 pilot이 상대적으로 큰 응답을 먼저 시험하게 하고, 기본 50 bulk-request 단위 shard로 나누어 shard별 checkpoint·manifest·cache를 둡니다. 이 경계는 거대한 단일 checkpoint를 매 요청마다 다시 쓰는 비용, 한 번의 실패 도메인, 한 디렉터리에 과도한 파일이 쌓이는 문제를 제한합니다. 같은 run name에서는 plan·shard 크기·station batch 크기를 바꾸지 않습니다.
 
+checkpoint 저장은 임시 파일을 쓴 뒤 원자적으로 교체하며, Windows에서 일시적인 `PermissionError`가 발생하면 **같은 임시 상태를 최대 5회 제한 재시도**합니다. 끝까지 교체하지 못하면 기존 checkpoint와 `.tmp`를 모두 남기고 실패합니다. HTTP 성공·cache 생성 뒤 fetched 상태 승격 전에 중단된 경우, resume은 검증된 기존 cache를 재HTTP 없이 채택하면서 기존 `attempts_detail`과 logical new-fetch provenance를 보존합니다.
+
 기존 21행/300행/stratafix 캐시는 그대로 보존합니다. 이들은 특정 station의 일부 시각 창에 대한 증거이므로 **월 전체 bulk 요청을 이미 수집했다는 근거로 재사용하지 않습니다.** 최신 전체 실행 입력은 `baseline_recovery_v2_weather_scope_fix_20260918` 매핑을 명시적으로 사용합니다.
 
 전체 27-shard 네트워크 실행은 아직 완료되지 않았습니다. 2026-09-21 로컬 실행에서는 stress-first shard 0의 50개 request group이 최종 `complete=true`, `successful=true`로 끝났고, 누적 HTTP attempt 51회 중 503 1회가 재시도로 복구됐습니다. 해당 shard-local checkpoint/manifest/cache는 Git-ignored 로컬 실행 증거이며, 전체 수집이 끝나기 전의 중간 결과입니다. 다음 단계는 한 shard씩 순차 실행하고 어떤 shard라도 미완료·실패하면 즉시 멈추는 [run_weather_full_collection](notebooks/run_weather_full_collection.py) 경로를 사용합니다.
