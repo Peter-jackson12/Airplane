@@ -271,3 +271,98 @@ def test_finalize_never_overwrites_existing_final_manifest(tmp_path, monkeypatch
         full.finalize("baseline_recovery_v2_test", "mapping")
 
     assert final_file.read_text() == '{"existing": true}'
+
+
+
+def test_finalize_accepts_pre_recovery-field_successful_shard(tmp_path, monkeypatch):
+    monkeypatch.setattr(full, "ROOT", tmp_path)
+
+    start = pd.Timestamp("2019-01-01T00:00:00Z")
+    end = pd.Timestamp("2019-02-01T00:00:00Z")
+    plan = pd.DataFrame(
+        [
+            {
+                "ordinal": 0,
+                "shard_index": 0,
+                "request_id": "REQ0",
+                "network": "AA_ASOS",
+                "month": "2019-01",
+                "batch_index": 0,
+                "stations_json": '["S0"]',
+                "station_count": 1,
+                "window_start_utc": start,
+                "window_end_utc": end,
+                "station_years": 0.1,
+            }
+        ],
+        columns=full.PLAN_COLUMNS,
+    )
+    plan_manifest = {
+        "plan_sha256": "plan-sha",
+        "mapping_sha256": "mapping-sha",
+        "denominators": {"shard_count": 1, "shard_size": 1},
+        "provider_contract": {"checked_on": "2026-09-21"},
+    }
+    monkeypatch.setattr(
+        full, "load_plan", lambda *args, **kwargs: (plan_manifest, plan)
+    )
+    plan_manifest_file = tmp_path / "plan_manifest.json"
+    plan_manifest_file.write_text(json.dumps(plan_manifest))
+    monkeypatch.setattr(full, "plan_manifest_path", lambda name: plan_manifest_file)
+
+    final_file = tmp_path / "final.json"
+    monkeypatch.setattr(full, "final_manifest_path", lambda name: final_file)
+
+    cache = tmp_path / "cache.csv"
+    _write_bulk(cache, "S0", "2019-01-01 00:00")
+    request = {
+        "request_id": "REQ0",
+        "network": "AA_ASOS",
+        "month": "2019-01",
+        "batch_index": 0,
+        "stations": ["S0"],
+        "station_count": 1,
+        "window_start_utc": start.isoformat(),
+        "window_end_utc": end.isoformat(),
+        "station_years": 0.1,
+        "cache_file": "cache.csv",
+        "sha256": _sha(cache),
+        "rows": 1,
+        "was_already_cached": False,
+        "attempts": 1,
+        "attempts_detail": [
+            {
+                "attempt": 1,
+                "success": True,
+                "bytes_received": cache.stat().st_size,
+                "seconds": 1.0,
+                "error": None,
+            }
+        ],
+        "status": "fetched",
+    }
+    # This intentionally matches shards written before PR #8: no
+    # recovered_incomplete_checkpoint_groups field and no per-request recovery flag.
+    shard = {
+        "schema_version": full.SHARD_MANIFEST_SCHEMA_VERSION,
+        "plan_sha256": "plan-sha",
+        "successful": True,
+        "request_groups_in_shard": 1,
+        "cumulative_http_attempts": 1,
+        "cumulative_bytes_downloaded": cache.stat().st_size,
+        "cumulative_bytes_reserved_against_budget": cache.stat().st_size,
+        "cumulative_active_fetch_seconds": 2.25,
+        "unmeasured_byte_attempts": 0,
+        "cache_hit_groups": 0,
+        "new_fetch_groups": 1,
+        "requests": [request],
+    }
+    shard_file = tmp_path / "shard_0000_manifest.json"
+    shard_file.write_text(json.dumps(shard))
+    monkeypatch.setattr(full, "shard_manifest_path", lambda name, idx: shard_file)
+
+    payload = full.finalize("baseline_recovery_v2_test", "mapping")
+
+    assert payload["recovered_incomplete_checkpoint_groups"] == 0
+    assert payload["http_attempts_from_request_records"] == 1
+    assert payload["cache_file_count"] == 1
