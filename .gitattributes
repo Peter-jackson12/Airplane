@@ -1,0 +1,10 @@
+# Only the README figure builder, outputs and its four aggregate inputs are
+# pinned to LF so their recorded SHA-256 values survive Windows checkouts.
+# Do not impose line-ending changes on runtime collection code or local data.
+scripts/build_readme_assets.py text eol=lf
+assets/readme/*.svg text eol=lf
+assets/readme/sources.json text eol=lf
+output/preprocessing_full_summary.csv text eol=lf
+output/baseline_recovery_v2_calibration_20260917_level_summary.csv text eol=lf
+output/baseline_recovery_v2_row_date_attribution_20260918_status_summary.csv text eol=lf
+output/baseline_recovery_v2_weather_expanded_stratafix_20260918_latency_sensitivity.csv text eol=lf
