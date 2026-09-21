@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "generator_sha256": "8a772f8d4303255deafc44e5ee1ae6bf1fc0cef79f770b9e9ac00ca9046c0c31",
+  "sources": {
+    "models": {
+      "path": "output/preprocessing_full_summary.csv",
+      "sha256": "32a1634b61e8a19cc59b3de5bc1bce36d7b4b8c79bf39e11de92f90b112fbc35"
+    },
+    "calibration": {
+      "path": "output/baseline_recovery_v2_calibration_20260917_level_summary.csv",
+      "sha256": "5e5e0f665ec1182092af3b3746f59db83e64c4dd4e505827060487ca089c6371"
+    },
+    "attribution": {
+      "path": "output/baseline_recovery_v2_row_date_attribution_20260918_status_summary.csv",
+      "sha256": "f099091824d9b5525565381a3915258794fbd6a1746873bce0b5a5e7b9351aef"
+    },
+    "latency": {
+      "path": "output/baseline_recovery_v2_weather_expanded_stratafix_20260918_latency_sensitivity.csv",
+      "sha256": "469ef4066aa36322cf2e57c9e9d8ed0b9fd722f0b93f865cf158b0f809a87c32"
+    }
+  },
+  "filters": {
+    "models": [
+      "P4",
+      "P4_clean",
+      "P6_fixed",
+      "P6_clean"
+    ],
+    "calibration": {
+      "phase_key": "P6_clean",
+      "arm": "shared",
+      "group": "overall"
+    },
+    "attribution": "sum rows over all 12 months; three disjoint status buckets",
+    "latency": "stratafix only; recompute matched_rows / eligible_rows for each role/scenario"
+  },
+  "reviewed_data": {
+    "models": [
+      {
+        "phase": "P4",
+        "mean": 0.5749156666666667,
+        "sd": 0.0009640878244918485
+      },
+      {
+        "phase": "P4_clean",
+        "mean": 0.574541,
+        "sd": 0.0007259779610979442
+      },
+      {
+        "phase": "P6_fixed",
+        "mean": 0.5760616666666667,
+        "sd": 0.0014911962759252854
+      },
+      {
+        "phase": "P6_clean",
+        "mean": 0.575685,
+        "sd": 0.0010747469469600751
+      }
+    ],
+    "calibration": [
+      {
+        "calibrator": "none",
+        "ece_percentage_points": 0.4588385887189566,
+        "log_loss": 0.4475767841443325,
+        "macro_f1": 0.5756847605700698
+      },
+      {
+        "calibrator": "platt",
+        "ece_percentage_points": 0.34774095346276335,
+        "log_loss": 0.4475190071965136,
+        "macro_f1": 0.5755174162081577
+      },
+      {
+        "calibrator": "isotonic",
+        "ece_percentage_points": 0.18766610130130001,
+        "log_loss": 0.44893708180288777,
+        "macro_f1": 0.5752480707761677
+      }
+    ],
+    "attribution": [
+      {
+        "category": "Accepted: complete key, one candidate year",
+        "rows": 706759
+      },
+      {
+        "category": "Held: missing key, one candidate year",
+        "rows": 291308
+      },
+      {
+        "category": "Held: all other inspected cases",
+        "rows": 1933
+      }
+    ],
+    "latency": [
+      {
+        "latency_minutes": 0,
+        "role": "origin",
+        "eligible_rows": 268,
+        "matched_rows": 266,
+        "match_rate_percent": 99.25373134328358
+      },
+      {
+        "latency_minutes": 0,
+        "role": "destination",
+        "eligible_rows": 268,
+        "matched_rows": 268,
+        "match_rate_percent": 100.0
+      },
+      {
+        "latency_minutes": 10,
+        "role": "origin",
+        "eligible_rows": 268,
+        "matched_rows": 266,
+        "match_rate_percent": 99.25373134328358
+      },
+      {
+        "latency_minutes": 10,
+        "role": "destination",
+        "eligible_rows": 268,
+        "matched_rows": 268,
+        "match_rate_percent": 100.0
+      },
+      {
+        "latency_minutes": 30,
+        "role": "origin",
+        "eligible_rows": 268,
+        "matched_rows": 265,
+        "match_rate_percent": 98.88059701492537
+      },
+      {
+        "latency_minutes": 30,
+        "role": "destination",
+        "eligible_rows": 268,
+        "matched_rows": 268,
+        "match_rate_percent": 100.0
+      },
+      {
+        "latency_minutes": 60,
+        "role": "origin",
+        "eligible_rows": 268,
+        "matched_rows": 150,
+        "match_rate_percent": 55.970149253731336
+      },
+      {
+        "latency_minutes": 60,
+        "role": "destination",
+        "eligible_rows": 268,
+        "matched_rows": 157,
+        "match_rate_percent": 58.582089552238806
+      }
+    ]
+  },
+  "figures": {
+    "models": {
+      "path": "assets/readme/model_comparison.svg",
+      "sha256": "a09ad424a6871a46c1d349cac1f9b218386e7b5096cc11c4bc06f028f6beb614"
+    },
+    "calibration": {
+      "path": "assets/readme/calibration_tradeoff.svg",
+      "sha256": "8219f1e3de45ba08729b241d02a5a5b6b3c8f63c772b3562abfe5d8d6914535e"
+    },
+    "attribution": {
+      "path": "assets/readme/date_attribution.svg",
+      "sha256": "c203132646ad63529cb1e82d31449d3e6a4dfee6e1c80613027b95157e8d2b76"
+    },
+    "latency": {
+      "path": "assets/readme/weather_latency.svg",
+      "sha256": "1f9ac871e030de34c7013c0df719a45293811777b0fc941a40771756bb54221e"
+    }
+  },
+  "limitations": [
+    "No raw data access or model retraining.",
+    "No live collection progress is inferred.",
+    "English plot labels use portable embedded glyphs; README provides Korean captions.",
+    "Current collection totals and weather-on scores are not fabricated."
+  ]
+}

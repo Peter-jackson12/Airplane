@@ -1,30 +1,47 @@
-# 항공편 지연 분류와 데이터 전처리
+# Airplane · 항공편 지연 분류와 데이터 전처리
+
+[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml)
+[평가 코드](src/cv.py) · [잠금 의존성](uv.lock) · [검증된 결과](#5-최신검증결과) · [실행 재개](#7-코드구조와재현)
 
 **불확실한 값을 채우는 것보다, 무엇을 알고 있는지 구분하고 같은 조건에서 검증하는 프로젝트입니다.**
 
-원본 100만 행의 항공편 데이터에서 결측·시각·항공사 식별 문제를 점검하고, 검증 라벨이 모델 선택에 섞이지 않는 평가 경로를 만들었습니다. 기존 입력을 사용한 전처리·모델 분석은 완료했으며, 현재는 **외부 날씨 정보를 추가하는 확장 실험**을 진행 중입니다. 날씨 추가에 따른 성능 향상은 아직 검증하지 않았습니다.
+원본 항공편 데이터의 결측·시각·항공사 식별을 점검하고, **전처리의 타당성과 실제 예측 성능을 분리해 검증**합니다. 기존 입력의 LightGBM 분류·OOF·확률 보정 분석은 완료했으며, 날씨를 새 정보원으로 추가하는 확장 실험을 진행하고 있습니다.
 
-작성: Peter-jackson12 TF · 문서 정리: 2026-09-21 · v0.26
+작성: Peter-jackson12 TF · 문서 기준: 2026-09-21 · 제출 형태: GitHub README + 코드 + 연결된 실행 근거
 
-> **현재 결론:** 전처리의 의미와 검증 구조는 개선했지만 Macro F1 향상은 확인하지 못했습니다. 확률 보정은 평균 확률 편향과 ECE를 줄였지만 분류 성능을 개선하지 못했습니다. 따라서 다음 실험은 임계값을 계속 조정하는 것이 아니라, 날씨라는 새 정보원을 동일 평가 조건에서 비교하는 것입니다.
+<a id="submission-overview"></a>
+### 30초 요약
+
+| 데이터 규모 | 직접 평가한 집단 | 전처리 비교 실험 | 날짜 귀속 채택 |
+|---:|---:|---:|---:|
+| **1,000,000행** | **라벨 255,001행** | **10조건 × 3시드 × 5-fold** | **706,759행** |
+
+분모와 범위는 [데이터 설명](#2-데이터와분석범위), [10조건 결과](output/preprocessing_full_summary.csv), [날짜 귀속 집계](output/baseline_recovery_v2_row_date_attribution_20260918_status_summary.csv)에서 확인합니다. 날짜 귀속 집단과 모델 평가 집단은 같은 모집단이 아닙니다.
+
+> **확인한 결론:** 전처리의 의미와 검증 구조는 개선했지만 **Macro F1 향상은 확인하지 못했습니다.** 확률 보정으로 ECE가 감소해도 분류 성능이 개선되는 것은 아니었습니다.
 >
-> **바로 다음 작업:** 기존 로컬 HOMR/IEM 캐시 해시 대조와 **stratafix 300행**의 실제 IEM 수집·결합은 2026-09-21에 완료했습니다([결과](#next-local-run)). 다음 후보는 채택 706,759행 전체에 대한 수집 설계·실행이며, 이번 범위에는 포함하지 않습니다.
+> **아직 확인하지 않은 결론:** 전체 날씨 결합과 동일 조건 모델 비교는 미완료입니다. **날씨 추가의 성능 향상·실시간 운영 성능을 주장하지 않습니다.**
 
 <a id="project-status"></a>
-### 현재 상태 한눈에 보기
+### 검증이 끝난 부분과 진행 중인 부분
 
-| 영역 | 완료한 범위 | 남은 경계 |
+| 영역 | 현재 근거 | 다음 판정 경계 |
 |---|---|---|
-| 원본 품질·전처리 | 결측·대치·시간 피처·원본 결측 이력 점검 | 의미 개선과 성능 향상은 별개 |
-| 모델·OOF·확률 보정 | P4/P6 및 개별 변경 10조건 × 3시드; P6 OOF·보정·오분류 분석 | 전체 Phase의 최신 프로토콜 성능을 검증한 것은 아님 |
-| 날짜 귀속 | 2018·2019년 BTS Marketing Carrier 12개월 대조; 706,759행 채택 | 나머지 293,241행은 검사 후 보류 |
-| 날씨 경계 검증 | 21행 및 **기존** 확대 300행의 실수집·결합, 캐시 재결합 검증 | 수정 표본의 결과와 합산하지 않음 |
-| 수정 표본 stratafix | 새 300행 선정, 실제 IEM 수집·결합·진단 완료(2026-09-21) | 355개 전부의 2018~2019 역사적 연속성은 여전히 미확인 |
-| 날씨 성능 실험·제출 | 비교 조건과 완료 기준 정의 | 전체 706,759행 결합·동일 조건 재학습·최종 결과 정리 필요 |
+| 원본 품질·전처리 | 유일 대응 대치, 시각 의미, 원본 결측 이력 검증 | 의미 개선 ≠ 성능 향상 |
+| 모델·OOF·보정 | 10조건 × 3시드 비교 및 별도 OOF·보정 분석 | 전체 Phase·미래 운영 성능 검증은 아님 |
+| 날짜 귀속 | 2018/2019 BTS 12개월 대조, 706,759행 채택 | 293,241행은 미검사가 아니라 보류 |
+| 날씨 표본 | 21행·기존 300행·stratafix 300행을 각각 검증 | 서로 다른 표본을 합산하지 않음 |
+| 전체 날씨 수집 | bulk/shard/resume 구현, 부분 실수집·복구 로컬 보고 | 전체 완료 manifest는 아직 Git에 미반영 |
+| 날씨 모델 비교 | 동일 라벨 행·분할·시드·nested 평가 계약 | 전체 결합 → 대조 실험 → 최종 결론 |
 
-**읽는 방법:** 발표·프로젝트 이해는 1~6절, 실행 재개는 7절, 증거 탐색은 8절입니다. 세부 분석과 검증 회차는 **같은 README의 9절 접기 부록**에 보존했습니다. 접힌 내용도 원문에는 모두 들어 있습니다. 에이전트는 [AGENTS.md](AGENTS.md) → 이 README의 현재 상태·실행 경계 → 해당 작업의 근거 순서로 읽습니다.
+**이 표는 실시간 다운로드 모니터가 아닙니다.** 최신 로컬 진행률을 추정해 채우지 않으며, 완료 수치는 해당 실행 근거가 반영된 뒤 갱신합니다. [완료 결과를 반영할 위치](#submission-completion)
 
-**목차:** [1. 목적](#1-목적과문제정의) · [2. 데이터](#2-데이터와분석범위) · [3. 전처리](#3-전처리결정과근거) · [4. 파이프라인](#4-현재파이프라인) · [5. 결과](#5-최신검증결과) · [6. 날씨·다음 단계](#6-한계와다음단계) · [7. 재현](#7-코드구조와재현) · [8. 근거 지도](#8-문서안내) · [9. 상세 부록](#evidence-appendix)
+**평가자:** [30초 요약](#submission-overview) → [전체 구조](#4-현재파이프라인) → [결과 그래프](#5-최신검증결과) → [한계](#6-한계와다음단계)  
+**실행자·에이전트:** [AGENTS.md](AGENTS.md) → [현재 상태](#project-status) → [재현·운영 경계](#7-코드구조와재현) → [근거 지도](#8-문서안내)
+
+**목차:** [1. 목적](#1-목적과문제정의) · [2. 데이터](#2-데이터와분석범위) · [3. 전처리](#3-전처리결정과근거) · [4. 파이프라인](#4-현재파이프라인) · [5. 결과](#5-최신검증결과) · [6. 날씨·다음 단계](#6-한계와다음단계) · [7. 재현](#7-코드구조와재현) · [8. 근거 지도](#8-문서안내) · [9. 접기 부록](#evidence-appendix) · [발표 흐름](#presentation-route)
+
+---
 
 <a id="1-목적과문제정의"></a>
 ## 1. 목적과 문제 정의
@@ -49,6 +66,10 @@ CSV 한 행의 `Delay`를 이진 분류합니다. `Not_Delayed=0`, `Delayed=1`�
 원본은 Git에 포함되지 않습니다. 컬럼별 타입·결측 수의 전수표 `output/label_coverage/schema.csv`도 **로컬 생성물**입니다. GitHub에서 읽을 수 있는 [라벨 분포 보고서](output/label_coverage_review.md)와 구별합니다.
 
 핵심 입력은 월·일, 출발/도착 예정 시각, 공항, 항공사, 기체번호, 거리입니다. `Cancelled`·`Diverted`는 원본에서 모두 0인 상수이므로 제거합니다. 수집기간·원천 이용 조건 등은 원 자료의 계약과 함께 확인해야 합니다.
+
+![원본 100만 행 중 날짜 귀속 채택 706759행, 결측 키의 단일 후보 291308행 및 기타 1933행은 보류](assets/readme/date_attribution.svg)
+
+**그림 1. 채택과 보류를 구분한 날짜 귀속.** 막대는 모두 같은 원본 100만 행의 서로 겹치지 않는 집단입니다. 후보 연도가 하나여도 키가 결측이면 채택하지 않습니다. [원본 집계 CSV](output/baseline_recovery_v2_row_date_attribution_20260918_status_summary.csv) · [그림의 수치·출처 해시](assets/readme/sources.json)
 
 ### 분석에서 중요했던 네 가지 문제
 
@@ -84,6 +105,26 @@ CSV 한 행의 `Delay`를 이진 분류합니다. `Not_Delayed=0`, `Delayed=1`�
 
 <a id="4-현재파이프라인"></a>
 ## 4. 현재 파이프라인
+
+### 전체 작업을 한 장으로 보기
+
+```mermaid
+flowchart TD
+    A["원본 100만 행 / Delay 라벨·미라벨 구분"] --> B["결측·시각·항공사 식별 점검"]
+    B --> C["기존 입력 전처리 + LightGBM"]
+    C --> D["nested 평가 / OOF / 보정 비교 완료"]
+    A --> E["BTS 대조 / 채택한 행만 날짜 귀속"]
+    E --> F["공항-관측소 매핑 / UTC 예측 시점"]
+    F --> G["월별 bulk 날씨 수집 / shard별 저장"]
+    G --> H["전체 완료 검증 / finalize"]
+    H --> I["예측 시점까지 가용한 날씨만 결합"]
+    D --> J["같은 평가 조건의 날씨 없음 vs 있음 비교"]
+    I --> J
+```
+
+**핵심 질문은 다운로드 속도가 아니라 새 정보가 지연 분류에 도움이 되는가입니다.** 상단의 기존 입력 분석과 하단의 날씨 확장은 별도 경로이며, 마지막 동일 조건 비교로 연결합니다. `finalize`는 수집 완료 검사이지 모델 실험의 완료가 아닙니다.
+
+### 라벨 누수를 막는 평가 경계
 
 ```mermaid
 flowchart TD
@@ -134,9 +175,9 @@ clean의 평균 F1 차이는 P4 −0.000375, P6 −0.000377입니다. 작은 차
 
 **성능 비교 기준은 P6_fixed, 전처리 의미 개선을 설명하는 경로는 P6_clean입니다.** P6_clean을 검증된 성능 향상 모델이나 배포 모델로 부르지 않습니다. 3시드 SD는 새 데이터에 대한 신뢰구간이 아니며, 프로젝트의 0.002 참고값도 유의수준이 아닙니다.
 
-![전처리 변경 효과](output/preprocessing_full_effects.png)
+![동일 nested 프로토콜의 P4, P4_clean, P6_fixed, P6_clean Macro F1 평균과 3시드 표준편차 비교](assets/readme/model_comparison.svg)
 
-그림은 동일 시드끼리 계산한 변경−기준의 평균 ±1 표본 SD이며 신뢰구간이 아닙니다. [전체 10조건 결과](output/preprocessing_full_evaluation.md), [요약 CSV](output/preprocessing_full_summary.csv), [시드별 결과](output/preprocessing_full_runs.csv)
+**그림 2. 전처리 10조건 중 네 기준 조건의 Macro F1.** 점은 3시드 평균, 오차막대는 ±1 표본 SD이며 신뢰구간이 아닙니다. 차이를 읽기 위한 확대 축임을 명시했으며, 오차막대 겹침만으로 동등성·유의성을 판정하지 않습니다. 모든 조건과 paired delta는 [기존 개별 변경 효과 그림](output/preprocessing_full_effects.png)에서도 확인합니다. [전체 10조건 결과](output/preprocessing_full_evaluation.md), [요약 CSV](output/preprocessing_full_summary.csv), [시드별 결과](output/preprocessing_full_runs.csv)
 
 ### 확률의 정확성과 지연 탐지 능력은 달랐습니다
 
@@ -147,6 +188,10 @@ P6 두 조건의 행별 OOF를 다시 저장·검증했고, 보정기는 **outer
 | 없음 | 0.575685 | 0.447577 | 0.139904 | 0.4588 |
 | Platt | 0.575517 | 0.447519 | 0.139890 | 0.3477 |
 | Isotonic | 0.575248 | 0.448937 | 0.139915 | 0.1877 |
+
+![P6_clean 공유형 보정의 ECE와 LogLoss 비교: Isotonic의 ECE 감소가 LogLoss 개선으로 이어지지는 않음](assets/readme/calibration_tradeoff.svg)
+
+**그림 3. 보정 지표의 상충 관계.** P6_clean·공유형·전체 라벨 집단의 세 보정 조건만 표시했습니다. 두 축 모두 낮을수록 좋고, 정확한 Macro F1은 위 표에서 함께 읽습니다. ECE는 비율을 100배 한 %p 단위입니다. [원본 수준값 CSV](output/baseline_recovery_v2_calibration_20260917_level_summary.csv) · [그림 출처](assets/readme/sources.json)
 
 표는 동일 라벨 255,001행·nested 평가의 3시드 평균입니다. 평균 확률 편향과 ECE는 줄었지만 Macro F1 향상은 확인되지 않았습니다. Isotonic은 ECE 감소와 함께 LogLoss 악화·순위 정보 감소가 관찰됐습니다. 분리형 대조, 12개 실험 셀, 환경 간 미세 차이는 [부록 D](#appendix-model-diagnostics)에 있습니다. [보정 보고서](output/baseline_recovery_v2_calibration_20260917_report.md), [수준값](output/baseline_recovery_v2_calibration_20260917_level_summary.csv)
 
@@ -165,6 +210,10 @@ P6 두 조건의 행별 OOF를 다시 저장·검증했고, 보정기는 **outer
 
 stratafix는 기존 확대 표본을 덮어쓴 이름이 아니라, 선정 순서를 고쳐 **별도로 만든 표본**입니다. 341개 층 중 300개를 포함하며 제외된 41개 층의 모집단은 3,077행(약 0.44%)입니다. 모든 층을 포함했다거나 대표성이 입증됐다고 표현하지 않습니다. 보류 32행은 시간대 충돌 19·미확인 12·현재만 확인 1행입니다. [stratafix 선정 manifest](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_selection_manifest.json), [선정 CSV](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_selection.csv)
 
+![stratafix 수집 가능 268행에서 가용성 지연 가정별 출발 및 도착 날씨 결합률, 60분 가정에서 각각 150행과 157행 결합](assets/readme/weather_latency.svg)
+
+**그림 4. 데이터가 있어도 예측 시점에 가용하지 않으면 사용할 수 없습니다.** 분모는 stratafix의 수집 가능 268행입니다. 보류 32행을 포함한 전체 300행 분모와 구분하며, 0/10/30/60분은 실제 수신 지연의 실측값이 아닌 가정입니다. 이는 결합률 그래프이지 날씨 모델의 성능 그래프가 아닙니다. [민감도 CSV](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_latency_sensitivity.csv)
+
 ### 날씨 결합과 비교의 고정 계약
 
 예측 시점은 **예정 출발 60분 전**입니다. 현지 예정 시각을 출발 공항의 IANA 시간대로 UTC 변환한 뒤 60분을 뺍니다. 출발·도착 공항 관측 모두 **이 같은 예측 시점까지 가용한 관측**만 사용하며, 도착 시점의 미래 관측은 사용하지 않습니다.
@@ -179,14 +228,70 @@ stratafix는 기존 확대 표본을 덮어쓴 이름이 아니라, 선정 순�
 
 1. ~~**기존 로컬 증거 확인:** 원본·HOMR/IEM·행별 결과의 존재와 해시를 대조합니다.~~ **완료(2026-09-21).** 21개 HOMR JSON·9개 IEM GeoJSON 전량 기존 evidence의 SHA-256과 일치했고, 20공항 cache-only 재현(`baseline_recovery_v2_station_identity_recheck_20260921`)도 통과했습니다.
 2. ~~**stratafix 실수집·결합:** 필요한 매핑·역사적 적용기간의 불확실성을 명시하고, 근거가 부족한 항목은 보류한 채 검증합니다.**~~ **완료(2026-09-21).** [실행 결과](#next-local-run). 355개 전부를 확인한 것처럼 승격하지 않았고, 우선 조사 20개 공항의 판정도 그대로 유지했습니다.
-3. **전체 대상 결합:** 귀속 채택 706,759행을 대상으로 규칙에 맞게 수집·결합하고 결측·제외 사유를 검증합니다. 모든 행의 날씨를 채우는 것이 목표는 아닙니다. **다음 우선순위입니다. 전체 네트워크 실행은 아직 하지 않았고, 먼저 실행 plan을 고정한 뒤 작은 shard부터 검증합니다.**
+3. **전체 대상 결합:** 귀속 채택 706,759행을 대상으로 규칙에 맞게 수집·결합하고 결측·제외 사유를 검증합니다. 모든 행의 날씨를 채우는 것이 목표는 아닙니다. **진행 중인 확장 단계입니다. bulk 수집·부분 실수집·복구 경로는 구현됐으며, 전체 수집 완료와 행별 결합은 별도의 근거로 판정합니다. 최신 로컬 진행률은 이 문서에서 추정하지 않습니다.**
 4. **날씨 유무 비교:** 같은 평가 조건으로 기준선과 날씨 추가 조건을 재학습하고 시드별 차이·한계를 보고합니다.
 5. **GitHub 제출 정리:** README의 최종 결론·재현 명령·근거를 동기화합니다. 향상이 없어도 적절한 비교를 끝내면 검증 목표를 마무리할 수 있습니다.
 
-**이번 작업은 1~2번을 완료했습니다.** 전체 706,759행 수집·모델 재학습으로 바로 확대하지 않았습니다. 독립 미래 테스트·모델 서빙·전체 Phase 비교·DOCX 변환은 이번 제출의 필수 완료 조건이 아닙니다. 라벨 선정 규칙과 미래 입력 가용성도 미확인입니다.
+**검증 완료 근거는 1~2번까지 확보했습니다.** 이후 전체 수집 경로를 구현해 로컬 실행으로 확장했으며, 전체 수집 완료·행별 결합·모델 재학습의 완료는 아직 이 README에서 선언하지 않습니다. 독립 미래 테스트·모델 서빙·전체 Phase 비교·DOCX 변환은 이번 제출의 필수 완료 조건이 아닙니다. 라벨 선정 규칙과 미래 입력 가용성도 미확인입니다.
+
+<a id="weather-glossary"></a>
+### 용어를 작업 단위로 읽기
+
+| 용어 | 이 프로젝트에서의 뜻 |
+|---|---|
+| request group | 같은 IEM network·UTC 월·최대 20 station으로 만든 한 번의 논리적 요청 |
+| HTTP attempt | 실제 호출 한 번; 실패와 재시도도 각각 예산을 소비 |
+| shard | request group을 기본 50개씩 나눈 저장·재개 단위; 새로운 모델이나 데이터 종류가 아님 |
+| checkpoint | 어디까지 처리했는지와 누적 예산·시도 이력을 저장한 진행 기록 |
+| manifest / fingerprint | 결과의 경로·해시·집계 / 입력과 요청 규칙이 같은지 판별하는 식별값 |
+| finalize / join | 전체 요청 완료·파일 무결성 검증 / 항공편 행과 가용한 날씨 관측 결합 |
+| OOF / TE | 학습에 쓰지 않은 fold의 예측 / 라벨 기반 범주 인코딩; TE는 inner 경계를 지킴 |
+
+<a id="submission-completion"></a>
+### 남은 결과를 반영할 위치와 완료 기준
+
+빈 성능 그래프나 예상 다운로드 수치를 실제 결과처럼 넣지 않습니다. 아래 항목은 **결과 미반영**이며, 데이터가 없어서 0이라고 표시한 것이 아닙니다.
+
+| 후속 결과 | 필요한 근거 | 반영 위치·완료 조건 |
+|---|---|---|
+| 전체 수집 통계·shard별 요청/재시도/용량 | 전체 fetch manifest와 각 shard manifest·checkpoint | 6~7절; 전 shard 성공, 요청 집합 일치, 캐시 재검증 후 실측 그래프 추가 |
+| 전체 행별 날씨 결합률·제외 사유 | 전체 join 및 진단 결과 | 6절; ID·행수·순서와 observed/available 시간 경계 확인 |
+| 날씨 없음 vs 있음 성능 | 동일 라벨 행·시드·fold·nested 계약의 paired 결과 | 5절; Macro F1·LogLoss·AUC, 시드별 차이와 한계 보고 |
+| 제출 최종 결론 | 위 근거와 코드 revision | 상단 요약·현재 상태·그림 출처를 함께 갱신; 향상 자체는 완료 조건이 아님 |
 
 <a id="7-코드구조와재현"></a>
 ## 7. 코드 구조와 재현
+
+> **수집 중인 실행 환경:** 문서 개편을 반영하려고 돌아가는 프로세스를 중단하거나 중간에 pull하지 않습니다. 문서와 그림 작업은 GitHub의 별도 브랜치에서 수행하며, 실행 환경 동기화는 현재 수집이 정상 종료하거나 멈춘 뒤 기존 작업을 보존해 진행합니다.
+
+<a id="reliability-design"></a>
+### 실패를 숨기지 않는 수집·복구 구조
+
+```mermaid
+flowchart TD
+    A["고정된 plan과 이전 shard 검증"] --> B{"검증된 기존 캐시가 있는가?"}
+    B -->|있음| C["해시·스키마·시간창 검사 / 시도 이력 보존"]
+    B -->|없음| D["HTTP 전에 요청·바이트 예산 예약 저장"]
+    D --> E["같은 요청으로 제한된 재시도 / 누적 예산 반영"]
+    E --> F["캐시 검증 / checkpoint 완료 상태 저장"]
+    C --> G{"shard 전체 성공인가?"}
+    F --> G
+    G -->|성공| H["결과 재검증 후 다음 shard"]
+    G -->|미완료·실패| I["중단 / 이후 shard 시작하지 않음"]
+```
+
+| 보호하는 경계 | 구현과 검증 근거 | 보장하지 않는 것 |
+|---|---|---|
+| 다른 요청을 같은 작업으로 이어받지 않음 | [고정 plan·fingerprint](notebooks/fetch_weather_full_sharded.py) | 실패한 station을 임의 대체하지 않음 |
+| 실패·재시도도 예산에 포함 | [예약·누적 accounting](notebooks/fetch_weather_sample_expanded.py) | 미측정 바이트를 0으로 가정하지 않음 |
+| 완료 기록도 다시 확인 | [순차 runner](notebooks/run_weather_full_collection.py), [회귀](tests/test_weather_full_collection_runner.py) | exit 0 하나만으로 전체 완료를 선언하지 않음 |
+| HTTP 성공 후 완료 저장이 끊겨도 이력 유지 | [checkpoint 복구 회귀](tests/test_weather_expanded_pipeline.py) | 컨테이너·OS·스토리지 무장애를 주장하지 않음 |
+
+파일 교체 재시도는 **HTTP 재호출과 별개**입니다. 현행 checkpoint 교체는 최초 시도를 포함해 최대 5회, 실패 사이 0.1초 간격이며 계속 실패하면 예외를 전파합니다. 원자적 rename이 전원 장애까지 포함한 영속성 보장을 뜻하지는 않습니다. 원인 프로세스를 특정하지 못한 Windows 접근 거부를 백신 탓으로 단정하지 않습니다.
+
+### 공개 저장소와 로컬 데이터의 경계
+
+GitHub에는 코드·테스트·문서·공개 가능한 집계 근거를 둡니다. 원본 `data/train.csv`, 대용량 날씨 캐시와 사고 snapshot은 로컬에 유지합니다. 인증키·쿠키·개인정보는 커밋하지 않으며, `.gitignore`를 보안 접근제어로 간주하지 않습니다. 이 README와 그림은 **Git에 있는 집계 파일만으로** 생성·검증할 수 있습니다.
 
 ### GitHub만으로 확인할 수 있는 것
 
@@ -312,6 +417,24 @@ uv run --locked --offline python -u -m notebooks.run_weather_full_collection --n
 
 `--prepare-only` 결과가 기존 142,574 station-day 또는 132,783 merged-interval 산정과 일치한다고 주장하지 않습니다. 두 숫자는 과거 sizing 정의이고, 새 plan manifest의 `bulk_request_groups`가 현재 transport 실행 계약입니다. 수집 완료·finalize·row-level join 검증 전에는 weather-on 모델 학습으로 넘어가지 않습니다.
 
+<a id="readme-figures"></a>
+### README 그림의 재현과 출처 검증
+
+다음 명령은 공개 집계 CSV만 읽습니다. IEM 호출·원본 데이터 로드·모델 학습을 하지 않습니다. 그림 파일은 정적 SVG이며 한글 설명과 정확한 표를 함께 제공해 이미지 없이도 결론을 읽을 수 있게 했습니다.
+
+```powershell
+# 그림·실제 사용값·출처 및 그림 해시 생성
+uv run --locked --offline python scripts/build_readme_assets.py
+
+# 읽기 전용: 출처, 필터, 표시 수치, SVG 해시가 바뀌지 않았는지 검사
+uv run --locked --offline python scripts/build_readme_assets.py --check
+
+# README 링크·기존 계약·그림 재현성 검사
+uv run --locked --offline python -m pytest -q tests/test_readme_contract.py tests/test_readme_presentation.py
+```
+
+[그림 생성기](scripts/build_readme_assets.py) · [수치·필터·SHA-256 출처표](assets/readme/sources.json) · [문서 회귀 검사](tests/test_readme_presentation.py)
+
 ### 코드 지도
 
 | 경로 | 역할 |
@@ -361,6 +484,15 @@ README는 현재 상태의 기준이고, 구체적인 사실은 연결된 코드
 | 전체 수집량 재산정 | [station별 상세](output/baseline_recovery_v2_weather_scope_refined_20260918_refined_scope_per_station.csv), [manifest](output/baseline_recovery_v2_weather_scope_refined_20260918_refined_scope_manifest.json) — 전체 수집 실측이 아님 |
 | 미결합 원인 | [세분화된 사유](output/baseline_recovery_v2_weather_expanded_diagnostic_v2_20260918_diagnostic_unmatched_reasons.csv), [manifest](output/baseline_recovery_v2_weather_expanded_diagnostic_v2_20260918_diagnostic_manifest.json) |
 | 발표·과거 제출 양식 | [2026-09-16 초안](output/preprocessing_current_report.md), [Word 양식](머신러닝%20모델링%20프로젝트%20보고서%20템플릿.docx) — 현재 필수 제출물이 아님 |
+
+<a id="presentation-route"></a>
+### 발표할 때는 이 순서로 설명합니다
+
+**문제 → 판단 → 검증 → 확장.** “결측을 많이 채우면 더 좋은 모델일까?”로 시작해, 모호한 대치를 중단하고 시각의 의미를 바로잡은 이유를 3절에서 보여줍니다. 이어 5절의 같은 조건 비교에서 **의미 개선이 Macro F1 향상으로 이어지지 않았음**을 설명하고, 보정 지표와 탐지 성능의 차이를 짚습니다. 마지막으로 새 정보원인 날씨도 예측 시점의 가용성을 지켜야 한다는 6절로 연결합니다. 수집·복구 구조는 이 실험을 재현 가능하게 만드는 근거로 설명합니다.
+
+**질문에 대한 근거 위치:** “누수는?” → 4절의 inner/outer 경계와 전체 입력 묶음의 한계. “날씨 효과는?” → 아직 미검증, 완료 기준표. “왜 보류했나?” → 2절 날짜 귀속과 6절 매핑 규칙. “중단되면?” → 7절 checkpoint·순차 runner와 회귀 테스트.
+
+기존 분석·명령·실행 회차는 아래 **같은 README 안**에 남아 있습니다. AGENTS와 README를 읽는 기존 컨트롤타워 방식은 유지합니다.
 
 <a id="evidence-appendix"></a>
 ## 9. 상세 분석·검증·재현 부록
