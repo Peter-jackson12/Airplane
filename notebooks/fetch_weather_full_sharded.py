@@ -72,7 +72,7 @@ PROVIDER_DOCUMENTED_STATION_YEAR_LIMIT = 1000.0
 
 PLAN_SCHEMA_VERSION = 2
 SHARD_MANIFEST_SCHEMA_VERSION = 2
-FINAL_MANIFEST_SCHEMA_VERSION = 2
+FINAL_MANIFEST_SCHEMA_VERSION = 3
 DEFAULT_SHARD_SIZE = 50
 DEFAULT_MAX_STATIONS_PER_REQUEST = 20
 BULK_ATTEMPT_PAUSE_SECONDS = 1.25
@@ -101,9 +101,10 @@ def _validate_name(name: str) -> None:
 
 def _json_atomic(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(json.dumps(payload, indent=2, default=str))
-    tmp.replace(path)
+    # Reuse the bounded PermissionError retry semantics used by checkpoints.
+    # This keeps the previous file and the fully-written .tmp evidence if the
+    # final atomic replace remains unavailable after the bounded retries.
+    save_checkpoint(path, payload)
 
 
 def _as_root_relative(path: Path) -> str:
@@ -877,7 +878,84 @@ def _expected_requests(plan: pd.DataFrame) -> dict[str, dict]:
     }
 
 
+def _classify_attempt_error(error: object) -> str:
+    text = str(error or "").lower()
+    if "http 503" in text:
+        return "http_503"
+    if "http 429" in text:
+        return "http_429"
+    if "http 422" in text:
+        return "http_422"
+    if "interrupted mid-attempt" in text:
+        return "interrupted_unknown"
+    if "timed out" in text or "timeout" in text:
+        return "timeout"
+    if "response exceeds bounded size" in text:
+        return "response_size_cap"
+    if "response failed validation" in text:
+        return "response_validation"
+    return "other"
+
+
+def _summarize_attempts(records: list[dict]) -> dict:
+    error_counts = {
+        "http_503": 0,
+        "http_429": 0,
+        "http_422": 0,
+        "timeout": 0,
+        "response_size_cap": 0,
+        "response_validation": 0,
+        "interrupted_unknown": 0,
+        "other": 0,
+    }
+    total_attempts = 0
+    successful_attempts = 0
+    failed_attempts = 0
+    retry_attempts = 0
+    unmeasured_attempts = 0
+    request_groups_with_network_attempts = 0
+
+    for rec in records:
+        detail = list(rec.get("attempts_detail") or [])
+        declared = int(rec.get("attempts", len(detail)) or 0)
+        if declared != len(detail):
+            raise ValueError(
+                f"request {rec.get('request_id')} attempts={declared} but "
+                f"attempts_detail has {len(detail)} entries"
+            )
+        if detail:
+            request_groups_with_network_attempts += 1
+        retry_attempts += max(len(detail) - 1, 0)
+        total_attempts += len(detail)
+        for attempt in detail:
+            if attempt.get("bytes_received") is None:
+                unmeasured_attempts += 1
+            if bool(attempt.get("success")):
+                successful_attempts += 1
+            else:
+                failed_attempts += 1
+                error_counts[_classify_attempt_error(attempt.get("error"))] += 1
+
+    return {
+        "http_attempts_from_request_records": total_attempts,
+        "successful_http_attempts": successful_attempts,
+        "failed_http_attempts": failed_attempts,
+        "retry_attempts": retry_attempts,
+        "unmeasured_http_attempts_from_request_records": unmeasured_attempts,
+        "request_groups_with_network_attempts": request_groups_with_network_attempts,
+        "cache_only_request_groups": len(records) - request_groups_with_network_attempts,
+        "provider_error_counts": error_counts,
+    }
+
+
 def finalize(name: str, mapping_name: str, *, verify_cache_hashes: bool = True) -> dict:
+    out_manifest = final_manifest_path(name)
+    if out_manifest.exists():
+        raise FileExistsError(
+            f"final weather evidence already exists: {out_manifest}. "
+            "Existing final evidence is never overwritten; inspect it or use a fresh run name."
+        )
+
     plan_manifest, plan = load_plan(name, mapping_name)
     expected = _expected_requests(plan)
     shard_count = int(plan_manifest["denominators"]["shard_count"])
@@ -890,9 +968,14 @@ def finalize(name: str, mapping_name: str, *, verify_cache_hashes: bool = True) 
         "cumulative_bytes_downloaded": 0,
         "cumulative_bytes_reserved_against_budget": 0,
         "cumulative_active_fetch_seconds": 0.0,
+        "unmeasured_byte_attempts": 0,
         "cache_hit_groups": 0,
+        "recovered_incomplete_checkpoint_groups": 0,
         "new_fetch_groups": 0,
     }
+    total_cache_rows = 0
+    total_cache_bytes_on_disk = 0
+    cache_files_seen: set[str] = set()
 
     for idx in range(shard_count):
         path = shard_manifest_path(name, idx)
@@ -929,13 +1012,21 @@ def finalize(name: str, mapping_name: str, *, verify_cache_hashes: bool = True) 
             ):
                 raise ValueError(f"shard {idx} request window differs from plan for {rid}")
 
-            cache = ROOT / rec["cache_file"]
+            cache_file = _normalize_cache_file(rec["cache_file"])
+            if cache_file in cache_files_seen:
+                raise ValueError(f"duplicate cache file across requests: {cache_file}")
+            cache = ROOT / cache_file
             if not cache.exists():
                 raise ValueError(f"shard {idx} cache file is missing: {cache}")
-            _validate_bulk_file(cache, exp)
+            actual_rows = _validate_bulk_file(cache, exp)
+            if rec.get("rows") is not None and int(rec["rows"]) != actual_rows:
+                raise ValueError(f"shard {idx} row count mismatch for {rid}")
             if verify_cache_hashes and digest(cache) != rec["sha256"]:
                 raise ValueError(f"shard {idx} cache hash mismatch for {rid}")
 
+            cache_files_seen.add(cache_file)
+            total_cache_rows += actual_rows
+            total_cache_bytes_on_disk += int(cache.stat().st_size)
             actual_ids.add(rid)
             all_requests.append(rec)
 
@@ -961,6 +1052,39 @@ def finalize(name: str, mapping_name: str, *, verify_cache_hashes: bool = True) 
         raise ValueError(
             f"completed shard requests do not equal plan: missing={missing}, extra={extra}"
         )
+    if len(cache_files_seen) != len(expected):
+        raise ValueError(
+            f"completed cache file count differs from plan: "
+            f"cache_files={len(cache_files_seen)}, requests={len(expected)}"
+        )
+
+    attempt_audit = _summarize_attempts(all_requests)
+    if attempt_audit["http_attempts_from_request_records"] != int(
+        totals["cumulative_http_attempts"]
+    ):
+        raise ValueError(
+            "request attempts_detail no longer reconciles to shard cumulative_http_attempts: "
+            f"records={attempt_audit['http_attempts_from_request_records']}, "
+            f"shards={totals['cumulative_http_attempts']}"
+        )
+    if attempt_audit["unmeasured_http_attempts_from_request_records"] != int(
+        totals["unmeasured_byte_attempts"]
+    ):
+        raise ValueError(
+            "unmeasured attempts_detail no longer reconciles to shard accounting: "
+            f"records={attempt_audit['unmeasured_http_attempts_from_request_records']}, "
+            f"shards={totals['unmeasured_byte_attempts']}"
+        )
+    recovered_from_records = sum(
+        1
+        for rec in all_requests
+        if rec.get("recovered_from_existing_cache_after_incomplete_checkpoint")
+    )
+    if recovered_from_records != int(totals["recovered_incomplete_checkpoint_groups"]):
+        raise ValueError(
+            "recovered incomplete-checkpoint request records no longer reconcile to "
+            "shard summaries"
+        )
 
     all_requests.sort(key=lambda r: expected[r["request_id"]]["month"] + "|" + expected[r["request_id"]]["network"] + "|" + r["request_id"])
     payload = {
@@ -976,7 +1100,11 @@ def finalize(name: str, mapping_name: str, *, verify_cache_hashes: bool = True) 
         "all_shards_complete": True,
         "failed_groups": 0,
         "cache_hashes_reverified": bool(verify_cache_hashes),
+        "cache_file_count": int(len(cache_files_seen)),
+        "total_cache_rows": int(total_cache_rows),
+        "total_cache_bytes_on_disk": int(total_cache_bytes_on_disk),
         **totals,
+        **attempt_audit,
         "requests": all_requests,
         "shards": shard_index_rows,
         "provider_contract": plan_manifest["provider_contract"],
@@ -994,7 +1122,7 @@ def finalize(name: str, mapping_name: str, *, verify_cache_hashes: bool = True) 
             "separate stage.",
         ],
     }
-    _json_atomic(final_manifest_path(name), payload)
+    _json_atomic(out_manifest, payload)
     return payload
 
 
