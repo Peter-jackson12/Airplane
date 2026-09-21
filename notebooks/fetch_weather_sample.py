@@ -89,16 +89,9 @@ def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def cache_path_for(station: str, start: pd.Timestamp, end: pd.Timestamp,
-                   cache_dir: Path | None = None) -> Path:
-    """Return the deterministic cache path for one exact request window.
-
-    Sample runs keep the historical shared CACHE_DIR by default. Full-scale
-    sharded collection can pass a shard-local directory so one filesystem
-    directory never has to hold the entire archive run.
-    """
+def cache_path_for(station: str, start: pd.Timestamp, end: pd.Timestamp) -> Path:
     tag = f"{station}_{start.strftime('%Y%m%dT%H%M')}_{end.strftime('%Y%m%dT%H%M')}"
-    return (CACHE_DIR if cache_dir is None else cache_dir) / f'iem_{tag}.csv'
+    return CACHE_DIR / f'iem_{tag}.csv'
 
 
 def build_request_url(station: str, start: pd.Timestamp, end: pd.Timestamp) -> str:
@@ -109,14 +102,13 @@ def build_request_url(station: str, start: pd.Timestamp, end: pd.Timestamp) -> s
     return 'https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?' + urlencode(params, doseq=True)
 
 
-def validate_cached_window(station: str, start: pd.Timestamp, end: pd.Timestamp,
-                           cache_dir: Path | None = None) -> Path | None:
+def validate_cached_window(station: str, start: pd.Timestamp, end: pd.Timestamp) -> Path | None:
     """Returns the cache path if a schema-valid cache file already exists for
     exactly this (station, window) request, else None (never partially/blindly
     trusted). A file that exists but fails to parse or does not match the
     expected archive schema/station is a hard error, not a silent re-fetch --
     existing evidence must not be quietly overwritten or bypassed."""
-    cache = cache_path_for(station, start, end, cache_dir=cache_dir)
+    cache = cache_path_for(station, start, end)
     if not cache.exists():
         return None
     try:
@@ -131,7 +123,7 @@ def validate_cached_window(station: str, start: pd.Timestamp, end: pd.Timestamp,
 
 
 def fetch_attempt(station: str, start: pd.Timestamp, end: pd.Timestamp, *, timeout: float,
-                  max_bytes_remaining: int, cache_dir: Path | None = None) -> dict:
+                  max_bytes_remaining: int) -> dict:
     """One bounded HTTP attempt for a (station, window) request; never
     retries internally. The caller owns retry/backoff/budget accounting so
     every attempt -- successful or not -- can be charged against the request
@@ -145,7 +137,7 @@ def fetch_attempt(station: str, start: pd.Timestamp, end: pd.Timestamp, *, timeo
     this SAME effective cap, so a response cannot pass one and fail the other.
     """
     url = build_request_url(station, start, end)
-    cache = cache_path_for(station, start, end, cache_dir=cache_dir)
+    cache = cache_path_for(station, start, end)
     part = cache.with_name(cache.name + '.part')
     effective_cap = (MAX_RESPONSE_BYTES if max_bytes_remaining is None
                      else min(MAX_RESPONSE_BYTES, max_bytes_remaining))
