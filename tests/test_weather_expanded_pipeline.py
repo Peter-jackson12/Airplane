@@ -14,8 +14,15 @@ from notebooks.fetch_weather_sample_expanded import (CHECKPOINT_SCHEMA_VERSION, 
                                                       recover_interrupted_attempts, save_checkpoint,
                                                       validate_checkpoint_schema, verify_plan_fingerprint)
 from notebooks.join_weather_sample import load_observations
-from notebooks.join_weather_sample_expanded import build_requests
+from notebooks.join_weather_sample_expanded import build_manifest_limitations, build_requests
 from src.weather import join_weather_asof
+
+
+# ---- manifest wording follows the runtime sample denominator ----
+
+def test_expanded_join_manifest_limitations_use_runtime_denominators():
+    limitations = build_manifest_limitations(300, 268)
+    assert '300 stratified rows (268 collectible)' in limitations[0]
 
 
 # ---- build_station_day_groups: interval/window merging ----
