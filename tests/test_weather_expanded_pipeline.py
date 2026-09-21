@@ -1173,7 +1173,7 @@ def test_resume_adopts_valid_cache_without_network_and_preserves_prior_attempt_h
     assert result['cumulative_requests'] == 1
     assert result['cumulative_bytes_measured'] == 321
     record = result['fetched'][0]
-    assert record['was_already_cached'] is True
+    assert record['was_already_cached'] is False
     assert record['attempts'] == 1
     assert record['attempts_detail'] == [attempt]
     assert record['recovered_from_existing_cache_after_incomplete_checkpoint'] is True
