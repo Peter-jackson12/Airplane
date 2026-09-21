@@ -274,7 +274,7 @@ def test_finalize_never_overwrites_existing_final_manifest(tmp_path, monkeypatch
 
 
 
-def test_finalize_accepts_pre_recovery-field_successful_shard(tmp_path, monkeypatch):
+def test_finalize_accepts_pre_recovery_field_successful_shard(tmp_path, monkeypatch):
     monkeypatch.setattr(full, "ROOT", tmp_path)
 
     start = pd.Timestamp("2019-01-01T00:00:00Z")
