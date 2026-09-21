@@ -103,6 +103,7 @@ def test_bulk_plan_is_deterministic_under_row_reordering():
     )
     pd.testing.assert_frame_equal(a, b)
     assert den_a == den_b
+    assert a.station_count.tolist() == sorted(a.station_count.tolist(), reverse=True)
 
 
 def test_bulk_plan_covers_every_required_row_window():
@@ -248,3 +249,38 @@ def test_executor_rejects_nonpositive_custom_response_cap():
             checkpoint=checkpoint,
             max_response_bytes_per_attempt=0,
         )
+
+
+def test_executor_failed_group_keeps_request_identity():
+    checkpoint = new_checkpoint_state()
+
+    def fail_once(*args, **kwargs):
+        return {
+            "success": False,
+            "bytes_received": 1,
+            "seconds": 0.0,
+            "error": "synthetic failure",
+        }
+
+    result = execute_with_caps(
+        [("REQ", "2019-01")],
+        {
+            ("REQ", "2019-01"): [
+                pd.Timestamp("2019-01-01T06:00:00Z"),
+                pd.Timestamp("2019-01-31T22:00:00Z"),
+            ]
+        },
+        max_requests=1,
+        max_bytes=100,
+        max_seconds=100,
+        cache_exists_fn=lambda *args: None,
+        attempt_fn=fail_once,
+        digest_fn=lambda p: "x",
+        now_fn=lambda: 0.0,
+        checkpoint=checkpoint,
+        max_attempts_per_group=1,
+        max_response_bytes_per_attempt=10,
+    )
+
+    assert result["failed"][0]["station"] == "REQ"
+    assert result["failed"][0]["day"] == "2019-01"
