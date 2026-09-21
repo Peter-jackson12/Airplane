@@ -35,7 +35,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import math
 import time
 from pathlib import Path
 from urllib.parse import urlencode
