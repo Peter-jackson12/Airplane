@@ -286,3 +286,39 @@ def test_executor_failed_group_keeps_request_identity():
 
     assert result["failed"][0]["station"] == "REQ"
     assert result["failed"][0]["day"] == "2019-01"
+
+
+def test_executor_attempt_pause_applies_after_failure_and_counts_against_time_budget():
+    checkpoint = new_checkpoint_state()
+    slept = []
+
+    result = execute_with_caps(
+        [("REQ", "2019-01")],
+        {
+            ("REQ", "2019-01"): [
+                pd.Timestamp("2019-01-01T06:00:00Z"),
+                pd.Timestamp("2019-01-31T22:00:00Z"),
+            ]
+        },
+        max_requests=1,
+        max_bytes=100,
+        max_seconds=100,
+        cache_exists_fn=lambda *args: None,
+        attempt_fn=lambda *args, **kwargs: {
+            "success": False,
+            "bytes_received": 1,
+            "seconds": 0.0,
+            "error": "synthetic failure",
+        },
+        digest_fn=lambda p: "x",
+        now_fn=lambda: 0.0,
+        checkpoint=checkpoint,
+        sleep_fn=slept.append,
+        max_attempts_per_group=1,
+        attempt_pause_seconds=1.25,
+        max_response_bytes_per_attempt=10,
+    )
+
+    assert slept == [1.25]
+    assert checkpoint["seconds_used"] == pytest.approx(1.25)
+    assert result["failed"][0]["station"] == "REQ"
