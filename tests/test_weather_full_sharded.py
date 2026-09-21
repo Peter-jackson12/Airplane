@@ -187,7 +187,11 @@ def _write_bulk_csv(path, stations):
 
 def test_bulk_cache_validation_accepts_only_requested_station_ids(tmp_path):
     path = tmp_path / "bulk.csv"
-    req = {"stations": ["A1", "B1"]}
+    req = {
+        "stations": ["A1", "B1"],
+        "window_start_utc": pd.Timestamp("2019-01-01T00:00:00Z"),
+        "window_end_utc": pd.Timestamp("2019-02-01T00:00:00Z"),
+    }
     _write_bulk_csv(path, ["A1", "B1"])
     assert _validate_bulk_file(path, req) == 2
 
@@ -322,3 +326,28 @@ def test_executor_attempt_pause_applies_after_failure_and_counts_against_time_bu
     assert slept == [1.25]
     assert checkpoint["seconds_used"] == pytest.approx(1.25)
     assert result["failed"][0]["station"] == "REQ"
+
+
+def test_bulk_plan_rejects_station_id_shared_across_networks():
+    mapping = _mapping()
+    mapping.loc[mapping.iata.eq("DDD"), "candidate_sid"] = "C1"
+    with pytest.raises(ValueError, match="exactly one IEM network"):
+        build_bulk_month_plan(
+            _pool(), mapping, shard_size=2, max_stations_per_request=2
+        )
+
+
+def test_bulk_cache_validation_rejects_observations_outside_requested_window(tmp_path):
+    path = tmp_path / "bulk.csv"
+    req = {
+        "stations": ["A1"],
+        "window_start_utc": pd.Timestamp("2019-01-01T00:00:00Z"),
+        "window_end_utc": pd.Timestamp("2019-02-01T00:00:00Z"),
+    }
+    _write_bulk_csv(path, ["A1"])
+    frame = pd.read_csv(path, keep_default_na=False)
+    frame.loc[0, "valid"] = "2019-02-02 00:00"
+    frame.to_csv(path, index=False)
+
+    with pytest.raises(ValueError, match="outside requested window"):
+        _validate_bulk_file(path, req)
