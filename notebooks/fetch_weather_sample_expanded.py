@@ -419,10 +419,11 @@ def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
             recovered_incomplete = bool(
                 prior and prior.get('status') not in {None, 'fetched'} and prior_attempts
             )
+            prior_had_success = any(bool(a.get('success')) for a in prior_attempts)
             record = {'station': station, 'day': day, 'window_start_utc': window_start.isoformat(),
                      'window_end_utc': window_end.isoformat(), 'cache_file': str(cached),
                      'sha256': actual_sha, 'rows': prior.get('rows') if prior else None,
-                     'was_already_cached': True, 'attempts': len(prior_attempts),
+                     'was_already_cached': not prior_had_success, 'attempts': len(prior_attempts),
                      'attempts_detail': prior_attempts,
                      'recovered_from_existing_cache_after_incomplete_checkpoint': recovered_incomplete,
                      'status': 'fetched'}
