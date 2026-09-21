@@ -273,7 +273,7 @@ uv run --locked --offline python -u -m notebooks.diagnose_weather_expanded_cache
 
 ### 전체 수집 전용 실행 경계
 
-300행용 station/day fetcher를 13만+ 그룹에 그대로 확대하지 않습니다. 2026-09-21 확인한 [IEM ASOS backend help](https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?help)는 한 요청에 여러 `station`/여러 `network`를 받을 수 있고, IP별 1초 throttle과 요청당 실용 상한 1,000 station-years를 명시합니다. 따라서 전체 수집은 [fetch_weather_full_sharded](notebooks/fetch_weather_full_sharded.py)에서 **실제 필요한 station-month를 IEM network × UTC month × 최대 20 station batch**로 먼저 materialize하고, 성공 요청 사이 1.25초 pause를 두는 bulk 경로를 사용합니다. 공급자 계약은 영구 보장이 아니므로 장기간 뒤 재실행할 때는 help를 다시 확인합니다.
+300행용 station/day fetcher를 13만+ 그룹에 그대로 확대하지 않습니다. 2026-09-21 확인한 [IEM ASOS backend help](https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?help)는 한 요청에 여러 `station`/여러 `network`를 받을 수 있고, IP별 1초 throttle과 요청당 실용 상한 1,000 station-years를 명시합니다. 따라서 전체 수집은 [fetch_weather_full_sharded](notebooks/fetch_weather_full_sharded.py)에서 **실제 필요한 station-month를 IEM network × UTC month × 최대 20 station batch**로 먼저 materialize하고, 성공·실패와 무관하게 모든 HTTP attempt 뒤 1.25초 pause를 두는 bulk 경로를 사용합니다. 공급자 계약은 영구 보장이 아니므로 장기간 뒤 재실행할 때는 help를 다시 확인합니다.
 
 Git에 있는 현재 `confirmed_period` 매핑만으로 계산한 구조적 상한은 355 station·52 IEM network입니다. 모든 station이 모든 달에 필요하다는 과대 가정에서도 20 station/batch 기준 월 54요청이므로 24개월은 1,296요청, 2017-12/2020-01 경계월까지 26개월로 잡아도 1,404요청입니다. 이는 실제 로컬 `prediction_at`으로 만든 plan의 요청 수가 아니라 **GitHub-only 상한 산정**입니다. 실제 요청 수·station-month 수·응답 크기는 `--prepare-only` 및 pilot 실행 근거로 확정합니다.
 
