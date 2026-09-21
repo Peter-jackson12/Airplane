@@ -222,6 +222,26 @@ def build_bulk_month_plan(
         [role_events("Origin_Airport"), role_events("Destination_Airport")],
         ignore_index=True,
     )
+
+    # Downstream weather joins key observations by station alone. A station
+    # identifier that resolves through more than one IEM network would therefore
+    # be ambiguous even if each individual HTTP request looked valid. Reject
+    # that mapping before materializing any transport plan.
+    station_network_counts = (
+        events[["station", "network"]]
+        .drop_duplicates()
+        .groupby("station")["network"]
+        .nunique()
+    )
+    conflicting_station_networks = sorted(
+        station_network_counts[station_network_counts.gt(1)].index.astype(str).tolist()
+    )
+    if conflicting_station_networks:
+        raise ValueError(
+            "station identifiers must map to exactly one IEM network for station-only "
+            f"downstream joins; conflicts: {conflicting_station_networks}"
+        )
+
     events["window_start"] = events["prediction_at"] - pd.Timedelta(hours=LOOKBACK_HOURS)
     events["window_end"] = events["prediction_at"] + pd.Timedelta(hours=LOOKAHEAD_HOURS)
     events["start_month"] = events["window_start"].dt.strftime("%Y-%m")
@@ -403,6 +423,17 @@ def _validate_bulk_file(path: Path, req: dict) -> int:
         parsed = pd.to_datetime(keys["valid"], utc=True, errors="coerce")
         if parsed.isna().any():
             raise ValueError(f"{path} contains unparseable valid timestamps")
+        start = pd.Timestamp(req["window_start_utc"])
+        end = pd.Timestamp(req["window_end_utc"])
+        if start.tzinfo is None or end.tzinfo is None:
+            raise ValueError("bulk request window must be timezone-aware")
+        outside = parsed.lt(start) | parsed.gt(end)
+        if outside.any():
+            first_bad = parsed.loc[outside].iloc[0].isoformat()
+            raise ValueError(
+                f"{path} contains observation time {first_bad} outside requested "
+                f"window {start.isoformat()}..{end.isoformat()}"
+            )
     return int(len(keys))
 
 
