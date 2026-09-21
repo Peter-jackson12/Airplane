@@ -262,7 +262,9 @@ def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
                       max_attempts_per_group=MAX_ATTEMPTS_PER_GROUP,
                       max_consecutive_failures=MAX_CONSECUTIVE_FAILURES,
                       default_attempt_timeout=DEFAULT_ATTEMPT_TIMEOUT_SECONDS,
-                      attempt_overhead_seconds=0.0, success_pause_seconds=0.0):
+                      attempt_overhead_seconds=0.0, success_pause_seconds=0.0,
+                      attempt_pause_seconds=0.0,
+                      max_response_bytes_per_attempt=MAX_RESPONSE_BYTES):
     """Resumable, budget-aware fetch loop.
 
     `checkpoint` is a mutable dict carrying CUMULATIVE state across resumed
@@ -301,6 +303,10 @@ def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
     not be observed (e.g. an interrupted attempt) -- only that it is never
     dropped from budget accounting and never silently re-run for free.
     """
+    if max_response_bytes_per_attempt <= 0:
+        raise ValueError('max_response_bytes_per_attempt must be > 0')
+    if attempt_pause_seconds < 0:
+        raise ValueError('attempt_pause_seconds must be >= 0')
     fetched, skipped_cap, failed = [], [], []
     session_start = now_fn()
     session_requests = 0
@@ -422,7 +428,7 @@ def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
             # attempts whose real usage is unknown. Only a MEASURED outcome replaces the reservation with
             # the actual bytes transferred.
             bytes_remaining_before = max_bytes - checkpoint['bytes_used']
-            effective_cap = min(MAX_RESPONSE_BYTES, bytes_remaining_before)
+            effective_cap = min(max_response_bytes_per_attempt, bytes_remaining_before)
 
             # Reserve THIS attempt's request AND byte budget and persist BEFORE the network call: if the
             # process dies mid-attempt, both reservations survive on disk and are never re-issued as a
@@ -461,6 +467,17 @@ def execute_with_caps(planned, groups, *, max_requests, max_bytes, max_seconds,
                 {'station': station, 'day': day, **attempts_this_group[-1]}])[-ATTEMPT_LOG_LIMIT:]
             checkpoint['groups'][key] = {'status': 'in_progress', 'attempts_detail': attempts_this_group}
             persist()
+
+            # Some providers enforce a request-rate throttle regardless of HTTP outcome.
+            # A caller can request a minimum post-attempt pause that applies to SUCCESS AND
+            # FAILURE alike. It is charged to the same cumulative time budget, and if no
+            # time remains then no pause is invented because the next group cannot attempt
+            # another request under this invocation anyway.
+            attempt_pause = min(attempt_pause_seconds, max(remaining_seconds(), 0.0))
+            if attempt_pause > 0:
+                sleep_fn(attempt_pause)
+                checkpoint['seconds_used'] += attempt_pause
+                persist()
 
             if outcome.get('success'):
                 group_outcome = outcome
