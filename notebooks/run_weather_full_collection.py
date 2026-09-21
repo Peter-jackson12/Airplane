@@ -223,6 +223,10 @@ def run_shards(
         manifest_file = shard_manifest_path(name, idx)
         if manifest_file.exists():
             existing = json.loads(manifest_file.read_text())
+            if existing.get("schema_version") != SHARD_MANIFEST_SCHEMA_VERSION:
+                raise ValueError(f"shard {idx} has unsupported manifest schema")
+            if existing.get("plan_sha256") != plan_manifest["plan_sha256"]:
+                raise ValueError(f"shard {idx} manifest belongs to a different request plan")
             if existing.get("successful"):
                 verify_successful_shard(name, plan_manifest, plan, idx)
                 print(
