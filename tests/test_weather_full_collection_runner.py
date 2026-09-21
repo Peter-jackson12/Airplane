@@ -256,7 +256,14 @@ def test_run_shards_skips_already_successful_shard_without_network(
 
     current_manifest = tmp_path / "shard_1.json"
     current_manifest.write_text(
-        json.dumps({"successful": True, "request_groups_in_shard": 1})
+        json.dumps(
+            {
+                "schema_version": SHARD_MANIFEST_SCHEMA_VERSION,
+                "plan_sha256": "planhash",
+                "successful": True,
+                "request_groups_in_shard": 1,
+            }
+        )
     )
     monkeypatch.setattr(
         runner,
