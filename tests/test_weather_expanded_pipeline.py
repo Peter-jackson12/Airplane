@@ -9,7 +9,8 @@ from notebooks.fetch_weather_sample_expanded import (CHECKPOINT_SCHEMA_VERSION, 
                                                       compute_fetch_plan_fingerprint,
                                                       compute_plan_fingerprint, execute_with_caps,
                                                       fetch_plan_options, load_checkpoint,
-                                                      new_checkpoint_state, record_budget_limits,
+                                                      new_checkpoint_state, checkpoint_has_prior_progress,
+                                                      record_budget_limits,
                                                       recover_interrupted_attempts, save_checkpoint,
                                                       validate_checkpoint_schema, verify_plan_fingerprint)
 from notebooks.join_weather_sample import load_observations
@@ -18,6 +19,22 @@ from src.weather import join_weather_asof
 
 
 # ---- build_station_day_groups: interval/window merging ----
+
+def test_checkpoint_has_prior_progress_returns_stable_bool_not_mutable_groups_reference():
+    checkpoint = new_checkpoint_state()
+    fresh = checkpoint_has_prior_progress(checkpoint)
+    assert fresh is False
+    assert isinstance(fresh, bool)
+
+    # Mutating groups later must not retroactively change the already-captured flag.
+    checkpoint['groups']['A|2019-01-01'] = {'status': 'fetched'}
+    assert fresh is False
+    assert checkpoint_has_prior_progress(checkpoint) is True
+
+    requests_only = new_checkpoint_state()
+    requests_only['requests_used'] = 1
+    assert checkpoint_has_prior_progress(requests_only) is True
+
 
 def test_station_day_groups_merge_same_station_and_day_across_rows():
     collectible = pd.DataFrame({
