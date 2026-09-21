@@ -250,7 +250,9 @@ uv run --locked --offline python -u -m notebooks.join_weather_sample_expanded --
 uv run --locked --offline python -u -m notebooks.diagnose_weather_expanded_cache --name $Sample --out-name baseline_recovery_v2_weather_expanded_stratafix_diagnostic_20260921 --mapping-name $Mapping
 ```
 
-**fetch 결과:** 계획된 530 station-day 그룹 중 530개 모두 처리됨(`skipped_due_to_cap=0`, `failed_groups=0`, `cap_that_stopped_collection=null`). 초기 600요청·200MB·3600초 상한에 걸리지 않아 예산 상향 없이 한 번에 끝났습니다. 캐시 적중 464 · 신규 요청 66, 이번 실행 HTTP 시도 68회 · 측정 바이트 175,144 · 미측정 시도 2건 · 예산 차감용 reserved bytes 4,175,144 · 누적 활성 수집 시간 약 277.1초(경과 281.3초). `budget_limit_history`에 `{max_requests:600, max_bytes:200000000, max_seconds:3600}` 1건이 기록됐습니다. [fetch manifest](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_fetch_manifest.json), [checkpoint](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_fetch_checkpoint.json)
+**fetch 결과:** 계획된 530 station-day 그룹 중 530개 모두 처리됨(`skipped_due_to_cap=0`, `failed_groups=0`, `cap_that_stopped_collection=null`). 초기 600요청·200MB·3600초 상한에 걸리지 않아 예산 상향 없이 한 번에 끝났습니다. 캐시 적중 464 · 신규 요청 66, 이번 실행 HTTP 시도 68회 · 측정 바이트 175,144 · 미측정 시도 2건 · 예산 차감용 reserved bytes 4,175,144 · 누적 활성 수집 시간 약 277.1초(경과 281.3초). `budget_limit_history`에 `{max_requests:600, max_bytes:200000000, max_seconds:3600}` 1건이 기록됐습니다. [fetch manifest](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_fetch_manifest.json). 재개용 checkpoint는 `output/baseline_recovery_v2_weather_expanded_stratafix_20260918_fetch_checkpoint.json`의 로컬 전용 파일이며 Git에 추적하지 않습니다.
+
+**메타데이터 주의:** 이 최초 수집은 실행 전에 stratafix checkpoint가 없음을 직접 확인하고 시작했지만, 당시 `resumed_from_checkpoint` 계산이 빈 `groups` dict 자체를 보관해 실행 중 그 dict가 채워지면서 fetch manifest에 boolean 대신 그룹 객체가 직렬화되는 감사 메타데이터 결함이 드러났습니다. 수집·예산·join 수치에는 영향을 주지 않으며 후속 코드에서 stable boolean으로 수정·회귀 고정했습니다. 기존 manifest는 실행 당시 증거로 덮어쓰지 않습니다.
 
 **join 결과:** 300 ID 유일·행수·순서 보존, 완전 동일 중복 보고 1건 제거, 보류 32행 전부 station·관측 필드 결측(마스킹 확인, 예측 시점만 채움), `unresolved_no_prediction_at=0`. 수집 가능 268 분모의 latency별 결합/최대·중앙값 관측 나이:
 
