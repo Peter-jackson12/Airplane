@@ -270,7 +270,9 @@ def build_bulk_month_plan(
     plan = pd.DataFrame(rows)
     if len(plan):
         plan = plan.sort_values(
-            ["month", "network", "batch_index"], kind="mergesort"
+            ["station_count", "month", "network", "batch_index"],
+            ascending=[False, True, True, True],
+            kind="mergesort",
         ).reset_index(drop=True)
         if plan["request_id"].duplicated().any():
             raise ValueError("bulk request_id collision")
@@ -548,7 +550,7 @@ def prepare_plan(
         "plan_file": _as_root_relative(local_plan),
         "plan_sha256": digest(local_plan),
         "plan_columns": PLAN_COLUMNS,
-        "plan_order": "UTC month ascending, IEM network ascending, station batch ascending",
+        "plan_order": "station_count descending (pilot stress first), then UTC month/network/batch ascending",
         "denominators": denominators,
         "provider_contract": {
             "checked_on": PROVIDER_CONTRACT_CHECKED_ON,
