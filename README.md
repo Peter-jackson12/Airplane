@@ -273,27 +273,31 @@ uv run --locked --offline python -u -m notebooks.diagnose_weather_expanded_cache
 
 ### 전체 수집 전용 실행 경계
 
-300행용 fetcher를 13만+ 그룹에 그대로 확대하지 않습니다. 전체 수집은 [fetch_weather_full_sharded](notebooks/fetch_weather_full_sharded.py)에서 **실제 실행될 station/UTC-day 창을 먼저 로컬 request plan으로 고정**하고, 기본 500그룹씩 분리한 shard별 checkpoint·manifest·cache로 진행합니다. 이 분리는 checkpoint JSON 전체를 매 요청마다 다시 쓰는 비용과 한 번의 거대한 실패 도메인, 한 디렉터리에 매우 많은 캐시 파일이 쌓이는 문제를 제한하기 위한 운영 경계입니다.
+300행용 station/day fetcher를 13만+ 그룹에 그대로 확대하지 않습니다. 2026-09-21 확인한 [IEM ASOS backend help](https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?help)는 한 요청에 여러 `station`/여러 `network`를 받을 수 있고, IP별 1초 throttle과 요청당 실용 상한 1,000 station-years를 명시합니다. 따라서 전체 수집은 [fetch_weather_full_sharded](notebooks/fetch_weather_full_sharded.py)에서 **실제 필요한 station-month를 IEM network × UTC month × 최대 20 station batch**로 먼저 materialize하고, 성공 요청 사이 1.25초 pause를 두는 bulk 경로를 사용합니다. 공급자 계약은 영구 보장이 아니므로 장기간 뒤 재실행할 때는 help를 다시 확인합니다.
 
-기존 21행/300행 캐시는 보존합니다. 자동 재사용은 **station·window_start·window_end가 정확히 같은 schema-valid 캐시**에만 허용하며, 단순히 시간이 겹치거나 포함된다는 이유로 전체 창을 이미 수집했다고 간주하지 않습니다. 최신 실행 입력은 `baseline_recovery_v2_weather_scope_fix_20260918` 매핑을 명시적으로 사용합니다.
+Git에 있는 현재 `confirmed_period` 매핑만으로 계산한 구조적 상한은 355 station·52 IEM network입니다. 모든 station이 모든 달에 필요하다는 과대 가정에서도 20 station/batch 기준 월 54요청이므로 24개월은 1,296요청, 2017-12/2020-01 경계월까지 26개월로 잡아도 1,404요청입니다. 이는 실제 로컬 `prediction_at`으로 만든 plan의 요청 수가 아니라 **GitHub-only 상한 산정**입니다. 실제 요청 수·station-month 수·응답 크기는 `--prepare-only` 및 pilot 실행 근거로 확정합니다.
 
-전체 네트워크 실행은 아직 하지 않았습니다. 먼저 로컬 원본으로 plan만 생성하고 분모·실제 station-day 그룹 수·shard 수를 확인합니다. 같은 run name에서는 shard 크기와 plan을 바꾸지 않습니다.
+전체 plan은 기본 50 bulk-request 단위 shard로 나누고 shard별 checkpoint·manifest·cache를 둡니다. 이 경계는 거대한 단일 checkpoint를 매 요청마다 다시 쓰는 비용, 한 번의 실패 도메인, 한 디렉터리에 과도한 파일이 쌓이는 문제를 제한합니다. 같은 run name에서는 plan·shard 크기·station batch 크기를 바꾸지 않습니다.
+
+기존 21행/300행/stratafix 캐시는 그대로 보존합니다. 이들은 특정 station의 일부 시각 창에 대한 증거이므로 **월 전체 bulk 요청을 이미 수집했다는 근거로 재사용하지 않습니다.** 최신 전체 실행 입력은 `baseline_recovery_v2_weather_scope_fix_20260918` 매핑을 명시적으로 사용합니다.
+
+전체 네트워크 실행은 아직 하지 않았습니다. 먼저 로컬 원본으로 plan만 생성해 분모·station-month·bulk request 수·shard 수를 검토하고, 그 다음 첫 shard도 **5번의 신규 HTTP attempt까지만** pilot으로 실행해 실제 응답 바이트·시간·실패/503/422 여부를 확인합니다. pilot 근거를 검토하기 전 전체 shard 반복 실행으로 넘어가지 않습니다.
 
 ```powershell
-$Full = "baseline_recovery_v2_weather_full_20260921"
+$Full = "baseline_recovery_v2_weather_full_bulk_20260921"
 $Mapping = "baseline_recovery_v2_weather_scope_fix_20260918"
 
-# 네트워크 호출 없음: 실제 실행 plan과 source hash만 고정
-uv run --locked --offline python -u -m notebooks.fetch_weather_full_sharded --name $Full --mapping-name $Mapping --prepare-only --shard-size 500
+# 네트워크 호출 없음: 실제 bulk plan과 source hash만 고정
+uv run --locked --offline python -u -m notebooks.fetch_weather_full_sharded --name $Full --mapping-name $Mapping --prepare-only --shard-size 50 --max-stations-per-request 20
 
-# plan 검토 뒤 첫 shard를 작은 누적 request cap으로 pilot
-uv run --locked --offline python -u -m notebooks.fetch_weather_full_sharded --name $Full --mapping-name $Mapping --shard-index 0 --shard-size 500 --max-requests 100 --max-bytes 200000000 --max-seconds 1800
+# plan 검토 뒤 첫 shard를 신규 HTTP attempt 5회까지만 pilot
+uv run --locked --offline python -u -m notebooks.fetch_weather_full_sharded --name $Full --mapping-name $Mapping --shard-index 0 --shard-size 50 --max-stations-per-request 20 --max-requests 5 --max-bytes 100000000 --max-seconds 900
 
-# 동일 shard 재개 시 cap은 checkpoint 누적 사용량보다 큰 값으로 올린다.
-# 모든 shard 성공 후에만 --finalize를 실행한다.
+# pilot 검토 후 같은 shard를 재개할 때만 누적 cap을 올린다.
+# 모든 shard가 성공한 뒤에만 --finalize를 실행한다.
 ```
 
-`--prepare-only` 결과가 기존 142,574 station-day 산정과 일치한다고 미리 주장하지 않습니다. 새 plan manifest가 실제 원본·최신 매핑에서 생성된 뒤 그 행 수를 현재 실행 계약으로 사용합니다. 수집 완료 전에는 weather-on 모델 학습으로 넘어가지 않습니다.
+`--prepare-only` 결과가 기존 142,574 station-day 또는 132,783 merged-interval 산정과 일치한다고 주장하지 않습니다. 두 숫자는 과거 sizing 정의이고, 새 plan manifest의 `bulk_request_groups`가 현재 transport 실행 계약입니다. 수집 완료·finalize·row-level join 검증 전에는 weather-on 모델 학습으로 넘어가지 않습니다.
 
 ### 코드 지도
 
@@ -315,7 +319,7 @@ uv run --locked --offline python -u -m notebooks.fetch_weather_full_sharded --na
 | [select_weather_sample_expanded](notebooks/select_weather_sample_expanded.py), [fetch_weather_sample_expanded](notebooks/fetch_weather_sample_expanded.py), [join_weather_sample_expanded](notebooks/join_weather_sample_expanded.py) | 층화 선정·상한 내 수집·지연 민감도 결합 |
 | [diagnose_weather_expanded_cache](notebooks/diagnose_weather_expanded_cache.py), [reconcile_weather_cache_recombination](notebooks/reconcile_weather_cache_recombination.py) | 캐시 진단·수정 코드 재결합과 명시적 PASS/FAIL |
 | [scope_weather_collection](notebooks/scope_weather_collection.py), [scope_weather_collection_refined](notebooks/scope_weather_collection_refined.py) | 초기 산정·실제 구간 병합/차감 재산정 |
-| [fetch_weather_full_sharded](notebooks/fetch_weather_full_sharded.py) | 전체 adopted weather 실행 plan 고정·500그룹 shard·shard별 checkpoint/cache/finalize |
+| [fetch_weather_full_sharded](notebooks/fetch_weather_full_sharded.py) | 전체 adopted weather의 network×월×station-batch bulk plan·50요청 shard·checkpoint/cache/finalize |
 | `notebooks/`, `tests/`, `output/` | 재현·회귀·실행 증거. 루트의 다른 `run_*.py`는 과거 경로일 수 있음 |
 
 <a id="8-문서안내"></a>
@@ -600,7 +604,7 @@ ID·행수·순서, observed/available≤prediction, station 일치, DST→NaT, 
 
 후속 진단은 실패를 station 전체가 아닌 **(station, day)**에 연결하고, 관측 부재·가용성 가정상 미가용·90분 초과를 분리했습니다. 기존 300행의 10분 조건 출발 미결합 2건은 `stale_beyond_max_age`, 60분 조건 출발 115·도착 113건은 `not_yet_available_under_latency_assumption`입니다. 보고 자체 부재와 `unexpected_unmatched_despite_available_report`는 0건이었습니다. 과거 `no_report_within_max_age`를 모두 단순 노후로 읽지 않습니다. [초기 진단 manifest](output/baseline_recovery_v2_weather_expanded_diagnostic_20260918_diagnostic_manifest.json), [세분화된 진단](output/baseline_recovery_v2_weather_expanded_diagnostic_v2_20260918_diagnostic_manifest.json), [사유표](output/baseline_recovery_v2_weather_expanded_diagnostic_v2_20260918_diagnostic_unmatched_reasons.csv)
 
-`scope_weather_collection_refined.py`는 station별 실제 필요 구간을 병합하고 검증된 기존 캐시 구간을 차감합니다. 프로젝트 자체 요청당 2MB 상한으로 분할하기 위한 중앙 전송률 기반 추정 길이는 약 7,392시간이지만 실제 응답 크기의 보장이 아닙니다. 이 분할 계획의 요청 수는 132,783건으로 초기 station-day 142,574건과 정의가 다릅니다. **132,783은 구간 기반 규모 산정값이지 현재 fetch 엔진이 그대로 실행할 요청 수가 아닙니다.** 전체 수집 전용 경로는 아래처럼 실제 station/day 창을 먼저 materialize해 그 plan의 행 수를 실행 계약으로 사용합니다.
+`scope_weather_collection_refined.py`는 station별 실제 필요 구간을 병합하고 검증된 기존 캐시 구간을 차감합니다. 프로젝트 자체 요청당 2MB 상한으로 분할하기 위한 중앙 전송률 기반 추정 길이는 약 7,392시간이지만 실제 응답 크기의 보장이 아닙니다. 이 분할 계획의 요청 수는 132,783건으로 초기 station-day 142,574건과 정의가 다릅니다. **132,783은 구간 기반 규모 산정값이지 현재 전체수집 transport가 그대로 실행할 요청 수가 아닙니다.** 전체 수집 전용 경로는 IEM의 다중-station 요청을 이용해 network×UTC month×station batch를 materialize하며, 실제 bulk 요청 수는 로컬 원본으로 생성한 plan manifest에서 확정합니다.
 
 기존 21행+300행의 574개 실측 그룹에서 30분 미만 극단값을 제외한 bytes/시간 분포 p10~p90를 신규 필요 시간 전체에 적용한 **시나리오 범위는 약 531~1,049MB, 중앙값 약 596MB**입니다. 신뢰구간·보장된 최소/최대가 아닙니다. station별 개별 비율이 아니라 하나의 공통 비율을 355곳에 적용했고 185곳은 실측 표본을 기여하지 못했습니다. 원본 디스크 약 258.7바이트/행과 pandas 메모리 약 771.3바이트/행은 구별합니다.
 
