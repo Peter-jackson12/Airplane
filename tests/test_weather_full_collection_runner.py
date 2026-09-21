@@ -290,3 +290,46 @@ def test_run_shards_skips_already_successful_shard_without_network(
 
     assert code == 0
     assert verified == [0, 1]
+
+
+
+def test_run_shards_rejects_existing_manifest_from_different_plan(
+    tmp_path, monkeypatch
+):
+    plan = _minimal_plan((0,))
+    manifest = {"denominators": {"shard_count": 1}, "plan_sha256": "planhash"}
+    monkeypatch.setattr(runner, "load_plan", lambda *args, **kwargs: (manifest, plan))
+
+    current_manifest = tmp_path / "shard_0.json"
+    current_manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": SHARD_MANIFEST_SCHEMA_VERSION,
+                "plan_sha256": "different-plan",
+                "successful": False,
+            }
+        )
+    )
+    monkeypatch.setattr(
+        runner,
+        "shard_manifest_path",
+        lambda name, idx: current_manifest,
+    )
+    monkeypatch.setattr(
+        runner,
+        "execute_shard",
+        lambda *args, **kwargs: pytest.fail("mismatched manifest must stop before network"),
+    )
+
+    with pytest.raises(ValueError, match="different request plan"):
+        runner.run_shards(
+            "run",
+            "mapping",
+            start_shard=0,
+            end_shard=0,
+            shard_size=50,
+            max_stations_per_request=20,
+            retry_headroom=10,
+            additional_max_bytes=100,
+            additional_max_seconds=100,
+        )
