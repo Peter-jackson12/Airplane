@@ -1,0 +1,11 @@
+field,field_type,total_observation_rows,missing_M,missing_M_rate,trace_T_values,other_non_numeric_values
+tmpf,numeric,5279,1,0.00018942981625307822,0.0,0.0
+dwpf,numeric,5279,10,0.0018942981625307824,0.0,0.0
+relh,numeric,5279,31,0.005872324303845425,0.0,0.0
+sknt,numeric,5279,8,0.0015154385300246258,0.0,0.0
+gust,numeric,5279,4651,0.8810380753930669,0.0,0.0
+vsby,numeric,5279,4,0.0007577192650123129,0.0,0.0
+p01i,numeric,5279,15,0.0028414472437961733,507.0,0.0
+skyc1,categorical_code,5279,4,0.0007577192650123129,,
+wxcodes,categorical_code,5279,3983,0.7544989581360106,,
+snowdepth,numeric,5279,5279,1.0,0.0,0.0

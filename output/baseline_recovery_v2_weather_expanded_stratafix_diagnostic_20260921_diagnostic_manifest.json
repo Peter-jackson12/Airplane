@@ -1,0 +1,40 @@
+{
+  "name": "baseline_recovery_v2_weather_expanded_stratafix_diagnostic_20260921",
+  "source_run": "baseline_recovery_v2_weather_expanded_stratafix_20260918",
+  "mapping_name": "baseline_recovery_v2_weather_scope_fix_20260918",
+  "code_sha256": "0d0bc2d4ab0d696fbd23102404327044bcba0b13b320621ecd7f14df6d9362e7",
+  "fits_any_model": false,
+  "uses_external_data": false,
+  "target_columns_used": [],
+  "id_row_count_order_preserved_across_all_scenarios": true,
+  "denominators_table": "output\\baseline_recovery_v2_weather_expanded_stratafix_diagnostic_20260921_diagnostic_denominators.csv",
+  "match_rates_table": "output\\baseline_recovery_v2_weather_expanded_stratafix_diagnostic_20260921_diagnostic_match_rates.csv",
+  "age_distribution_table": "output\\baseline_recovery_v2_weather_expanded_stratafix_diagnostic_20260921_diagnostic_age_distribution.csv",
+  "unmatched_reasons_table": "output\\baseline_recovery_v2_weather_expanded_stratafix_diagnostic_20260921_diagnostic_unmatched_reasons.csv",
+  "year_season_airport_table": "output\\baseline_recovery_v2_weather_expanded_stratafix_diagnostic_20260921_diagnostic_year_season_airport.csv",
+  "field_quality_table": "output\\baseline_recovery_v2_weather_expanded_stratafix_diagnostic_20260921_diagnostic_field_quality.csv",
+  "refined_collection_size_estimate": {
+    "basis": "530 REAL station-day groups actually collected in baseline_recovery_v2_weather_expanded_stratafix_20260918 (both the 21-row probe scale and this 300-row expanded run), using EACH group's own recorded window length in hours -- not a single flat bytes-per-request average applied uniformly to short (21-row) and long (full-population) windows alike.",
+    "measured_groups": 530,
+    "measured_total_window_hours": 4270.416666666667,
+    "measured_total_raw_bytes": 1365308,
+    "measured_bytes_per_window_hour": 319.71306468923797,
+    "measured_raw_bytes_per_observation_row": 2007.8058823529411,
+    "measured_normalized_pandas_bytes_per_observation_row": 772.0409168403106,
+    "note_raw_vs_normalized": "raw = bytes of the downloaded CSV as stored; normalized = in-memory pandas footprint per parsed observation row (deep=True) -- these differ and neither should be read as \"storage needed on disk after processing\".",
+    "full_population_reestimate": null
+  },
+  "existing_cache_coverage": {
+    "distinct_station_day_groups_already_cached_locally": 570,
+    "source_runs_checked": [
+      "baseline_recovery_v2_weather_expanded_stratafix_20260918",
+      "baseline_recovery_v2_weather_sample_20260918"
+    ],
+    "limitation": "This counts groups already cached from prior VALIDATION runs only (21-row + 300-row); it is not a claim about coverage of the full 142,574-group population, which was never attempted at that scale."
+  },
+  "limitations": [
+    "This is a re-diagnosis of ALREADY-COLLECTED data (no new fetch, no new selection); it cannot recover information about requests that were never made.",
+    "unmatched_reasons splits collectible-and-resolved-but-unmatched rows into \"collection_failed_or_not_attempted\" (that SPECIFIC (station, day) appears in the fetch manifest's failed list -- a failure is never propagated to other, successfully-collected days for the same station), then, among the rest, three further categories computed by looking at the actual cached observations rather than only the join output: \"no_report_observed_before_prediction_time\" (no report at all with observed_at <= prediction_at exists in the cache for that station), \"not_yet_available_under_latency_assumption\" (a report DOES exist and is not stale, but observed_at + this scenario's assumed latency is still after prediction_at -- an artifact of the latency ASSUMPTION, not a fact about data availability or age), and \"stale_beyond_max_age\" (a report exists and is available under this latency, but its age exceeds the 90-minute cap). For this particular run, failed was empty, so no unmatched row here is a collection failure.",
+    "trace_T_values counts IEM's literal \"T\" (trace precipitation) encoding in p01i, distinct from \"M\" (missing) -- neither is a numeric 0, and a feature pipeline treating \"T\" as missing or as 0.0 would be making two different, unverified modeling choices."
+  ]
+}

@@ -4,11 +4,11 @@
 
 원본 100만 행의 항공편 데이터에서 결측·시각·항공사 식별 문제를 점검하고, 검증 라벨이 모델 선택에 섞이지 않는 평가 경로를 만들었습니다. 기존 입력을 사용한 전처리·모델 분석은 완료했으며, 현재는 **외부 날씨 정보를 추가하는 확장 실험**을 진행 중입니다. 날씨 추가에 따른 성능 향상은 아직 검증하지 않았습니다.
 
-작성: Peter-jackson12 TF · 문서 정리: 2026-09-20 · v0.25
+작성: Peter-jackson12 TF · 문서 정리: 2026-09-21 · v0.26
 
 > **현재 결론:** 전처리의 의미와 검증 구조는 개선했지만 Macro F1 향상은 확인하지 못했습니다. 확률 보정은 평균 확률 편향과 ECE를 줄였지만 분류 성능을 개선하지 못했습니다. 따라서 다음 실험은 임계값을 계속 조정하는 것이 아니라, 날씨라는 새 정보원을 동일 평가 조건에서 비교하는 것입니다.
 >
-> **바로 다음 작업:** 기존 로컬 HOMR/IEM 캐시를 복원·해시 대조하고, 이미 선정된 **stratafix 300행**을 실제 수집·결합합니다. GitHub CI 성공은 이 로컬 작업의 완료를 뜻하지 않습니다. [실행 순서](#next-local-run)
+> **바로 다음 작업:** 기존 로컬 HOMR/IEM 캐시 해시 대조와 **stratafix 300행**의 실제 IEM 수집·결합은 2026-09-21에 완료했습니다([결과](#next-local-run)). 다음 후보는 채택 706,759행 전체에 대한 수집 설계·실행이며, 이번 범위에는 포함하지 않습니다.
 
 <a id="project-status"></a>
 ### 현재 상태 한눈에 보기
@@ -19,8 +19,8 @@
 | 모델·OOF·확률 보정 | P4/P6 및 개별 변경 10조건 × 3시드; P6 OOF·보정·오분류 분석 | 전체 Phase의 최신 프로토콜 성능을 검증한 것은 아님 |
 | 날짜 귀속 | 2018·2019년 BTS Marketing Carrier 12개월 대조; 706,759행 채택 | 나머지 293,241행은 검사 후 보류 |
 | 날씨 경계 검증 | 21행 및 **기존** 확대 300행의 실수집·결합, 캐시 재결합 검증 | 수정 표본의 결과와 합산하지 않음 |
-| 수정 표본 stratafix | 새 300행 선정 완료 | 실제 날씨 수집·결합 미실행 |
-| 날씨 성능 실험·제출 | 비교 조건과 완료 기준 정의 | 전체 대상 결합·동일 조건 재학습·최종 결과 정리 필요 |
+| 수정 표본 stratafix | 새 300행 선정, 실제 IEM 수집·결합·진단 완료(2026-09-21) | 355개 전부의 2018~2019 역사적 연속성은 여전히 미확인 |
+| 날씨 성능 실험·제출 | 비교 조건과 완료 기준 정의 | 전체 706,759행 결합·동일 조건 재학습·최종 결과 정리 필요 |
 
 **읽는 방법:** 발표·프로젝트 이해는 1~6절, 실행 재개는 7절, 증거 탐색은 8절입니다. 세부 분석과 검증 회차는 **같은 README의 9절 접기 부록**에 보존했습니다. 접힌 내용도 원문에는 모두 들어 있습니다. 에이전트는 [AGENTS.md](AGENTS.md) → 이 README의 현재 상태·실행 경계 → 해당 작업의 근거 순서로 읽습니다.
 
@@ -161,7 +161,7 @@ P6 두 조건의 행별 OOF를 다시 저장·검증했고, 보정기는 **outer
 |---|---:|---:|---:|---|
 | 경계 검증 표본 | 21 | 별도 8공항 규칙 | DST 모호 시각 1행 미결합 | 실제 수집·결합 완료; 양쪽 20/21행 결합 |
 | 기존 확대 표본 | 300 | 271 | 29 | 실제 수집·결합·후속 재결합 완료; 선정 편향을 후속 발견 |
-| stratafix 표본 | 300 | 268 | 32 | 선정만 완료; 실제 수집·결합 미실행 |
+| stratafix 표본 | 300 | 268 | 32 | 실제 수집·결합·진단 완료(2026-09-21) |
 
 stratafix는 기존 확대 표본을 덮어쓴 이름이 아니라, 선정 순서를 고쳐 **별도로 만든 표본**입니다. 341개 층 중 300개를 포함하며 제외된 41개 층의 모집단은 3,077행(약 0.44%)입니다. 모든 층을 포함했다거나 대표성이 입증됐다고 표현하지 않습니다. 보류 32행은 시간대 충돌 19·미확인 12·현재만 확인 1행입니다. [stratafix 선정 manifest](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_selection_manifest.json), [선정 CSV](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_selection.csv)
 
@@ -177,13 +177,13 @@ stratafix는 기존 확대 표본을 덮어쓴 이름이 아니라, 선정 순�
 
 ### 완료 기준과 현재 우선순위
 
-1. **기존 로컬 증거 확인:** 원본·HOMR/IEM·행별 결과의 존재와 해시를 대조합니다. 이 컴퓨터의 누락을 기존 분석 미완료로 해석하거나 검증된 결과를 불필요하게 재생성하지 않습니다.
-2. **stratafix 실수집·결합:** 필요한 매핑·역사적 적용기간의 불확실성을 명시하고, 근거가 부족한 항목은 보류한 채 검증합니다. 355개 전부를 확인한 것처럼 승격하지 않습니다.
-3. **전체 대상 결합:** 귀속 채택 706,759행을 대상으로 규칙에 맞게 수집·결합하고 결측·제외 사유를 검증합니다. 모든 행의 날씨를 채우는 것이 목표는 아닙니다.
+1. ~~**기존 로컬 증거 확인:** 원본·HOMR/IEM·행별 결과의 존재와 해시를 대조합니다.~~ **완료(2026-09-21).** 21개 HOMR JSON·9개 IEM GeoJSON 전량 기존 evidence의 SHA-256과 일치했고, 20공항 cache-only 재현(`baseline_recovery_v2_station_identity_recheck_20260921`)도 통과했습니다.
+2. ~~**stratafix 실수집·결합:** 필요한 매핑·역사적 적용기간의 불확실성을 명시하고, 근거가 부족한 항목은 보류한 채 검증합니다.**~~ **완료(2026-09-21).** [실행 결과](#next-local-run). 355개 전부를 확인한 것처럼 승격하지 않았고, 우선 조사 20개 공항의 판정도 그대로 유지했습니다.
+3. **전체 대상 결합:** 귀속 채택 706,759행을 대상으로 규칙에 맞게 수집·결합하고 결측·제외 사유를 검증합니다. 모든 행의 날씨를 채우는 것이 목표는 아닙니다. **다음 우선순위이며 이번 작업 범위 밖입니다.**
 4. **날씨 유무 비교:** 같은 평가 조건으로 기준선과 날씨 추가 조건을 재학습하고 시드별 차이·한계를 보고합니다.
 5. **GitHub 제출 정리:** README의 최종 결론·재현 명령·근거를 동기화합니다. 향상이 없어도 적절한 비교를 끝내면 검증 목표를 마무리할 수 있습니다.
 
-**이번 다음 로컬 실행의 범위는 1~2번입니다.** 전체 수집·모델 재학습으로 바로 확대하지 않습니다. 독립 미래 테스트·모델 서빙·전체 Phase 비교·DOCX 변환은 이번 제출의 필수 완료 조건이 아닙니다. 라벨 선정 규칙과 미래 입력 가용성도 미확인입니다.
+**이번 작업은 1~2번을 완료했습니다.** 전체 706,759행 수집·모델 재학습으로 바로 확대하지 않았습니다. 독립 미래 테스트·모델 서빙·전체 Phase 비교·DOCX 변환은 이번 제출의 필수 완료 조건이 아닙니다. 라벨 선정 규칙과 미래 입력 가용성도 미확인입니다.
 
 <a id="7-코드구조와재현"></a>
 ## 7. 코드 구조와 재현
@@ -227,38 +227,45 @@ uv run --locked --offline python -m pytest -q -m "local_data or not local_data"
 입력이 없거나 손상되면 실패해야 합니다. 합성 파일로 원자료를 대체하거나 실패 검사를 약화하지 않습니다. 관측소 검사 23개와 실제 원본 스키마 검사 1개가 현재 로컬 계약이며, 같은 모듈의 순수 회귀는 CI에 남습니다.
 
 <a id="next-local-run"></a>
-### 바로 다음 로컬 실행: 캐시 검증 → stratafix
+### 로컬 실행 기록: 캐시 검증 → stratafix 실수집·결합 (완료, 2026-09-21)
 
-먼저 `git status --short` → [AGENTS.md](AGENTS.md) → 현재 상태를 확인합니다. 다른 에이전트 변경·기존 스테이징이 있으면 보존하며 동시 쓰기를 피합니다. 원격 갱신과 병합은 AGENTS의 Git 규칙을 따릅니다.
+`git status --short` → [AGENTS.md](AGENTS.md) → README 확인 후 로컬 `master`가 원격 `f718dd7`과 일치하고 작업 트리가 깨끗함을 확인했습니다. 다른 에이전트 변경은 없었습니다.
 
-HOMR/IEM 원자료를 해시 대조한 뒤 **새 실행명**으로 캐시 전용 재현을 합니다. 아래 날짜·접미사는 예시이며 같은 이름의 결과가 있으면 새 이름을 사용합니다.
+HOMR JSON 21개·IEM GeoJSON 9개를 evidence의 SHA-256과 전량 대조해 일치를 확인한 뒤, 새 실행명으로 캐시 전용 재현을 했습니다.
 
 ```powershell
 uv run --locked --offline python -u -m notebooks.verify_priority_station_identity --name baseline_recovery_v2_station_identity_recheck_20260921
 ```
 
-기본은 캐시 전용입니다. `--allow-network`를 붙이지 않습니다. `--cache-dir`는 HOMR 위치만 바꾸며 IEM 위치는 바꾸지 않습니다. `main()`이 22개 레코드의 ncdcStnId·플랫폼·필수 식별자와 SPN 이외 필수 IEM feature를 확인하며, 불일치 시 증거표 작성 전에 실패합니다.
+`--allow-network`는 사용하지 않았습니다(캐시 전용). `record_verification.passed=true`, `checks_run=22`로 22개 레코드의 ncdcStnId·플랫폼·필수 식별자와 SPN 이외 필수 IEM feature가 원자료에서 그대로 재생산됨을 확인했습니다. 결과는 기존 파일을 덮어쓰지 않고 새 이름으로 저장했습니다. [evidence](output/baseline_recovery_v2_station_identity_recheck_20260921_evidence.csv), [manifest](output/baseline_recovery_v2_station_identity_recheck_20260921_manifest.json)
 
-stratafix 선정은 이미 끝났으므로 다시 뽑지 않습니다. 아래 입력 조합을 유지합니다.
+stratafix 선정(300/268/32, 보류 tz_conflict 19·unconfirmed 12·confirmed_current_only 1)은 다시 뽑지 않고 아래 입력 조합을 그대로 사용했습니다. 실행 전 기존 fetch checkpoint·manifest·joined 결과를 확인했으며 stratafix 이름으로는 아무것도 없어 **최초 수집**으로 진행했습니다.
 
 ```powershell
 $Sample = "baseline_recovery_v2_weather_expanded_stratafix_20260918"
 $Mapping = "baseline_recovery_v2_weather_scope_fix_20260918"
-```
 
-`output/${Sample}_selection.csv`와 선정 manifest를 대조하고, 기존 fetch checkpoint·manifest·joined 결과 및 관련 캐시부터 확인합니다. 현재 체크포인트는 **v3**입니다. v1/v2를 지우거나 버전 숫자만 고쳐 재개하지 않습니다. v3에서도 selection·mapping·조회 구간·고정 fetch 정책이 달라지면 같은 이름을 재사용하지 않습니다. 이미 결합된 결과를 덮어쓰는 실행도 금지합니다.
-
-아래 fetch는 **실제 IEM 네트워크 요청을 수행**합니다. 입력·증거 검증을 통과하고 충돌하는 과거 실행이 없을 때만 진행합니다. `--offline`은 여기서도 uv 패키지 접근만 제한합니다.
-
-```powershell
 uv run --locked --offline python -u -m notebooks.fetch_weather_sample_expanded --name $Sample --mapping-name $Mapping --max-requests 600 --max-bytes 200000000 --max-seconds 3600
 uv run --locked --offline python -u -m notebooks.join_weather_sample_expanded --name $Sample --mapping-name $Mapping
 uv run --locked --offline python -u -m notebooks.diagnose_weather_expanded_cache --name $Sample --out-name baseline_recovery_v2_weather_expanded_stratafix_diagnostic_20260921 --mapping-name $Mapping
 ```
 
-각 명령의 성공과 산출물을 확인하고 다음 명령을 실행합니다. 상한에 걸리거나 실패한 fetch를 완료로 간주하지 않습니다. 600요청·200MB·3600초는 초기 안전 경계이며 완료 보장이 아닙니다. v3에서 총 상한을 조정해도 누적 사용량은 유지되고 `budget_limit_history`에 기록됩니다. 예산 변경과 입력 변경은 다릅니다. [현행 재개 계약과 이전 버전](#appendix-engineering)
+**fetch 결과:** 계획된 530 station-day 그룹 중 530개 모두 처리됨(`skipped_due_to_cap=0`, `failed_groups=0`, `cap_that_stopped_collection=null`). 초기 600요청·200MB·3600초 상한에 걸리지 않아 예산 상향 없이 한 번에 끝났습니다. 캐시 적중 464 · 신규 요청 66, 이번 실행 HTTP 시도 68회 · 측정 바이트 175,144 · 미측정 시도 2건 · 예산 차감용 reserved bytes 4,175,144 · 누적 활성 수집 시간 약 277.1초(경과 281.3초). `budget_limit_history`에 `{max_requests:600, max_bytes:200000000, max_seconds:3600}` 1건이 기록됐습니다. [fetch manifest](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_fetch_manifest.json), [checkpoint](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_fetch_checkpoint.json)
 
-종료 시 300 ID의 유일성·행수·순서, 보류 32행의 무결합, 관측/가용 시각, 90분 나이 상한, 0/10/30/60분별 분모·미결합 사유를 확인합니다. `unexpected_unmatched_despite_available_report`는 코드 결함 신호로 조사합니다. measured bytes와 예산 차감용 reserved bytes를 구분하고, 실제 fetch·join·진단이 끝난 경우에만 현재 상태를 갱신합니다. **이번 단계에서는 전체 706,759행 수집·재학습을 실행하지 않습니다.**
+**join 결과:** 300 ID 유일·행수·순서 보존, 완전 동일 중복 보고 1건 제거, 보류 32행 전부 station·관측 필드 결측(마스킹 확인, 예측 시점만 채움), `unresolved_no_prediction_at=0`. 수집 가능 268 분모의 latency별 결합/최대·중앙값 관측 나이:
+
+| latency | 출발 결합/268 | 도착 결합/268 | 출발 관측 나이 중앙값/최대 |
+|---|---:|---:|---:|
+| 0분 | 266 (99.25%) | 268 (100.00%) | 27/59분 |
+| 10분 | 266 (99.25%) | 268 (100.00%) | 37/69분 |
+| 30분 | 265 (98.88%) | 268 (100.00%) | 57/89분 |
+| 60분 | 150 (55.97%) | 157 (58.58%) | 71/90분 |
+
+전체 300행 분모로는 10분 기준 출발 266/300(88.67%), 도착 268/300(89.33%)입니다. 이 값은 기존(다른) 300행 표본의 269/300·271/300과 다른 새 표본의 새 결과이며, 비교 목적의 목표값이 아닙니다. [join manifest](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_join_manifest.json), [latency 민감도](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_latency_sensitivity.csv). 원본 결과는 `data/weather_probe/baseline_recovery_v2_weather_expanded_stratafix_20260918_joined/joined_latency{0,10,30,60}min.csv`입니다.
+
+**진단 결과:** `id_row_count_order_preserved_across_all_scenarios=true`. 미결합 사유는 `not_collectible_mapping`(분모 제외 32) · `stale_beyond_max_age`(모든 latency 출발 2건) · `not_yet_available_under_latency_assumption`(30분 출발 1건, 60분 출발 116·도착 111건)뿐이며, **`unexpected_unmatched_despite_available_report`는 0건**으로 코드 결함 신호는 없었습니다. [진단 manifest](output/baseline_recovery_v2_weather_expanded_stratafix_diagnostic_20260921_diagnostic_manifest.json), [사유표](output/baseline_recovery_v2_weather_expanded_stratafix_diagnostic_20260921_diagnostic_unmatched_reasons.csv)
+
+측정 바이트(`bytes_measured`)와 예산 차감용 reserved bytes는 위와 같이 구분해 보고했습니다. **이번 실행에서는 전체 706,759행 수집·재학습을 하지 않았습니다.**
 
 ### 코드 지도
 
@@ -299,7 +306,9 @@ README는 현재 상태의 기준이고, 구체적인 사실은 연결된 코드
 | 12개월 날짜 귀속 | [상태 집계](output/baseline_recovery_v2_row_date_attribution_20260918_status_summary.csv), [마스킹 진단](output/baseline_recovery_v2_row_date_attribution_20260918_masking_diagnostic.csv), [manifest](output/baseline_recovery_v2_row_date_attribution_20260918_manifest.json) |
 | 21행 경계 검증 | [선정](output/baseline_recovery_v2_weather_sample_20260918_selection_manifest.json), [fetch](output/baseline_recovery_v2_weather_sample_20260918_fetch_manifest.json), [join](output/baseline_recovery_v2_weather_sample_20260918_join_manifest.json) |
 | 기존 300행 실수집 | [선정](output/baseline_recovery_v2_weather_expanded_20260918_selection_manifest.json), [fetch](output/baseline_recovery_v2_weather_expanded_20260918_fetch_manifest.json), [join](output/baseline_recovery_v2_weather_expanded_20260918_join_manifest.json), [지연 민감도](output/baseline_recovery_v2_weather_expanded_20260918_latency_sensitivity.csv) |
-| 새 stratafix 300행 | [선정](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_selection_manifest.json), [층](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_strata.csv) — 실수집 근거가 아님 |
+| 새 stratafix 300행 선정 | [선정](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_selection_manifest.json), [층](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_strata.csv) |
+| stratafix 실수집·결합·진단(2026-09-21) | [fetch manifest](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_fetch_manifest.json), [join manifest](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_join_manifest.json), [latency 민감도](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_latency_sensitivity.csv), [진단 manifest](output/baseline_recovery_v2_weather_expanded_stratafix_diagnostic_20260921_diagnostic_manifest.json), [미결합 사유](output/baseline_recovery_v2_weather_expanded_stratafix_diagnostic_20260921_diagnostic_unmatched_reasons.csv) |
+| 20공항 신원 cache-only 재현(2026-09-21) | [evidence](output/baseline_recovery_v2_station_identity_recheck_20260921_evidence.csv), [manifest](output/baseline_recovery_v2_station_identity_recheck_20260921_manifest.json) |
 | 매핑과 20공항 판정 | [수정 매핑 manifest](output/baseline_recovery_v2_weather_scope_fix_20260918_mapping_manifest.json), [우선 조사 목록](output/baseline_recovery_v2_weather_scope_fix_20260918_mapping_priority_investigation.csv), [최신 신원 증거](output/baseline_recovery_v2_station_identity_verification_fix_20260918_evidence.csv), [manifest](output/baseline_recovery_v2_station_identity_verification_fix_20260918_manifest.json) |
 | 수정 코드 실제 재결합 | [5차 비교](output/baseline_recovery_v2_weather_recombination_provenance_20260918_reconciliation_comparisons.json), [manifest](output/baseline_recovery_v2_weather_recombination_provenance_20260918_reconciliation_manifest.json) |
 | 전체 수집량 재산정 | [station별 상세](output/baseline_recovery_v2_weather_scope_refined_20260918_refined_scope_per_station.csv), [manifest](output/baseline_recovery_v2_weather_scope_refined_20260918_refined_scope_manifest.json) — 전체 수집 실측이 아님 |
@@ -548,13 +557,15 @@ ID·행수·순서, observed/available≤prediction, station 일치, DST→NaT, 
 
 [기존 선정 manifest](output/baseline_recovery_v2_weather_expanded_20260918_selection_manifest.json), [층](output/baseline_recovery_v2_weather_expanded_20260918_strata.csv), [모집단](output/baseline_recovery_v2_weather_expanded_20260918_population_composition.csv), [표본](output/baseline_recovery_v2_weather_expanded_20260918_sample_composition.csv), [join 요약](output/baseline_recovery_v2_weather_expanded_20260918_join_summary.csv), [민감도](output/baseline_recovery_v2_weather_expanded_20260918_latency_sensitivity.csv), [구성별 커버리지](output/baseline_recovery_v2_weather_expanded_20260918_join_coverage_by_year_season_region.csv). 원본 결과는 `data/weather_probe/baseline_recovery_v2_weather_expanded_20260918_joined/joined_latency{0,10,30,60}min.csv`에 있습니다.
 
-### stratafix는 선정만 완료한 별도 표본입니다
+### stratafix 선정 회차 (2026-09-18; 실수집·결합은 2026-09-21에 완료)
 
 기존 알파벳 순회는 뒤쪽 41개 층, 특히 2019 겨울 여러 지역을 제외했고, 두 번째 pass의 `iloc[pass_no]`는 이미 뽑은 행을 제거한 상태에서 다음 순위를 건너뛰었습니다. `broad_inclusion_order`의 연도→계절→지역/시간대→규모 중첩 라운드로빈과 남은 행 `iloc[0]`으로 수정했습니다.
 
 같은 상한 300에서 41개 층은 여전히 못 들어갑니다. 제외층은 전부 small 규모이며 두 연도·네 계절·6개 지역/시간대(South:New_York, South:Chicago, West:Boise, West:Denver, West:Los_Angeles, West:Phoenix)에 분산됩니다. 해당 모집단은 3,077/706,759행입니다. 결과·타깃·수집 성공률을 보고 순서를 고르지 않았습니다. **이 수정이 모든 대표성 문제를 제거했다는 뜻은 아닙니다.**
 
-수정 표본 300행은 수집 가능 268·보류 32이고 실제 수집·결합은 미실행입니다. 우선 조사 공항 중 AZA·FCA·KTN·MQT·SDF·SIT·SPN·STT·STX·YUM 10곳이 포함됩니다. 이 사실만으로 collectible로 승격하지 않습니다. [새 선정](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_selection_manifest.json), [새 층](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_strata.csv), [모집단 구성](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_population_composition.csv), [표본 구성](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_sample_composition.csv)
+수정 표본 300행은 수집 가능 268·보류 32이며, 이 회차(2026-09-18)에는 실제 수집·결합이 없었습니다. 우선 조사 공항 중 AZA·FCA·KTN·MQT·SDF·SIT·SPN·STT·STX·YUM 10곳이 포함됩니다. 이 사실만으로 collectible로 승격하지 않습니다. [새 선정](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_selection_manifest.json), [새 층](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_strata.csv), [모집단 구성](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_population_composition.csv), [표본 구성](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_sample_composition.csv)
+
+실제 수집·결합·진단은 이후 2026-09-21에 완료했습니다. 결과와 근거는 [7절 실행 기록](#next-local-run)에 있으며, 이 선정 회차의 300/268/32 및 보류 사유 수치는 변경 없이 그대로 유지됩니다.
 
 ### 미결합 원인과 구간 기반 규모 재산정
 

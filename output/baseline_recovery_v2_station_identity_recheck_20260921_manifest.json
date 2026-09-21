@@ -1,0 +1,195 @@
+{
+  "name": "baseline_recovery_v2_station_identity_recheck_20260921",
+  "purpose": "Official-source (NOAA/NCEI HOMR) cross-check of the 20 priority airports flagged by output\\baseline_recovery_v2_weather_scope_fix_20260918_mapping_priority_investigation.csv. Scope fixed to exactly these 20 airports; they are disjoint from the 355 confirmed_period airports, which this script does not touch.",
+  "fits_any_model": false,
+  "uses_external_data": false,
+  "target_columns_used": [],
+  "code_sha256": "661391776f0bd09094787764c6702d6b7495395a153b86c529e0ae1e9b93d987",
+  "cache_mode": "cache_only",
+  "cache_dir": "data\\weather_probe\\baseline_recovery_v2_station_identity_investigation_20260918_homr_raw",
+  "priority_csv": {
+    "path": "output\\baseline_recovery_v2_weather_scope_fix_20260918_mapping_priority_investigation.csv",
+    "sha256": "6f83be9a676b78f5286f861c933dfe7ee64d65ab15381df6bf93295bae99f3c6"
+  },
+  "stratafix_selection_csv": {
+    "path": "output\\baseline_recovery_v2_weather_expanded_stratafix_20260918_selection.csv",
+    "sha256": "86b38b0ffb8fdc65bd371e041741b75247567dc8edc0aeb25bf93a49bfed5d8b"
+  },
+  "homr_base_url": "https://www.ncei.noaa.gov/access/homr/services/station/search",
+  "homr_queries": {
+    "AZA": "ICAO:KIWA",
+    "BKG": "ICAO:KBBG",
+    "FCA": "ICAO:KGPI",
+    "HHH": "ICAO:KHXD",
+    "IMT": "ICAO:KIMT",
+    "ISN": "ICAO:KISN",
+    "KTN": "ICAO:PAKT",
+    "MQT": "ICAO:KSAW",
+    "PBI": "FAA:PBI",
+    "PSG": "ICAO:PAPG",
+    "SCE": "ICAO:KUNV",
+    "SDF": "ICAO:KSDF",
+    "SIT": "ICAO:PASI",
+    "SPN": "ICAO:PGSN",
+    "STT": "ICAO:TIST",
+    "STX": "ICAO:TISX",
+    "USA": "ICAO:KJQF",
+    "WRG": "ICAO:PAWG",
+    "XWA": "ICAO:KXWA",
+    "YUM": "FAA:YUM"
+  },
+  "homr_extra_queries": {
+    "YUM": [
+      "ICAO:KNYL"
+    ]
+  },
+  "iem_feature_checks": {
+    "AZA": [
+      {
+        "network": "AZ_ASOS",
+        "sid": "IWA",
+        "file": "data\\weather_probe\\networks\\AZ_ASOS.geojson",
+        "sha256": "0ab6692440059467a65ddc9cd9c4159d15a77180709a9e26d86e970fa57b2ee5",
+        "found": true
+      }
+    ],
+    "BKG": [
+      {
+        "network": "MO_ASOS",
+        "sid": "BBG",
+        "file": "data\\weather_probe\\networks\\MO_ASOS.geojson",
+        "sha256": "00579c2c030844f3e21ebf469b880f81cbf80d764dafbf501f09024367da32d9",
+        "found": true
+      }
+    ],
+    "FCA": [
+      {
+        "network": "MT_ASOS",
+        "sid": "GPI",
+        "file": "data\\weather_probe\\networks\\MT_ASOS.geojson",
+        "sha256": "3b73c5945914aea32f1ef737d97f62b0e7913fb8b5374054e95f9bcb54254fe2",
+        "found": true
+      }
+    ],
+    "HHH": [
+      {
+        "network": "SC_ASOS",
+        "sid": "HXD",
+        "file": "data\\weather_probe\\networks\\SC_ASOS.geojson",
+        "sha256": "1dc05cf4e02e175d7c2300ad9dde5cd162ffb7da2d497f3c3f9a45a0a3bcea82",
+        "found": true
+      }
+    ],
+    "MQT": [
+      {
+        "network": "MI_ASOS",
+        "sid": "SAW",
+        "file": "data\\weather_probe\\networks\\MI_ASOS.geojson",
+        "sha256": "c484799d692ddc25a3b125d0d0dee39150e17747d8c42e7bec4fc4c726615070",
+        "found": true
+      }
+    ],
+    "PBI": [
+      {
+        "network": "FL_ASOS",
+        "sid": "DJT",
+        "file": "data\\weather_probe\\networks\\FL_ASOS.geojson",
+        "sha256": "3061709942835b1b75e1e735f195050ffeda865e5617f5132b12efc5953eca79",
+        "found": true
+      }
+    ],
+    "SCE": [
+      {
+        "network": "PA_ASOS",
+        "sid": "UNV",
+        "file": "data\\weather_probe\\networks\\PA_ASOS.geojson",
+        "sha256": "20fd394f1b6cbbf917184d8c4352f2612272df0152a31f5cbc71306af5fead41",
+        "found": true
+      }
+    ],
+    "SPN": [
+      {
+        "network": "GU_ASOS",
+        "sid": "GSN",
+        "file": "data\\weather_probe\\networks\\GU_ASOS.geojson",
+        "sha256": "0459babeddd97d16faececac67a484f25c68954dc8136bc0aa3f7d1dc4eaf1d4",
+        "found": false
+      },
+      {
+        "network": "GU_ASOS",
+        "sid": "SPN",
+        "file": "data\\weather_probe\\networks\\GU_ASOS.geojson",
+        "sha256": "0459babeddd97d16faececac67a484f25c68954dc8136bc0aa3f7d1dc4eaf1d4",
+        "found": false
+      },
+      {
+        "network": "GU_ASOS",
+        "sid": "PGSN",
+        "file": "data\\weather_probe\\networks\\GU_ASOS.geojson",
+        "sha256": "0459babeddd97d16faececac67a484f25c68954dc8136bc0aa3f7d1dc4eaf1d4",
+        "found": false
+      }
+    ],
+    "USA": [
+      {
+        "network": "NC_ASOS",
+        "sid": "JQF",
+        "file": "data\\weather_probe\\networks\\NC_ASOS.geojson",
+        "sha256": "5bcdd908f7abe7136495a2f142e45076b5ba9fc0d947568919e31c71babd29a2",
+        "found": true
+      }
+    ],
+    "YUM": [
+      {
+        "network": "AZ_ASOS",
+        "sid": "YUM",
+        "file": "data\\weather_probe\\networks\\AZ_ASOS.geojson",
+        "sha256": "0ab6692440059467a65ddc9cd9c4159d15a77180709a9e26d86e970fa57b2ee5",
+        "found": true
+      },
+      {
+        "network": "AZ_ASOS",
+        "sid": "NYL",
+        "file": "data\\weather_probe\\networks\\AZ_ASOS.geojson",
+        "sha256": "0ab6692440059467a65ddc9cd9c4159d15a77180709a9e26d86e970fa57b2ee5",
+        "found": true
+      }
+    ]
+  },
+  "evidence_table": "output\\baseline_recovery_v2_station_identity_recheck_20260921_evidence.csv",
+  "evidence_table_sha256": "9976807695da35e0dfa5fbe953192a5fc74a53f0b733fbc2758feadea7f3c36e",
+  "record_verification": {
+    "passed": true,
+    "checks_run": 22,
+    "iem_features_required_found": [
+      "AZA",
+      "BKG",
+      "FCA",
+      "HHH",
+      "MQT",
+      "PBI",
+      "SCE",
+      "USA",
+      "YUM"
+    ],
+    "note": "True here means every EXPECTED_RECORD check for all 20 airports selected its configured ncdcStnId from the fetched response and matched its required/forbidden platforms AND its required identifiers (EXPECTED_IDENTIFIERS, fourth round), and every non-SPN IEM_FEATURE_CHECK entry was found=True -- main() raises RuntimeError before writing any evidence file if that is not the case, so a run that reached this point and wrote output always has passed=True."
+  },
+  "row_count": 20,
+  "stratafix_membership_count": 10,
+  "population_note": "20 rows here are confirmed_current_only(3) + tz_conflict_needs_resolution(8) + unconfirmed(9) from the prior mapping round; they do not overlap the 355 confirmed_period airports, which remain uninvestigated by this script.",
+  "limitations": [
+    "This script fetches and hashes NOAA/NCEI HOMR raw responses and cross-checks cached IEM network GeoJSON features deterministically, but the per-airport judgment text in FINDINGS is human-authored analysis of those responses (reading English free-text remarks is not a deterministic classification) -- re-running this script reproduces the same fetch/cross-check and the same table only because FINDINGS is fixed source, not because the judgment itself is re-derived from the raw JSON.",
+    "historical_identity_confirmed / verification_tier in the existing pipeline output (mapping_table.csv, mapping_priority_investigation.csv) are NOT modified by this script; identity_determination here is a separate field for a human or a future coding round to act on.",
+    "This is a cache-only reproduction of a manual judgment, not an automated proof of official -source completeness: an airport left unconfirmed here may mean this round found no linking record, not that no such record exists anywhere.",
+    "PSG and WRG were downgraded to unconfirmed_program_linkage_insufficient: their fetched HOMR record is COOP-only, with no ASOS/AWOS platform entry, unlike IMT/KTN/SDF/SIT whose own HOMR record does carry an ASOS platform entry with ASOS-specific remarks. That ASOS-platform-linkage contrast is unaffected by the later current-vs-historical split (see the \"Third round\" bullet below): IMT/SDF/SIT no longer carry facility_continuity_confirmed themselves -- only KTN keeps a distinct confirmed-with-caveat determination.",
+    "YUM was downgraded to identifier_mismatch_partially_resolved_source_conflict this round: this project's own cached IEM AZ_ASOS network file disagrees with NOAA HOMR about the closed \"YUM\" identifier's coordinates (see FINDINGS['YUM']['inference_and_unresolved']), and a 2021-12-16 HOMR metadata update adding an ASOS platform entry to KNYL is not treated as a verified ASOS installation date.",
+    "SPN (Saipan) remains genuinely unconfirmed: NOAA HOMR shows an active ASOS (FAA id GSN) covering 2018-2019, but this project's cached IEM GU_ASOS network response does not list it under any tried id. Not resolved this round.",
+    "The 8 identifier-mismatch findings (AZA/BKG/FCA/HHH/MQT/PBI/SCE/USA) are candidate bugs in candidate_network_and_sid() in notebooks/map_weather_stations.py; that script was not modified by this investigation.",
+    "FAA facility master records (e.g. a dated Form 5010) were not queried; only NOAA/NCEI HOMR and the already-cached IEM network metadata.",
+    "raw_evidence_fetch_date_estimate is a filesystem-mtime estimate of when each cache file was first written, not a verified per-request fetch log; evidence_reviewed_date is this run's own assembly date and is not backdated to look like an original fetch date.",
+    "No new weather time series collection, no stratafix real collection, no model retraining, and no changes to any baseline_recovery_v2_weather_* production output were made.",
+    "Third round: identity_determination for IMT/SDF/SIT was downgraded from facility_continuity_confirmed_tz_string_conflict_unchanged to current_facility_confirmed_historical_continuity_unconfirmed_tz_string_conflict_unchanged -- their fetched HOMR record confirms the CURRENT facility/ASOS-program linkage but carries no dated event, so 2018-2019 continuity specifically is left unconfirmed rather than folded into \"confirmed\". KTN keeps a separate determination because its record does carry a dated (1997) pre-period event, itself not proof of 2018-2019 either. All 20 rows now carry a historical_continuity_2018_2019 field distinguishing this from current-identifier/program confirmation; for the identifier-mismatch group, inference_and_unresolved no longer reads \"none\" where the only basis is an unbroken POR plus the absence of a relocation remark.",
+    "Third round: EXPECTED_RECORD + verify_expected_record() connect the fetched HOMR JSON's actual stationCollection.stations to each judgment's cited ncdcStnId and required/forbidden platforms inside this run itself (record_verification above), not only in a separate test suite reading the cache independently -- a cache file existing is checked separately from the record it contains still matching what FINDINGS claims.",
+    "Fourth round (this revision): PBI's remark text and continuity_basis previously attributed a dated \"rename postdates 2018-2019\" claim to the fetched HOMR record; the raw record (FAA_PBI. json) carries no such dated statement, only current identifiers (FAA=DJT, ICAO=KDJT, NWSLI=PBI) and an undated ad hoc metadata-name-update entry. PBI's historical_continuity_2018 _2019 was downgraded from explicit_statement_change_postdates_window to rename_confirmed_by_current_ids_undated_in_record; FCA's and KTN's actual dated remarks (2005 rename, 1997 station move) are unaffected. Separately, EXPECTED_IDENTIFIERS + the identifier check inside verify_expected_record() now require each judgment's cited FAA/ICAO/NWSLI/NEXRAD identifiers to actually be present on the selected ncdcStnId's record -- previously only ncdcStnId selection and platforms were checked, so a record that kept the same ncdcStnId and platforms but had its identifiers deleted or swapped would still have printed the fixed FINDINGS text unflagged. This check does not require every HOMR_QUERY lookup key (e.g. FAA:PBI) to itself appear among the record's current identifiers, since some lookups (PBI) are intentionally keyed by a historical id the record no longer carries as its own."
+  ]
+}
