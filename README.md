@@ -277,7 +277,7 @@ uv run --locked --offline python -u -m notebooks.diagnose_weather_expanded_cache
 
 Git에 있는 현재 `confirmed_period` 매핑만으로 계산한 구조적 상한은 355 station·52 IEM network입니다. 모든 station이 모든 달에 필요하다는 과대 가정에서도 20 station/batch 기준 월 54요청이므로 24개월은 1,296요청, 2017-12/2020-01 경계월까지 26개월로 잡아도 1,404요청입니다. 이는 실제 로컬 `prediction_at`으로 만든 plan의 요청 수가 아니라 **GitHub-only 상한 산정**입니다. 실제 요청 수·station-month 수·응답 크기는 `--prepare-only` 및 pilot 실행 근거로 확정합니다.
 
-전체 plan은 기본 50 bulk-request 단위 shard로 나누고 shard별 checkpoint·manifest·cache를 둡니다. 이 경계는 거대한 단일 checkpoint를 매 요청마다 다시 쓰는 비용, 한 번의 실패 도메인, 한 디렉터리에 과도한 파일이 쌓이는 문제를 제한합니다. 같은 run name에서는 plan·shard 크기·station batch 크기를 바꾸지 않습니다.
+전체 plan은 station 수가 많은 요청부터 결정적으로 정렬해 첫 pilot이 상대적으로 큰 응답을 먼저 시험하게 하고, 기본 50 bulk-request 단위 shard로 나누어 shard별 checkpoint·manifest·cache를 둡니다. 이 경계는 거대한 단일 checkpoint를 매 요청마다 다시 쓰는 비용, 한 번의 실패 도메인, 한 디렉터리에 과도한 파일이 쌓이는 문제를 제한합니다. 같은 run name에서는 plan·shard 크기·station batch 크기를 바꾸지 않습니다.
 
 기존 21행/300행/stratafix 캐시는 그대로 보존합니다. 이들은 특정 station의 일부 시각 창에 대한 증거이므로 **월 전체 bulk 요청을 이미 수집했다는 근거로 재사용하지 않습니다.** 최신 전체 실행 입력은 `baseline_recovery_v2_weather_scope_fix_20260918` 매핑을 명시적으로 사용합니다.
 
