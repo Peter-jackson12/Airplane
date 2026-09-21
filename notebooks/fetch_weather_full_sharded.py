@@ -359,7 +359,7 @@ def build_bulk_request_url(req: dict) -> str:
         "latlon": "no",
         "elev": "no",
         "missing": "M",
-        "trace": "T",
+        "trace": "0.0001",
         "report_type": [3, 4],
     }
     return ENDPOINT + "?" + urlencode(params, doseq=True)
@@ -489,6 +489,8 @@ def _bulk_fetch_policy(plan_manifest: dict) -> dict:
         "request_unit": "IEM network x UTC month x station batch",
         "data_fields": WEATHER_FIELDS,
         "report_types": [3, 4],
+        "missing_representation": "M",
+        "trace_representation": "0.0001",
         "max_stations_per_request": int(
             plan_manifest["denominators"]["max_stations_per_request"]
         ),
@@ -564,6 +566,8 @@ def prepare_plan(
             "whole_month_fetch": True,
             "weather_fields": WEATHER_FIELDS,
             "report_types": [3, 4],
+            "missing_representation": "M",
+            "trace_representation": "0.0001",
             "max_response_bytes_per_attempt": MAX_BULK_RESPONSE_BYTES,
             "attempt_timeout_seconds": BULK_ATTEMPT_TIMEOUT_SECONDS,
             "legacy_partial_cache_policy": (
