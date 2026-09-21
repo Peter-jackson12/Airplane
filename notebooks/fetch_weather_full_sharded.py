@@ -798,13 +798,17 @@ def execute_shard(
     for rec in result["fetched"]:
         request_id = str(rec["station"])
         req = requests[request_id]
+        normalized_cache_file = _normalize_cache_file(rec["cache_file"])
+        rows = rec.get("rows")
+        if rows is None:
+            rows = _validate_bulk_file(ROOT / normalized_cache_file, req)
         item = {
             **req,
             "window_start_utc": req["window_start_utc"].isoformat(),
             "window_end_utc": req["window_end_utc"].isoformat(),
-            "cache_file": _normalize_cache_file(rec["cache_file"]),
+            "cache_file": normalized_cache_file,
             "sha256": rec["sha256"],
-            "rows": rec.get("rows"),
+            "rows": rows,
             "was_already_cached": bool(rec.get("was_already_cached")),
             "attempts": int(rec.get("attempts", 0)),
             "attempts_detail": rec.get("attempts_detail", []),
