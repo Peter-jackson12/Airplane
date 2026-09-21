@@ -254,6 +254,8 @@ uv run --locked --offline python -u -m notebooks.diagnose_weather_expanded_cache
 
 **메타데이터 주의:** 이 최초 수집은 실행 전에 stratafix checkpoint가 없음을 직접 확인하고 시작했지만, 당시 `resumed_from_checkpoint` 계산이 빈 `groups` dict 자체를 보관해 실행 중 그 dict가 채워지면서 fetch manifest에 boolean 대신 그룹 객체가 직렬화되는 감사 메타데이터 결함이 드러났습니다. 수집·예산·join 수치에는 영향을 주지 않으며 후속 코드에서 stable boolean으로 수정·회귀 고정했습니다. 기존 manifest는 실행 당시 증거로 덮어쓰지 않습니다.
 
+**join 메타데이터 주의:** 실제 결과·latency 표·README는 268 collectible을 사용하지만, 당시 join manifest의 첫 limitation 문장에는 이전 확대 표본의 분모가 하드코딩되어 남았습니다. 계산 결과가 아니라 설명문 생성 결함이며, 후속 코드에서 runtime 분모를 사용하도록 수정·회귀 고정했습니다. 기존 manifest는 실행 당시 증거로 보존합니다.
+
 **join 결과:** 300 ID 유일·행수·순서 보존, 완전 동일 중복 보고 1건 제거, 보류 32행 전부 station·관측 필드 결측(마스킹 확인, 예측 시점만 채움), `unresolved_no_prediction_at=0`. 수집 가능 268 분모의 latency별 결합/최대·중앙값 관측 나이:
 
 | latency | 출발 결합/268 | 도착 결합/268 | 출발 관측 나이 중앙값/최대 |
