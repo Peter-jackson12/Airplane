@@ -166,6 +166,8 @@ def test_bulk_request_url_uses_one_network_multiple_stations_and_only_join_field
     assert query["sts"] == ["2019-01-01T00:00:00Z"]
     assert query["ets"] == ["2019-02-01T00:00:00Z"]
     assert query["tz"] == ["UTC"]
+    assert query["missing"] == ["M"]
+    assert query["trace"] == ["0.0001"]
 
 
 def _write_bulk_csv(path, stations):
