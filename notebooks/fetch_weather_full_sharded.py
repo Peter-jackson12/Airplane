@@ -1031,6 +1031,13 @@ def finalize(name: str, mapping_name: str, *, verify_cache_hashes: bool = True) 
             all_requests.append(rec)
 
         for key in totals:
+            if key == "recovered_incomplete_checkpoint_groups":
+                # Shards completed before this audit field was introduced are
+                # still valid evidence; absence means no recorded recovery.
+                totals[key] += int(shard.get(key, 0))
+                continue
+            if key not in shard:
+                raise ValueError(f"shard {idx} is missing required accounting field {key}")
             totals[key] += shard[key]
         shard_index_rows.append(
             {
