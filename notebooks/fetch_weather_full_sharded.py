@@ -75,7 +75,7 @@ SHARD_MANIFEST_SCHEMA_VERSION = 2
 FINAL_MANIFEST_SCHEMA_VERSION = 2
 DEFAULT_SHARD_SIZE = 50
 DEFAULT_MAX_STATIONS_PER_REQUEST = 20
-BULK_SUCCESS_PAUSE_SECONDS = 1.25
+BULK_ATTEMPT_PAUSE_SECONDS = 1.25
 BULK_ATTEMPT_TIMEOUT_SECONDS = 120.0
 MAX_BULK_RESPONSE_BYTES = 20_000_000
 
@@ -500,7 +500,8 @@ def _bulk_fetch_policy(plan_manifest: dict) -> dict:
         "max_consecutive_failures": MAX_CONSECUTIVE_FAILURES,
         "backoff_base_seconds": BACKOFF_BASE_SECONDS,
         "subprocess_termination_grace_seconds": SUBPROCESS_TERMINATION_GRACE_SECONDS,
-        "success_pause_seconds": BULK_SUCCESS_PAUSE_SECONDS,
+        "success_pause_seconds": 0.0,
+        "attempt_pause_seconds": BULK_ATTEMPT_PAUSE_SECONDS,
         "provider_documented_throttle_seconds": PROVIDER_DOCUMENTED_THROTTLE_SECONDS,
         "provider_documented_station_year_limit": PROVIDER_DOCUMENTED_STATION_YEAR_LIMIT,
         "provider_contract_checked_on": PROVIDER_CONTRACT_CHECKED_ON,
@@ -559,7 +560,7 @@ def prepare_plan(
             "help_url": PROVIDER_HELP,
             "documented_per_ip_throttle_seconds": PROVIDER_DOCUMENTED_THROTTLE_SECONDS,
             "documented_station_year_limit_per_request": PROVIDER_DOCUMENTED_STATION_YEAR_LIMIT,
-            "planned_success_pause_seconds": BULK_SUCCESS_PAUSE_SECONDS,
+            "planned_attempt_pause_seconds": BULK_ATTEMPT_PAUSE_SECONDS,
         },
         "transport_contract": {
             "request_unit": "network_month_station_batch",
@@ -757,7 +758,8 @@ def execute_shard(
         max_consecutive_failures=MAX_CONSECUTIVE_FAILURES,
         default_attempt_timeout=BULK_ATTEMPT_TIMEOUT_SECONDS,
         attempt_overhead_seconds=SUBPROCESS_TERMINATION_GRACE_SECONDS,
-        success_pause_seconds=BULK_SUCCESS_PAUSE_SECONDS,
+        success_pause_seconds=0.0,
+        attempt_pause_seconds=BULK_ATTEMPT_PAUSE_SECONDS,
         max_response_bytes_per_attempt=MAX_BULK_RESPONSE_BYTES,
     )
 
