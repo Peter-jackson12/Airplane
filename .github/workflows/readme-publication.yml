@@ -1,0 +1,93 @@
+name: Build submission README (temporary)
+
+on:
+  push:
+    branches: [docs/submission-readme-20260921]
+    paths:
+      - .github/workflows/readme-publication.yml
+      - scripts/build_readme_assets.py
+      - scripts/_apply_readme_submission.py
+      - tests/test_readme_presentation.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: readme-publication-20260921
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == 'Peter-jackson12/Airplane' && github.ref == 'refs/heads/docs/submission-readme-20260921'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: docs/submission-readme-20260921
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+        with:
+          version: '0.12.5'
+          python-version: '3.14'
+          enable-cache: false
+      - name: Install the existing locked dependencies
+        run: uv sync --locked --dev
+      - name: Build figures and visual review PNGs from tracked aggregates
+        run: |
+          uv run --locked --offline python - <<'PY'
+          from pathlib import Path
+          import matplotlib
+          matplotlib.use('Agg')
+          from matplotlib.figure import Figure
+          from scripts import build_readme_assets as builder
+          previews = Path('readme-preview')
+          previews.mkdir(exist_ok=True)
+          original_save = Figure.savefig
+          def save_with_preview(self, filename, *args, **kwargs):
+              result = original_save(self, filename, *args, **kwargs)
+              if str(filename).endswith('.svg'):
+                  original_save(self, previews / Path(filename).with_suffix('.png').name, dpi=150)
+              return result
+          Figure.savefig = save_with_preview
+          builder.build()
+          PY
+      - name: Apply the presentation without changing the evidence appendix
+        run: |
+          if ! grep -q 'id="submission-overview"' README.md; then
+            uv run --locked --offline python scripts/_apply_readme_submission.py
+          fi
+      - name: Validate source receipt and the entire Git-only regression suite
+        run: |
+          uv run --locked --offline python scripts/build_readme_assets.py --check
+          uv run --locked --offline python -m pytest -q --strict-markers -m 'not local_data'
+      - name: Save a bounded visual-review artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: readme-submission-preview
+          retention-days: 5
+          path: |
+            README.md
+            assets/readme/
+            scripts/build_readme_assets.py
+            readme-preview/
+      - name: Commit only generated documentation to this feature branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git add -- README.md assets/readme/
+          if git diff --cached --quiet; then
+            echo 'Documentation already up to date.'
+            exit 0
+          fi
+          git diff --cached --name-only | while IFS= read -r file; do
+            case "$file" in README.md|assets/readme/*) ;; *) echo "Refusing unexpected path: $file"; exit 1;; esac
+          done
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'docs: publish source-backed submission README and figures'
+          auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          echo "::add-mask::$auth"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" push origin HEAD:refs/heads/docs/submission-readme-20260921
