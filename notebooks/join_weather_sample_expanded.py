@@ -32,6 +32,19 @@ def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def build_manifest_limitations(total_rows: int, total_collectible: int) -> list[str]:
+    """Describe this run without hard-coding an older sample denominator."""
+    return [
+        f'This validates representativeness and the join contract on {total_rows} stratified rows '
+        f'({total_collectible} collectible); it is not full-archive weather collection and is not a '
+        'performance result.',
+        'not_collectible rows (mapping unconfirmed/tz_conflict/current-only) never receive weather '
+        'in any scenario -- they are not excluded from the row count or denominators.',
+        'Any future performance comparison must evaluate weather-on vs weather-off on the SAME '
+        'rows and must not generalize the adopted-population share to full-dataset performance.',
+    ]
+
+
 def run_join(requests: pd.DataFrame, obs: pd.DataFrame, prefix: str) -> pd.DataFrame:
     joined = join_weather_asof(requests[['station', 'prediction_at']], obs, max_age=MAX_OBS_AGE)
     joined.index = requests.index
@@ -138,6 +151,7 @@ def main() -> None:
     # for a like-for-like comparison; the other three latencies are the sensitivity check
     headline = per_scenario_frames[10]
     total_not_collectible = int((~headline.collectible).sum())
+    total_collectible = int(headline.collectible.sum())
     total_unresolved = int(headline.prediction_at.isna().sum())
     summary_rows = []
     for role in ('origin', 'destination'):
@@ -166,7 +180,8 @@ def main() -> None:
         'max_obs_age': MAX_OBS_AGE, 'latency_scenarios_minutes': LATENCY_SCENARIOS_MINUTES,
         'headline_scenario_minutes': 10,
         'rows': int(len(headline)), 'dropped_exact_duplicate_reports': int(dropped_exact_duplicates),
-        'not_collectible_rows': total_not_collectible, 'unresolved_no_prediction_at': total_unresolved,
+        'collectible_rows': total_collectible, 'not_collectible_rows': total_not_collectible,
+        'unresolved_no_prediction_at': total_unresolved,
         'row_evidence_by_scenario': {str(lat): str((local / f'joined_latency{lat}min.csv').relative_to(ROOT))
                                      for lat in LATENCY_SCENARIOS_MINUTES},
         'row_sha256_by_scenario': {str(lat): digest(local / f'joined_latency{lat}min.csv')
@@ -175,14 +190,7 @@ def main() -> None:
         'characterization': 'a past combination under an ASSUMED publication latency, not a verified '
                             'operational point-in-time replay; none of the four latency values (0/10/30/60 '
                             'minutes) is a measured historical receipt time',
-        'limitations': [
-            'This validates representativeness and the join contract on 300 stratified rows (271 '
-            'collectible); it is not full-archive weather collection and is not a performance result.',
-            'not_collectible rows (mapping unconfirmed/tz_conflict/current-only) never receive weather '
-            'in any scenario -- they are not excluded from the row count or denominators.',
-            'Any future performance comparison must evaluate weather-on vs weather-off on the SAME '
-            'rows and must not generalize the adopted-population share to full-dataset performance.',
-        ],
+        'limitations': build_manifest_limitations(len(headline), total_collectible),
     }
     (out / f'{args.name}_join_manifest.json').write_text(json.dumps(manifest, indent=2, default=str))
     print(json.dumps({k: v for k, v in manifest.items() if k != 'limitations'}, indent=2, default=str))
