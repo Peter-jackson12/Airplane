@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from types import SimpleNamespace
 
 import numpy as np
@@ -214,3 +215,48 @@ def test_checkpoint_identity_is_strict_and_resume_cells_unique(tmp_path):
     path.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(ValueError, match="duplicate"):
         comparison.load_checkpoint(path, identity)
+
+
+def test_validate_inputs_only_builds_contract_but_fits_nothing(tmp_path, monkeypatch):
+    monkeypatch.setattr(comparison, "ROOT", tmp_path)
+    (tmp_path / "output").mkdir()
+    adopted = pd.DataFrame({
+        "ID": ["A", "B", "C"],
+        "Delay": ["Delayed", "Not_Delayed", None],
+    })
+    weather = pd.DataFrame({"ID": ["A", "B", "C"]})
+    for name in WEATHER_MODEL_FEATURES:
+        weather[name] = 1.0
+    weather["weather_origin_matched"] = pd.Series([1, 1, 0], dtype="int8")
+    weather["weather_destination_matched"] = pd.Series([1, 0, 0], dtype="int8")
+    manifest = {
+        "outputs": {"10": {"sha256": "a" * 64}},
+        "sources": {"raw_train": {"sha256": "b" * 64}},
+    }
+    scenario = {
+        "origin_matched": 2, "destination_matched": 1,
+        "both_matched": 1, "one_matched": 1, "none_matched": 1,
+    }
+    X_off = pd.DataFrame({"base": [1.0, 2.0]})
+    X_on = pd.concat([
+        X_off,
+        weather.loc[:1, list(WEATHER_MODEL_FEATURES)].reset_index(drop=True)
+    ], axis=1)
+    y = pd.Series([1, 0], dtype=int)
+    spec = SimpleNamespace()
+    monkeypatch.setattr(comparison, "load_inputs",
+                        lambda _: (adopted, weather, manifest, scenario, {}))
+    monkeypatch.setattr(comparison, "build_pair",
+                        lambda *_: (X_off, X_on, y, spec))
+    monkeypatch.setattr(comparison.subprocess, "check_output",
+                        lambda args, **kwargs: "c" * 40 if args[1] == "rev-parse" else "")
+    monkeypatch.setattr(comparison, "evaluate_condition",
+                        lambda *a, **k: pytest.fail("validate-only must not fit models"))
+    monkeypatch.setattr(sys, "argv", [
+        "run_weather_model_comparison",
+        "--name", "baseline_recovery_v2_validate_only",
+        "--validate-inputs-only",
+    ])
+    comparison.main()
+    assert not (tmp_path / "data").exists()
+    assert not list((tmp_path / "output").iterdir())
