@@ -113,3 +113,16 @@ def test_readme_notebook_module_commands_have_entry_files():
     for module in modules:
         path = ROOT.joinpath(*module.split('.')).with_suffix('.py')
         assert path.is_file(), f'Missing module in README command: {module}'
+
+
+def test_readme_weather_overview_matches_unrounded_tracked_summary():
+    text = README.read_text(encoding='utf-8').split('<a id="1-목적과문제정의"></a>', 1)[0]
+    summary = json.loads((ROOT / (
+        'output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json'
+    )).read_text(encoding='utf-8'))
+    for key, label in (('macro_f1_nested', 'Macro F1 ↑'), ('log_loss', 'LogLoss ↓'), ('roc_auc', 'ROC-AUC ↑')):
+        off = summary['conditions']['weather_off'][key]['mean']
+        on = summary['conditions']['weather_on'][key]['mean']
+        delta = summary['paired_deltas_on_minus_off'][key]['mean']
+        signed = f'{delta:+.6f}'.replace('-', '−')
+        assert f'| {label} | {off:.6f} | **{on:.6f}** | **{signed}** |' in text

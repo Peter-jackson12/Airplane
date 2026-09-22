@@ -10,6 +10,7 @@ import argparse
 import csv
 import hashlib
 import json
+from html import escape
 from collections import Counter
 from pathlib import Path
 
@@ -91,17 +92,30 @@ def reviewed_data() -> dict:
             or weather.get('evaluation_rows') != 180332
             or weather.get('positive_rows') != 31805):
         raise ValueError('Weather-model submission contract changed; review the README')
-    delta = weather['paired_deltas_on_minus_off']
-    weather_rows = [
-        {'metric': 'Macro F1', 'mean_improvement': float(delta['macro_f1_nested']['mean']),
-         'sd': float(delta['macro_f1_nested']['std']), 'definition': 'weather_on - weather_off'},
-        {'metric': 'ROC-AUC', 'mean_improvement': float(delta['roc_auc']['mean']),
-         'sd': float(delta['roc_auc']['std']), 'definition': 'weather_on - weather_off'},
-        {'metric': 'LogLoss reduction', 'mean_improvement': -float(delta['log_loss']['mean']),
-         'sd': float(delta['log_loss']['std']), 'definition': 'weather_off - weather_on'},
-    ]
-    if not all(r['mean_improvement'] > 0 for r in weather_rows):
-        raise ValueError('Weather-model plotted improvement direction changed')
+    # Every displayed level, spread and delta comes from the existing summary.
+    # Keep the original signed delta; do not subtract rounded display values.
+    weather_rows = []
+    for metric, key, direction in (
+        ('Macro F1', 'macro_f1_nested', 'higher'),
+        ('LogLoss', 'log_loss', 'lower'),
+        ('ROC-AUC', 'roc_auc', 'higher'),
+    ):
+        off = weather['conditions']['weather_off'][key]
+        on = weather['conditions']['weather_on'][key]
+        delta = weather['paired_deltas_on_minus_off'][key]
+        sign = 1 if direction == 'higher' else -1
+        if set(delta['values_by_seed']) != {'42', '1', '7'}:
+            raise ValueError('Weather-model paired seeds changed')
+        if not all(sign * value > 0 for value in delta['values_by_seed'].values()):
+            raise ValueError('Weather-model seed improvement direction changed')
+        weather_rows.append({
+            'metric': metric, 'direction': direction,
+            'off_mean': off['mean'], 'off_sd': off['std'],
+            'on_mean': on['mean'], 'on_sd': on['std'],
+            'delta_mean': delta['mean'], 'delta_sd': delta['std'],
+            'delta_by_seed': delta['values_by_seed'],
+            'definition': 'weather_on - weather_off',
+        })
     return {'models': model_rows, 'calibration': calibration_rows,
             'attribution': attribution_rows, 'latency': latency_rows,
             'weather_model': weather_rows}
@@ -124,145 +138,224 @@ def check_receipt() -> dict:
     return receipt
 
 
-def build() -> None:
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    from matplotlib.ticker import FuncFormatter
+# SVG text remains searchable and uses the reader's Korean system font.
+# No external fonts/resources, timestamps or renderer-specific glyph paths are
+# embedded. Generation is deterministic and uses only the Python standard library.
+INK, MUTED, LINE = '#172b3a', '#526575', '#d8e1e8'
+BLUE, TEAL, GOLD = '#215f9a', '#087a78', '#a65b11'
 
+
+class Figure:
+    def __init__(self, title: str, subtitle: str, height: int):
+        self.height = height
+        self.parts = [
+            f'<svg xmlns="http://www.w3.org/2000/svg" width="960" height="{height}" '
+            f'viewBox="0 0 960 {height}" role="img" aria-labelledby="title desc">',
+            f'<title id="title">{escape(title)}</title>',
+            f'<desc id="desc">{escape(subtitle)}</desc>',
+            '<style>text{font-family:"Noto Sans CJK KR","Noto Sans CJK SC",'
+            '"Malgun Gothic","Apple SD Gothic Neo",sans-serif;'
+            'font-variant-numeric:tabular-nums}</style>',
+            f'<rect width="960" height="{height}" fill="white"/>',
+        ]
+        self.rect(32, 26, 5, 28, TEAL)
+        self.text(51, 48, title, size=25, weight='700')
+        self.text(32, 84, subtitle, size=17, fill=MUTED)
+
+    def text(self, x, y, text, *, size=19, fill=INK, weight='400', anchor='start'):
+        self.parts.append(f'<text x="{x:.2f}" y="{y:.2f}" font-size="{size}" '
+                          f'fill="{fill}" font-weight="{weight}" text-anchor="{anchor}">'
+                          f'{escape(str(text))}</text>')
+
+    def line(self, x1, y1, x2, y2, *, stroke=LINE, width=1.5, dash=''):
+        self.parts.append(f'<line x1="{x1:.2f}" y1="{y1:.2f}" x2="{x2:.2f}" y2="{y2:.2f}" '
+                          f'stroke="{stroke}" stroke-width="{width}" stroke-dasharray="{dash}"/>')
+
+    def rect(self, x, y, w, h, fill, *, stroke='none', radius=0):
+        self.parts.append(f'<rect x="{x:.2f}" y="{y:.2f}" width="{w:.2f}" height="{h:.2f}" '
+                          f'rx="{radius}" fill="{fill}" stroke="{stroke}"/>')
+
+    def dot(self, x, y, color, *, square=False, hollow=False):
+        if square:
+            self.rect(x - 6, y - 6, 12, 12, 'white' if hollow else color, stroke=color)
+        else:
+            self.parts.append(f'<circle cx="{x:.2f}" cy="{y:.2f}" r="6" '
+                              f'fill="{"white" if hollow else color}" stroke="{color}" stroke-width="2"/>')
+
+    def note(self, lines):
+        y = self.height - 24 - 26 * (len(lines) - 1)
+        self.line(32, y - 26, 928, y - 26)
+        for line in lines:
+            self.text(32, y, line, size=17, fill=MUTED)
+            y += 26
+
+    def save(self, path: Path):
+        path.write_text('\n'.join([*self.parts, '</svg>', '']), encoding='utf-8')
+
+
+def build() -> None:
     data = reviewed_data()
     ASSETS.mkdir(parents=True, exist_ok=True)
-    # Stable SVG IDs and metadata; rely on Matplotlib's default chart palette.
-    plt.rcParams.update({'svg.hashsalt': 'airplane-readme-v1', 'svg.fonttype': 'path',
-                         'font.family': 'DejaVu Sans', 'font.size': 12, 'axes.titlesize': 17,
-                         'axes.labelsize': 12, 'xtick.labelsize': 11, 'ytick.labelsize': 12})
     figures = {}
 
-    def finish(fig, ax, filename: str, key: str, note: str) -> None:
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        fig.text(0.025, 0.025, note, fontsize=10)
+    def finish(fig, filename, key, notes):
+        fig.note(notes)
         path = ASSETS / filename
-        fig.savefig(path, format='svg', metadata={'Date': None, 'Creator': 'Airplane README evidence builder'})
-        plt.close(fig)
-        figures[key] = {'path': path.relative_to(ROOT).as_posix(), 'sha256': sha256(path)}
+        fig.save(path)
+        figures[key] = {'path': str(path.relative_to(ROOT)), 'sha256': sha256(path)}
 
-    fig, ax = plt.subplots(figsize=(10, 4.6))
-    fig.subplots_adjust(left=0.18, right=0.96, bottom=0.23, top=0.77)
-    rows = data['models']
-    ax.errorbar([r['mean'] for r in rows], range(4), xerr=[r['sd'] for r in rows],
-                fmt='o', capsize=5, markersize=8, linewidth=1.8)
-    ax.set_yticks(range(4), [r['phase'] for r in rows])
-    ax.invert_yaxis()
-    ax.set_ylim(3.7, -0.8)
-    ax.set_xlim(0.5725, 0.5785)
-    ax.set_xlabel('Macro F1 (higher is better; zoomed axis)')
-    ax.grid(axis='x', alpha=0.2)
-    for i, row in enumerate(rows):
-        ax.annotate(f"{row['mean']:.6f}", (row['mean'], i), xytext=(0, 15),
-                    textcoords='offset points', ha='center', fontsize=10)
-    fig.suptitle('Preprocessing comparison: four reference conditions', x=0.025, ha='left', y=0.97)
-    fig.text(0.025, 0.865, '255,001 labeled rows | same nested protocol | seeds 42, 1, 7', fontsize=11)
-    finish(fig, ax, 'model_comparison.svg', 'models',
-           'Points: 3-seed means. Error bars: +/- 1 sample SD, not confidence intervals.\nShown: 4 of the 10 evaluated conditions. No verified Macro F1 improvement from clean preprocessing.')
+    fig = Figure('날짜를 신뢰성 있게 귀속한 항공편은 706,759행',
+                 '원본 1,000,000행 · BTS 2018/2019년 12개월 대조 · 서로 겹치지 않는 세 집단', 470)
+    labels = [('채택', '완전한 대조 키 · 후보 연도 하나'),
+              ('보류', '결측 대조 키 · 후보 연도 하나'), ('보류', '그 밖의 대조 결과')]
+    left, right = 370, 775
+    for tick in (0, 250000, 500000, 750000, 1000000):
+        x = left + (right - left) * tick / 1000000
+        fig.line(x, 125, x, 324)
+        fig.text(x, 350, f'{tick // 10000}만' if tick else '0', size=16, anchor='middle', fill=MUTED)
+    for i, (row, label) in enumerate(zip(data['attribution'], labels)):
+        y = 149 + 72 * i
+        color = TEAL if i == 0 else MUTED
+        fig.text(32, y - 2, label[0], size=21, weight='700', fill=color)
+        fig.text(32, y + 23, label[1], size=17, fill=MUTED)
+        fig.rect(left, y - 16, (right - left) * row['rows'] / 1000000, 24, color)
+        fig.text(919, y, f"{row['rows']:,}행", size=23, weight='700', anchor='end', fill=color)
+        fig.text(919, y + 24, f"{row['rows'] / 10000:.2f}%", size=17, anchor='end', fill=MUTED)
+    fig.line(left, 324, right, 324, stroke=MUTED)
+    fig.text(572, 379, '행 수 · 0부터 시작하는 동일 축', size=17, anchor='middle', fill=MUTED)
+    finish(fig, 'date_attribution.svg', 'attribution', [
+        '보류 293,241행도 모두 대조했습니다. 키가 결측이면 후보 연도가 하나여도 채택하지 않습니다.',
+        '날짜 귀속 집단과 라벨 집단은 다릅니다. 날씨 성능 비교는 귀속·라벨 보유 180,332행입니다.'])
 
-    fig, ax = plt.subplots(figsize=(10, 4.8))
-    fig.subplots_adjust(left=0.14, right=0.94, bottom=0.23, top=0.79)
-    rows = data['calibration']
-    for row, marker in zip(rows, ('o', 's', '^')):
-        ax.scatter(row['ece_percentage_points'], row['log_loss'], s=100, marker=marker)
-        label = {'none': 'No calibration', 'platt': 'Platt', 'isotonic': 'Isotonic'}[row['calibrator']]
-        offset = (-12, 10) if row['calibrator'] == 'none' else (12, 10)
-        align = 'right' if row['calibrator'] == 'none' else 'left'
-        ax.annotate(label, (row['ece_percentage_points'], row['log_loss']),
-                    xytext=offset, textcoords='offset points', ha=align, fontsize=11)
-    ax.set_xlim(0.12, 0.52)
-    ax.set_ylim(0.4472, 0.4493)
-    ax.ticklabel_format(axis='y', style='plain', useOffset=False)
-    ax.set_xlabel('ECE (percentage points; lower is better)')
-    ax.set_ylabel('LogLoss (lower is better)')
-    ax.grid(alpha=0.2)
-    fig.suptitle('Calibration: lower ECE is not the same as lower LogLoss', x=0.025, ha='left', y=0.97)
-    fig.text(0.025, 0.87, 'P6_clean | shared arm | overall | 255,001 labeled rows | 3-seed means', fontsize=11)
-    finish(fig, ax, 'calibration_tradeoff.svg', 'calibration',
-           'Each point is one calibrator, not a fitted relationship. Both axes are zoomed.\nIsotonic lowers ECE while increasing LogLoss here; this does not establish a Macro F1 gain.')
+    fig = Figure('전처리의 타당성 개선이 Macro F1 향상으로 이어지지는 않았습니다',
+                 '동일 라벨 255,001행 · 전처리 10조건 중 네 기준 조건 · 3시드 평균과 표본 표준편차', 500)
+    left, right, low, high = 240, 677, 0.5725, 0.5785
+    scale = lambda value: left + (right - left) * (value - low) / (high - low)
+    fig.text(925, 123, '평균 ± SD', size=17, anchor='end', fill=MUTED)
+    for tick in (0.573, 0.574, 0.575, 0.576, 0.577, 0.578):
+        x = scale(tick)
+        fig.line(x, 137, x, 351)
+        fig.text(x, 377, f'{tick:.3f}', size=16, anchor='middle', fill=MUTED)
+    for i, row in enumerate(data['models']):
+        y = 157 + i * 58
+        clean = row['phase'].endswith('clean')
+        color = TEAL if clean else BLUE
+        fig.text(32, y + 6, row['phase'], size=21, weight='700' if clean else '400')
+        x, x0, x1 = scale(row['mean']), scale(row['mean'] - row['sd']), scale(row['mean'] + row['sd'])
+        fig.line(x0, y, x1, y, stroke=color, width=2)
+        fig.line(x0, y - 6, x0, y + 6, stroke=color)
+        fig.line(x1, y - 6, x1, y + 6, stroke=color)
+        fig.dot(x, y, color, square=clean, hollow=not clean)
+        fig.text(925, y + 6, f"{row['mean']:.6f} ± {row['sd']:.6f}", size=19, anchor='end')
+    fig.line(left, 351, right, 351, stroke=MUTED)
+    fig.text(460, 405, 'Macro F1 ↑ · 차이를 읽기 위한 확대 축', size=17, anchor='middle', fill=MUTED)
+    finish(fig, 'model_comparison.svg', 'models', [
+        '점: 3시드 평균 · 오차막대: ±1 표본 SD(신뢰구간 아님) · ○ 기존 조건 / ■ 수정 조건',
+        '작은 차이나 오차막대의 겹침만으로 통계적 동등성·유의성·확정적 악화를 판정하지 않습니다.'])
 
-    fig, ax = plt.subplots(figsize=(10, 4.5))
-    fig.subplots_adjust(left=0.40, right=0.96, bottom=0.23, top=0.78)
-    rows = data['attribution']
-    bars = ax.barh(range(3), [r['rows'] for r in rows], height=0.52)
-    ax.set_yticks(range(3), ['Accepted: complete key\n+ one candidate year',
-                            'Held: missing key\n+ one candidate year', 'Held: other inspected cases'])
-    ax.invert_yaxis()
-    ax.set_xlim(0, 1000000)
-    ax.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f'{x / 1000:.0f}k'))
-    ax.set_xlabel('Rows (zero-based scale)')
-    ax.grid(axis='x', alpha=0.2)
-    for bar, row in zip(bars, rows):
-        ax.text(row['rows'] + 16000, bar.get_y() + bar.get_height() / 2,
-                f"{row['rows']:,}\n{row['rows'] / 10000:.2f}%", va='center', fontsize=11)
-    fig.suptitle('Date attribution: accepted and held rows', x=0.025, ha='left', y=0.97)
-    fig.text(0.025, 0.875, '1,000,000 source rows | BTS 2018/2019 comparison | 12 months inspected', fontsize=11)
-    finish(fig, ax, 'date_attribution.svg', 'attribution',
-           'Held rows were inspected, not forgotten. A unique candidate with incomplete keys is not accepted.\nThis selected subset is not the same population as the 255,001 labeled rows used for model evaluation.')
+    fig = Figure('날씨 추가 후 세 지표 모두 같은 방향으로 개선됐습니다',
+                 'P6_clean · 동일 평가 180,332행 · 시드 42 / 1 / 7 · 동일 외부 폴드와 내부 선택 절차', 688)
+    fig.text(32, 113, '출발·도착 날씨 14개 피처 추가 · 공개 지연 시간은 사전에 정한 10분 가정', size=17, fill=MUTED)
+    for i, row in enumerate(data['weather_model']):
+        top = 138 + i * 147
+        fig.rect(32, top, 896, 130, '#f6f9fb', stroke=LINE, radius=8)
+        fig.text(51, top + 37, row['metric'], size=25, weight='700')
+        direction = '높을수록 좋음 ↑' if row['direction'] == 'higher' else '낮을수록 좋음 ↓'
+        fig.text(51, top + 68, direction, size=17, fill=MUTED)
+        for x, name, key, color in ((250, '날씨 미사용', 'off', MUTED), (495, '날씨 사용', 'on', TEAL)):
+            fig.text(x, top + 27, name, size=17, fill=color)
+            fig.text(x, top + 66, f"{row[key + '_mean']:.6f}", size=31, weight='700', fill=color)
+            fig.text(x, top + 99, f"± {row[key + '_sd']:.6f}", size=18, fill=MUTED)
+        fig.line(444, top + 59, 476, top + 59, stroke=MUTED, width=2)
+        fig.line(468, top + 53, 476, top + 59, stroke=MUTED, width=2)
+        fig.line(468, top + 65, 476, top + 59, stroke=MUTED, width=2)
+        fig.line(708, top + 20, 708, top + 108)
+        fig.text(728, top + 27, '변화량 · 사용−미사용', size=16, fill=MUTED)
+        fig.text(728, top + 65, f"{row['delta_mean']:+.6f}".replace('-', '−'), size=28, fill=TEAL, weight='700')
+        fig.text(728, top + 98, f"± {row['delta_sd']:.6f}", size=18, fill=MUTED)
+    finish(fig, 'weather_model_comparison.svg', 'weather_model', [
+        '모든 값: 3시드 평균 ± 표본 SD(신뢰구간 아님). 변화량은 반올림 전 원본 집계를 사용합니다.',
+        '지표마다 척도와 해석이 다릅니다. 이 수치 카드는 변화량 크기를 공통 길이로 비교하지 않습니다.',
+        '10분은 실측값이 아닙니다. 정적 교차검증의 개선이며 인과 효과·미래 운항 성능은 미검증입니다.'])
 
-    fig, ax = plt.subplots(figsize=(10, 4.8))
-    fig.subplots_adjust(left=0.10, right=0.94, bottom=0.29, top=0.79)
-    for role, marker in (('origin', 'o'), ('destination', 's')):
+    fig = Figure('확률 보정 오차가 줄어도 LogLoss까지 좋아지지는 않았습니다',
+                 'P6_clean · 공유형 보정기 · 라벨 255,001행 · 3시드 평균 · 두 축 모두 낮을수록 좋음', 500)
+    left, right, top, bottom = 140, 575, 137, 347
+    x = lambda v: left + (right - left) * (v - 0.15) / (0.50 - 0.15)
+    y = lambda v: bottom - (bottom - top) * (v - 0.4473) / (0.4492 - 0.4473)
+    for tick in (0.2, 0.3, 0.4, 0.5):
+        fig.line(x(tick), top, x(tick), bottom)
+        fig.text(x(tick), bottom + 27, f'{tick:.1f}', anchor='middle', size=16, fill=MUTED)
+    for tick in (0.4475, 0.4480, 0.4485, 0.4490):
+        fig.line(left, y(tick), right, y(tick))
+        fig.text(left - 13, y(tick) + 5, f'{tick:.4f}', anchor='end', size=16, fill=MUTED)
+    fig.line(left, top, left, bottom, stroke=MUTED)
+    fig.line(left, bottom, right, bottom, stroke=MUTED)
+    fig.text(36, 121, 'LogLoss ↓', size=18, fill=MUTED)
+    fig.text(348, 409, 'ECE (%p) ↓ · 확대 축', size=18, anchor='middle', fill=MUTED)
+    names = {'none': '보정 없음', 'platt': 'Platt', 'isotonic': 'Isotonic'}
+    for i, row in enumerate(data['calibration']):
+        color = (MUTED, BLUE, GOLD)[i]
+        xp, yp = x(row['ece_percentage_points']), y(row['log_loss'])
+        fig.dot(xp, yp, color, square=i == 2, hollow=i == 0)
+        fig.text(xp, yp - 16, names[row['calibrator']], size=18, anchor='middle', fill=color)
+        ty = 153 + i * 76
+        fig.text(628, ty, names[row['calibrator']], size=21, weight='700', fill=color)
+        fig.text(628, ty + 29, f"ECE {row['ece_percentage_points']:.4f}%p · LogLoss {row['log_loss']:.6f}", size=16)
+    finish(fig, 'calibration_tradeoff.svg', 'calibration', [
+        'ECE는 비율을 100배 한 %p입니다. 비교 조건의 정확한 Macro F1은 README 표에 함께 제시합니다.',
+        'Isotonic은 ECE 감소와 LogLoss 악화가 함께 관찰됐습니다. 보정을 분류 성능 향상으로 해석하지 않습니다.'])
+
+    fig = Figure('날씨 공개가 늦다고 가정할수록 사용할 수 있는 관측이 줄었습니다',
+                 '층화 보정 표본(stratafix) 300행 중 수집 가능 268행 · 관측 나이 상한 90분', 534)
+    left, right, top, bottom = 100, 865, 154, 344
+    x = lambda v: left + (right - left) * v / 60
+    y = lambda v: bottom - (bottom - top) * v / 100
+    for tick in (0, 25, 50, 75, 100):
+        fig.line(left, y(tick), right, y(tick))
+        fig.text(left - 15, y(tick) + 6, f'{tick}%', size=17, anchor='end', fill=MUTED)
+    for tick in (0, 10, 30, 60):
+        fig.text(x(tick), bottom + 30, f'{tick}분', size=18, anchor='middle', fill=MUTED)
+    fig.line(left, top, left, bottom, stroke=MUTED)
+    fig.line(left, bottom, right, bottom, stroke=MUTED)
+    fig.text(32, 120, '결합률 · 결합 행 / 268행', size=17, fill=MUTED)
+    for i, role in enumerate(('origin', 'destination')):
         rows = sorted((r for r in data['latency'] if r['role'] == role), key=lambda r: r['latency_minutes'])
-        ax.plot([r['latency_minutes'] for r in rows], [r['match_rate_percent'] for r in rows],
-                marker=marker, linewidth=2, markersize=7, label=role.title())
+        color = BLUE if i == 0 else TEAL
+        for a, b in zip(rows, rows[1:]):
+            fig.line(x(a['latency_minutes']), y(a['match_rate_percent']),
+                     x(b['latency_minutes']), y(b['match_rate_percent']), stroke=color, width=2, dash='6 4' if i else '')
         for row in rows:
-            offset = -16 if role == 'origin' else 9
-            ax.annotate(f"{row['matched_rows']}/268", (row['latency_minutes'], row['match_rate_percent']),
-                        xytext=(0, offset), textcoords='offset points', ha='center', fontsize=9)
-    ax.set_xticks([0, 10, 30, 60])
-    ax.set_xlim(-4, 64)
-    ax.set_ylim(0, 115)
-    ax.set_yticks([0, 25, 50, 75, 100])
-    ax.set_xlabel('Assumed publication latency (minutes)')
-    ax.set_ylabel('Matched / eligible rows (%)')
-    ax.grid(alpha=0.2)
-    ax.legend(loc='lower left', frameon=False)
-    fig.suptitle('Stratafix: weather matching depends on availability assumptions', x=0.025, ha='left', y=0.97)
-    fig.text(0.025, 0.875, 'Separate 300-row sample | 268 eligible rows | maximum observation age: 90 minutes', fontsize=11)
-    finish(fig, ax, 'weather_latency.svg', 'latency',
-           '0/10/30/60-minute latency values are scenarios, not measured historical publication delays.\n32 ineligible rows remain in the full 300-row denominator. This chart is not a model-performance result.')
+            xp, yp = x(row['latency_minutes']), y(row['match_rate_percent'])
+            fig.dot(xp, yp, color, square=bool(i), hollow=not i)
+            fig.text(xp, yp + (30 if i == 0 else -19), f"{row['matched_rows']}/268", size=17, anchor='middle', fill=color)
+        lx = 561 + 195 * i
+        fig.dot(lx, 113, color, square=bool(i), hollow=not i)
+        fig.text(lx + 15, 119, '출발 공항' if i == 0 else '도착 공항', size=18, fill=color)
+    fig.text(470, 409, '날씨 공개 지연 시간 가정 · 실제 수신 지연의 측정값이 아님', size=18, anchor='middle', fill=MUTED)
+    finish(fig, 'weather_latency.svg', 'latency', [
+        '0 / 10 / 30 / 60분은 결합률 민감도를 살핀 가정입니다. 모델 성능 비교에는 10분만 사용했습니다.',
+        '보류 32행을 포함한 전체 분모는 300행입니다. 이 그림은 날씨 모델의 성능 그래프가 아닙니다.'])
 
-    fig, ax = plt.subplots(figsize=(10, 4.8))
-    fig.subplots_adjust(left=0.24, right=0.95, bottom=0.24, top=0.78)
-    rows = data['weather_model']
-    means = [r['mean_improvement'] for r in rows]
-    sds = [r['sd'] for r in rows]
-    ax.errorbar(means, range(len(rows)), xerr=sds, fmt='o', capsize=5,
-                markersize=8, linewidth=1.8)
-    ax.axvline(0, linewidth=1, alpha=0.5)
-    ax.set_yticks(range(len(rows)), [r['metric'] for r in rows])
-    ax.invert_yaxis()
-    ax.set_xlim(0, 0.036)
-    ax.set_xlabel('Mean paired improvement (positive is better)')
-    ax.grid(axis='x', alpha=0.2)
-    for i, row in enumerate(rows):
-        ax.annotate(f"{row['mean_improvement']:+.6f}", (row['mean_improvement'], i),
-                    xytext=(8, 0), textcoords='offset points', va='center', fontsize=10)
-    fig.suptitle('Weather-on vs weather-off: paired improvement', x=0.025, ha='left', y=0.97)
-    fig.text(0.025, 0.865,
-             'P6_clean | 180,332 labeled adopted rows | 10-minute latency assumption | seeds 42, 1, 7',
-             fontsize=11)
-    finish(fig, ax, 'weather_model_comparison.svg', 'weather_model',
-           'Points: 3-seed mean paired changes; error bars: +/- 1 sample SD, not confidence intervals.\n'
-           'Macro F1 and ROC-AUC use weather-on minus weather-off; LogLoss is plotted as the reduction (off minus on).')
-
-    receipt = {'schema_version': 1, 'generator_sha256': sha256(Path(__file__)),
-               'sources': {key: {'path': path, 'sha256': sha256(ROOT / path)} for key, path in SOURCES.items()},
-               'filters': {'models': list(PHASES), 'calibration': {'phase_key': 'P6_clean', 'arm': 'shared', 'group': 'overall'},
-                           'attribution': 'sum rows over all 12 months; three disjoint status buckets',
-                           'latency': 'stratafix only; recompute matched_rows / eligible_rows for each role/scenario',
-                           'weather_model': 'P6_clean; 10-minute assumed latency; 180,332 identical labeled rows; 3 paired seeds'},
-               'reviewed_data': data, 'figures': figures,
-               'limitations': ['No raw data access or model retraining.', 'No live collection progress is inferred.',
-                               'English plot labels use portable embedded glyphs; README provides Korean captions.',
-                               'Weather-model scores come only from the tracked paired-comparison summary.']}
+    receipt = {
+        'schema_version': 1, 'generator_sha256': sha256(Path(__file__)),
+        'sources': {key: {'path': path, 'sha256': sha256(ROOT / path)} for key, path in SOURCES.items()},
+        'filters': {
+            'models': list(PHASES),
+            'calibration': {'phase_key': 'P6_clean', 'arm': 'shared', 'group': 'overall'},
+            'attribution': 'sum rows over all 12 months; three disjoint status buckets',
+            'latency': 'stratafix only; recompute matched_rows / eligible_rows for each role/scenario',
+            'weather_model': 'P6_clean; 10-minute assumed latency; 180,332 identical labeled rows; 3 paired seeds',
+        },
+        'reviewed_data': data, 'figures': figures,
+        'limitations': [
+            'No raw data access, collection, joins or model retraining.',
+            'Korean SVG text uses system font fallbacks; no external resources or font files are embedded.',
+            'All weather levels, sample SDs and signed deltas come from the tracked summary before display rounding.',
+            'Weather metric cards do not encode magnitude with a common axis or length.',
+            'Sample SD is not a confidence interval; 10-minute publication latency is assumed, not measured.',
+        ],
+    }
     (ASSETS / 'sources.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print('Built five README figures and their source receipt; no network or raw data used.')
 

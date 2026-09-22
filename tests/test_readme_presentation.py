@@ -63,11 +63,23 @@ def test_latency_plot_preserves_scenario_denominator_and_numerators():
 
 def test_weather_model_plot_uses_frozen_paired_submission_result():
     rows = builder.reviewed_data()['weather_model']
-    assert [r['metric'] for r in rows] == ['Macro F1', 'ROC-AUC', 'LogLoss reduction']
-    assert rows[0]['mean_improvement'] == pytest.approx(0.025035354103310186)
-    assert rows[1]['mean_improvement'] == pytest.approx(0.032317256769799164)
-    assert rows[2]['mean_improvement'] == pytest.approx(0.011427550885430774)
-    assert all(r['mean_improvement'] > 0 and r['sd'] >= 0 for r in rows)
+    assert [r['metric'] for r in rows] == ['Macro F1', 'LogLoss', 'ROC-AUC']
+    # Protect the actual comparison, not the old chart's positive-only delta format.
+    expected = [
+        (0.5739098053816244, 0.5989451594849345, 0.025035354103310186, 'higher'),
+        (0.4481163223494364, 0.4366887714640056, -0.011427550885430774, 'lower'),
+        (0.6406182693684818, 0.6729355261382809, 0.032317256769799164, 'higher'),
+    ]
+    for row, (off, on, delta, direction) in zip(rows, expected):
+        assert row['off_mean'] == pytest.approx(off, abs=1e-14)
+        assert row['on_mean'] == pytest.approx(on, abs=1e-14)
+        assert row['delta_mean'] == pytest.approx(delta, abs=1e-14)
+        assert row['definition'] == 'weather_on - weather_off'
+        assert row['direction'] == direction
+        assert all(row[key] >= 0 for key in ('off_sd', 'on_sd', 'delta_sd'))
+        assert set(row['delta_by_seed']) == {'42', '1', '7'}
+        sign = 1 if direction == 'higher' else -1
+        assert all(sign * value > 0 for value in row['delta_by_seed'].values())
 
 
 def test_submission_readme_keeps_scope_and_completed_results_explicit():
@@ -76,7 +88,7 @@ def test_submission_readme_keeps_scope_and_completed_results_explicit():
                    'reliability-design', 'readme-figures', 'presentation-route'):
         assert f'<a id="{anchor}"></a>' in text
     for boundary in ('실시간 다운로드 모니터가 아닙니다', '신뢰구간이 아닙니다',
-                     '날씨 모델의 성능 그래프가 아닙니다', '10분은 실측 공개 지연 시간(publication latency)이 아닙니다',
+                     '날씨 모델의 성능 그래프가 아닙니다', '10분은 실측 날씨 공개 지연 시간이 아닙니다',
                      '원인 프로세스를 특정하지 못한', '중간에 pull하지 않습니다'):
         assert boundary in text
     assert text.count('```mermaid') >= 3
@@ -114,3 +126,41 @@ def test_figure_builder_does_not_import_collection_or_network_code():
         elif isinstance(node, ast.ImportFrom) and node.module:
             imports.add(node.module.split('.')[0])
     assert not imports.intersection({'requests', 'httpx', 'urllib', 'socket', 'subprocess', 'notebooks', 'src'})
+
+
+def test_weather_svg_displays_source_levels_spreads_and_signed_deltas():
+    svg = ET.parse(ROOT / 'assets/readme/weather_model_comparison.svg')
+    text = '\n'.join(svg.getroot().itertext())
+    for label in ('날씨 미사용', '날씨 사용', '사용−미사용', '신뢰구간 아님',
+                  '공통 길이'):
+        assert label in text
+    for row in builder.reviewed_data()['weather_model']:
+        assert row['metric'] in text
+        for key in ('off_mean', 'on_mean'):
+            assert f"{row[key]:.6f}" in text
+        for key in ('off_sd', 'on_sd', 'delta_sd'):
+            assert f"± {row[key]:.6f}" in text
+        assert f"{row['delta_mean']:+.6f}".replace('-', '−') in text
+
+
+def test_asset_rebuild_is_deterministic_and_preserves_source_bytes(tmp_path, monkeypatch):
+    import shutil
+
+    target = tmp_path / 'repo'
+    target.mkdir()
+    before = {}
+    for relative in builder.SOURCES.values():
+        source = ROOT / relative
+        copied = target / relative
+        copied.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, copied)
+        before[relative] = source.read_bytes()
+    expected = {p.name: p.read_bytes() for p in (ROOT / 'assets/readme').iterdir() if p.is_file()}
+    monkeypatch.setattr(builder, 'ROOT', target)
+    monkeypatch.setattr(builder, 'ASSETS', target / 'assets/readme')
+    builder.build()
+    builder.check_receipt()
+    for name, content in expected.items():
+        assert (target / 'assets/readme' / name).read_bytes() == content
+    for relative, content in before.items():
+        assert (target / relative).read_bytes() == content
