@@ -5,22 +5,22 @@
 
 **불확실한 값을 채우는 것보다, 무엇을 알고 있는지 구분하고 같은 조건에서 검증하는 프로젝트입니다.**
 
-원본 항공편 데이터의 결측·시각·항공사 식별을 점검하고, **전처리의 타당성과 실제 예측 성능을 분리해 검증**합니다. 기존 입력의 LightGBM·OOF·확률 보정뿐 아니라 날짜 귀속, 전체 날씨 수집, row-level point-in-time join, 동일조건 weather-off/on paired 비교까지 완료했습니다.
+원본 항공편 데이터의 결측·시각·항공사 식별을 점검하고, **전처리의 타당성과 실제 예측 성능을 분리해 검증**합니다. 기존 입력의 LightGBM·OOF·확률 보정뿐 아니라 날짜 귀속, 전체 날씨 수집, 행 단위 시점 기준 결합, 날씨 미사용/사용 동일조건 비교까지 완료했습니다.
 
 작성: Peter-jackson12 TF · 문서 기준: 2026-09-22 · 제출 형태: GitHub README + 코드 + 연결된 실행 근거
 
 <a id="submission-overview"></a>
 ### 30초 요약
 
-| 데이터 규모 | 기존 입력 직접 평가 | 전처리 비교 실험 | 날짜 귀속 채택 | 날씨 paired 평가 |
+| 데이터 규모 | 기존 입력 직접 평가 | 전처리 비교 실험 | 날짜 귀속 채택 | 날씨 동일조건 평가 |
 |---:|---:|---:|---:|---:|
-| **1,000,000행** | **라벨 255,001행** | **10조건 × 3시드 × 5-fold** | **706,759행** | **adopted∩labeled 180,332행** |
+| **1,000,000행** | **라벨 255,001행** | **10조건 × 3시드 × 5-fold** | **706,759행** | **날짜 귀속·라벨 보유 180,332행** |
 
-분모와 범위는 [데이터 설명](#2-데이터와분석범위), [10조건 결과](output/preprocessing_full_summary.csv), [날짜 귀속 집계](output/baseline_recovery_v2_row_date_attribution_20260918_status_summary.csv), [날씨 paired 요약](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json)에서 확인합니다. 255,001행 기존 입력 평가와 180,332행 날씨 비교는 같은 모집단이 아닙니다.
+분모와 범위는 [데이터 설명](#2-데이터와분석범위), [10조건 결과](output/preprocessing_full_summary.csv), [날짜 귀속 집계](output/baseline_recovery_v2_row_date_attribution_20260918_status_summary.csv), [날씨 비교 요약](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json)에서 확인합니다. 255,001행 기존 입력 평가와 180,332행 날씨 비교는 같은 모집단이 아닙니다.
 
-> **확인한 결론:** 전처리 의미 개선 자체의 Macro F1 향상은 확인하지 못했고, 보정의 ECE 감소도 분류 성능 향상을 뜻하지 않았습니다. 반면 **사전에 고정한 10분 가용성 가정과 14개 날씨 피처를 추가한 paired CV에서는 세 시드 모두 Macro F1·LogLoss·ROC-AUC가 같은 방향으로 개선**됐습니다.
+> **확인한 결론:** 전처리 의미 개선 자체의 Macro F1 향상은 확인하지 못했고, 보정의 ECE 감소도 분류 성능 향상을 뜻하지 않았습니다. 반면 **사전에 고정한 10분 가용성 가정과 14개 날씨 피처를 추가한 동일조건 교차검증에서는 세 시드 모두 Macro F1·LogLoss·ROC-AUC가 같은 방향으로 개선**됐습니다.
 >
-> **해석 경계:** 날씨 유무 paired 비교까지 완료했지만 이는 adopted∩labeled 180,332행의 정적 CV입니다. **10분은 실측 publication latency가 아닙니다.** 관측된 개선을 날씨의 인과 효과나 미래 운항 성능으로 일반화하지 않습니다.
+> **해석 경계:** 날씨 유무 동일조건 비교까지 완료했지만 이는 날짜 귀속·라벨 보유 180,332행의 정적 교차검증입니다. **10분은 실측 공개 지연 시간(publication latency)이 아닙니다.** 관측된 개선을 날씨의 인과 효과나 미래 운항 성능으로 일반화하지 않습니다.
 
 <a id="project-status"></a>
 ### 검증 상태
@@ -30,10 +30,10 @@
 | 원본 품질·전처리 | 유일 대응 대치, 시각 의미, 원본 결측 이력 검증 | 의미 개선 ≠ 성능 향상 |
 | 모델·OOF·보정 | 10조건 × 3시드 비교 및 별도 OOF·보정 분석 | 전체 Phase·미래 운영 성능 검증은 아님 |
 | 날짜 귀속 | 2018/2019 BTS 12개월 대조, 706,759행 채택 | 293,241행은 미검사가 아니라 보류 |
-| 날씨 표본 | 21행·기존 300행·stratafix 300행을 각각 검증 | 서로 다른 표본을 합산하지 않음 |
-| 전체 날씨 수집 | **27/27 shard · 1,317 request group 완료**, final manifest + corrected audit Git 기록 | transport 완료 ≠ 모델 성능 |
+| 날씨 표본 | 21행·기존 300행·층화 보정 표본(`stratafix`) 300행을 각각 검증 | 서로 다른 표본을 합산하지 않음 |
+| 전체 날씨 수집 | **27/27 분할 · 1,317 요청 묶음 완료**, 최종 실행 기록 + 정정 감사 기록 | 수집 완료 ≠ 모델 성능 |
 | 전체 날씨 결합 | **706,759행 전부 보존**, 10분 가정 both matched **689,457행** | 미래 관측·가용시각·station/window 위반 0 |
-| 날씨 모델 비교 | **180,332 동일 평가행 × seeds 42/1/7**, 동일 outer fold·nested 계약 | 정적 paired CV 완료; 미래 운영 성능 검증은 아님 |
+| 날씨 모델 비교 | **180,332 동일 평가행 × 시드 42/1/7**, 동일 외부 폴드·내부 선택 절차 | 정적 동일조건 교차검증 완료; 미래 운영 성능 검증은 아님 |
 
 **이 표는 실시간 다운로드 모니터가 아닙니다.** 최신 로컬 진행률을 추정해 채우지 않으며, 완료 수치는 해당 실행 근거가 반영된 뒤 갱신합니다. [완료 결과를 반영할 위치](#submission-completion)
 
@@ -46,6 +46,8 @@
 
 <a id="1-목적과문제정의"></a>
 ## 1. 목적과 문제 정의
+
+**한 줄 목적:** 항공편 한 건의 `Delay`(지연 여부)를 예측하고, 전처리와 출발·도착 공항 날씨 정보 추가가 예측 성능에 미치는 영향을 같은 조건에서 검증합니다.
 
 CSV 한 행의 `Delay`를 이진 분류합니다. `Not_Delayed=0`, `Delayed=1`이며, 타깃 결측은 **미라벨**이지 정상 정답이 아닙니다. ID의 유일성도 실제 운항편의 유일성을 자동으로 보장하지 않습니다.
 
@@ -113,10 +115,10 @@ CSV 한 행의 `Delay`를 이진 분류합니다. `Not_Delayed=0`, `Delayed=1`�
 flowchart TD
     A["원본 100만 행 / Delay 라벨·미라벨 구분"] --> B["결측·시각·항공사 식별 점검"]
     B --> C["기존 입력 전처리 + LightGBM"]
-    C --> D["nested 평가 / OOF / 보정 비교 완료"]
+    C --> D["내부 선택 포함 교차검증 / OOF / 보정 비교 완료"]
     A --> E["BTS 대조 / 채택한 행만 날짜 귀속"]
     E --> F["공항-관측소 매핑 / UTC 예측 시점"]
-    F --> G["월별 bulk 날씨 수집 / shard별 저장"]
+    F --> G["월별 일괄 날씨 수집 / 분할별 저장"]
     G --> H["전체 완료 검증 / finalize"]
     H --> I["예측 시점까지 가용한 날씨만 결합"]
     D --> J["같은 평가 조건의 날씨 없음 vs 있음 비교"]
@@ -161,7 +163,7 @@ Honest pseudo-label의 teacher도 student inner-train 안에서 nested 선택을
 
 ### 전처리는 타당해졌지만 분류 성능 향상은 확인되지 않았습니다
 
-실제 원본 100만 행을 전처리하고 동일한 라벨 255,001행을 채점한 **10조건 × 3시드 × 5-fold = 30회 CV, 150개 outer fold** 결과입니다. P4/P6 전체 변경 외에 대치만·비율만·결측 표현만 바꾼 6개 조건을 포함합니다.
+실제 원본 100만 행을 전처리하고 동일한 라벨 255,001행을 채점한 **10조건 × 3시드 × 5-fold = 30회 교차검증, 150개 외부 폴드** 결과입니다. P4/P6 전체 변경 외에 대치만·비율만·결측 표현만 바꾼 6개 조건을 포함합니다.
 
 P4는 범주형+TE, P6_fixed는 시간 복원과 미상 시간대 제외 Traffic을 추가한 비교 조건입니다. `clean`은 3절의 변경을 함께 적용한 이름입니다.
 
@@ -176,25 +178,25 @@ clean의 평균 F1 차이는 P4 −0.000375, P6 −0.000377입니다. 작은 차
 
 **성능 비교 기준은 P6_fixed, 전처리 의미 개선을 설명하는 경로는 P6_clean입니다.** P6_clean을 검증된 성능 향상 모델이나 배포 모델로 부르지 않습니다. 3시드 SD는 새 데이터에 대한 신뢰구간이 아니며, 프로젝트의 0.002 참고값도 유의수준이 아닙니다.
 
-![동일 nested 프로토콜의 P4, P4_clean, P6_fixed, P6_clean Macro F1 평균과 3시드 표준편차 비교](assets/readme/model_comparison.svg)
+![동일 내부 선택 교차검증 절차의 P4, P4_clean, P6_fixed, P6_clean Macro F1 평균과 3시드 표준편차 비교](assets/readme/model_comparison.svg)
 
-**그림 2. 전처리 10조건 중 네 기준 조건의 Macro F1.** 점은 3시드 평균, 오차막대는 ±1 표본 SD이며 신뢰구간이 아닙니다. 차이를 읽기 위한 확대 축임을 명시했으며, 오차막대 겹침만으로 동등성·유의성을 판정하지 않습니다. 모든 조건과 paired delta는 [기존 개별 변경 효과 그림](output/preprocessing_full_effects.png)에서도 확인합니다. [전체 10조건 결과](output/preprocessing_full_evaluation.md), [요약 CSV](output/preprocessing_full_summary.csv), [시드별 결과](output/preprocessing_full_runs.csv)
+**그림 2. 전처리 10조건 중 네 기준 조건의 Macro F1.** 점은 3시드 평균, 오차막대는 ±1 표본 SD이며 신뢰구간이 아닙니다. 차이를 읽기 위한 확대 축임을 명시했으며, 오차막대 겹침만으로 동등성·유의성을 판정하지 않습니다. 모든 조건과 조건 간 차이는 [기존 개별 변경 효과 그림](output/preprocessing_full_effects.png)에서도 확인합니다. [전체 10조건 결과](output/preprocessing_full_evaluation.md), [요약 CSV](output/preprocessing_full_summary.csv), [시드별 결과](output/preprocessing_full_runs.csv)
 
-### 날씨 추가는 동일조건 paired CV에서 일관된 개선을 보였습니다
+### 날씨 추가는 동일조건 교차검증에서 일관된 개선을 보였습니다
 
-전체 날짜 귀속 706,759행 중 라벨이 있는 **180,332행**을 같은 순서로 고정하고, `P6_clean`을 weather-off 기준으로 다시 학습했습니다. weather-on은 모델 결과를 보기 전에 고정한 **14개 수치 피처**만 추가했습니다: 출발·도착 각각 `tmpf`, `dwpf`, `sknt`, `vsby`, `p01i`, 관측 나이, matched flag입니다. `gust`·`snowdepth`·`wxcodes`는 높은 결측, `relh`는 최소 계약에서의 중복성, `skyc1`는 범주 확장, `metar`는 감사 원문이라는 이유로 사전에 제외했습니다.
+전체 날짜 귀속 706,759행 중 라벨이 있는 **180,332행**을 같은 순서로 고정하고, `P6_clean`을 날씨 미사용 기준으로 다시 학습했습니다. 날씨 사용 조건은 모델 결과를 보기 전에 고정한 **14개 수치 피처**만 추가했습니다: 출발·도착 각각 `tmpf`, `dwpf`, `sknt`, `vsby`, `p01i`, 관측 나이, 결합 여부 표시값입니다. `gust`·`snowdepth`·`wxcodes`는 높은 결측, `relh`는 최소 계약에서의 중복성, `skyc1`는 범주 확장, `metar`는 감사 원문이라는 이유로 사전에 제외했습니다.
 
 | 조건 | Macro F1 평균 ± SD ↑ | LogLoss 평균 ± SD ↓ | ROC-AUC 평균 ± SD ↑ |
 |---|---:|---:|---:|
-| weather-off | 0.573910 ± 0.000707 | 0.448116 ± 0.000045 | 0.640618 ± 0.000277 |
-| weather-on | **0.598945 ± 0.000417** | **0.436689 ± 0.000132** | **0.672936 ± 0.000458** |
-| paired on−off | **+0.025035 ± 0.000533** | **−0.011428 ± 0.000088** | **+0.032317 ± 0.000321** |
+| 날씨 미사용 | 0.573910 ± 0.000707 | 0.448116 ± 0.000045 | 0.640618 ± 0.000277 |
+| 날씨 사용 | **0.598945 ± 0.000417** | **0.436689 ± 0.000132** | **0.672936 ± 0.000458** |
+| 차이(사용−미사용) | **+0.025035 ± 0.000533** | **−0.011428 ± 0.000088** | **+0.032317 ± 0.000321** |
 
-seed 42/1/7 모두 세 지표가 같은 방향으로 움직였습니다. 각 seed에서 off/on은 **동일 180,332행과 동일 outer-fold fingerprint**를 사용했고, 트리 수와 임계값은 각 조건의 outer-train 내부에서 같은 nested 절차로 독립 선택했습니다. 날씨 미결합·결측 행을 평가에서 제거하지 않았고, 모델 실행 중 추가 네트워크 요청도 없었습니다.
+시드 42/1/7 모두 세 지표가 같은 방향으로 움직였습니다. 각 시드에서 두 조건은 **동일 180,332행과 동일 외부 폴드 구성**을 사용했고, 트리 수와 임계값은 각 조건의 외부 학습 데이터 내부에서 같은 선택 절차로 독립적으로 정했습니다. 날씨 미결합·결측 행을 평가에서 제거하지 않았고, 모델 실행 중 추가 네트워크 요청도 없었습니다.
 
-![P6_clean의 동일 180332행 paired CV에서 weather-on이 세 시드 평균 Macro F1과 ROC-AUC를 높이고 LogLoss를 낮춘 결과](assets/readme/weather_model_comparison.svg)
+![P6_clean의 동일 180332행 교차검증에서 날씨 사용 조건이 세 시드 평균 Macro F1과 ROC-AUC를 높이고 LogLoss를 낮춘 결과](assets/readme/weather_model_comparison.svg)
 
-**그림 3. 날씨 추가의 paired 변화량.** 점은 3시드 평균, 오차막대는 ±1 표본 SD이며 신뢰구간이 아닙니다. Macro F1·ROC-AUC는 on−off, LogLoss는 감소량(off−on)을 양수로 표시했습니다. 모델에는 **10분 publication-latency 가정**만 사용했으며 0/30/60분은 coverage sensitivity로만 남겼습니다. [시드별 실행](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv), [paired delta](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_paired_deltas.csv), [요약](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json), [실행 manifest](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_manifest.json), [그림 출처](assets/readme/sources.json)
+**그림 3. 날씨 추가에 따른 변화량.** 점은 3시드 평균, 오차막대는 ±1 표본 SD이며 신뢰구간이 아닙니다. Macro F1·ROC-AUC는 on−off, LogLoss는 감소량(off−on)을 양수로 표시했습니다. 모델에는 **날씨 공개 지연 10분 가정**만 사용했으며 0/30/60분은 결합률 민감도 확인용으로만 남겼습니다. [시드별 실행](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv), [조건별 차이](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_paired_deltas.csv), [요약](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json), [실행 manifest](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_manifest.json), [그림 출처](assets/readme/sources.json)
 
 **이 결과는 제출 범위에서 관찰한 예측 성능 차이입니다.** 세 seed는 독립 데이터셋이 아니고 SD도 신뢰구간이 아닙니다. 10분은 실측 publication latency가 아닙니다. 날짜 귀속이 가능한 선택 집단의 정적 CV이므로 날씨의 인과 효과나 미래 운항 성능으로 일반화하지 않습니다.
 
@@ -225,13 +227,13 @@ P6 두 조건의 행별 OOF를 다시 저장·검증했고, 보정기는 **outer
 |---|---:|---:|---:|---|
 | 경계 검증 표본 | 21 | 별도 8공항 규칙 | DST 모호 시각 1행 미결합 | 실제 수집·결합 완료; 양쪽 20/21행 결합 |
 | 기존 확대 표본 | 300 | 271 | 29 | 실제 수집·결합·후속 재결합 완료; 선정 편향을 후속 발견 |
-| stratafix 표본 | 300 | 268 | 32 | 실제 수집·결합·진단 완료(2026-09-21) |
+| 층화 보정 표본 (`stratafix`) | 300 | 268 | 32 | 실제 수집·결합·진단 완료(2026-09-21) |
 
-stratafix는 기존 확대 표본을 덮어쓴 이름이 아니라, 선정 순서를 고쳐 **별도로 만든 표본**입니다. 341개 층 중 300개를 포함하며 제외된 41개 층의 모집단은 3,077행(약 0.44%)입니다. 모든 층을 포함했다거나 대표성이 입증됐다고 표현하지 않습니다. 보류 32행은 시간대 충돌 19·미확인 12·현재만 확인 1행입니다. [stratafix 선정 manifest](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_selection_manifest.json), [선정 CSV](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_selection.csv)
+`stratafix`는 기존 확대 표본을 덮어쓴 이름이 아니라, 선정 순서를 고쳐 **별도로 만든 층화 보정 표본**입니다. 341개 층 중 300개를 포함하며 제외된 41개 층의 모집단은 3,077행(약 0.44%)입니다. 모든 층을 포함했다거나 대표성이 입증됐다고 표현하지 않습니다. 보류 32행은 시간대 충돌 19·미확인 12·현재만 확인 1행입니다. [stratafix 선정 manifest](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_selection_manifest.json), [선정 CSV](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_selection.csv)
 
-![stratafix 수집 가능 268행에서 가용성 지연 가정별 출발 및 도착 날씨 결합률, 60분 가정에서 각각 150행과 157행 결합](assets/readme/weather_latency.svg)
+![층화 보정 표본 중 수집 가능 268행에서 가용성 지연 가정별 출발 및 도착 날씨 결합률, 60분 가정에서 각각 150행과 157행 결합](assets/readme/weather_latency.svg)
 
-**그림 5. 데이터가 있어도 예측 시점에 가용하지 않으면 사용할 수 없습니다.** 분모는 stratafix의 수집 가능 268행입니다. 보류 32행을 포함한 전체 300행 분모와 구분하며, 0/10/30/60분은 실제 수신 지연의 실측값이 아닌 가정입니다. 이는 결합률 그래프이지 날씨 모델의 성능 그래프가 아닙니다. [민감도 CSV](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_latency_sensitivity.csv)
+**그림 5. 데이터가 있어도 예측 시점에 가용하지 않으면 사용할 수 없습니다.** 분모는 층화 보정 표본(`stratafix`)의 수집 가능 268행입니다. 보류 32행을 포함한 전체 300행 분모와 구분하며, 0/10/30/60분은 실제 수신 지연의 실측값이 아닌 가정입니다. 이는 결합률 그래프이지 날씨 모델의 성능 그래프가 아닙니다. [민감도 CSV](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_latency_sensitivity.csv)
 
 ### 날씨 결합과 비교의 고정 계약
 
@@ -241,15 +243,15 @@ stratafix는 기존 확대 표본을 덮어쓴 이름이 아니라, 선정 순�
 
 전체 귀속 집단의 공항 375개 중 `confirmed_period` 355개는 **IEM 현재 목록의 ID·시간대 문자열·기록 보유 기간을 확인한 등급**입니다. 2018~2019년 시설 신원·이전 이력을 공식 자료로 전부 검증했다는 뜻이 아닙니다. 우선 조사 20개도 조회 완료와 역사적 확인 완료를 구분합니다. 대체 ID는 production 매핑에 자동 반영하지 않았습니다. [최신 매핑표](output/baseline_recovery_v2_weather_scope_fix_20260918_mapping_table.csv), [최신 20공항 증거](output/baseline_recovery_v2_station_identity_verification_fix_20260918_evidence.csv), [상세 판정](#appendix-station-identity)
 
-날씨 유무 성능 비교는 **같은 라벨 평가 행·분할·시드·nested 프로토콜**에서 수행합니다. 날씨 결측 처리·범주형/TE·트리 수·임계값 선택은 학습·내부 선택 경계 안에 두고 outer-valid를 선택에 쓰지 않습니다. 날씨 결합 성공 행만 골라 평가 집단을 바꾸지 않습니다. 채택 706,759행은 두 예정 시각 등이 관측된 선택된 부분집합이므로, 그 결과를 원본 전체나 미래 운영 성능으로 일반화하지 않습니다.
+날씨 유무 성능 비교는 **같은 라벨 평가 행·분할·시드·내부 선택 절차**에서 수행합니다. 날씨 결측 처리·범주형/TE·트리 수·임계값 선택은 학습·내부 선택 경계 안에 두고 외부 검증 데이터(`outer-valid`)를 선택에 쓰지 않습니다. 날씨 결합 성공 행만 골라 평가 집단을 바꾸지 않습니다. 채택 706,759행은 두 예정 시각 등이 관측된 선택된 부분집합이므로, 그 결과를 원본 전체나 미래 운영 성능으로 일반화하지 않습니다.
 
 ### 완료 기준과 현재 상태
 
 1. ~~**기존 로컬 증거 확인**~~ — **완료(2026-09-21).**
-2. ~~**stratafix 실수집·결합**~~ — **완료(2026-09-21).**
-3. ~~**전체 weather transport**~~ — **완료(2026-09-22).** 27/27 shard, 1,317 request group, cache/hash 및 corrected attempt audit를 고정했습니다.
+2. ~~**층화 보정 표본(`stratafix`) 실수집·결합**~~ — **완료(2026-09-21).**
+3. ~~**전체 날씨 수집**~~ — **완료(2026-09-22).** 27/27 분할, 1,317 요청 묶음, 캐시/해시 및 정정 시도 감사 기록을 고정했습니다.
 4. ~~**row-level 전체 결합**~~ — **완료(2026-09-22).** 706,759행 전체 분모와 ID 순서를 유지한 채 0/10/30/60분 가정별 point-in-time join을 완료하고 독립 gzip 감사를 통과했습니다.
-5. ~~**날씨 유무 비교**~~ — **완료(2026-09-22).** adopted∩labeled 180,332행에서 P6_clean weather-off/on을 동일 seed·outer fold·nested 프로토콜로 비교했습니다.
+5. ~~**날씨 유무 비교**~~ — **완료(2026-09-22).** 날짜 귀속·라벨 보유 180,332행에서 `P6_clean`의 날씨 미사용/사용 조건을 동일 시드·외부 폴드·내부 선택 절차로 비교했습니다.
 6. ~~**GitHub 제출 정리**~~ — **완료(2026-09-22).** join/model evidence, 최종 결론, 재현 명령과 그림 출처를 README에 연결했습니다.
 
 **제출용 핵심 경로는 1~6까지 완료했습니다.** 독립 미래 테스트·실시간 모델 서빙·실측 publication latency 복원·새 데이터 소스·추가 모델군 탐색은 이번 제출의 완료 조건이 아니며 후속 과제입니다.
@@ -257,7 +259,7 @@ stratafix는 기존 확대 표본을 덮어쓴 이름이 아니라, 선정 순�
 <a id="full-weather-row-join"></a>
 ### 전체 행 point-in-time join 완료 근거
 
-**실제 706,759행 full join과 독립 gzip 감사까지 완료했습니다.** 실행 revision은 `0e1495c5f17deb958e6dce623eea78cb96cb54c4`이며, 네 latency 출력 모두 입력 행수·ID 유일성·ID 순서·`row_position`을 보존했습니다.
+**실제 706,759행 전체 행 날씨 결합과 독립 gzip 감사까지 완료했습니다.** 실행 revision은 `0e1495c5f17deb958e6dce623eea78cb96cb54c4`이며, 네 latency 출력 모두 입력 행수·ID 유일성·ID 순서·`row_position`을 보존했습니다.
 
 | 가용성 지연 가정 | origin matched | destination matched | both | one | none |
 |---:|---:|---:|---:|---:|---:|
@@ -282,7 +284,7 @@ uv run --locked --offline python -u -m notebooks.join_weather_full --name baseli
 `--validate-inputs-only`는 cache join 출력 없이 입력 계보·행 정체성·분모·재생성 plan만 검사합니다. 행별 gzip과 partition은 Git-ignored 로컬 근거이며 Git에는 작은 summary/manifest만 기록합니다.
 
 <a id="full-weather-transport"></a>
-### 전체 weather transport 완료 근거
+### 전체 날씨 수집 완료 근거
 
 전체 수집은 **2026-09-22 finalization과 corrected attempt audit까지 완료**했습니다. 이 단계 자체가 증명하는 것은 IEM archive transport plan의 요청·캐시 무결성까지이며, row-level 결합과 모델 성능은 별도 근거가 필요합니다. 그 후속 근거는 위 [전체 행 join](#full-weather-row-join)과 5절의 paired 비교에서 각각 별도로 완료했습니다.
 
@@ -293,7 +295,7 @@ uv run --locked --offline python -u -m notebooks.join_weather_full --name baseli
 | UTC prediction time 해석 가능 | 691,385 |
 | station / IEM network | 355 / 52 |
 | station-month pairs | 7,816 |
-| request groups / shards | **1,317 / 27** |
+| 요청 묶음 / 분할 수 | **1,317 / 27** |
 | successful HTTP attempts | **1,317** |
 | failed attempts → retry | **26 → 26** |
 | corrected provider errors | **HTTP 503 25건 + interrupted unknown 1건** |
@@ -319,9 +321,9 @@ final manifest 생성 당시 오류 분류기는 실제 curl 문자열 `The requ
 
 | 용어 | 이 프로젝트에서의 뜻 |
 |---|---|
-| request group | 같은 IEM network·UTC 월·최대 20 station으로 만든 한 번의 논리적 요청 |
+| 요청 묶음 (`request group`) | 같은 IEM 네트워크·UTC 월·최대 20개 관측소로 만든 한 번의 논리적 요청 |
 | HTTP attempt | 실제 호출 한 번; 실패와 재시도도 각각 예산을 소비 |
-| shard | request group을 기본 50개씩 나눈 저장·재개 단위; 새로운 모델이나 데이터 종류가 아님 |
+| 분할 (`shard`) | 요청 묶음을 기본 50개씩 나눈 저장·재개 단위; 새로운 모델이나 데이터 종류가 아님 |
 | checkpoint | 어디까지 처리했는지와 누적 예산·시도 이력을 저장한 진행 기록 |
 | manifest / fingerprint | 결과의 경로·해시·집계 / 입력과 요청 규칙이 같은지 판별하는 식별값 |
 | finalize / join | 전체 요청 완료·파일 무결성 검증 / 항공편 행과 가용한 날씨 관측 결합 |
@@ -334,15 +336,15 @@ final manifest 생성 당시 오류 분류기는 실제 curl 문자열 `The requ
 
 | 제출 결과 | 근거 | 최종 상태 |
 |---|---|---|
-| 전체 수집 통계 | [plan](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_plan_manifest.json), [final](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_manifest.json), [corrected audit](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_audit.json) | **완료:** 27/27 shard, 1,317 groups, cache/hash 및 attempt audit 일치 |
+| 전체 수집 통계 | [plan](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_plan_manifest.json), [final](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_manifest.json), [corrected audit](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_audit.json) | **완료:** 27/27 분할, 1,317 요청 묶음, 캐시/해시 및 시도 감사 기록 일치 |
 | 전체 행별 결합 | [join summary](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_summary.json), [join manifest](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json) | **완료:** 706,759행 유지; 10분 both matched 689,457; 시간·station invariant 위반 0 |
-| 날씨 없음 vs 있음 | [model summary](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json), [model manifest](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_manifest.json) | **완료:** 동일 180,332행; Macro F1 0.573910→0.598945; paired Δ +0.025035 |
+| 날씨 없음 vs 있음 | [model summary](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json), [model manifest](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_manifest.json) | **완료:** 동일 180,332행; Macro F1 0.573910→0.598945; 동일조건 차이 +0.025035 |
 | 제출 최종 결론 | 위 근거 + [그림 영수증](assets/readme/sources.json) | **완료:** 결과·한계·재현 명령·그림을 같은 tracked evidence에 연결 |
 
 <a id="7-코드구조와재현"></a>
 ## 7. 코드 구조와 재현
 
-> **장시간 로컬 실행 원칙:** 실행 중인 프로세스를 문서 반영 때문에 중단하거나 중간에 pull하지 않습니다. 이번 full-weather transport·full join·paired model comparison은 모두 정상 종료와 evidence 검증까지 완료했으며, 후속 로컬 실행도 같은 원칙으로 기존 evidence를 보존한 뒤 동기화합니다.
+> **장시간 로컬 실행 원칙:** 실행 중인 프로세스를 문서 반영 때문에 중단하거나 중간에 pull하지 않습니다. 이번 전체 날씨 수집·전체 행 결합·날씨 유무 동일조건 모델 비교는 모두 정상 종료와 근거 검증까지 완료했으며, 후속 로컬 실행도 같은 원칙으로 기존 evidence를 보존한 뒤 동기화합니다.
 
 <a id="reliability-design"></a>
 ### 실패를 숨기지 않는 수집·복구 구조
@@ -468,7 +470,7 @@ checkpoint 저장은 임시 파일을 쓴 뒤 원자적으로 교체하며, Wind
 
 기존 21행/300행/stratafix 캐시는 그대로 보존합니다. 이들은 특정 station의 일부 시각 창에 대한 증거이므로 **월 전체 bulk 요청을 이미 수집했다는 근거로 재사용하지 않습니다.** 최신 전체 실행 입력은 `baseline_recovery_v2_weather_scope_fix_20260918` 매핑을 명시적으로 사용합니다.
 
-**초기 실행 기록(2026-09-21, 전체 완료 전):** stress-first shard 0의 50개 request group이 `complete=true`, `successful=true`로 끝났고, 누적 HTTP attempt 51회 중 503 1회가 재시도로 복구됐습니다. 해당 shard-local checkpoint/manifest/cache는 Git-ignored 로컬 중간 증거입니다. 후속 수집은 한 shard씩 순차 실행하고 어떤 shard라도 미완료·실패하면 즉시 멈추는 [run_weather_full_collection](notebooks/run_weather_full_collection.py) 경로를 사용했습니다. **현재는 27/27 shard 수집·finalize와 full join·weather-off/on paired 비교까지 완료**됐으며, [최종 결과와 evidence](#6-한계와다음단계)를 기준으로 읽습니다. 아래는 당시 실행 순서의 보존용 예시이며, 현재 제출을 위해 다시 실행할 작업이 아닙니다.
+**초기 실행 기록(2026-09-21, 전체 완료 전):** stress-first shard 0의 50개 request group이 `complete=true`, `successful=true`로 끝났고, 누적 HTTP attempt 51회 중 503 1회가 재시도로 복구됐습니다. 해당 shard-local checkpoint/manifest/cache는 Git-ignored 로컬 중간 증거입니다. 후속 수집은 한 shard씩 순차 실행하고 어떤 shard라도 미완료·실패하면 즉시 멈추는 [run_weather_full_collection](notebooks/run_weather_full_collection.py) 경로를 사용했습니다. **현재는 27/27 분할 수집·최종화와 전체 행 날씨 결합·날씨 미사용/사용 동일조건 비교까지 완료**됐으며, [최종 결과와 evidence](#6-한계와다음단계)를 기준으로 읽습니다. 아래는 당시 실행 순서의 보존용 예시이며, 현재 제출을 위해 다시 실행할 작업이 아닙니다.
 
 ```powershell
 $Full = "baseline_recovery_v2_weather_full_bulk_20260921"
@@ -570,7 +572,7 @@ README는 현재 상태의 기준이고, 구체적인 사실은 연결된 코드
 
 **문제 → 판단 → 검증 → 확장.** “결측을 많이 채우면 더 좋은 모델일까?”로 시작해, 모호한 대치를 중단하고 시각의 의미를 바로잡은 이유를 3절에서 보여줍니다. 이어 5절의 같은 조건 비교에서 **의미 개선이 Macro F1 향상으로 이어지지 않았음**을 설명하고, 보정 지표와 탐지 성능의 차이를 짚습니다. 마지막으로 새 정보원인 날씨도 예측 시점의 가용성을 지켜야 한다는 6절로 연결합니다. 수집·복구 구조는 이 실험을 재현 가능하게 만드는 근거로 설명합니다.
 
-**질문에 대한 근거 위치:** “누수는?” → 4절의 inner/outer 경계와 전체 입력 묶음의 한계. “날씨 효과는?” → 5절의 동일조건 paired CV 개선과 6절의 가용성 가정·해석 한계(인과 효과·미래 운항 성능은 미검증). “왜 보류했나?” → 2절 날짜 귀속과 6절 매핑 규칙. “중단되면?” → 7절 checkpoint·순차 runner와 회귀 테스트.
+**질문에 대한 근거 위치:** “누수는?” → 4절의 inner/outer 경계와 전체 입력 묶음의 한계. “날씨 효과는?” → 5절의 동일조건 교차검증 개선과 6절의 가용성 가정·해석 한계(인과 효과·미래 운항 성능은 미검증). “왜 보류했나?” → 2절 날짜 귀속과 6절 매핑 규칙. “중단되면?” → 7절 checkpoint·순차 runner와 회귀 테스트.
 
 기존 분석·명령·실행 회차는 아래 **같은 README 안**에 남아 있습니다. AGENTS와 README를 읽는 기존 컨트롤타워 방식은 유지합니다.
 
