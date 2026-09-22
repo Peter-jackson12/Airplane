@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "name": "baseline_recovery_v2_weather_full_join_20260922",
+  "successful": true,
+  "transport_name": "baseline_recovery_v2_weather_full_bulk_20260921",
+  "mapping_name": "baseline_recovery_v2_weather_scope_fix_20260918",
+  "git_sha": "0e1495c5f17deb958e6dce623eea78cb96cb54c4",
+  "code_sha256_lf": {
+    "src/weather.py": "e31a3c75325c2a499c5fd92cfb88cd8b707c5daa3ac71232095dd2f2d6236878",
+    "src/weather_full.py": "90662a1730d16a76c446080bcb66604325d918ad39bf202cbf160295540a62be",
+    "notebooks/join_weather_full.py": "ba36b3387984bc93364c189ef59a47a3ba48778b8048556544e2fe9e07fa38dc",
+    "notebooks/scope_weather_collection_refined.py": "161b909d2617b7f30da2a0bfc3e5b6b254d7f652d945674412cf78c46c1a205c",
+    "notebooks/fetch_weather_full_sharded.py": "10e7dd3cbcac97ed7af5147affda2b78615279c31c6bfcae762fe85cc7746b82",
+    "notebooks/join_weather_sample.py": "420d877ad345a7b33aa26b0530cc2a374bde1c4a7e50fe59741412629e0a87fc"
+  },
+  "uv_lock_sha256": "d73d34856c696d77df451d9a998fb75b1e42108d3f8d4fdb51cb70cee737dc22",
+  "python_version": "3.14.6",
+  "pandas_version": "3.0.5",
+  "sources": {
+    "plan_manifest": {
+      "path": "output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_plan_manifest.json",
+      "sha256": "7b8fcc3313b46aabde116978483438e4f00238fa1d8911028a6c0adbe3dd1b0c",
+      "bytes": 3775
+    },
+    "final_fetch_manifest": {
+      "path": "output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_manifest.json",
+      "sha256": "e299f0cfbc2b958f2e991cf6e0a850e0ff2f6813a76f7391c5451454b0f0c602",
+      "bytes": 1436997
+    },
+    "corrected_attempt_audit": {
+      "path": "output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_audit.json",
+      "sha256": "5bba9a88d58fc814e2df652276d0c9d7189bb7b1fb199dbb7b76c990cb2039ad",
+      "bytes": 1657
+    },
+    "mapping": {
+      "path": "output/baseline_recovery_v2_weather_scope_fix_20260918_mapping_table.csv",
+      "sha256": "d39ef026304335f31a4b9acd1e19d55d25de2344a1a31c64335459e2b15c9408",
+      "bytes": 152968
+    },
+    "raw_train": {
+      "path": "data/train.csv",
+      "sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+      "bytes": 116707688
+    },
+    "attribution_manifest": {
+      "path": "output/baseline_recovery_v2_row_date_attribution_20260918_manifest.json",
+      "sha256": "f0ee3b79d8353360bb21417cdc9d86cf23316d6a7777a77ceaacb20b9518a217",
+      "bytes": 8225
+    },
+    "attribution_rows": {
+      "path": "data/bts/baseline_recovery_v2_row_date_attribution_20260918/row_dates.csv.gz",
+      "sha256": "9c679535e59666bfb2de8a4460fd0c0a8b433f29900b704d0de4ff21e712421a",
+      "bytes": 9958940
+    },
+    "bulk_request_plan": {
+      "path": "data/weather_probe/baseline_recovery_v2_weather_full_bulk_20260921/bulk_request_plan.csv",
+      "sha256": "be5f5ddcb28a46b6af78839e53a317bc7454fdafabb8e62028fca1247b90b1f3",
+      "bytes": 233476
+    }
+  },
+  "denominators": {
+    "total_adopted_rows": 706759,
+    "mapping_eligible_rows_confirmed_period_both_ends": 691386,
+    "utc_time_resolved_rows": 691385,
+    "mapping_eligible_but_utc_unresolved_rows": 1,
+    "not_mapping_eligible_rows": 15373
+  },
+  "all_prediction_at_resolved_rows": 706758,
+  "outputs": {
+    "0": {
+      "path": "data/weather_probe/baseline_recovery_v2_weather_full_join_20260922_full_join/joined_latency0min.csv.gz",
+      "rows": 706759,
+      "sha256": "b415011e9e83bd8553c25d3c4f0d4b6ff38d646c45bc0664bccc32459f0f331e",
+      "bytes": 99181594
+    },
+    "10": {
+      "path": "data/weather_probe/baseline_recovery_v2_weather_full_join_20260922_full_join/joined_latency10min.csv.gz",
+      "rows": 706759,
+      "sha256": "28f015b579f17e4b3ffa67c7ee9ec07aba7225fdbd1502b5d8cb839e797b80e5",
+      "bytes": 100412934
+    },
+    "30": {
+      "path": "data/weather_probe/baseline_recovery_v2_weather_full_join_20260922_full_join/joined_latency30min.csv.gz",
+      "rows": 706759,
+      "sha256": "6c157b4701c9be358ef0fb8985674bc0f198c2b3d8f2902719dc617e0e675c19",
+      "bytes": 100399877
+    },
+    "60": {
+      "path": "data/weather_probe/baseline_recovery_v2_weather_full_join_20260922_full_join/joined_latency60min.csv.gz",
+      "rows": 706759,
+      "sha256": "f815747df063779e407e528b25cfac07386bf627983a78f3754d6f8e727e3956",
+      "bytes": 70231641
+    }
+  },
+  "cache_validation": {
+    "cache_files_read": 1317,
+    "cache_rows_read": 7299100,
+    "cache_bytes_read": 1093058768,
+    "dropped_exact_duplicate_reports": 0,
+    "peak_partition_observations": 340321,
+    "peak_partition_observation_memory_bytes": 154689039
+  },
+  "csv_serialization": {
+    "null_token": "<NA>",
+    "empty_string_is_null": false,
+    "reader": "src.weather_full.read_joined_csv",
+    "id_dtype": "string"
+  },
+  "ordered_id_sha256": "f35715f7873fc6d1e0181d198e903853830e2f215390862c62f20e5510bbfd1d",
+  "invariants": {
+    "future_observation_uses": 0,
+    "future_availability_uses": 0,
+    "station_mismatches": 0,
+    "out_of_window_uses": 0,
+    "duplicate_output_ids": 0,
+    "row_order_mismatches": 0,
+    "ineligible_matches": 0
+  },
+  "summary": {
+    "path": "output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_summary.json",
+    "sha256": "706906089765d177f0da2ee39ca9c2912e9defeb765d064f1f8b85f31a7a907a"
+  },
+  "fits_any_model": false,
+  "target_columns_used": [],
+  "network_requests": 0,
+  "prediction_offset_minutes": 60,
+  "max_observation_age_minutes": 90,
+  "latency_scenarios_minutes": [
+    0,
+    10,
+    30,
+    60
+  ],
+  "measured_publication_latency": false,
+  "row_output_format": "deterministic gzip CSV; input ID order; one full-denominator file per latency",
+  "raw_weather_fields": [
+    "tmpf",
+    "dwpf",
+    "relh",
+    "sknt",
+    "gust",
+    "vsby",
+    "p01i",
+    "skyc1",
+    "wxcodes",
+    "snowdepth",
+    "metar"
+  ],
+  "raw_feature_contract": "IEM M -> missing; numeric blanks -> missing; categorical blanks retained and counted separately; metar is audit text, not automatically a model feature",
+  "model_feature_selection_frozen": false,
+  "limitations": [
+    "Historical join under ASSUMED 0/10/30/60-minute publication latency, not verified real-time replay.",
+    "confirmed_period retains the existing mapping evidence grade, not a new historical station certification.",
+    "No weather-on training or feature selection occurred. Any later comparison must keep identical labels, seeds, outer folds, nested selection and metrics.",
+    "All adopted rows remain in every output and denominator, including ineligible and unresolved rows.",
+    "Source-window boundaries are inclusive, matching the finalized transport validator. Cross-month duplicate conflicts fail closed.",
+    "Stale/absent reasons refer only to collected windows, not proof of absence from the provider archive.",
+    "Partitions remain in the ignored local run directory. No resume or overwrite mode is provided."
+  ]
+}
