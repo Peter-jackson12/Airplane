@@ -28,6 +28,7 @@ WEATHER_FIELDS = ['tmpf', 'dwpf', 'relh', 'sknt', 'gust', 'vsby', 'p01i',
 NUMERIC_FIELDS = ['tmpf', 'dwpf', 'relh', 'sknt', 'gust', 'vsby', 'p01i', 'snowdepth']
 LATENCIES = (0, 10, 30, 60)
 MAX_AGE_MINUTES = 90
+CSV_NULL = '<NA>'
 ROLES = {'origin': 'Origin_Airport', 'destination': 'Destination_Airport'}
 SOURCE_FIELDS = ['source_request_id', 'source_window_start_utc', 'source_window_end_utc']
 OBS_COLUMNS = ['station', 'observed_at', *WEATHER_FIELDS, *SOURCE_FIELDS]
@@ -47,6 +48,27 @@ def digest(path: Path) -> str:
         for block in iter(lambda: stream.read(1024 * 1024), b''):
             h.update(block)
     return h.hexdigest()
+
+
+def read_joined_csv(path: Path | str, *, chunksize: int | None = None,
+                    usecols: list[str] | None = None):
+    """Decode only the explicit null token; preserve blank categories and IDs.
+
+    Returns a DataFrame, or a TextFileReader when chunksize is supplied.
+    Timestamp columns remain strings until explicitly parsed with utc=True.
+    Default pandas NA inference would conflate blank weather codes with M.
+    """
+    return pd.read_csv(path, keep_default_na=False, na_values=[CSV_NULL],
+                       dtype={'ID': str}, float_precision='round_trip',
+                       chunksize=chunksize, usecols=usecols)
+
+
+def write_partition(frame: pd.DataFrame, path: Path) -> None:
+    text = frame.select_dtypes(include=['object', 'string'])
+    require(not any(text[col].eq(CSV_NULL).fillna(False).any() for col in text),
+            'reserved CSV null token collides with a literal value')
+    frame.sort_values('_join_ordinal').to_csv(
+        path, index=False, lineterminator='\n', float_format='%.17g', na_rep=CSV_NULL)
 
 
 def relative_path(root: Path, value: str) -> Path:
@@ -360,7 +382,7 @@ def run_partitioned(pool: pd.DataFrame, mapping: pd.DataFrame, entries: list[dic
         for latency, joined in join_block(rows, lookup, raw):
             diagnostics.add(latency, joined)
             path = parts_dir / f'{block_no:04d}_latency{latency}.csv'
-            joined.sort_values('_join_ordinal').to_csv(path, index=False, lineterminator='\n', float_format='%.17g')
+            write_partition(joined, path)
             parts[latency].append(path)
         print(json.dumps({'month': month, 'flight_rows': len(rows), **stats}), flush=True)
     require(stats['cache_files_read'] == len(entries), 'not all cache files were validated')
@@ -371,6 +393,8 @@ def run_partitioned(pool: pd.DataFrame, mapping: pd.DataFrame, entries: list[dic
         outputs[str(latency)] = {'path': target.relative_to(root).as_posix(),
                                  **merge_parts(parts[latency], target, ids)}
     return {'outputs': outputs, 'scenarios': diagnostics.finish(), 'cache_validation': stats,
+            'csv_serialization': {'null_token': CSV_NULL, 'empty_string_is_null': False,
+                                  'reader': 'src.weather_full.read_joined_csv', 'id_dtype': 'string'},
             'ordered_id_sha256': hashlib.sha256(json.dumps(ids, separators=(',', ':')).encode()).hexdigest(),
             'invariants': dict.fromkeys(['future_observation_uses', 'future_availability_uses',
                                        'station_mismatches', 'out_of_window_uses', 'duplicate_output_ids',
