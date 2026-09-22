@@ -5,22 +5,22 @@
 
 **불확실한 값을 채우는 것보다, 무엇을 알고 있는지 구분하고 같은 조건에서 검증하는 프로젝트입니다.**
 
-원본 항공편 데이터의 결측·시각·항공사 식별을 점검하고, **전처리의 타당성과 실제 예측 성능을 분리해 검증**합니다. 기존 입력의 LightGBM 분류·OOF·확률 보정 분석은 완료했으며, 날씨를 새 정보원으로 추가하는 확장 실험을 진행하고 있습니다.
+원본 항공편 데이터의 결측·시각·항공사 식별을 점검하고, **전처리의 타당성과 실제 예측 성능을 분리해 검증**합니다. 기존 입력의 LightGBM·OOF·확률 보정뿐 아니라 날짜 귀속, 전체 날씨 수집, row-level point-in-time join, 동일조건 weather-off/on paired 비교까지 완료했습니다.
 
 작성: Peter-jackson12 TF · 문서 기준: 2026-09-22 · 제출 형태: GitHub README + 코드 + 연결된 실행 근거
 
 <a id="submission-overview"></a>
 ### 30초 요약
 
-| 데이터 규모 | 직접 평가한 집단 | 전처리 비교 실험 | 날짜 귀속 채택 |
-|---:|---:|---:|---:|
-| **1,000,000행** | **라벨 255,001행** | **10조건 × 3시드 × 5-fold** | **706,759행** |
+| 데이터 규모 | 기존 입력 직접 평가 | 전처리 비교 실험 | 날짜 귀속 채택 | 날씨 paired 평가 |
+|---:|---:|---:|---:|---:|
+| **1,000,000행** | **라벨 255,001행** | **10조건 × 3시드 × 5-fold** | **706,759행** | **adopted∩labeled 180,332행** |
 
-분모와 범위는 [데이터 설명](#2-데이터와분석범위), [10조건 결과](output/preprocessing_full_summary.csv), [날짜 귀속 집계](output/baseline_recovery_v2_row_date_attribution_20260918_status_summary.csv)에서 확인합니다. 날짜 귀속 집단과 모델 평가 집단은 같은 모집단이 아닙니다.
+분모와 범위는 [데이터 설명](#2-데이터와분석범위), [10조건 결과](output/preprocessing_full_summary.csv), [날짜 귀속 집계](output/baseline_recovery_v2_row_date_attribution_20260918_status_summary.csv), [날씨 paired 요약](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json)에서 확인합니다. 255,001행 기존 입력 평가와 180,332행 날씨 비교는 같은 모집단이 아닙니다.
 
-> **확인한 결론:** 전처리의 의미와 검증 구조는 개선했지만 **Macro F1 향상은 확인하지 못했습니다.** 확률 보정으로 ECE가 감소해도 분류 성능이 개선되는 것은 아니었습니다.
+> **확인한 결론:** 전처리 의미 개선 자체의 Macro F1 향상은 확인하지 못했고, 보정의 ECE 감소도 분류 성능 향상을 뜻하지 않았습니다. 반면 **사전에 고정한 10분 가용성 가정과 14개 날씨 피처를 추가한 paired CV에서는 세 시드 모두 Macro F1·LogLoss·ROC-AUC가 같은 방향으로 개선**됐습니다.
 >
-> **아직 확인하지 않은 결론:** 전체 날씨 결합과 동일 조건 모델 비교는 미완료입니다. **날씨 추가의 성능 향상·실시간 운영 성능을 주장하지 않습니다.**
+> **해석 경계:** 날씨 유무 paired 비교까지 완료했지만 이는 adopted∩labeled 180,332행의 정적 CV입니다. **10분은 실측 publication latency가 아닙니다.** 관측된 개선을 날씨의 인과 효과나 미래 운항 성능으로 일반화하지 않습니다.
 
 <a id="project-status"></a>
 ### 검증이 끝난 부분과 진행 중인 부분
@@ -31,8 +31,9 @@
 | 모델·OOF·보정 | 10조건 × 3시드 비교 및 별도 OOF·보정 분석 | 전체 Phase·미래 운영 성능 검증은 아님 |
 | 날짜 귀속 | 2018/2019 BTS 12개월 대조, 706,759행 채택 | 293,241행은 미검사가 아니라 보류 |
 | 날씨 표본 | 21행·기존 300행·stratafix 300행을 각각 검증 | 서로 다른 표본을 합산하지 않음 |
-| 전체 날씨 수집 | **27/27 shard · 1,317 request group 완료**, final manifest + corrected audit Git 기록 | row-level point-in-time join은 별도 단계 |
-| 날씨 모델 비교 | 동일 라벨 행·분할·시드·nested 평가 계약 | 전체 결합 → 대조 실험 → 최종 결론 |
+| 전체 날씨 수집 | **27/27 shard · 1,317 request group 완료**, final manifest + corrected audit Git 기록 | transport 완료 ≠ 모델 성능 |
+| 전체 날씨 결합 | **706,759행 전부 보존**, 10분 가정 both matched **689,457행** | 미래 관측·가용시각·station/window 위반 0 |
+| 날씨 모델 비교 | **180,332 동일 평가행 × seeds 42/1/7**, 동일 outer fold·nested 계약 | 정적 paired CV 완료; 미래 운영 성능 검증은 아님 |
 
 **이 표는 실시간 다운로드 모니터가 아닙니다.** 최신 로컬 진행률을 추정해 채우지 않으며, 완료 수치는 해당 실행 근거가 반영된 뒤 갱신합니다. [완료 결과를 반영할 위치](#submission-completion)
 
