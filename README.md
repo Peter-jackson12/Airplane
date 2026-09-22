@@ -7,7 +7,7 @@
 
 원본 항공편 데이터의 결측·시각·항공사 식별을 점검하고, **전처리의 타당성과 실제 예측 성능을 분리해 검증**합니다. 기존 입력의 LightGBM 분류·OOF·확률 보정 분석은 완료했으며, 날씨를 새 정보원으로 추가하는 확장 실험을 진행하고 있습니다.
 
-작성: Peter-jackson12 TF · 문서 기준: 2026-09-21 · 제출 형태: GitHub README + 코드 + 연결된 실행 근거
+작성: Peter-jackson12 TF · 문서 기준: 2026-09-22 · 제출 형태: GitHub README + 코드 + 연결된 실행 근거
 
 <a id="submission-overview"></a>
 ### 30초 요약
@@ -31,7 +31,7 @@
 | 모델·OOF·보정 | 10조건 × 3시드 비교 및 별도 OOF·보정 분석 | 전체 Phase·미래 운영 성능 검증은 아님 |
 | 날짜 귀속 | 2018/2019 BTS 12개월 대조, 706,759행 채택 | 293,241행은 미검사가 아니라 보류 |
 | 날씨 표본 | 21행·기존 300행·stratafix 300행을 각각 검증 | 서로 다른 표본을 합산하지 않음 |
-| 전체 날씨 수집 | bulk/shard/resume 구현, 부분 실수집·복구 로컬 보고 | 전체 완료 manifest는 아직 Git에 미반영 |
+| 전체 날씨 수집 | **27/27 shard · 1,317 request group 완료**, final manifest + corrected audit Git 기록 | row-level point-in-time join은 별도 단계 |
 | 날씨 모델 비교 | 동일 라벨 행·분할·시드·nested 평가 계약 | 전체 결합 → 대조 실험 → 최종 결론 |
 
 **이 표는 실시간 다운로드 모니터가 아닙니다.** 최신 로컬 진행률을 추정해 채우지 않으며, 완료 수치는 해당 실행 근거가 반영된 뒤 갱신합니다. [완료 결과를 반영할 위치](#submission-completion)
@@ -228,11 +228,45 @@ stratafix는 기존 확대 표본을 덮어쓴 이름이 아니라, 선정 순�
 
 1. ~~**기존 로컬 증거 확인:** 원본·HOMR/IEM·행별 결과의 존재와 해시를 대조합니다.~~ **완료(2026-09-21).** 21개 HOMR JSON·9개 IEM GeoJSON 전량 기존 evidence의 SHA-256과 일치했고, 20공항 cache-only 재현(`baseline_recovery_v2_station_identity_recheck_20260921`)도 통과했습니다.
 2. ~~**stratafix 실수집·결합:** 필요한 매핑·역사적 적용기간의 불확실성을 명시하고, 근거가 부족한 항목은 보류한 채 검증합니다.**~~ **완료(2026-09-21).** [실행 결과](#next-local-run). 355개 전부를 확인한 것처럼 승격하지 않았고, 우선 조사 20개 공항의 판정도 그대로 유지했습니다.
-3. **전체 대상 결합:** 귀속 채택 706,759행을 대상으로 규칙에 맞게 수집·결합하고 결측·제외 사유를 검증합니다. 모든 행의 날씨를 채우는 것이 목표는 아닙니다. **진행 중인 확장 단계입니다. bulk 수집·부분 실수집·복구 경로는 구현됐으며, 전체 수집 완료와 행별 결합은 별도의 근거로 판정합니다. 최신 로컬 진행률은 이 문서에서 추정하지 않습니다.**
-4. **날씨 유무 비교:** 같은 평가 조건으로 기준선과 날씨 추가 조건을 재학습하고 시드별 차이·한계를 보고합니다.
-5. **GitHub 제출 정리:** README의 최종 결론·재현 명령·근거를 동기화합니다. 향상이 없어도 적절한 비교를 끝내면 검증 목표를 마무리할 수 있습니다.
+3. ~~**전체 weather transport:** 귀속 채택 706,759행에서 필요한 station-month를 고정 plan으로 수집하고 모든 shard/cache를 재검증합니다.~~ **완료(2026-09-22).** 27/27 shard와 1,317 request group을 완료했고 final manifest·정정 audit을 Git에 기록했습니다. [transport 완료 근거](#full-weather-transport)
+4. **row-level 전체 결합:** 귀속 채택 706,759행에 예측시점 기준의 가용한 날씨만 point-in-time join하고, 결합률·결측·보류 사유를 검증합니다. 모든 행의 날씨를 억지로 채우는 것이 목표는 아닙니다. **현재 다음 우선순위입니다.**
+5. **날씨 유무 비교:** 같은 평가 조건으로 기준선과 날씨 추가 조건을 재학습하고 시드별 차이·한계를 보고합니다.
+6. **GitHub 제출 정리:** README의 최종 결론·재현 명령·근거를 동기화합니다. 향상이 없어도 적절한 비교를 끝내면 검증 목표를 마무리할 수 있습니다.
 
-**검증 완료 근거는 1~2번까지 확보했습니다.** 이후 전체 수집 경로를 구현해 로컬 실행으로 확장했으며, 전체 수집 완료·행별 결합·모델 재학습의 완료는 아직 이 README에서 선언하지 않습니다. 독립 미래 테스트·모델 서빙·전체 Phase 비교·DOCX 변환은 이번 제출의 필수 완료 조건이 아닙니다. 라벨 선정 규칙과 미래 입력 가용성도 미확인입니다.
+**검증 완료 근거는 1~3번까지 확보했습니다.** transport 완료는 “필요한 원시 날씨 archive를 안전하게 확보했다”는 뜻이며, 행별 결합률이나 날씨 추가 모델의 성능을 의미하지 않습니다. 독립 미래 테스트·모델 서빙·전체 Phase 비교·DOCX 변환은 이번 제출의 필수 완료 조건이 아닙니다. 라벨 선정 규칙과 실제 publication latency도 미확인입니다.
+
+<a id="full-weather-transport"></a>
+### 전체 weather transport 완료 근거
+
+전체 수집은 **2026-09-22 finalization과 corrected attempt audit까지 완료**했습니다. 이 단계의 완료는 IEM archive transport plan의 요청·캐시 무결성을 증명하며, 아직 706,759개 항공편 행에 날씨가 성공적으로 붙었다거나 예측 성능이 개선됐다는 뜻은 아닙니다.
+
+| 항목 | 최종 확인값 |
+|---|---:|
+| adopted rows (전체 결합 대상) | 706,759 |
+| confirmed-period 양끝 매핑 가능 | 691,386 |
+| UTC prediction time 해석 가능 | 691,385 |
+| station / IEM network | 355 / 52 |
+| station-month pairs | 7,816 |
+| request groups / shards | **1,317 / 27** |
+| successful HTTP attempts | **1,317** |
+| failed attempts → retry | **26 → 26** |
+| corrected provider errors | **HTTP 503 25건 + interrupted unknown 1건** |
+| cache files / rows | **1,317 / 7,299,100** |
+| cache bytes = measured download bytes | **1,093,058,768 bytes** |
+| budget reserved bytes | 1,613,058,768 bytes |
+| recovered incomplete checkpoint groups | 1 |
+
+세 파일을 함께 읽습니다.
+
+- [plan manifest](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_plan_manifest.json): 706,759행에서 어떤 station-month가 필요한지 materialize한 1,317-request 계약과 분모
+- [immutable final fetch manifest](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_manifest.json): 27개 shard·cache/hash/row/attempt accounting의 최종 실행 증거
+- [corrected attempt audit sidecar](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_audit.json): final manifest를 수정하지 않고 저장된 `attempts_detail`만 재분류한 정정 증거
+
+final manifest 생성 당시 오류 분류기는 실제 curl 문자열 `The requested URL returned error: 503`을 `other`로 집계했습니다. 원본 final manifest는 실행 증거로 **수정하지 않고 보존**했으며, audit sidecar가 같은 1,343 attempts를 다시 읽어 `http_503=25`, `interrupted_unknown=1`, `other=0`으로 정정합니다. source final manifest SHA-256은 audit에 `e299f0cfbc2b958f2e991cf6e0a850e0ff2f6813a76f7391c5451454b0f0c602`로 고정돼 있습니다.
+
+측정 다운로드 바이트와 현재 최종 cache 파일 크기 합은 모두 **1,093,058,768 bytes**로 일치합니다. reserved−measured 520,000,000 bytes는 26개의 미측정 attempt에 보수적으로 남긴 20MB reservation의 합입니다. 이는 실제로 520MB를 추가 다운로드했다는 뜻이 아닙니다.
+
+다음 단계는 이 1,317개 월별 cache를 **예정 출발 60분 전이라는 동일 prediction point**에서 706,759개 행에 결합하는 것입니다. transport 전체 월 파일에 관측이 존재해도 90분 age·availability 경계를 넘으면 row-level join에서는 사용하지 않습니다.
 
 <a id="weather-glossary"></a>
 ### 용어를 작업 단위로 읽기
@@ -250,11 +284,11 @@ stratafix는 기존 확대 표본을 덮어쓴 이름이 아니라, 선정 순�
 <a id="submission-completion"></a>
 ### 남은 결과를 반영할 위치와 완료 기준
 
-빈 성능 그래프나 예상 다운로드 수치를 실제 결과처럼 넣지 않습니다. 아래 항목은 **결과 미반영**이며, 데이터가 없어서 0이라고 표시한 것이 아닙니다.
+빈 성능 그래프나 예상 다운로드 수치를 실제 결과처럼 넣지 않습니다. **전체 수집 통계는 transport evidence로 반영 완료**했으며, 아래 나머지 항목은 **결과 미반영**입니다. 데이터가 없어서 0이라고 표시한 것이 아닙니다.
 
 | 후속 결과 | 필요한 근거 | 반영 위치·완료 조건 |
 |---|---|---|
-| 전체 수집 통계·shard별 요청/재시도/용량 | 전체 fetch manifest와 각 shard manifest·checkpoint | 6~7절; 전 shard 성공, 요청 집합 일치, 캐시 재검증 후 실측 그래프 추가 |
+| ~~전체 수집 통계·shard별 요청/재시도/용량~~ | [plan manifest](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_plan_manifest.json), [final manifest](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_manifest.json), [corrected audit](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_audit.json) | **완료:** 27/27 shard, 1,317 groups, cache/hash 재검증 및 attempt audit 일치 |
 | 전체 행별 날씨 결합률·제외 사유 | 전체 join 및 진단 결과 | 6절; ID·행수·순서와 observed/available 시간 경계 확인 |
 | 날씨 없음 vs 있음 성능 | 동일 라벨 행·시드·fold·nested 계약의 paired 결과 | 5절; Macro F1·LogLoss·AUC, 시드별 차이와 한계 보고 |
 | 제출 최종 결론 | 위 근거와 코드 revision | 상단 요약·현재 상태·그림 출처를 함께 갱신; 향상 자체는 완료 조건이 아님 |
@@ -262,7 +296,7 @@ stratafix는 기존 확대 표본을 덮어쓴 이름이 아니라, 선정 순�
 <a id="7-코드구조와재현"></a>
 ## 7. 코드 구조와 재현
 
-> **수집 중인 실행 환경:** 문서 개편을 반영하려고 돌아가는 프로세스를 중단하거나 중간에 pull하지 않습니다. 문서와 그림 작업은 GitHub의 별도 브랜치에서 수행하며, 실행 환경 동기화는 현재 수집이 정상 종료하거나 멈춘 뒤 기존 작업을 보존해 진행합니다.
+> **장시간 로컬 실행 원칙:** 실행 중인 프로세스를 문서 반영 때문에 중단하거나 중간에 pull하지 않습니다. 이번 full-weather transport는 정상 종료·finalize·audit까지 완료됐으며, 이후 로컬 실행도 같은 원칙으로 기존 evidence를 보존한 뒤 동기화합니다.
 
 <a id="reliability-design"></a>
 ### 실패를 숨기지 않는 수집·복구 구조
