@@ -31,6 +31,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add README.md assets/readme/*.svg assets/readme/sources.json .github/workflows/final-readme-sync.yml
-          git diff --cached --check
+          git diff --cached --check -- README.md assets/readme/sources.json
           git commit -m "docs: regenerate final README evidence figures"
           git push origin HEAD:docs/final-submission-weather-results
