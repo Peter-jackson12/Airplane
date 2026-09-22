@@ -1,0 +1,27 @@
+name: README review source snapshot
+
+on:
+  push:
+    branches: [docs/readme-final-reader-20260922]
+    paths: [.github/workflows/readme-review-artifact.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  source-snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: de34de3faf6548392963dbecc84d58169d2f9468
+      - name: Archive only tracked source and existing evidence
+        run: git archive --format=tar.gz --output=readme-review-source.tar.gz HEAD
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: readme-review-source-de34de3f
+          path: readme-review-source.tar.gz
+          retention-days: 1
+          if-no-files-found: error
