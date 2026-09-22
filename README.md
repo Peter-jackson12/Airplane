@@ -23,7 +23,7 @@
 > **해석 경계:** 날씨 유무 paired 비교까지 완료했지만 이는 adopted∩labeled 180,332행의 정적 CV입니다. **10분은 실측 publication latency가 아닙니다.** 관측된 개선을 날씨의 인과 효과나 미래 운항 성능으로 일반화하지 않습니다.
 
 <a id="project-status"></a>
-### 검증이 끝난 부분과 진행 중인 부분
+### 검증 상태
 
 | 영역 | 현재 근거 | 다음 판정 경계 |
 |---|---|---|
@@ -40,7 +40,7 @@
 **평가자:** [30초 요약](#submission-overview) → [전체 구조](#4-현재파이프라인) → [결과 그래프](#5-최신검증결과) → [한계](#6-한계와다음단계)  
 **실행자·에이전트:** [AGENTS.md](AGENTS.md) → [현재 상태](#project-status) → [재현·운영 경계](#7-코드구조와재현) → [근거 지도](#8-문서안내)
 
-**목차:** [1. 목적](#1-목적과문제정의) · [2. 데이터](#2-데이터와분석범위) · [3. 전처리](#3-전처리결정과근거) · [4. 파이프라인](#4-현재파이프라인) · [5. 결과](#5-최신검증결과) · [6. 날씨·다음 단계](#6-한계와다음단계) · [7. 재현](#7-코드구조와재현) · [8. 근거 지도](#8-문서안내) · [9. 접기 부록](#evidence-appendix) · [발표 흐름](#presentation-route)
+**목차:** [1. 목적](#1-목적과문제정의) · [2. 데이터](#2-데이터와분석범위) · [3. 전처리](#3-전처리결정과근거) · [4. 파이프라인](#4-현재파이프라인) · [5. 결과](#5-최신검증결과) · [6. 날씨 결과·한계](#6-한계와다음단계) · [7. 재현](#7-코드구조와재현) · [8. 근거 지도](#8-문서안내) · [9. 접기 부록](#evidence-appendix) · [발표 흐름](#presentation-route)
 
 ---
 
@@ -253,6 +253,7 @@ stratafix는 기존 확대 표본을 덮어쓴 이름이 아니라, 선정 순�
 6. ~~**GitHub 제출 정리**~~ — **완료(2026-09-22).** join/model evidence, 최종 결론, 재현 명령과 그림 출처를 README에 연결했습니다.
 
 **제출용 핵심 경로는 1~6까지 완료했습니다.** 독립 미래 테스트·실시간 모델 서빙·실측 publication latency 복원·새 데이터 소스·추가 모델군 탐색은 이번 제출의 완료 조건이 아니며 후속 과제입니다.
+
 <a id="full-weather-row-join"></a>
 ### 전체 행 point-in-time join 완료 근거
 
@@ -279,6 +280,7 @@ uv run --locked --offline python -u -m notebooks.join_weather_full --name baseli
 ```
 
 `--validate-inputs-only`는 cache join 출력 없이 입력 계보·행 정체성·분모·재생성 plan만 검사합니다. 행별 gzip과 partition은 Git-ignored 로컬 근거이며 Git에는 작은 summary/manifest만 기록합니다.
+
 <a id="full-weather-transport"></a>
 ### 전체 weather transport 완료 근거
 
@@ -336,10 +338,11 @@ final manifest 생성 당시 오류 분류기는 실제 curl 문자열 `The requ
 | 전체 행별 결합 | [join summary](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_summary.json), [join manifest](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json) | **완료:** 706,759행 유지; 10분 both matched 689,457; 시간·station invariant 위반 0 |
 | 날씨 없음 vs 있음 | [model summary](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json), [model manifest](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_manifest.json) | **완료:** 동일 180,332행; Macro F1 0.573910→0.598945; paired Δ +0.025035 |
 | 제출 최종 결론 | 위 근거 + [그림 영수증](assets/readme/sources.json) | **완료:** 결과·한계·재현 명령·그림을 같은 tracked evidence에 연결 |
+
 <a id="7-코드구조와재현"></a>
 ## 7. 코드 구조와 재현
 
-> **장시간 로컬 실행 원칙:** 실행 중인 프로세스를 문서 반영 때문에 중단하거나 중간에 pull하지 않습니다. 이번 full-weather transport는 정상 종료·finalize·audit까지 완료됐으며, 이후 로컬 실행도 같은 원칙으로 기존 evidence를 보존한 뒤 동기화합니다.
+> **장시간 로컬 실행 원칙:** 실행 중인 프로세스를 문서 반영 때문에 중단하거나 중간에 pull하지 않습니다. 이번 full-weather transport·full join·paired model comparison은 모두 정상 종료와 evidence 검증까지 완료했으며, 후속 로컬 실행도 같은 원칙으로 기존 evidence를 보존한 뒤 동기화합니다.
 
 <a id="reliability-design"></a>
 ### 실패를 숨기지 않는 수집·복구 구조
