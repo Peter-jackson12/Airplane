@@ -1,6 +1,7 @@
 """Synthetic contracts for the frozen submission weather-model comparison."""
 from __future__ import annotations
 
+import json
 from types import SimpleNamespace
 
 import numpy as np
@@ -171,7 +172,7 @@ def test_evaluate_condition_uses_repository_nested_selector_without_outer_fold_d
     second = comparison.evaluate_condition(X.assign(extra=1.0), y, seed=42, spec=spec)
     assert first["n_rows"] == second["n_rows"] == n
     assert first["fold_fingerprint"] == second["fold_fingerprint"]
-    assert len(pd.read_json(first["per_fold_thresholds"], typ="series")) == 5
+    assert len(json.loads(first["per_fold_thresholds"])) == 5
     assert 0 <= first["macro_f1_nested"] <= 1
 
 
@@ -210,6 +211,6 @@ def test_checkpoint_identity_is_strict_and_resume_cells_unique(tmp_path):
         "identity": identity,
         "rows": rows + rows,
     }
-    path.write_text(pd.io.json.dumps(payload))
+    path.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(ValueError, match="duplicate"):
         comparison.load_checkpoint(path, identity)
