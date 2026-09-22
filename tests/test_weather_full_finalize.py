@@ -31,7 +31,7 @@ def test_summarize_attempts_classifies_retries_and_interruption():
                     "success": False,
                     "bytes_received": None,
                     "seconds": 2.0,
-                    "error": "curl exit 22: HTTP 503",
+                    "error": "curl: (22) The requested URL returned error: 503",
                 },
                 {
                     "attempt": 2,
@@ -366,3 +366,119 @@ def test_finalize_accepts_pre_recovery_field_successful_shard(tmp_path, monkeypa
     assert payload["recovered_incomplete_checkpoint_groups"] == 0
     assert payload["http_attempts_from_request_records"] == 1
     assert payload["cache_file_count"] == 1
+
+
+
+@pytest.mark.parametrize(
+    "message,status_key",
+    [
+        ("curl: (22) The requested URL returned error: 503", "http_503"),
+        ("HTTP 503", "http_503"),
+        ("status 503", "http_503"),
+        ("curl: (22) The requested URL returned error: 429", "http_429"),
+        ("curl: (22) The requested URL returned error: 422", "http_422"),
+    ],
+)
+def test_classify_attempt_error_accepts_realistic_http_status_spellings(message, status_key):
+    assert full._classify_attempt_error(message) == status_key
+
+
+def test_audit_final_manifest_preserves_source_and_writes_correction_sidecar(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setattr(full, "ROOT", tmp_path)
+    source = tmp_path / "final.json"
+    audit = tmp_path / "audit.json"
+    monkeypatch.setattr(full, "final_manifest_path", lambda name: source)
+    monkeypatch.setattr(full, "final_audit_path", lambda name: audit)
+
+    records = [
+        {
+            "request_id": "REQ0",
+            "attempts": 2,
+            "attempts_detail": [
+                {
+                    "attempt": 1,
+                    "success": False,
+                    "bytes_received": None,
+                    "seconds": 1.0,
+                    "error": "curl: (22) The requested URL returned error: 503",
+                },
+                {
+                    "attempt": 2,
+                    "success": True,
+                    "bytes_received": 123,
+                    "seconds": 1.0,
+                    "error": None,
+                },
+            ],
+        },
+        {
+            "request_id": "REQ1",
+            "attempts": 2,
+            "attempts_detail": [
+                {
+                    "attempt": 1,
+                    "success": False,
+                    "bytes_received": None,
+                    "seconds": None,
+                    "error": "interrupted mid-attempt (process ended before the outcome was recorded)",
+                },
+                {
+                    "attempt": 2,
+                    "success": True,
+                    "bytes_received": 456,
+                    "seconds": 1.0,
+                    "error": None,
+                },
+            ],
+        },
+    ]
+    source_payload = {
+        "schema_version": full.FINAL_MANIFEST_SCHEMA_VERSION,
+        "name": "baseline_recovery_v2_test",
+        "bulk_request_groups": 2,
+        "cumulative_http_attempts": 4,
+        "unmeasured_byte_attempts": 2,
+        # Deliberately preserve the bad historical summary produced by the old classifier.
+        "provider_error_counts": {
+            "http_503": 0,
+            "http_429": 0,
+            "http_422": 0,
+            "timeout": 0,
+            "response_size_cap": 0,
+            "response_validation": 0,
+            "interrupted_unknown": 1,
+            "other": 1,
+        },
+        "requests": records,
+    }
+    source.write_text(json.dumps(source_payload, indent=2))
+    source_text = source.read_text()
+    source_sha = _sha(source)
+
+    result = full.audit_final_manifest("baseline_recovery_v2_test")
+
+    assert source.read_text() == source_text
+    assert _sha(source) == source_sha
+    assert result["source_final_manifest_sha256"] == source_sha
+    assert result["provider_error_counts_corrected"] is True
+    corrected = result["recomputed_attempt_audit"]["provider_error_counts"]
+    assert corrected["http_503"] == 1
+    assert corrected["interrupted_unknown"] == 1
+    assert corrected["other"] == 0
+    assert audit.exists()
+
+
+def test_audit_final_manifest_never_overwrites_existing_sidecar(tmp_path, monkeypatch):
+    source = tmp_path / "final.json"
+    audit = tmp_path / "audit.json"
+    source.write_text("{}")
+    audit.write_text('{"existing": true}')
+    monkeypatch.setattr(full, "final_manifest_path", lambda name: source)
+    monkeypatch.setattr(full, "final_audit_path", lambda name: audit)
+
+    with pytest.raises(FileExistsError, match="never overwritten"):
+        full.audit_final_manifest("baseline_recovery_v2_test")
+
+    assert audit.read_text() == '{"existing": true}'
