@@ -249,6 +249,10 @@ def test_readme_records_actual_full_join_after_execution_evidence():
     assert '689,457' in section
     assert 'output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_summary.json' in section
     assert 'output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json' in section
-    assert 'notebooks.join_weather_full' in section
-    assert '--validate-inputs-only' in section
+    # Result evidence remains beside the coverage table; its commands are
+    # now linked to the technical reproduction section rather than repeated.
+    assert '(#join-reproduction)' in section
+    reproduction = readme.split('<a id="join-reproduction"></a>', 1)[1].split('</details>', 1)[0]
+    assert 'notebooks.join_weather_full' in reproduction
+    assert '--validate-inputs-only' in reproduction
     assert '10분은 실측 날씨 공개 지연 시간이 아닙니다' in section

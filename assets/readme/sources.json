@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generator_sha256": "c1092cc59513b578fa55fae4eb688a75b5b16ee932c4821c129980e0e57ee9e2",
+  "generator_sha256": "01b02ef8c9c6031d9a4efb2240bc866b42abbe61cce3b843cec2f23b7077c18d",
   "sources": {
     "models": {
       "path": "output/preprocessing_full_summary.csv",
@@ -157,50 +157,81 @@
     "weather_model": [
       {
         "metric": "Macro F1",
-        "mean_improvement": 0.025035354103310186,
+        "higher_is_better": true,
+        "off_mean": 0.5739098053816244,
+        "on_mean": 0.5989451594849345,
+        "off_sd": 0.0007074202533587928,
+        "on_sd": 0.00041675811178789246,
+        "delta_mean": 0.025035354103310186,
         "sd": 0.0005325491690458776,
-        "definition": "weather_on - weather_off"
+        "definition": "weather_on - weather_off",
+        "deltas_by_seed": {
+          "42": 0.025323682269766667,
+          "1": 0.0244208085060188,
+          "7": 0.02536157153414509
+        }
+      },
+      {
+        "metric": "LogLoss",
+        "higher_is_better": false,
+        "off_mean": 0.4481163223494364,
+        "on_mean": 0.4366887714640056,
+        "off_sd": 4.483540466064671e-05,
+        "on_sd": 0.00013206468081174033,
+        "delta_mean": -0.011427550885430774,
+        "sd": 8.825017494063345e-05,
+        "definition": "weather_on - weather_off",
+        "deltas_by_seed": {
+          "42": -0.011327211808278448,
+          "1": -0.011462320892383637,
+          "7": -0.011493119955630238
+        }
       },
       {
         "metric": "ROC-AUC",
-        "mean_improvement": 0.032317256769799164,
+        "higher_is_better": true,
+        "off_mean": 0.6406182693684818,
+        "on_mean": 0.6729355261382809,
+        "off_sd": 0.0002765826482186117,
+        "on_sd": 0.0004576571694845221,
+        "delta_mean": 0.032317256769799164,
         "sd": 0.0003206253230742163,
-        "definition": "weather_on - weather_off"
-      },
-      {
-        "metric": "LogLoss reduction",
-        "mean_improvement": 0.011427550885430774,
-        "sd": 8.825017494063345e-05,
-        "definition": "weather_off - weather_on"
+        "definition": "weather_on - weather_off",
+        "deltas_by_seed": {
+          "42": 0.032010802507813074,
+          "1": 0.03229058132499252,
+          "7": 0.03265038647659191
+        }
       }
     ]
   },
   "figures": {
-    "models": {
-      "path": "assets/readme/model_comparison.svg",
-      "sha256": "a09ad424a6871a46c1d349cac1f9b218386e7b5096cc11c4bc06f028f6beb614"
-    },
-    "calibration": {
-      "path": "assets/readme/calibration_tradeoff.svg",
-      "sha256": "8219f1e3de45ba08729b241d02a5a5b6b3c8f63c772b3562abfe5d8d6914535e"
-    },
     "attribution": {
       "path": "assets/readme/date_attribution.svg",
-      "sha256": "c203132646ad63529cb1e82d31449d3e6a4dfee6e1c80613027b95157e8d2b76"
+      "sha256": "f3862132fff6f3f97fd5a4e4a44d3580bce0c0cc7922aee6fcb8a00304559a60"
     },
-    "latency": {
-      "path": "assets/readme/weather_latency.svg",
-      "sha256": "1f9ac871e030de34c7013c0df719a45293811777b0fc941a40771756bb54221e"
+    "models": {
+      "path": "assets/readme/model_comparison.svg",
+      "sha256": "2e73b8d9836004c7d79e4895afb85b5f719c65333c8e40bd140685735bdd13cc"
     },
     "weather_model": {
       "path": "assets/readme/weather_model_comparison.svg",
-      "sha256": "3b52b01a881c274b58622de3678674249ad60305140864945681c49397986eb7"
+      "sha256": "b8f3e26a3098aad0d7be0925931b63783bcffa0753fa5e76420d9831f877e44b"
+    },
+    "calibration": {
+      "path": "assets/readme/calibration_tradeoff.svg",
+      "sha256": "2ec12168d3dad14c1561c36cb64778852224ddd1a4a2ebd567f6ffac6d8d94fd"
+    },
+    "latency": {
+      "path": "assets/readme/weather_latency.svg",
+      "sha256": "f9f0a77364002fefaca4245aa9547ba819cd2b2b4eb95ef66d790760be372a75"
     }
   },
   "limitations": [
-    "No raw data access or model retraining.",
+    "No raw data access, network calls or model retraining.",
     "No live collection progress is inferred.",
-    "English plot labels use portable embedded glyphs; README provides Korean captions.",
-    "Weather-model scores come only from the tracked paired-comparison summary."
+    "Korean SVG text uses system font fallbacks; no font files or external assets are embedded.",
+    "Weather levels and signed paired deltas are rounded independently from tracked evidence.",
+    "Three-seed SD is not a confidence interval; the metrics do not share a quantitative axis."
   ]
 }

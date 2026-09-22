@@ -76,7 +76,12 @@ def test_readme_details_and_fences_are_balanced():
             summaries += 1
     assert depth == 0, 'Unclosed details element'
     assert openings == summaries and openings > 0
-    assert prose.index('id="evidence-appendix"') < prose.index('<details>')
+    # Technical reproduction details may be folded from section 7 onward.
+    # The problem, results and interpretation limits must remain unfolded.
+    reader_body = prose.split('<a id="7-코드구조와재현"></a>', 1)[0]
+    assert '<details>' not in reader_body
+    assert '0.598945' in reader_body and '180,332' in reader_body
+    assert '인과 효과' in reader_body and '실측 공개 지연 시간이 아닙니다' in reader_body
 
 
 def test_readme_current_model_table_matches_tracked_summary():
