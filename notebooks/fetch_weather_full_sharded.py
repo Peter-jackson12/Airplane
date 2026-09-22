@@ -35,6 +35,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import time
 from pathlib import Path
 from urllib.parse import urlencode
@@ -73,6 +74,7 @@ PROVIDER_DOCUMENTED_STATION_YEAR_LIMIT = 1000.0
 PLAN_SCHEMA_VERSION = 2
 SHARD_MANIFEST_SCHEMA_VERSION = 2
 FINAL_MANIFEST_SCHEMA_VERSION = 3
+FINAL_AUDIT_SCHEMA_VERSION = 1
 DEFAULT_SHARD_SIZE = 50
 DEFAULT_MAX_STATIONS_PER_REQUEST = 20
 BULK_ATTEMPT_PAUSE_SECONDS = 1.25
@@ -132,6 +134,10 @@ def plan_manifest_path(name: str) -> Path:
 
 def final_manifest_path(name: str) -> Path:
     return ROOT / "output" / f"{name}_full_weather_fetch_manifest.json"
+
+
+def final_audit_path(name: str) -> Path:
+    return ROOT / "output" / f"{name}_full_weather_fetch_audit.json"
 
 
 def shard_checkpoint_path(name: str, shard_index: int) -> Path:
@@ -878,13 +884,27 @@ def _expected_requests(plan: pd.DataFrame) -> dict[str, dict]:
     }
 
 
+def _contains_http_status(text: str, status: int) -> bool:
+    # curl --fail commonly reports e.g.
+    # "curl: (22) The requested URL returned error: 503", while other
+    # callers may report "HTTP 503" or "status 503". Treat those equivalent
+    # spellings as the same provider response without matching arbitrary
+    # occurrences of the digits elsewhere in an error message.
+    patterns = (
+        rf"\bhttp(?:/[0-9.]+)?\s+{status}\b",
+        rf"\berror:\s*{status}\b",
+        rf"\bstatus(?:\s+code)?[:=]?\s*{status}\b",
+    )
+    return any(re.search(pattern, text) for pattern in patterns)
+
+
 def _classify_attempt_error(error: object) -> str:
     text = str(error or "").lower()
-    if "http 503" in text:
+    if _contains_http_status(text, 503):
         return "http_503"
-    if "http 429" in text:
+    if _contains_http_status(text, 429):
         return "http_429"
-    if "http 422" in text:
+    if _contains_http_status(text, 422):
         return "http_422"
     if "interrupted mid-attempt" in text:
         return "interrupted_unknown"
@@ -1133,6 +1153,80 @@ def finalize(name: str, mapping_name: str, *, verify_cache_hashes: bool = True) 
     return payload
 
 
+def audit_final_manifest(name: str) -> dict:
+    source = final_manifest_path(name)
+    out = final_audit_path(name)
+    if not source.exists():
+        raise FileNotFoundError(f"final weather manifest is missing: {source}")
+    if out.exists():
+        raise FileExistsError(
+            f"final weather audit already exists: {out}. "
+            "Existing correction evidence is never overwritten."
+        )
+
+    source_payload = json.loads(source.read_text())
+    if source_payload.get("schema_version") != FINAL_MANIFEST_SCHEMA_VERSION:
+        raise ValueError(
+            f"{source} has schema_version={source_payload.get('schema_version')!r}; "
+            f"expected {FINAL_MANIFEST_SCHEMA_VERSION}"
+        )
+    if source_payload.get("name") != name:
+        raise ValueError(
+            f"{source} belongs to run {source_payload.get('name')!r}, not {name!r}"
+        )
+
+    records = list(source_payload.get("requests") or [])
+    expected_groups = int(source_payload.get("bulk_request_groups", -1))
+    if len(records) != expected_groups:
+        raise ValueError(
+            f"final manifest request length differs from bulk_request_groups: "
+            f"requests={len(records)}, bulk_request_groups={expected_groups}"
+        )
+
+    recomputed = _summarize_attempts(records)
+    if recomputed["http_attempts_from_request_records"] != int(
+        source_payload.get("cumulative_http_attempts", -1)
+    ):
+        raise ValueError(
+            "recomputed attempts no longer reconcile to final manifest "
+            f"cumulative_http_attempts: records={recomputed['http_attempts_from_request_records']}, "
+            f"manifest={source_payload.get('cumulative_http_attempts')}"
+        )
+    if recomputed["unmeasured_http_attempts_from_request_records"] != int(
+        source_payload.get("unmeasured_byte_attempts", -1)
+    ):
+        raise ValueError(
+            "recomputed unmeasured attempts no longer reconcile to final manifest "
+            f"accounting: records={recomputed['unmeasured_http_attempts_from_request_records']}, "
+            f"manifest={source_payload.get('unmeasured_byte_attempts')}"
+        )
+
+    prior_counts = source_payload.get("provider_error_counts")
+    corrected_counts = recomputed["provider_error_counts"]
+    payload = {
+        "schema_version": FINAL_AUDIT_SCHEMA_VERSION,
+        "name": name,
+        "source_final_manifest": _as_root_relative(source),
+        "source_final_manifest_sha256": digest(source),
+        "source_final_manifest_bytes": int(source.stat().st_size),
+        "source_final_manifest_schema_version": int(source_payload["schema_version"]),
+        "bulk_request_groups": expected_groups,
+        "cumulative_http_attempts": int(source_payload["cumulative_http_attempts"]),
+        "unmeasured_byte_attempts": int(source_payload["unmeasured_byte_attempts"]),
+        "source_provider_error_counts": prior_counts,
+        "recomputed_attempt_audit": recomputed,
+        "provider_error_counts_corrected": bool(prior_counts != corrected_counts),
+        "classification_note": (
+            "The immutable source final manifest is preserved as execution evidence. "
+            "This sidecar recomputes only attempt-level classifications from its stored "
+            "requests[].attempts_detail using the current classifier; it does not alter "
+            "request, cache, byte, row, shard, or model evidence."
+        ),
+    }
+    _json_atomic(out, payload)
+    return payload
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--name", required=True)
@@ -1140,6 +1234,7 @@ def main() -> None:
     ap.add_argument("--prepare-only", action="store_true")
     ap.add_argument("--shard-index", type=int)
     ap.add_argument("--finalize", action="store_true")
+    ap.add_argument("--audit-final", action="store_true")
     ap.add_argument("--shard-size", type=int, default=DEFAULT_SHARD_SIZE)
     ap.add_argument(
         "--max-stations-per-request",
@@ -1153,10 +1248,16 @@ def main() -> None:
     args = ap.parse_args()
     _validate_name(args.name)
 
-    modes = int(args.prepare_only) + int(args.shard_index is not None) + int(args.finalize)
+    modes = (
+        int(args.prepare_only)
+        + int(args.shard_index is not None)
+        + int(args.finalize)
+        + int(args.audit_final)
+    )
     if modes != 1:
         raise ValueError(
-            "Choose exactly one of --prepare-only, --shard-index N, or --finalize"
+            "Choose exactly one of --prepare-only, --shard-index N, --finalize, "
+            "or --audit-final"
         )
 
     if args.prepare_only:
@@ -1182,6 +1283,11 @@ def main() -> None:
                 default=str,
             )
         )
+        return
+
+    if args.audit_final:
+        result = audit_final_manifest(args.name)
+        print(json.dumps(result, indent=2, default=str))
         return
 
     result = execute_shard(
