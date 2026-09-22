@@ -84,7 +84,7 @@ def test_partitioned_matches_unpartitioned_reference_and_reads_once(tmp_path, ar
             req = prepared[['prediction_at']].assign(station=prepared[airport].map(lookup.candidate_sid).where(eligible))
             obs = raw.assign(available_at=raw.observed_at + pd.Timedelta(minutes=lat))
             expected = join_weather_asof(req, obs, max_age='90min')
-            pd.testing.assert_series_equal(pd.to_datetime(got[f'{role}_observed_at'], utc=True, format='mixed'),
+            pd.testing.assert_series_equal(pd.to_datetime(got[f'{role}_observed_at'], utc=True, format='mixed').astype('datetime64[ns, UTC]'),
                                            expected.observed_at, check_names=False, check_dtype=False)
             pd.testing.assert_series_equal(got[f'{role}_tmpf'], expected.tmpf,
                                            check_names=False, check_dtype=False)

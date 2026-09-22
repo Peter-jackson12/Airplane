@@ -206,3 +206,27 @@ def test_json_publication_is_exclusive(tmp_path):
     with pytest.raises(ValueError, match='already exists'):
         driver.write_new_json(path, {'successful': False})
     assert json.loads(path.read_text())['successful'] is True
+
+
+def test_tracked_final_manifest_shape_is_supported_without_local_cache():
+    from src.weather_full import validate_entries
+    root = Path(__file__).resolve().parents[1]
+    name = 'baseline_recovery_v2_weather_full_bulk_20260921'
+    path = root / 'output' / f'{name}_full_weather_fetch_manifest.json'
+    final = json.loads(path.read_text())
+    audit = json.loads((root / 'output' / f'{name}_full_weather_fetch_audit.json').read_text())
+    assert final['schema_version'] == 3 and final['all_shards_complete'] is True
+    assert digest(path) == audit['source_final_manifest_sha256'] == 'e299f0cfbc2b958f2e991cf6e0a850e0ff2f6813a76f7391c5451454b0f0c602'
+    months = validate_entries(final['requests'], root)
+    assert sum(map(len, months.values())) == final['cache_file_count'] == 1317
+    assert sum(e['rows'] for e in final['requests']) == final['total_cache_rows'] == 7299100
+
+
+def test_readme_distinguishes_join_implementation_from_actual_execution():
+    root = Path(__file__).resolve().parents[1]
+    readme = (root / 'README.md').read_text()
+    section = readme.split('<a id="full-weather-row-join"></a>', 1)[1].split('<a id="full-weather-transport"></a>', 1)[0]
+    assert '실제 706,759행 join은 아직 실행하지 않았습니다' in section
+    assert 'notebooks.join_weather_full' in section
+    assert '--validate-inputs-only' in section
+    assert '모델용 feature 선택과 weather-on 학습은 실제 join 검증 후' in section

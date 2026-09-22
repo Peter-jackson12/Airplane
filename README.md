@@ -235,6 +235,28 @@ stratafix는 기존 확대 표본을 덮어쓴 이름이 아니라, 선정 순�
 
 **검증 완료 근거는 1~3번까지 확보했습니다.** transport 완료는 “필요한 원시 날씨 archive를 안전하게 확보했다”는 뜻이며, 행별 결합률이나 날씨 추가 모델의 성능을 의미하지 않습니다. 독립 미래 테스트·모델 서빙·전체 Phase 비교·DOCX 변환은 이번 제출의 필수 완료 조건이 아닙니다. 라벨 선정 규칙과 실제 publication latency도 미확인입니다.
 
+<a id="full-weather-row-join"></a>
+### 전체 행 point-in-time join 실행 경로
+
+**Git-only 구현 단계이며 실제 706,759행 join은 아직 실행하지 않았습니다.** transport 완료 상태와 구분합니다. 실행기는 [join_weather_full.py](notebooks/join_weather_full.py), 월별 엔진은 [weather_full.py](src/weather_full.py), 합성 경계·입력 계보 검증은 [엔진 테스트](tests/test_weather_full.py)와 [driver 테스트](tests/test_join_weather_full_driver.py)에 있습니다. 실제 coverage·결측률·모델 성능은 로컬 실행 근거를 확인한 뒤 반영합니다.
+
+입력은 기존 adopted-pool loader를 그대로 사용합니다. raw train·날짜 귀속·mapping·bulk plan·immutable final·corrected audit의 SHA 계보를 확인하고, 동일 loader로 재생성한 prediction-time 수집 수요가 원래 plan과 같은지 검증합니다. 양끝 confirmed_period 691,386행 중 UTC 해석 가능 691,385행만 관측을 결합합니다. 보류 15,373행과 UTC 미해석 1행도 각 출력 706,759행의 분모에 남습니다.
+
+전체 7.3M 관측을 한 번에 합치지 않습니다. 각 cache를 한 번 읽어 SHA·행수·station·수집 시간창을 검증하고, UTC 월 단위로 파싱합니다. 직전 월의 90분 경계 관측과 station별 마지막 관측(결측 사유 진단용)을 유지하며 네 latency를 같은 관측에서 계산합니다. 임시 CSV partition들을 원래 ID 순서로 스트리밍 병합하므로 전체 행별 결과 네 벌을 RAM에 보관하지 않습니다. 동일 station/time의 모든 weather field가 같을 때만 중복을 제거하며, A,A,B,B 형태나 같은 METAR의 다른 수치도 충돌로 중단합니다. 원래 sample evidence는 수정하지 않습니다.
+
+```powershell
+uv run --locked --offline python -m pytest -q --strict-markers -m "not local_data"
+uv run --locked --offline python -u -m notebooks.join_weather_full --name baseline_recovery_v2_weather_full_join_20260922 --transport-name baseline_recovery_v2_weather_full_bulk_20260921 --mapping-name baseline_recovery_v2_weather_scope_fix_20260918
+```
+
+같은 명령에 `--validate-inputs-only`를 붙이면 실제 weather cache를 읽거나 join 출력을 쓰기 전에 입력 계보·행 정체성·분모·재생성 plan만 확인합니다. 실제 실행 전 작업 트리는 tracked 변경 없이 깨끗해야 합니다. 기존 이름 재사용, `--force`, 자동 재수집·mapping 대체·모델 학습은 지원하지 않습니다. 실패하면 해당 실행의 부분 파일을 보존하고 새로운 run name을 사용합니다.
+
+Git에는 `<name>_full_weather_join_manifest.json`과 `<name>_full_weather_join_summary.json` 두 작은 JSON만 남깁니다. 행별 결과는 `data/weather_probe/<name>_full_join/joined_latency{0,10,30,60}min.csv.gz`이며 partition들도 같은 Git-ignored 디렉터리에 남습니다. 네 출력 모두 입력 ID 순서·유일성·행수를 검사합니다. 정확한 디스크 크기는 실행 시 gzip 파일별 bytes로 기록합니다. `peak_partition_observation_memory_bytes`는 관측 DataFrame의 크기이지 프로세스 전체 RSS가 아닙니다.
+
+summary는 동일 전체 분모의 origin/destination/both/one/none coverage, 관측 나이 분위수, 역할별 미결합 사유, 각 field의 전체/결합행 결측과 빈 문자열 수를 기록합니다. 사유는 mapping 보류, prediction_at 미해석, 수집된 구간에서 과거 관측 없음, 90분 초과, latency 가정상 아직 미가용을 구분합니다. 최종 manifest는 모든 cache 검증·출력 행 정체성 검사를 통과한 뒤 **마지막에** 작성합니다. final manifest가 없는 부분 출력은 성공 근거가 아닙니다.
+
+`observed_at <= prediction_at`, `available_at <= prediction_at`, age 0~90분, station 신원과 source window를 런타임에서 검사합니다. available_at은 실측이 아니라 0/10/30/60분 가정입니다. raw feature 계약은 기존 11개 field를 유지하며 IEM `M`과 수치형 빈칸은 결측, 범주형 빈칸은 별도 집계합니다. `metar`는 감사용 원문이며 자동으로 모델 피처에 넣지 않습니다. **모델용 feature 선택과 weather-on 학습은 실제 join 검증 후 별도 단계**입니다. 같은 라벨·시드·outer fold·nested 선택·metric의 paired 비교 계약은 바꾸지 않습니다.
+
 <a id="full-weather-transport"></a>
 ### 전체 weather transport 완료 근거
 
