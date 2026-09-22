@@ -245,10 +245,10 @@ def test_readme_records_actual_full_join_after_execution_evidence():
     root = Path(__file__).resolve().parents[1]
     readme = (root / 'README.md').read_text(encoding='utf-8')
     section = readme.split('<a id="full-weather-row-join"></a>', 1)[1].split('<a id="full-weather-transport"></a>', 1)[0]
-    assert '실제 706,759행 full join과 독립 gzip 감사까지 완료했습니다' in section
+    assert '실제 706,759행 전체 행 날씨 결합과 독립 gzip 감사까지 완료했습니다' in section
     assert '689,457' in section
     assert 'output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_summary.json' in section
     assert 'output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json' in section
     assert 'notebooks.join_weather_full' in section
     assert '--validate-inputs-only' in section
-    assert '10분은 실측 publication latency가 아닙니다' in section
+    assert '10분은 실측 날씨 공개 지연 시간이 아닙니다' in section
