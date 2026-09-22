@@ -76,7 +76,7 @@ def test_submission_readme_keeps_scope_and_completed_results_explicit():
                    'reliability-design', 'readme-figures', 'presentation-route'):
         assert f'<a id="{anchor}"></a>' in text
     for boundary in ('실시간 다운로드 모니터가 아닙니다', '신뢰구간이 아닙니다',
-                     '날씨 모델의 성능 그래프가 아닙니다', '10분은 실측 publication latency가 아닙니다',
+                     '날씨 모델의 성능 그래프가 아닙니다', '10분은 실측 공개 지연 시간(publication latency)이 아닙니다',
                      '원인 프로세스를 특정하지 못한', '중간에 pull하지 않습니다'):
         assert boundary in text
     assert text.count('```mermaid') >= 3
@@ -98,10 +98,10 @@ def test_readme_records_completed_weather_transport_join_and_model_comparison():
     ):
         assert f'({evidence})' in text
     for value in ('1,317 / 27', '1,317 / 7,299,100', '1,093,058,768 bytes',
-                  'HTTP 503 25건 + interrupted unknown 1건',
+                  'HTTP 503 25건 + 중단 상태 불명(`interrupted_unknown`) 1건',
                   '689,457', '180,332', '0.598945', '+0.025035'):
         assert value in text
-    assert '날씨 유무 paired 비교까지 완료' in text
+    assert '날씨 유무 동일조건 비교까지 완료' in text
     assert '미래 운항 성능으로 일반화하지 않습니다' in text
 
 
