@@ -1,4 +1,4 @@
-name: README review source snapshot
+name: Apply verified README review
 
 on:
   push:
@@ -6,20 +6,92 @@ on:
     paths: [.github/workflows/readme-review-snapshot.yml]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  snapshot:
+  apply:
+    if: github.ref == 'refs/heads/docs/readme-final-reader-review'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          persist-credentials: false
-      - name: Export tracked source for offline documentation review
-        run: git archive --format=tar HEAD > readme-review-source.tar
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+          ref: docs/readme-final-reader-review
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
         with:
-          name: readme-review-source
-          path: readme-review-source.tar
-          retention-days: 1
+          version: "0.12.5"
+          python-version: "3.14"
+          enable-cache: false
+      - name: Install locked dependencies
+        run: uv sync --locked --dev
+      - name: Apply exact reviewed text with before and after hash checks
+        run: |
+          uv run --locked --offline python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          root = Path('.')
+          parts = sorted((root / '.readme-review').glob('patch-*.json-part'))
+          assert [p.name for p in parts] == [f'patch-{n:02}.json-part' for n in range(1, 6)]
+          patch = json.loads(b''.join(p.read_bytes() for p in parts))
+          assert patch['base_master'] == 'de34de3faf6548392963dbecc84d58169d2f9468'
+          assert patch['slice_unit'] == 'unicode-codepoints'
+          allowed = {'README.md', 'scripts/build_readme_assets.py',
+                     'tests/test_final_submission_status.py', 'tests/test_join_weather_full_driver.py',
+                     'tests/test_readme_contract.py', 'tests/test_readme_presentation.py'}
+          assert {f['path'] for f in patch['files']} == allowed
+          assert len(patch['files']) == len(allowed)
+          prepared = {}
+          for edit in patch['files']:
+              path = root / edit['path']
+              before = path.read_bytes()
+              assert hashlib.sha256(before).hexdigest() == edit['before_sha256'], edit['path']
+              source = before.decode('utf-8')
+              pieces = []
+              for piece in edit['pieces']:
+                  if isinstance(piece, str):
+                      pieces.append(piece)
+                  else:
+                      assert len(piece) == 2 and all(type(i) is int for i in piece)
+                      start, stop = piece
+                      assert 0 <= start <= stop <= len(source)
+                      pieces.append(source[start:stop])
+              after = ''.join(pieces).encode('utf-8')
+              assert hashlib.sha256(after).hexdigest() == edit['after_sha256'], edit['path']
+              prepared[path] = after
+          for path, content in prepared.items():
+              path.write_bytes(content)
+          print('Six reviewed text files applied with exact SHA-256 verification.')
+          PY
+      - name: Regenerate and verify documentation figures only
+        run: |
+          uv run --locked --offline python scripts/build_readme_assets.py
+          uv run --locked --offline python scripts/build_readme_assets.py --check
+      - name: Run Git-only regression tests
+        run: uv run --locked --offline python -m pytest -q --strict-markers -m "not local_data"
+      - name: Verify exact output hashes and unchanged evidence before commit
+        run: |
+          uv run --locked --offline python - <<'PY'
+          import hashlib
+          import json
+          import subprocess
+          from pathlib import Path
+          parts = sorted(Path('.readme-review').glob('patch-*.json-part'))
+          patch = json.loads(b''.join(p.read_bytes() for p in parts))
+          expected = patch['expected_outputs']
+          assert len(expected) == 12
+          for name, digest in expected.items():
+              assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == digest, name
+          changed = set(subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines())
+          assert changed == set(expected), sorted(changed)
+          assert not subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard'], text=True).strip()
+          subprocess.run(['git', 'diff', '--check'], check=True)
+          subprocess.run(['git', 'diff', '--exit-code', '--', 'output', 'src', 'notebooks', 'AGENTS.md',
+                          'pyproject.toml', 'uv.lock', '.github/workflows/ci.yml'], check=True)
+          subprocess.run(['git', 'add', '--', *sorted(expected)], check=True)
+          print('All 12 reviewed outputs match; evidence, model code and CI unchanged.')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'docs: finalize Korean reader narrative and evidence-backed figures'
+          git push origin HEAD:refs/heads/docs/readme-final-reader-review
