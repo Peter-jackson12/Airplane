@@ -1,6 +1,7 @@
 """Synthetic source lineage and CLI integration, never real flight evidence."""
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -216,10 +217,28 @@ def test_tracked_final_manifest_shape_is_supported_without_local_cache():
     final = json.loads(path.read_text())
     audit = json.loads((root / 'output' / f'{name}_full_weather_fetch_audit.json').read_text())
     assert final['schema_version'] == 3 and final['all_shards_complete'] is True
-    assert digest(path) == audit['source_final_manifest_sha256'] == 'e299f0cfbc2b958f2e991cf6e0a850e0ff2f6813a76f7391c5451454b0f0c602'
+    # Git normalizes text to LF, whereas the immutable audit hashes the
+    # Windows CRLF source bytes. Verify BOTH representations independently.
+    # This test does not rewrite any file, and the real driver still requires
+    # byte-for-byte source/cache hashes; it does not normalize input evidence.
+    lf = path.read_bytes().replace(b'\r\n', b'\n')
+    source_bytes = lf.replace(b'\n', b'\r\n')
+    assert hashlib.sha256(lf).hexdigest() == 'fe2234c62baa90b2c2a0ed004455f20fa7c83b69068eccb36238254d6d55ca55'
+    assert hashlib.sha256(source_bytes).hexdigest() == audit['source_final_manifest_sha256'] == 'e299f0cfbc2b958f2e991cf6e0a850e0ff2f6813a76f7391c5451454b0f0c602'
+    assert len(source_bytes) == audit['source_final_manifest_bytes'] == 1436997
     months = validate_entries(final['requests'], root)
     assert sum(map(len, months.values())) == final['cache_file_count'] == 1317
     assert sum(e['rows'] for e in final['requests']) == final['total_cache_rows'] == 7299100
+
+
+def test_driver_rejects_line_ending_change_without_weakening_source_hash(source):
+    original = source['final'].read_bytes()
+    lf = original.replace(b'\r\n', b'\n')
+    alternate = lf if original != lf else lf.replace(b'\n', b'\r\n')
+    assert alternate != original
+    source['final'].write_bytes(alternate)
+    with pytest.raises(ValueError, match='immutable final SHA mismatch'):
+        driver.load_inputs(TRANSPORT, MAPPING)
 
 
 def test_readme_distinguishes_join_implementation_from_actual_execution():
