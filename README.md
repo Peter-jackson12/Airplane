@@ -456,7 +456,7 @@ uv run --locked --offline python -u -m notebooks.diagnose_weather_expanded_cache
 
 측정 바이트(`bytes_measured`)와 예산 차감용 reserved bytes는 위와 같이 구분해 보고했습니다. **이번 실행에서는 전체 706,759행 수집·재학습을 하지 않았습니다.**
 
-### 전체 수집 전용 실행 경계
+### 전체 수집 전용 실행 경계와 초기 실행 기록
 
 300행용 station/day fetcher를 13만+ 그룹에 그대로 확대하지 않습니다. 2026-09-21 확인한 [IEM ASOS backend help](https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?help)는 한 요청에 여러 `station`/여러 `network`를 받을 수 있고, IP별 1초 throttle과 요청당 실용 상한 1,000 station-years를 명시합니다. 따라서 전체 수집은 [fetch_weather_full_sharded](notebooks/fetch_weather_full_sharded.py)에서 **실제 필요한 station-month를 IEM network × UTC month × 최대 20 station batch**로 먼저 materialize하고, 성공·실패와 무관하게 모든 HTTP attempt 뒤 1.25초 pause를 두는 bulk 경로를 사용합니다. 공급자 계약은 영구 보장이 아니므로 장기간 뒤 재실행할 때는 help를 다시 확인합니다.
 
@@ -468,7 +468,7 @@ checkpoint 저장은 임시 파일을 쓴 뒤 원자적으로 교체하며, Wind
 
 기존 21행/300행/stratafix 캐시는 그대로 보존합니다. 이들은 특정 station의 일부 시각 창에 대한 증거이므로 **월 전체 bulk 요청을 이미 수집했다는 근거로 재사용하지 않습니다.** 최신 전체 실행 입력은 `baseline_recovery_v2_weather_scope_fix_20260918` 매핑을 명시적으로 사용합니다.
 
-전체 27-shard 네트워크 실행은 아직 완료되지 않았습니다. 2026-09-21 로컬 실행에서는 stress-first shard 0의 50개 request group이 최종 `complete=true`, `successful=true`로 끝났고, 누적 HTTP attempt 51회 중 503 1회가 재시도로 복구됐습니다. 해당 shard-local checkpoint/manifest/cache는 Git-ignored 로컬 실행 증거이며, 전체 수집이 끝나기 전의 중간 결과입니다. 다음 단계는 한 shard씩 순차 실행하고 어떤 shard라도 미완료·실패하면 즉시 멈추는 [run_weather_full_collection](notebooks/run_weather_full_collection.py) 경로를 사용합니다.
+**초기 실행 기록(2026-09-21, 전체 완료 전):** stress-first shard 0의 50개 request group이 `complete=true`, `successful=true`로 끝났고, 누적 HTTP attempt 51회 중 503 1회가 재시도로 복구됐습니다. 해당 shard-local checkpoint/manifest/cache는 Git-ignored 로컬 중간 증거입니다. 후속 수집은 한 shard씩 순차 실행하고 어떤 shard라도 미완료·실패하면 즉시 멈추는 [run_weather_full_collection](notebooks/run_weather_full_collection.py) 경로를 사용했습니다. **현재는 27/27 shard 수집·finalize와 full join·weather-off/on paired 비교까지 완료**됐으며, [최종 결과와 evidence](#6-한계와다음단계)를 기준으로 읽습니다. 아래는 당시 실행 순서의 보존용 예시이며, 현재 제출을 위해 다시 실행할 작업이 아닙니다.
 
 ```powershell
 $Full = "baseline_recovery_v2_weather_full_bulk_20260921"
@@ -500,7 +500,7 @@ uv run --locked --offline python -u -m notebooks.run_weather_full_collection --n
 <a id="readme-figures"></a>
 ### README 그림의 재현과 출처 검증
 
-다음 명령은 공개 집계 CSV만 읽습니다. IEM 호출·원본 데이터 로드·모델 학습을 하지 않습니다. 그림 파일은 정적 SVG이며 한글 설명과 정확한 표를 함께 제공해 이미지 없이도 결론을 읽을 수 있게 했습니다.
+다음 명령은 Git에 추적된 집계 CSV·JSON만 읽습니다. IEM 호출·원본 데이터 로드·모델 학습을 하지 않습니다. 그림 파일은 정적 SVG이며 한글 설명과 정확한 표를 함께 제공해 이미지 없이도 결론을 읽을 수 있게 했습니다.
 
 ```powershell
 # 그림·실제 사용값·출처 및 그림 해시 생성
@@ -570,7 +570,7 @@ README는 현재 상태의 기준이고, 구체적인 사실은 연결된 코드
 
 **문제 → 판단 → 검증 → 확장.** “결측을 많이 채우면 더 좋은 모델일까?”로 시작해, 모호한 대치를 중단하고 시각의 의미를 바로잡은 이유를 3절에서 보여줍니다. 이어 5절의 같은 조건 비교에서 **의미 개선이 Macro F1 향상으로 이어지지 않았음**을 설명하고, 보정 지표와 탐지 성능의 차이를 짚습니다. 마지막으로 새 정보원인 날씨도 예측 시점의 가용성을 지켜야 한다는 6절로 연결합니다. 수집·복구 구조는 이 실험을 재현 가능하게 만드는 근거로 설명합니다.
 
-**질문에 대한 근거 위치:** “누수는?” → 4절의 inner/outer 경계와 전체 입력 묶음의 한계. “날씨 효과는?” → 아직 미검증, 완료 기준표. “왜 보류했나?” → 2절 날짜 귀속과 6절 매핑 규칙. “중단되면?” → 7절 checkpoint·순차 runner와 회귀 테스트.
+**질문에 대한 근거 위치:** “누수는?” → 4절의 inner/outer 경계와 전체 입력 묶음의 한계. “날씨 효과는?” → 5절의 동일조건 paired CV 개선과 6절의 가용성 가정·해석 한계(인과 효과·미래 운항 성능은 미검증). “왜 보류했나?” → 2절 날짜 귀속과 6절 매핑 규칙. “중단되면?” → 7절 checkpoint·순차 runner와 회귀 테스트.
 
 기존 분석·명령·실행 회차는 아래 **같은 README 안**에 남아 있습니다. AGENTS와 README를 읽는 기존 컨트롤타워 방식은 유지합니다.
 
