@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generator_sha256": "8a772f8d4303255deafc44e5ee1ae6bf1fc0cef79f770b9e9ac00ca9046c0c31",
+  "generator_sha256": "c1092cc59513b578fa55fae4eb688a75b5b16ee932c4821c129980e0e57ee9e2",
   "sources": {
     "models": {
       "path": "output/preprocessing_full_summary.csv",
@@ -17,6 +17,10 @@
     "latency": {
       "path": "output/baseline_recovery_v2_weather_expanded_stratafix_20260918_latency_sensitivity.csv",
       "sha256": "469ef4066aa36322cf2e57c9e9d8ed0b9fd722f0b93f865cf158b0f809a87c32"
+    },
+    "weather_model": {
+      "path": "output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json",
+      "sha256": "d5d116c29826db1283a01488796b59fe3f08399889a3ba3916ed969f024f6210"
     }
   },
   "filters": {
@@ -32,7 +36,8 @@
       "group": "overall"
     },
     "attribution": "sum rows over all 12 months; three disjoint status buckets",
-    "latency": "stratafix only; recompute matched_rows / eligible_rows for each role/scenario"
+    "latency": "stratafix only; recompute matched_rows / eligible_rows for each role/scenario",
+    "weather_model": "P6_clean; 10-minute assumed latency; 180,332 identical labeled rows; 3 paired seeds"
   },
   "reviewed_data": {
     "models": [
@@ -148,6 +153,26 @@
         "matched_rows": 157,
         "match_rate_percent": 58.582089552238806
       }
+    ],
+    "weather_model": [
+      {
+        "metric": "Macro F1",
+        "mean_improvement": 0.025035354103310186,
+        "sd": 0.0005325491690458776,
+        "definition": "weather_on - weather_off"
+      },
+      {
+        "metric": "ROC-AUC",
+        "mean_improvement": 0.032317256769799164,
+        "sd": 0.0003206253230742163,
+        "definition": "weather_on - weather_off"
+      },
+      {
+        "metric": "LogLoss reduction",
+        "mean_improvement": 0.011427550885430774,
+        "sd": 8.825017494063345e-05,
+        "definition": "weather_off - weather_on"
+      }
     ]
   },
   "figures": {
@@ -166,12 +191,16 @@
     "latency": {
       "path": "assets/readme/weather_latency.svg",
       "sha256": "1f9ac871e030de34c7013c0df719a45293811777b0fc941a40771756bb54221e"
+    },
+    "weather_model": {
+      "path": "assets/readme/weather_model_comparison.svg",
+      "sha256": "3b52b01a881c274b58622de3678674249ad60305140864945681c49397986eb7"
     }
   },
   "limitations": [
     "No raw data access or model retraining.",
     "No live collection progress is inferred.",
     "English plot labels use portable embedded glyphs; README provides Korean captions.",
-    "Current collection totals and weather-on scores are not fabricated."
+    "Weather-model scores come only from the tracked paired-comparison summary."
   ]
 }
