@@ -180,6 +180,24 @@ clean의 평균 F1 차이는 P4 −0.000375, P6 −0.000377입니다. 작은 차
 
 **그림 2. 전처리 10조건 중 네 기준 조건의 Macro F1.** 점은 3시드 평균, 오차막대는 ±1 표본 SD이며 신뢰구간이 아닙니다. 차이를 읽기 위한 확대 축임을 명시했으며, 오차막대 겹침만으로 동등성·유의성을 판정하지 않습니다. 모든 조건과 paired delta는 [기존 개별 변경 효과 그림](output/preprocessing_full_effects.png)에서도 확인합니다. [전체 10조건 결과](output/preprocessing_full_evaluation.md), [요약 CSV](output/preprocessing_full_summary.csv), [시드별 결과](output/preprocessing_full_runs.csv)
 
+### 날씨 추가는 동일조건 paired CV에서 일관된 개선을 보였습니다
+
+전체 날짜 귀속 706,759행 중 라벨이 있는 **180,332행**을 같은 순서로 고정하고, `P6_clean`을 weather-off 기준으로 다시 학습했습니다. weather-on은 모델 결과를 보기 전에 고정한 **14개 수치 피처**만 추가했습니다: 출발·도착 각각 `tmpf`, `dwpf`, `sknt`, `vsby`, `p01i`, 관측 나이, matched flag입니다. `gust`·`snowdepth`·`wxcodes`는 높은 결측, `relh`는 최소 계약에서의 중복성, `skyc1`는 범주 확장, `metar`는 감사 원문이라는 이유로 사전에 제외했습니다.
+
+| 조건 | Macro F1 평균 ± SD ↑ | LogLoss 평균 ± SD ↓ | ROC-AUC 평균 ± SD ↑ |
+|---|---:|---:|---:|
+| weather-off | 0.573910 ± 0.000707 | 0.448116 ± 0.000045 | 0.640618 ± 0.000277 |
+| weather-on | **0.598945 ± 0.000417** | **0.436689 ± 0.000132** | **0.672936 ± 0.000458** |
+| paired on−off | **+0.025035 ± 0.000533** | **−0.011428 ± 0.000088** | **+0.032317 ± 0.000321** |
+
+seed 42/1/7 모두 세 지표가 같은 방향으로 움직였습니다. 각 seed에서 off/on은 **동일 180,332행과 동일 outer-fold fingerprint**를 사용했고, 트리 수와 임계값은 각 조건의 outer-train 내부에서 같은 nested 절차로 독립 선택했습니다. 날씨 미결합·결측 행을 평가에서 제거하지 않았고, 모델 실행 중 추가 네트워크 요청도 없었습니다.
+
+![P6_clean의 동일 180332행 paired CV에서 weather-on이 세 시드 평균 Macro F1과 ROC-AUC를 높이고 LogLoss를 낮춘 결과](assets/readme/weather_model_comparison.svg)
+
+**그림 3. 날씨 추가의 paired 변화량.** 점은 3시드 평균, 오차막대는 ±1 표본 SD이며 신뢰구간이 아닙니다. Macro F1·ROC-AUC는 on−off, LogLoss는 감소량(off−on)을 양수로 표시했습니다. 모델에는 **10분 publication-latency 가정**만 사용했으며 0/30/60분은 coverage sensitivity로만 남겼습니다. [시드별 실행](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv), [paired delta](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_paired_deltas.csv), [요약](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json), [실행 manifest](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_manifest.json), [그림 출처](assets/readme/sources.json)
+
+**이 결과는 제출 범위에서 관찰한 예측 성능 차이입니다.** 세 seed는 독립 데이터셋이 아니고 SD도 신뢰구간이 아닙니다. 10분은 실측 publication latency가 아닙니다. 날짜 귀속이 가능한 선택 집단의 정적 CV이므로 날씨의 인과 효과나 미래 운항 성능으로 일반화하지 않습니다.
+
 ### 확률의 정확성과 지연 탐지 능력은 달랐습니다
 
 P6 두 조건의 행별 OOF를 다시 저장·검증했고, 보정기는 **outer-train 내부**에서만 적합해 독립 outer-valid로 비교했습니다. 보정 결과를 같은 학습 OOF에서 채점한 것이 아닙니다.
@@ -192,7 +210,7 @@ P6 두 조건의 행별 OOF를 다시 저장·검증했고, 보정기는 **outer
 
 ![P6_clean 공유형 보정의 ECE와 LogLoss 비교: Isotonic의 ECE 감소가 LogLoss 개선으로 이어지지는 않음](assets/readme/calibration_tradeoff.svg)
 
-**그림 3. 보정 지표의 상충 관계.** P6_clean·공유형·전체 라벨 집단의 세 보정 조건만 표시했습니다. 두 축 모두 낮을수록 좋고, 정확한 Macro F1은 위 표에서 함께 읽습니다. ECE는 비율을 100배 한 %p 단위입니다. [원본 수준값 CSV](output/baseline_recovery_v2_calibration_20260917_level_summary.csv) · [그림 출처](assets/readme/sources.json)
+**그림 4. 보정 지표의 상충 관계.** P6_clean·공유형·전체 라벨 집단의 세 보정 조건만 표시했습니다. 두 축 모두 낮을수록 좋고, 정확한 Macro F1은 위 표에서 함께 읽습니다. ECE는 비율을 100배 한 %p 단위입니다. [원본 수준값 CSV](output/baseline_recovery_v2_calibration_20260917_level_summary.csv) · [그림 출처](assets/readme/sources.json)
 
 표는 동일 라벨 255,001행·nested 평가의 3시드 평균입니다. 평균 확률 편향과 ECE는 줄었지만 Macro F1 향상은 확인되지 않았습니다. Isotonic은 ECE 감소와 함께 LogLoss 악화·순위 정보 감소가 관찰됐습니다. 분리형 대조, 12개 실험 셀, 환경 간 미세 차이는 [부록 D](#appendix-model-diagnostics)에 있습니다. [보정 보고서](output/baseline_recovery_v2_calibration_20260917_report.md), [수준값](output/baseline_recovery_v2_calibration_20260917_level_summary.csv)
 
@@ -213,7 +231,7 @@ stratafix는 기존 확대 표본을 덮어쓴 이름이 아니라, 선정 순�
 
 ![stratafix 수집 가능 268행에서 가용성 지연 가정별 출발 및 도착 날씨 결합률, 60분 가정에서 각각 150행과 157행 결합](assets/readme/weather_latency.svg)
 
-**그림 4. 데이터가 있어도 예측 시점에 가용하지 않으면 사용할 수 없습니다.** 분모는 stratafix의 수집 가능 268행입니다. 보류 32행을 포함한 전체 300행 분모와 구분하며, 0/10/30/60분은 실제 수신 지연의 실측값이 아닌 가정입니다. 이는 결합률 그래프이지 날씨 모델의 성능 그래프가 아닙니다. [민감도 CSV](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_latency_sensitivity.csv)
+**그림 5. 데이터가 있어도 예측 시점에 가용하지 않으면 사용할 수 없습니다.** 분모는 stratafix의 수집 가능 268행입니다. 보류 32행을 포함한 전체 300행 분모와 구분하며, 0/10/30/60분은 실제 수신 지연의 실측값이 아닌 가정입니다. 이는 결합률 그래프이지 날씨 모델의 성능 그래프가 아닙니다. [민감도 CSV](output/baseline_recovery_v2_weather_expanded_stratafix_20260918_latency_sensitivity.csv)
 
 ### 날씨 결합과 비교의 고정 계약
 
