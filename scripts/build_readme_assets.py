@@ -20,6 +20,7 @@ SOURCES = {
     'calibration': 'output/baseline_recovery_v2_calibration_20260917_level_summary.csv',
     'attribution': 'output/baseline_recovery_v2_row_date_attribution_20260918_status_summary.csv',
     'latency': 'output/baseline_recovery_v2_weather_expanded_stratafix_20260918_latency_sensitivity.csv',
+    'weather_model': 'output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json',
 }
 PHASES = ('P4', 'P4_clean', 'P6_fixed', 'P6_clean')
 CALIBRATORS = ('none', 'platt', 'isotonic')
@@ -80,8 +81,30 @@ def reviewed_data() -> dict:
     expected = {(role, latency) for role in ('origin', 'destination') for latency in (0, 10, 30, 60)}
     if len(latency_rows) != 8 or {(r['role'], r['latency_minutes']) for r in latency_rows} != expected:
         raise ValueError('Latency source has missing or duplicate scenarios')
+
+    weather = json.loads((ROOT / SOURCES['weather_model']).read_text(encoding='utf-8'))
+    if (weather.get('base_phase') != 'P6_clean'
+            or weather.get('headline_latency_minutes') != 10
+            or weather.get('headline_latency_is_measured') is not False
+            or weather.get('seeds') != [42, 1, 7]
+            or weather.get('weather_feature_count') != 14
+            or weather.get('evaluation_rows') != 180332
+            or weather.get('positive_rows') != 31805):
+        raise ValueError('Weather-model submission contract changed; review the README')
+    delta = weather['paired_deltas_on_minus_off']
+    weather_rows = [
+        {'metric': 'Macro F1', 'mean_improvement': float(delta['macro_f1_nested']['mean']),
+         'sd': float(delta['macro_f1_nested']['std']), 'definition': 'weather_on - weather_off'},
+        {'metric': 'ROC-AUC', 'mean_improvement': float(delta['roc_auc']['mean']),
+         'sd': float(delta['roc_auc']['std']), 'definition': 'weather_on - weather_off'},
+        {'metric': 'LogLoss reduction', 'mean_improvement': -float(delta['log_loss']['mean']),
+         'sd': float(delta['log_loss']['std']), 'definition': 'weather_off - weather_on'},
+    ]
+    if not all(r['mean_improvement'] > 0 for r in weather_rows):
+        raise ValueError('Weather-model plotted improvement direction changed')
     return {'models': model_rows, 'calibration': calibration_rows,
-            'attribution': attribution_rows, 'latency': latency_rows}
+            'attribution': attribution_rows, 'latency': latency_rows,
+            'weather_model': weather_rows}
 
 
 def check_receipt() -> dict:
@@ -206,17 +229,42 @@ def build() -> None:
     finish(fig, ax, 'weather_latency.svg', 'latency',
            '0/10/30/60-minute latency values are scenarios, not measured historical publication delays.\n32 ineligible rows remain in the full 300-row denominator. This chart is not a model-performance result.')
 
+    fig, ax = plt.subplots(figsize=(10, 4.8))
+    fig.subplots_adjust(left=0.24, right=0.95, bottom=0.24, top=0.78)
+    rows = data['weather_model']
+    means = [r['mean_improvement'] for r in rows]
+    sds = [r['sd'] for r in rows]
+    ax.errorbar(means, range(len(rows)), xerr=sds, fmt='o', capsize=5,
+                markersize=8, linewidth=1.8)
+    ax.axvline(0, linewidth=1, alpha=0.5)
+    ax.set_yticks(range(len(rows)), [r['metric'] for r in rows])
+    ax.invert_yaxis()
+    ax.set_xlim(0, 0.036)
+    ax.set_xlabel('Mean paired improvement (positive is better)')
+    ax.grid(axis='x', alpha=0.2)
+    for i, row in enumerate(rows):
+        ax.annotate(f"{row['mean_improvement']:+.6f}", (row['mean_improvement'], i),
+                    xytext=(8, 0), textcoords='offset points', va='center', fontsize=10)
+    fig.suptitle('Weather-on vs weather-off: paired improvement', x=0.025, ha='left', y=0.97)
+    fig.text(0.025, 0.865,
+             'P6_clean | 180,332 labeled adopted rows | 10-minute latency assumption | seeds 42, 1, 7',
+             fontsize=11)
+    finish(fig, ax, 'weather_model_comparison.svg', 'weather_model',
+           'Points: 3-seed mean paired changes; error bars: +/- 1 sample SD, not confidence intervals.\n'
+           'Macro F1 and ROC-AUC use weather-on minus weather-off; LogLoss is plotted as the reduction (off minus on).')
+
     receipt = {'schema_version': 1, 'generator_sha256': sha256(Path(__file__)),
                'sources': {key: {'path': path, 'sha256': sha256(ROOT / path)} for key, path in SOURCES.items()},
                'filters': {'models': list(PHASES), 'calibration': {'phase_key': 'P6_clean', 'arm': 'shared', 'group': 'overall'},
                            'attribution': 'sum rows over all 12 months; three disjoint status buckets',
-                           'latency': 'stratafix only; recompute matched_rows / eligible_rows for each role/scenario'},
+                           'latency': 'stratafix only; recompute matched_rows / eligible_rows for each role/scenario',
+                           'weather_model': 'P6_clean; 10-minute assumed latency; 180,332 identical labeled rows; 3 paired seeds'},
                'reviewed_data': data, 'figures': figures,
                'limitations': ['No raw data access or model retraining.', 'No live collection progress is inferred.',
                                'English plot labels use portable embedded glyphs; README provides Korean captions.',
-                               'Current collection totals and weather-on scores are not fabricated.']}
+                               'Weather-model scores come only from the tracked paired-comparison summary.']}
     (ASSETS / 'sources.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print('Built four README figures and their source receipt; no network or raw data used.')
+    print('Built five README figures and their source receipt; no network or raw data used.')
 
 
 def main() -> None:
