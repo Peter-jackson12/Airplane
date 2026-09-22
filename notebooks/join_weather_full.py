@@ -90,7 +90,9 @@ def load_inputs(transport_name: str, mapping_name: str) -> tuple[pd.DataFrame, p
     for key in DENOMINATORS + ['bulk_request_groups', 'shard_count', 'distinct_stations',
                                'distinct_networks', 'station_month_pairs']:
         require(counts[key] == plan['denominators'][key], f'plan denominator drift: {key}')
-    recorded = pd.read_csv(paths['bulk_request_plan'])
+    # Keep station_years' binary float on CSV round-trip. The default parser
+    # may round its last bit; request identities/timestamps remain exact.
+    recorded = pd.read_csv(paths['bulk_request_plan'], float_precision='round_trip')
     require(list(recorded.columns) == list(regenerated.columns), 'bulk plan schema drift')
     require(recorded[['ordinal', 'shard_index']].to_dict('list') ==
             regenerated[['ordinal', 'shard_index']].to_dict('list'), 'bulk plan order drift')
