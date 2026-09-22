@@ -313,6 +313,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--name", required=True)
     parser.add_argument("--join-name", default=JOIN_RUN)
+    parser.add_argument("--validate-inputs-only", action="store_true")
     args = parser.parse_args()
     validate_name(args.name)
     require(args.join_name == JOIN_RUN,
@@ -339,6 +340,35 @@ def main() -> None:
     require(y.nunique() == 2, "paired label population requires both classes")
     identity = identity_payload(git_sha=git_sha, manifest=join_manifest, y=y,
                                 X_off=X_off, X_on=X_on)
+
+    mask = labeled_mask(adopted).reset_index(drop=True)
+    labeled_weather = weather.loc[mask].reset_index(drop=True)
+    labeled_coverage = {
+        "labeled_rows": int(len(y)),
+        "positive_rows": int(y.sum()),
+        "origin_matched": int(labeled_weather.weather_origin_matched.sum()),
+        "destination_matched": int(labeled_weather.weather_destination_matched.sum()),
+        "both_matched": int((labeled_weather.weather_origin_matched.eq(1) &
+                             labeled_weather.weather_destination_matched.eq(1)).sum()),
+    }
+    if args.validate_inputs_only:
+        print(json.dumps({
+            "input_validation": "passed",
+            "git_sha": git_sha,
+            "join_name": args.join_name,
+            "latency_minutes": HEADLINE_LATENCY_MINUTES,
+            "latency_is_measured": False,
+            "adopted_rows": int(len(adopted)),
+            "evaluation_rows": int(len(y)),
+            "positive_rows": int(y.sum()),
+            "weather_feature_count": len(WEATHER_MODEL_FEATURES),
+            "weather_features": list(WEATHER_MODEL_FEATURES),
+            "base_feature_count": int(X_off.shape[1]),
+            "weather_on_feature_count": int(X_on.shape[1]),
+            "labeled_weather_coverage": labeled_coverage,
+            "experiment_identity_sha256": stable_json_hash(identity),
+        }, ensure_ascii=False, indent=2), flush=True)
+        return
 
     local = ROOT / "data/weather_probe" / f"{args.name}_weather_model"
     local.mkdir(parents=True, exist_ok=True)
@@ -377,16 +407,6 @@ def main() -> None:
         "one_matched": int(scenario["one_matched"]),
         "none_matched": int(scenario["none_matched"]),
     }
-    mask = labeled_mask(adopted).reset_index(drop=True)
-    labeled_weather = weather.loc[mask].reset_index(drop=True)
-    labeled_coverage = {
-        "labeled_rows": int(len(y)),
-        "origin_matched": int(labeled_weather.weather_origin_matched.sum()),
-        "destination_matched": int(labeled_weather.weather_destination_matched.sum()),
-        "both_matched": int((labeled_weather.weather_origin_matched.eq(1) &
-                             labeled_weather.weather_destination_matched.eq(1)).sum()),
-    }
-
     summary = {
         "schema_version": 1,
         "name": args.name,
