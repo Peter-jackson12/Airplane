@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "name": "baseline_recovery_v2_weather_model_compare_20260922",
+  "base_phase": "P6_clean",
+  "headline_latency_minutes": 10,
+  "headline_latency_is_measured": false,
+  "seeds": [
+    42,
+    1,
+    7
+  ],
+  "weather_model_features": [
+    "weather_origin_tmpf",
+    "weather_origin_dwpf",
+    "weather_origin_sknt",
+    "weather_origin_vsby",
+    "weather_origin_p01i",
+    "weather_origin_age_minutes",
+    "weather_origin_matched",
+    "weather_destination_tmpf",
+    "weather_destination_dwpf",
+    "weather_destination_sknt",
+    "weather_destination_vsby",
+    "weather_destination_p01i",
+    "weather_destination_age_minutes",
+    "weather_destination_matched"
+  ],
+  "weather_feature_count": 14,
+  "feature_selection_policy": "Frozen before model fitting from join diagnostics and submission scope; no score-driven weather feature subset search.",
+  "excluded_weather_fields": {
+    "gust": "high missingness",
+    "snowdepth": "almost entirely missing",
+    "wxcodes": "high missingness and categorical expansion",
+    "relh": "derived/redundant with temperature and dew point for minimal contract",
+    "skyc1": "categorical expansion deferred",
+    "metar": "audit text, not an automatic model feature"
+  },
+  "full_join_10min_coverage": {
+    "origin_matched": 690361,
+    "destination_matched": 690381,
+    "both_matched": 689457,
+    "one_matched": 1828,
+    "none_matched": 15474
+  },
+  "labeled_population_coverage": {
+    "labeled_rows": 180332,
+    "positive_rows": 31805,
+    "origin_matched": 176147,
+    "destination_matched": 176178,
+    "both_matched": 175939
+  },
+  "evaluation_rows": 180332,
+  "positive_rows": 31805,
+  "positive_rate": 0.17636914136148882,
+  "conditions": {
+    "weather_off": {
+      "macro_f1_nested": {
+        "mean": 0.5739098053816244,
+        "std": 0.0007074202533587928,
+        "values_by_seed": {
+          "1": 0.5745881366518336,
+          "7": 0.5739647760563852,
+          "42": 0.5731765034366542
+        }
+      },
+      "log_loss": {
+        "mean": 0.4481163223494364,
+        "std": 4.483540466064671e-05,
+        "values_by_seed": {
+          "1": 0.44808664242820934,
+          "7": 0.44809442622128076,
+          "42": 0.448167898398819
+        }
+      },
+      "roc_auc": {
+        "mean": 0.6406182693684818,
+        "std": 0.0002765826482186117,
+        "values_by_seed": {
+          "1": 0.640928260643451,
+          "7": 0.6405298095738025,
+          "42": 0.6403967378881917
+        }
+      },
+      "f1_at_050": {
+        "mean": 0.4537313895500517,
+        "std": 0.00022163631501131436,
+        "values_by_seed": {
+          "1": 0.45347904564676833,
+          "7": 0.4538206213881503,
+          "42": 0.4538945016152365
+        }
+      },
+      "recall": {
+        "mean": 0.34638159618508624,
+        "std": 0.011769423245384705,
+        "values_by_seed": {
+          "1": 0.33290363150448044,
+          "7": 0.3516113818581984,
+          "42": 0.35462977519257977
+        }
+      }
+    },
+    "weather_on": {
+      "macro_f1_nested": {
+        "mean": 0.5989451594849345,
+        "std": 0.00041675811178789246,
+        "values_by_seed": {
+          "1": 0.5990089451578524,
+          "7": 0.5993263475905303,
+          "42": 0.5985001857064208
+        }
+      },
+      "log_loss": {
+        "mean": 0.4366887714640056,
+        "std": 0.00013206468081174033,
+        "values_by_seed": {
+          "1": 0.4366243215358257,
+          "7": 0.4366013062656505,
+          "42": 0.43684068659054054
+        }
+      },
+      "roc_auc": {
+        "mean": 0.6729355261382809,
+        "std": 0.0004576571694845221,
+        "values_by_seed": {
+          "1": 0.6732188419684435,
+          "7": 0.6731801960503944,
+          "42": 0.6724075403960048
+        }
+      },
+      "f1_at_050": {
+        "mean": 0.4788580606965882,
+        "std": 0.0016816800776343968,
+        "values_by_seed": {
+          "1": 0.4806873085945627,
+          "7": 0.47850773895327564,
+          "42": 0.47737913454192626
+        }
+      },
+      "recall": {
+        "mean": 0.3559188806791385,
+        "std": 0.0022356722319925876,
+        "values_by_seed": {
+          "1": 0.35667347901273383,
+          "7": 0.35340355290048736,
+          "42": 0.3576796101241943
+        }
+      }
+    }
+  },
+  "paired_deltas_on_minus_off": {
+    "macro_f1_nested": {
+      "mean": 0.025035354103310186,
+      "std": 0.0005325491690458776,
+      "values_by_seed": {
+        "42": 0.025323682269766667,
+        "1": 0.0244208085060188,
+        "7": 0.02536157153414509
+      }
+    },
+    "log_loss": {
+      "mean": -0.011427550885430774,
+      "std": 8.825017494063345e-05,
+      "values_by_seed": {
+        "42": -0.011327211808278448,
+        "1": -0.011462320892383637,
+        "7": -0.011493119955630238
+      }
+    },
+    "roc_auc": {
+      "mean": 0.032317256769799164,
+      "std": 0.0003206253230742163,
+      "values_by_seed": {
+        "42": 0.032010802507813074,
+        "1": 0.03229058132499252,
+        "7": 0.03265038647659191
+      }
+    },
+    "f1_at_050": {
+      "mean": 0.025126671146536494,
+      "std": 0.001900331720178453,
+      "values_by_seed": {
+        "42": 0.023484632926689786,
+        "1": 0.02720826294779438,
+        "7": 0.024687117565125316
+      }
+    },
+    "recall": {
+      "mean": 0.009537284494052297,
+      "std": 0.012341791485822963,
+      "values_by_seed": {
+        "42": 0.0030498349316145368,
+        "1": 0.023769847508253394,
+        "7": 0.0017921710422889592
+      }
+    }
+  },
+  "interpretation_guardrails": [
+    "Weather-on and weather-off use identical labeled rows, seeds and outer folds.",
+    "Each condition uses the same nested tree/threshold selection procedure; outer-valid labels do not select either.",
+    "No row is removed because weather is unmatched or a selected weather field is missing.",
+    "The 10-minute publication latency is an assumption, not a measured historical dissemination delay.",
+    "The three seed repetitions are not independent datasets or confidence intervals."
+  ]
+}

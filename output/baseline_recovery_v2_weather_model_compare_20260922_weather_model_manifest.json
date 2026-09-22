@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "name": "baseline_recovery_v2_weather_model_compare_20260922",
+  "successful": true,
+  "git_sha": "e539ad7d15c1fa8ea4280c81699e685256b07c24",
+  "python_version": "3.14.6",
+  "pandas_version": "3.0.5",
+  "join_name": "baseline_recovery_v2_weather_full_join_20260922",
+  "join_sources": {
+    "join_manifest": {
+      "path": "output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json",
+      "sha256": "d12bb70948893532806b5c727bba5c8d4604e6b09c544279d8f3299b7d1875e5",
+      "bytes": 6944
+    },
+    "join_summary": {
+      "path": "output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_summary.json",
+      "sha256": "706906089765d177f0da2ee39ca9c2912e9defeb765d064f1f8b85f31a7a907a",
+      "bytes": 16296
+    },
+    "joined_weather": {
+      "path": "data/weather_probe/baseline_recovery_v2_weather_full_join_20260922_full_join/joined_latency10min.csv.gz",
+      "sha256": "28f015b579f17e4b3ffa67c7ee9ec07aba7225fdbd1502b5d8cb839e797b80e5",
+      "bytes": 100412934
+    },
+    "raw_train": {
+      "path": "data/train.csv",
+      "sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+      "bytes": 116707688
+    }
+  },
+  "code_sha256_lf": {
+    "src/weather_model.py": "6128da2a9ca87ea7493cd9b7af9498bfccccccf6240dd0e7963c15fc78c35f62",
+    "src/weather_full.py": "90662a1730d16a76c446080bcb66604325d918ad39bf202cbf160295540a62be",
+    "src/features.py": "ad1e7078b0344b7bc90dd9b97e8cacfaf1e19352d640f0f393bf6ad7eb932a53",
+    "src/cv.py": "cfa5712e73b911a6b68ce73f3307e49d02d68e66cc356eac91313060c6c88786",
+    "rerun_all_phases.py": "fe59813e13f8f127e7aa97ef25b496d8e871a6a5abbdd3b0ce8b35e71d559791",
+    "notebooks/run_weather_model_comparison.py": "9dfc239dc5bd4ea1f7ad931e41ea9de01216ed4843b87a35bbca47c57f0142a5"
+  },
+  "uv_lock_sha256": "d73d34856c696d77df451d9a998fb75b1e42108d3f8d4fdb51cb70cee737dc22",
+  "experiment_identity": {
+    "git_sha": "e539ad7d15c1fa8ea4280c81699e685256b07c24",
+    "join_output_sha256": "28f015b579f17e4b3ffa67c7ee9ec07aba7225fdbd1502b5d8cb839e797b80e5",
+    "raw_train_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+    "base_phase": "P6_clean",
+    "latency_minutes": 10,
+    "latency_is_measured": false,
+    "seeds": [
+      42,
+      1,
+      7
+    ],
+    "weather_features": [
+      "weather_origin_tmpf",
+      "weather_origin_dwpf",
+      "weather_origin_sknt",
+      "weather_origin_vsby",
+      "weather_origin_p01i",
+      "weather_origin_age_minutes",
+      "weather_origin_matched",
+      "weather_destination_tmpf",
+      "weather_destination_dwpf",
+      "weather_destination_sknt",
+      "weather_destination_vsby",
+      "weather_destination_p01i",
+      "weather_destination_age_minutes",
+      "weather_destination_matched"
+    ],
+    "labeled_rows": 180332,
+    "positive_rows": 31805,
+    "base_columns_sha256": "660ead56f695658d0133cec133fadf306e9a68dcb2e924ca938ced86b6778472",
+    "weather_columns_sha256": "0145b7bb866bb715095ef00f32e46dcb91ad4f11d1bceec2fd4a91820d1e6606",
+    "cfg": {
+      "n_splits": 5,
+      "shuffle": true,
+      "seed": 42,
+      "stopping_rounds": 40,
+      "threshold_grid": [
+        0.1,
+        0.7,
+        0.01
+      ],
+      "metric_aggregation": "pooled_oof",
+      "inner_holdout_frac": 0.2,
+      "n_thresholds": 61,
+      "inner_early_stopping": true,
+      "nested_threshold": true
+    },
+    "n_estimators_grid": [
+      10,
+      25,
+      50,
+      75,
+      100,
+      150,
+      300,
+      600
+    ],
+    "te_smoothing_m": 20.0,
+    "lgbm_params": {
+      "objective": "binary",
+      "metric": "binary_logloss",
+      "boosting_type": "gbdt",
+      "learning_rate": 0.05,
+      "num_leaves": 63,
+      "max_depth": 8,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "random_state": 42,
+      "verbose": -1
+    }
+  },
+  "experiment_identity_sha256": "6587078cf82b8694478dc0f7ec70669fa0d3b36e679a56296cc1b08447ccea99",
+  "outputs": {
+    "runs": {
+      "path": "output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv",
+      "sha256": "80c729226cd123da1d8d6ce6dcb7c4ac30f7e12265a0b35d88111d10ab0be629",
+      "bytes": 10672
+    },
+    "paired": {
+      "path": "output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_paired_deltas.csv",
+      "sha256": "8587cea1202079e42575568d2c5bff45c1695c4ca123959212556a59a77b2171",
+      "bytes": 683
+    },
+    "summary": {
+      "path": "output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json",
+      "sha256": "d5d116c29826db1283a01488796b59fe3f08399889a3ba3916ed969f024f6210",
+      "bytes": 6017
+    }
+  },
+  "checkpoint": "data/weather_probe/baseline_recovery_v2_weather_model_compare_20260922_weather_model/checkpoint.json",
+  "fits_models": true,
+  "network_requests": 0,
+  "target_source": "data/train.csv only; joined weather artifact contains no target/outcome columns",
+  "paired_outer_folds": true,
+  "same_evaluation_rows": true,
+  "weather_rows_filtered_for_model": 0,
+  "weather_feature_selection_frozen": true,
+  "latency_selected_by_model_score": false,
+  "created_at_utc": "2026-09-22T02:10:24+00:00"
+}
