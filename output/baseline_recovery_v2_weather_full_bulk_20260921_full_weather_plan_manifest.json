@@ -1,0 +1,85 @@
+{
+  "schema_version": 2,
+  "name": "baseline_recovery_v2_weather_full_bulk_20260921",
+  "mapping_name": "baseline_recovery_v2_weather_scope_fix_20260918",
+  "attribution_run": "baseline_recovery_v2_row_date_attribution_20260918",
+  "attribution_row_sha256": "9c679535e59666bfb2de8a4460fd0c0a8b433f29900b704d0de4ff21e712421a",
+  "raw_train_sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+  "mapping_sha256": "d39ef026304335f31a4b9acd1e19d55d25de2344a1a31c64335459e2b15c9408",
+  "code_sha256": "63d3915023cf7331d7f5e65e332780e5aa8bc60bd7a417fa24933b8d0d2e1d3f",
+  "plan_file": "data/weather_probe/baseline_recovery_v2_weather_full_bulk_20260921/bulk_request_plan.csv",
+  "plan_sha256": "be5f5ddcb28a46b6af78839e53a317bc7454fdafabb8e62028fca1247b90b1f3",
+  "plan_columns": [
+    "ordinal",
+    "shard_index",
+    "request_id",
+    "network",
+    "month",
+    "batch_index",
+    "stations_json",
+    "station_count",
+    "window_start_utc",
+    "window_end_utc",
+    "station_years"
+  ],
+  "plan_order": "station_count descending (pilot stress first), then UTC month/network/batch ascending",
+  "denominators": {
+    "total_adopted_rows": 706759,
+    "mapping_eligible_rows_confirmed_period_both_ends": 691386,
+    "utc_time_resolved_rows": 691385,
+    "mapping_eligible_but_utc_unresolved_rows": 1,
+    "not_mapping_eligible_rows": 15373,
+    "distinct_stations": 355,
+    "distinct_networks": 52,
+    "station_month_pairs": 7816,
+    "bulk_request_groups": 1317,
+    "shard_size": 50,
+    "shard_count": 27,
+    "max_stations_per_request": 20,
+    "max_station_years_in_one_request": 1.6975023443328747,
+    "total_station_years_requested": 651.2987946364402
+  },
+  "provider_contract": {
+    "checked_on": "2026-09-21",
+    "help_url": "https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?help",
+    "documented_per_ip_throttle_seconds": 1.0,
+    "documented_station_year_limit_per_request": 1000.0,
+    "planned_attempt_pause_seconds": 1.25
+  },
+  "transport_contract": {
+    "request_unit": "network_month_station_batch",
+    "whole_month_fetch": true,
+    "weather_fields": [
+      "tmpf",
+      "dwpf",
+      "relh",
+      "sknt",
+      "gust",
+      "vsby",
+      "p01i",
+      "skyc1",
+      "wxcodes",
+      "snowdepth",
+      "metar"
+    ],
+    "report_types": [
+      3,
+      4
+    ],
+    "missing_representation": "M",
+    "trace_representation": "0.0001",
+    "max_response_bytes_per_attempt": 20000000,
+    "attempt_timeout_seconds": 120.0,
+    "legacy_partial_cache_policy": "21/300/stratafix station-window caches are preserved but do not skip any network/month bulk request; partial overlap is not full bulk coverage",
+    "checkpoint_policy": "one checkpoint per fixed-size request shard; shard_size and plan are immutable under one run name"
+  },
+  "fits_any_model": false,
+  "uses_external_data": false,
+  "target_columns_used": [],
+  "limitations": [
+    "prepare-only performs no network request. Actual bytes, elapsed time, 503/422 behavior and archive completeness remain unmeasured until the pilot shard runs.",
+    "The transport intentionally downloads whole UTC months for station-months that contain at least one required row-level weather window. This can download observations not ultimately selected by the 90-minute as-of join; it reduces provider request count, not the prediction-time information boundary.",
+    "Provider limits are documentation observed on the checked_on date, not a permanent guarantee. Re-verify the backend help before a materially later rerun.",
+    "Only confirmed_period rows with a resolved prediction_at create fetch demand; all adopted rows remain represented in the denominator summary."
+  ]
+}

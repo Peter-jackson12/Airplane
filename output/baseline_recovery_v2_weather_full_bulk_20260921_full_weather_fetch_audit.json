@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "name": "baseline_recovery_v2_weather_full_bulk_20260921",
+  "source_final_manifest": "output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_manifest.json",
+  "source_final_manifest_sha256": "e299f0cfbc2b958f2e991cf6e0a850e0ff2f6813a76f7391c5451454b0f0c602",
+  "source_final_manifest_bytes": 1436997,
+  "source_final_manifest_schema_version": 3,
+  "bulk_request_groups": 1317,
+  "cumulative_http_attempts": 1343,
+  "unmeasured_byte_attempts": 26,
+  "source_provider_error_counts": {
+    "http_503": 0,
+    "http_429": 0,
+    "http_422": 0,
+    "timeout": 0,
+    "response_size_cap": 0,
+    "response_validation": 0,
+    "interrupted_unknown": 1,
+    "other": 25
+  },
+  "recomputed_attempt_audit": {
+    "http_attempts_from_request_records": 1343,
+    "successful_http_attempts": 1317,
+    "failed_http_attempts": 26,
+    "retry_attempts": 26,
+    "unmeasured_http_attempts_from_request_records": 26,
+    "request_groups_with_network_attempts": 1317,
+    "cache_only_request_groups": 0,
+    "provider_error_counts": {
+      "http_503": 25,
+      "http_429": 0,
+      "http_422": 0,
+      "timeout": 0,
+      "response_size_cap": 0,
+      "response_validation": 0,
+      "interrupted_unknown": 1,
+      "other": 0
+    }
+  },
+  "provider_error_counts_corrected": true,
+  "classification_note": "The immutable source final manifest is preserved as execution evidence. This sidecar recomputes only attempt-level classifications from its stored requests[].attempts_detail using the current classifier; it does not alter request, cache, byte, row, shard, or model evidence."
+}
