@@ -1077,6 +1077,17 @@ uv run --locked --offline python -u -m notebooks.assign_row_dates --name baselin
 
 과거 Python 3.10/pandas 2.3.3와 Python 3.14/pandas 3.0.5의 재현 차이는 결측 이름 그룹 처리에서 발견됐습니다. pandas 2의 문자열 nan과 pandas 3의 결측 제외로 590행 그룹 집계가 달라지는 문제를 구별했고, gzip 메타데이터와 압축 해제 내용 비교도 구별합니다. 실행 근거·현재 코드를 기준으로 판정합니다.
 
+### 전체 weather join·paired model comparison — 최종 제출 경로
+
+아래 두 실행은 새 수집을 하지 않습니다. 첫 명령은 finalized 1,317 cache를 읽어 full join을 만들고, 둘째 명령은 검증된 10분 gzip과 원본을 해시 확인한 뒤 `P6_clean` weather-off/on 6 cells를 실행합니다. 기존 이름의 최종 evidence가 존재하면 덮어쓰지 않습니다.
+
+```powershell
+uv run --locked --offline python -u -m notebooks.join_weather_full --name baseline_recovery_v2_weather_full_join_20260922 --transport-name baseline_recovery_v2_weather_full_bulk_20260921 --mapping-name baseline_recovery_v2_weather_scope_fix_20260918
+uv run --locked --offline python -u -m notebooks.run_weather_model_comparison --name baseline_recovery_v2_weather_model_compare_20260922
+```
+
+모델 실행의 `--validate-inputs-only`는 fit/checkpoint/final output 없이 180,332 평가행, 31,805 양성, base 25열·weather-on 39열, 고정 14개 weather feature와 입력 해시를 확인합니다. 실제 모델은 seeds 42/1/7에서 off/on 동일 outer fold를 사용하며, 각 조건의 트리 수·임계값은 outer-train 내부 nested 절차로 선택합니다. [실행 코드](notebooks/run_weather_model_comparison.py), [feature 계약](src/weather_model.py)
+
 ### 초기 날씨 표본·초기 수집 산정 — 역사적 실행
 
 아래 선정/매핑/fetch는 필요한 경우 외부 데이터를 조회합니다. 원본·귀속 결과·mwgg 캐시와 관련 캐시가 필요합니다. 초기 실행명과 현재 stratafix를 섞지 않습니다.
@@ -1134,6 +1145,8 @@ HOMR JSON 21개·IEM GeoJSON 9개를 기존 증거 해시로 복원한 후 [7절
 | 2026-09-18 코드 6806551의 캐시 없는 환경 | 379개 통과·23개 실패 | 모두 HOMR/IEM 관측소 원본 캐시 누락으로 보고된 과거 로컬 재현 기록 |
 | 2026-09-20 PR #1 | 379개 통과·24개 선택 해제, 총 403개 | 관측소 23+스키마 1을 명시적 local_data로 분리 |
 | 2026-09-20 PR #2 | 382개 통과·24개 선택 해제, 총 406개 | v3 재개 계약 회귀 추가; 실데이터 재현 아님 |
+| 2026-09-22 full row join 구현 | 495개 통과·24개 선택 해제 | 706,759행 실제 join 전 Git-only 계약 고정 |
+| 2026-09-22 weather paired 비교 구현 | **507개 통과·24개 선택 해제** | 실제 6-cell 모델 실행은 별도 로컬 evidence로 검증 |
 
 현재 문서 개편은 이 과거 테스트를 재실행했다고 주장하지 않습니다. 최종 CI는 Actions의 해당 커밋으로 확인합니다. 문서 검사는 링크·구조·기록된 숫자의 정합성 검사이지 외부 원자료 확인이나 성능 재현이 아닙니다.
 
@@ -1155,7 +1168,7 @@ uv run --locked --offline python -u -m pytest -q -p no:cacheprovider --basetemp=
 
 기존 7개 스크립트 8개 학습 루프의 best iteration 2~3 문제, 목적함수 가중/비가중 LogLoss 불일치, 사전 TE의 inner 라벨 유입은 후속 수정의 배경입니다. 과거 ES 표를 현재 Phase 순위로 사용하지 않습니다. 과거 다른 fold OOF로 임계값을 고르는 경로와 현재 fold 내부 holdout 선택도 구별합니다.
 
-README v0.25는 현재 상태·핵심 결과를 상단으로 옮기고 반복 설명을 통합했습니다. 상세 수치·근거·회차·재현 명령은 같은 문서에 두며, 모델 코드·실험 산출물을 바꾸거나 새 날씨 결과를 만들지 않았습니다. 과거 표현 중 모든 층 포함, 캐시 적중 출처 단정, 마스킹 오류율 상한, 집계 일치에서 행별 동일성 추론, 해소된 11월 미일치의 재등장을 바로잡았습니다.
+최종 제출 README는 tracked full-join·paired-model evidence를 반영해 상단 상태와 결론을 동기화했습니다. 문서 정리 과정에서는 새 모델 실험이나 날씨 수집을 수행하지 않았고, 이미 고정된 결과를 다시 선택하거나 재튜닝하지 않았습니다. 과거 표현 중 모든 층 포함, 캐시 적중 출처 단정, 마스킹 오류율 상한, 집계 일치에서 행별 동일성 추론, 해소된 11월 미일치의 재등장을 바로잡았습니다.
 
 </details>
 
