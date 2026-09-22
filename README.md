@@ -119,13 +119,13 @@ flowchart TD
     A --> E["BTS 대조 / 채택한 행만 날짜 귀속"]
     E --> F["공항-관측소 매핑 / UTC 예측 시점"]
     F --> G["월별 일괄 날씨 수집 / 분할별 저장"]
-    G --> H["전체 완료 검증 / finalize"]
+    G --> H["전체 완료 검증 / 최종화"]
     H --> I["예측 시점까지 가용한 날씨만 결합"]
     D --> J["같은 평가 조건의 날씨 없음 vs 있음 비교"]
     I --> J
 ```
 
-**핵심 질문은 다운로드 속도가 아니라 새 정보가 지연 분류에 도움이 되는가입니다.** 상단의 기존 입력 분석과 하단의 날씨 확장은 별도 경로이며, 마지막 동일 조건 비교로 연결합니다. `finalize`는 수집 완료 검사이지 모델 실험의 완료가 아닙니다.
+**핵심 질문은 다운로드 속도가 아니라 새 정보가 지연 분류에 도움이 되는가입니다.** 상단의 기존 입력 분석과 하단의 날씨 확장은 별도 경로이며, 마지막 동일 조건 비교로 연결합니다. `finalize`(최종화)는 수집 완료 검사이지 모델 실험의 완료가 아닙니다.
 
 ### 라벨 누수를 막는 평가 경계
 
@@ -151,7 +151,7 @@ flowchart TD
 | 트리 수 후보 | `[10, 25, 50, 75, 100, 150, 300, 600]` |
 | 조기 종료 / scale_pos_weight | 현행 선택 경로에서 둘 다 미사용 |
 | 임계값 후보 | 0.10~0.70, 간격 0.01 |
-| 반복 | seed 42 / 1 / 7, 각각 5-fold |
+| 반복 | 시드 42 / 1 / 7, 각각 5-fold |
 | 집계 | 각 시드의 pooled OOF 지표 → 평균·표본 표준편차 |
 
 **전체 입력 묶음 가정은 남아 있습니다.** 노선 중앙값·코드 대응 사전·Traffic·범주 목록은 원본 전체 묶음의 비타깃 입력을 활용합니다. 라벨 누수가 없다는 것과 미래 예측 시점에 입력을 확보할 수 있다는 것은 다릅니다. 미래 운영을 주장하려면 통계를 학습에서 저장하고 새 입력에는 적용만 하는 경계, 예측 시점에 확보 가능한 운항계획 등의 출처가 필요합니다. [데이터 사용 계약](output/pipeline_data_contract.md), [평가 코드](src/cv.py)
@@ -214,7 +214,7 @@ P6 두 조건의 행별 OOF를 다시 저장·검증했고, 보정기는 **외�
 
 **그림 4. 보정 지표의 상충 관계.** P6_clean·공유형·전체 라벨 집단의 세 보정 조건만 표시했습니다. 두 축 모두 낮을수록 좋고, 정확한 Macro F1은 위 표에서 함께 읽습니다. ECE는 비율을 100배 한 %p 단위입니다. [원본 수준값 CSV](output/baseline_recovery_v2_calibration_20260917_level_summary.csv) · [그림 출처](assets/readme/sources.json)
 
-표는 동일 라벨 255,001행·nested 평가의 3시드 평균입니다. 평균 확률 편향과 ECE는 줄었지만 Macro F1 향상은 확인되지 않았습니다. Isotonic은 ECE 감소와 함께 LogLoss 악화·순위 정보 감소가 관찰됐습니다. 분리형 대조, 12개 실험 셀, 환경 간 미세 차이는 [부록 D](#appendix-model-diagnostics)에 있습니다. [보정 보고서](output/baseline_recovery_v2_calibration_20260917_report.md), [수준값](output/baseline_recovery_v2_calibration_20260917_level_summary.csv)
+표는 동일 라벨 255,001행·내부 선택을 포함한 동일 평가 절차의 3시드 평균입니다. 평균 확률 편향과 ECE는 줄었지만 Macro F1 향상은 확인되지 않았습니다. Isotonic은 ECE 감소와 함께 LogLoss 악화·순위 정보 감소가 관찰됐습니다. 분리형 대조, 12개 실험 셀, 환경 간 미세 차이는 [부록 D](#appendix-model-diagnostics)에 있습니다. [보정 보고서](output/baseline_recovery_v2_calibration_20260917_report.md), [수준값](output/baseline_recovery_v2_calibration_20260917_level_summary.csv)
 
 원본 출발·도착 시각이 모두 결측인 라벨 **3,031행**에서는 P6_clean의 지연 재현율이 **10.02%**였습니다. 보정으로 이 취약성이 해소되지 않았고, 저장된 예측의 기술 분석에서는 모델이 개별 편보다 항공사·공항·계절 같은 맥락의 평균 위험도를 주로 반영하는 양상이 관찰됐습니다. 이는 현재 입력·모델에 한정한 해석이며 결측의 인과 효과나 다른 피처의 무용성을 증명하지 않습니다. [OOF 그룹 결과](output/baseline_recovery_v2_oof_20260916_v2_groups.csv), [오분류 분석](output/baseline_recovery_v2_error_profile_20260917_report.md)
 
@@ -298,7 +298,7 @@ uv run --locked --offline python -u -m notebooks.join_weather_full --name baseli
 | 요청 묶음 / 분할 수 | **1,317 / 27** |
 | 성공 HTTP 시도 | **1,317** |
 | 실패 시도 → 재시도 | **26 → 26** |
-| 정정된 공급자 오류 | **HTTP 503 25건 + 중단 상태 불명 1건** |
+| 정정된 공급자 오류 | **HTTP 503 25건 + 중단 상태 불명(`interrupted_unknown`) 1건** |
 | cache files / rows | **1,317 / 7,299,100** |
 | cache bytes = measured download bytes | **1,093,058,768 bytes** |
 | budget reserved bytes | 1,613,058,768 bytes |
