@@ -1,0 +1,102 @@
+name: One-shot full join documentation sync
+on:
+  push:
+    branches: [feat/full-weather-row-join]
+    paths: [.github/workflows/full-join-maintenance.yml]
+permissions:
+  contents: write
+jobs:
+  sync:
+    if: github.ref == 'refs/heads/feat/full-weather-row-join'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Apply exact documentation and assertion edits, then remove this workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, subprocess
+          from pathlib import Path
+          repo = 'repos/Peter-jackson12/Airplane'
+          branch = 'heads/feat/full-weather-row-join'
+          head = os.environ['GITHUB_SHA']
+          def api(path, method='GET', body=None):
+              args = ['gh', 'api', repo + path, '--method', method]
+              if body is not None:
+                  args += ['--input', '-']
+              return json.loads(subprocess.check_output(args, input=None if body is None else json.dumps(body).encode()))
+          assert api('/git/ref/' + branch)['object']['sha'] == head, 'Concurrent branch edit; stop'
+          readme = Path('README.md').read_text(encoding='utf-8')
+          data = Path('README.md').read_bytes()
+          assert hashlib.sha1(f'blob {len(data)}\0'.encode() + data).hexdigest() == '380edd8ee8ffb7b43f05d669ade8123580e8ff0e', 'README changed; stop'
+          marker = '<a id="full-weather-transport"></a>'
+          assert readme.count(marker) == 1
+          addition = '''<a id="full-weather-row-join"></a>
+          ### 전체 행 point-in-time join 실행 경로
+
+          **Git-only 구현 단계이며 실제 706,759행 join은 아직 실행하지 않았습니다.** transport 완료 상태와 구분합니다. 실행기는 [join_weather_full.py](notebooks/join_weather_full.py), 월별 엔진은 [weather_full.py](src/weather_full.py), 합성 경계·입력 계보 검증은 [엔진 테스트](tests/test_weather_full.py)와 [driver 테스트](tests/test_join_weather_full_driver.py)에 있습니다. 실제 coverage·결측률·모델 성능은 로컬 실행 근거를 확인한 뒤 반영합니다.
+
+          입력은 기존 adopted-pool loader를 그대로 사용합니다. raw train·날짜 귀속·mapping·bulk plan·immutable final·corrected audit의 SHA 계보를 확인하고, 동일 loader로 재생성한 prediction-time 수집 수요가 원래 plan과 같은지 검증합니다. 양끝 confirmed_period 691,386행 중 UTC 해석 가능 691,385행만 관측을 결합합니다. 보류 15,373행과 UTC 미해석 1행도 각 출력 706,759행의 분모에 남습니다.
+
+          전체 7.3M 관측을 한 번에 합치지 않습니다. 각 cache를 한 번 읽어 SHA·행수·station·수집 시간창을 검증하고, UTC 월 단위로 파싱합니다. 직전 월의 90분 경계 관측과 station별 마지막 관측(결측 사유 진단용)을 유지하며 네 latency를 같은 관측에서 계산합니다. 임시 CSV partition들을 원래 ID 순서로 스트리밍 병합하므로 전체 행별 결과 네 벌을 RAM에 보관하지 않습니다. 동일 station/time의 모든 weather field가 같을 때만 중복을 제거하며, A,A,B,B 형태나 같은 METAR의 다른 수치도 충돌로 중단합니다. 원래 sample evidence는 수정하지 않습니다.
+
+          ```powershell
+          uv run --locked --offline python -m pytest -q --strict-markers -m "not local_data"
+          uv run --locked --offline python -u -m notebooks.join_weather_full --name baseline_recovery_v2_weather_full_join_20260922 --transport-name baseline_recovery_v2_weather_full_bulk_20260921 --mapping-name baseline_recovery_v2_weather_scope_fix_20260918
+          ```
+
+          같은 명령에 `--validate-inputs-only`를 붙이면 실제 weather cache를 읽거나 join 출력을 쓰기 전에 입력 계보·행 정체성·분모·재생성 plan만 확인합니다. 실제 실행 전 작업 트리는 tracked 변경 없이 깨끗해야 합니다. 기존 이름 재사용, `--force`, 자동 재수집·mapping 대체·모델 학습은 지원하지 않습니다. 실패하면 해당 실행의 부분 파일을 보존하고 새로운 run name을 사용합니다.
+
+          Git에는 `<name>_full_weather_join_manifest.json`과 `<name>_full_weather_join_summary.json` 두 작은 JSON만 남깁니다. 행별 결과는 `data/weather_probe/<name>_full_join/joined_latency{0,10,30,60}min.csv.gz`이며 partition들도 같은 Git-ignored 디렉터리에 남습니다. 네 출력 모두 입력 ID 순서·유일성·행수를 검사합니다. 정확한 디스크 크기는 실행 시 gzip 파일별 bytes로 기록합니다. `peak_partition_observation_memory_bytes`는 관측 DataFrame의 크기이지 프로세스 전체 RSS가 아닙니다.
+
+          summary는 동일 전체 분모의 origin/destination/both/one/none coverage, 관측 나이 분위수, 역할별 미결합 사유, 각 field의 전체/결합행 결측과 빈 문자열 수를 기록합니다. 사유는 mapping 보류, prediction_at 미해석, 수집된 구간에서 과거 관측 없음, 90분 초과, latency 가정상 아직 미가용을 구분합니다. 최종 manifest는 모든 cache 검증·출력 행 정체성 검사를 통과한 뒤 **마지막에** 작성합니다. final manifest가 없는 부분 출력은 성공 근거가 아닙니다.
+
+          `observed_at <= prediction_at`, `available_at <= prediction_at`, age 0~90분, station 신원과 source window를 런타임에서 검사합니다. available_at은 실측이 아니라 0/10/30/60분 가정입니다. raw feature 계약은 기존 11개 field를 유지하며 IEM `M`과 수치형 빈칸은 결측, 범주형 빈칸은 별도 집계합니다. `metar`는 감사용 원문이며 자동으로 모델 피처에 넣지 않습니다. **모델용 feature 선택과 weather-on 학습은 실제 join 검증 후 별도 단계**입니다. 같은 라벨·시드·outer fold·nested 선택·metric의 paired 비교 계약은 바꾸지 않습니다.
+
+          '''
+          updated = readme.replace(marker, addition + marker)
+          test_path = 'tests/test_weather_full.py'
+          tests = Path(test_path).read_text()
+          old = "pd.to_datetime(got[f'{role}_observed_at'], utc=True, format='mixed'),"
+          new = "pd.to_datetime(got[f'{role}_observed_at'], utc=True, format='mixed').astype('datetime64[ns, UTC]'),"
+          assert tests.count(old) == 1
+          tests = tests.replace(old, new)
+          driver_test_path = 'tests/test_join_weather_full_driver.py'
+          driver_tests = Path(driver_test_path).read_text()
+          driver_tests += '''\n\ndef test_tracked_final_manifest_shape_is_supported_without_local_cache():
+              from src.weather_full import validate_entries
+              root = Path(__file__).resolve().parents[1]
+              name = 'baseline_recovery_v2_weather_full_bulk_20260921'
+              path = root / 'output' / f'{name}_full_weather_fetch_manifest.json'
+              final = json.loads(path.read_text())
+              audit = json.loads((root / 'output' / f'{name}_full_weather_fetch_audit.json').read_text())
+              assert final['schema_version'] == 3 and final['all_shards_complete'] is True
+              assert digest(path) == audit['source_final_manifest_sha256'] == 'e299f0cfbc2b958f2e991cf6e0a850e0ff2f6813a76f7391c5451454b0f0c602'
+              months = validate_entries(final['requests'], root)
+              assert sum(map(len, months.values())) == final['cache_file_count'] == 1317
+              assert sum(e['rows'] for e in final['requests']) == final['total_cache_rows'] == 7299100
+
+
+          def test_readme_distinguishes_join_implementation_from_actual_execution():
+              root = Path(__file__).resolve().parents[1]
+              readme = (root / 'README.md').read_text()
+              section = readme.split('<a id="full-weather-row-join"></a>', 1)[1].split('<a id="full-weather-transport"></a>', 1)[0]
+              assert '실제 706,759행 join은 아직 실행하지 않았습니다' in section
+              assert 'notebooks.join_weather_full' in section
+              assert '--validate-inputs-only' in section
+              assert '모델용 feature 선택과 weather-on 학습은 실제 join 검증 후' in section
+          '''
+          edits = {'README.md': updated, test_path: tests, driver_test_path: driver_tests}
+          tree = api('/git/commits/' + head)['tree']['sha']
+          elements = [{'path': path, 'mode': '100644', 'type': 'blob', 'content': content} for path, content in edits.items()]
+          elements.append({'path': '.github/workflows/full-join-maintenance.yml', 'mode': '100644', 'type': 'blob', 'sha': None})
+          new_tree = api('/git/trees', 'POST', {'base_tree': tree, 'tree': elements})['sha']
+          commit = api('/git/commits', 'POST', {'message': 'docs: document cache-only full join and pin source contracts', 'tree': new_tree, 'parents': [head]})['sha']
+          assert api('/git/ref/' + branch)['object']['sha'] == head, 'Concurrent branch edit; stop'
+          api('/git/refs/' + branch, 'PATCH', {'sha': commit, 'force': False})
+          print('Updated README and regression assertions; removed one-shot workflow:', commit)
+          PY
