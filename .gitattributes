@@ -13,3 +13,7 @@ output/baseline_recovery_v2_weather_expanded_stratafix_20260918_latency_sensitiv
 # Existing transport plan/final/audit and mapping files remain untouched.
 output/baseline_recovery_v2_*_full_weather_join_manifest.json text eol=lf
 output/baseline_recovery_v2_*_full_weather_join_summary.json text eol=lf
+
+# Submission weather-model evidence is small and hash-linked across files.
+output/baseline_recovery_v2_*_weather_model_*.json text eol=lf
+output/baseline_recovery_v2_*_weather_model_*.csv text eol=lf
