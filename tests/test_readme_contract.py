@@ -99,7 +99,7 @@ def test_readme_stratafix_denominators_match_selection_manifest():
         'output/baseline_recovery_v2_weather_expanded_stratafix_20260918_selection_manifest.json'
     )).read_text(encoding='utf-8'))
     expected = (
-        f"| stratafix 표본 | {manifest['selected_rows']} | {manifest['collectible_rows']} | "
+        f"| 층화 보정 표본 (`stratafix`) | {manifest['selected_rows']} | {manifest['collectible_rows']} | "
         f"{manifest['not_collectible_rows']} |"
     )
     assert expected in text
