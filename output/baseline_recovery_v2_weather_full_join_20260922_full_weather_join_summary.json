@@ -1,0 +1,578 @@
+{
+  "schema_version": 1,
+  "name": "baseline_recovery_v2_weather_full_join_20260922",
+  "sources": {
+    "plan_manifest": {
+      "path": "output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_plan_manifest.json",
+      "sha256": "7b8fcc3313b46aabde116978483438e4f00238fa1d8911028a6c0adbe3dd1b0c",
+      "bytes": 3775
+    },
+    "final_fetch_manifest": {
+      "path": "output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_manifest.json",
+      "sha256": "e299f0cfbc2b958f2e991cf6e0a850e0ff2f6813a76f7391c5451454b0f0c602",
+      "bytes": 1436997
+    },
+    "corrected_attempt_audit": {
+      "path": "output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_audit.json",
+      "sha256": "5bba9a88d58fc814e2df652276d0c9d7189bb7b1fb199dbb7b76c990cb2039ad",
+      "bytes": 1657
+    },
+    "mapping": {
+      "path": "output/baseline_recovery_v2_weather_scope_fix_20260918_mapping_table.csv",
+      "sha256": "d39ef026304335f31a4b9acd1e19d55d25de2344a1a31c64335459e2b15c9408",
+      "bytes": 152968
+    },
+    "raw_train": {
+      "path": "data/train.csv",
+      "sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+      "bytes": 116707688
+    },
+    "attribution_manifest": {
+      "path": "output/baseline_recovery_v2_row_date_attribution_20260918_manifest.json",
+      "sha256": "f0ee3b79d8353360bb21417cdc9d86cf23316d6a7777a77ceaacb20b9518a217",
+      "bytes": 8225
+    },
+    "attribution_rows": {
+      "path": "data/bts/baseline_recovery_v2_row_date_attribution_20260918/row_dates.csv.gz",
+      "sha256": "9c679535e59666bfb2de8a4460fd0c0a8b433f29900b704d0de4ff21e712421a",
+      "bytes": 9958940
+    },
+    "bulk_request_plan": {
+      "path": "data/weather_probe/baseline_recovery_v2_weather_full_bulk_20260921/bulk_request_plan.csv",
+      "sha256": "be5f5ddcb28a46b6af78839e53a317bc7454fdafabb8e62028fca1247b90b1f3",
+      "bytes": 233476
+    }
+  },
+  "denominators": {
+    "total_adopted_rows": 706759,
+    "mapping_eligible_rows_confirmed_period_both_ends": 691386,
+    "utc_time_resolved_rows": 691385,
+    "mapping_eligible_but_utc_unresolved_rows": 1,
+    "not_mapping_eligible_rows": 15373
+  },
+  "all_prediction_at_resolved_rows": 706758,
+  "scenarios": [
+    {
+      "latency_minutes": 0,
+      "rows": 706759,
+      "origin_matched": 690546,
+      "destination_matched": 690521,
+      "both_matched": 689757,
+      "one_matched": 1553,
+      "none_matched": 15449,
+      "roles": {
+        "origin": {
+          "reasons": {
+            "matched": 690546,
+            "not_mapping_eligible": 15373,
+            "stale_beyond_90_minutes": 839,
+            "unresolved_prediction_at": 1
+          },
+          "match_rate_all_rows": 0.9770600728112412,
+          "age_quantiles_minutes": {
+            "0": 0.0,
+            "0.1": 5.0,
+            "0.25": 10.0,
+            "0.5": 26.0,
+            "0.75": 42.0,
+            "0.9": 52.0,
+            "0.95": 57.0,
+            "0.99": 59.0,
+            "1": 90.0
+          },
+          "feature_missing_all_rows": {
+            "tmpf": 16416,
+            "dwpf": 16533,
+            "relh": 17858,
+            "sknt": 17598,
+            "gust": 615927,
+            "vsby": 16436,
+            "p01i": 16938,
+            "skyc1": 16440,
+            "wxcodes": 616030,
+            "snowdepth": 706756,
+            "metar": 16213
+          },
+          "feature_missing_matched_rows": {
+            "tmpf": 203,
+            "dwpf": 320,
+            "relh": 1645,
+            "sknt": 1385,
+            "gust": 599714,
+            "vsby": 223,
+            "p01i": 725,
+            "skyc1": 227,
+            "wxcodes": 599817,
+            "snowdepth": 690543,
+            "metar": 0
+          },
+          "feature_blank_matched_rows": {
+            "tmpf": 0,
+            "dwpf": 0,
+            "relh": 0,
+            "sknt": 0,
+            "gust": 0,
+            "vsby": 0,
+            "p01i": 0,
+            "skyc1": 0,
+            "wxcodes": 0,
+            "snowdepth": 0,
+            "metar": 0
+          }
+        },
+        "destination": {
+          "reasons": {
+            "matched": 690521,
+            "not_mapping_eligible": 15373,
+            "stale_beyond_90_minutes": 864,
+            "unresolved_prediction_at": 1
+          },
+          "match_rate_all_rows": 0.9770247000745658,
+          "age_quantiles_minutes": {
+            "0": 0.0,
+            "0.1": 5.0,
+            "0.25": 10.0,
+            "0.5": 26.0,
+            "0.75": 42.0,
+            "0.9": 52.0,
+            "0.95": 57.0,
+            "0.99": 59.0,
+            "1": 90.0
+          },
+          "feature_missing_all_rows": {
+            "tmpf": 16436,
+            "dwpf": 16543,
+            "relh": 17865,
+            "sknt": 17722,
+            "gust": 616250,
+            "vsby": 16433,
+            "p01i": 16993,
+            "skyc1": 16465,
+            "wxcodes": 617671,
+            "snowdepth": 706758,
+            "metar": 16238
+          },
+          "feature_missing_matched_rows": {
+            "tmpf": 198,
+            "dwpf": 305,
+            "relh": 1627,
+            "sknt": 1484,
+            "gust": 600012,
+            "vsby": 195,
+            "p01i": 755,
+            "skyc1": 227,
+            "wxcodes": 601433,
+            "snowdepth": 690520,
+            "metar": 0
+          },
+          "feature_blank_matched_rows": {
+            "tmpf": 0,
+            "dwpf": 0,
+            "relh": 0,
+            "sknt": 0,
+            "gust": 0,
+            "vsby": 0,
+            "p01i": 0,
+            "skyc1": 0,
+            "wxcodes": 0,
+            "snowdepth": 0,
+            "metar": 0
+          }
+        }
+      }
+    },
+    {
+      "latency_minutes": 10,
+      "rows": 706759,
+      "origin_matched": 690361,
+      "destination_matched": 690381,
+      "both_matched": 689457,
+      "one_matched": 1828,
+      "none_matched": 15474,
+      "roles": {
+        "origin": {
+          "reasons": {
+            "matched": 690361,
+            "not_mapping_eligible": 15373,
+            "not_yet_available_under_latency_assumption": 185,
+            "stale_beyond_90_minutes": 839,
+            "unresolved_prediction_at": 1
+          },
+          "match_rate_all_rows": 0.9767983145598429,
+          "age_quantiles_minutes": {
+            "0": 10.0,
+            "0.1": 16.0,
+            "0.25": 24.0,
+            "0.5": 39.0,
+            "0.75": 56.0,
+            "0.9": 66.0,
+            "0.95": 67.0,
+            "0.99": 69.0,
+            "1": 90.0
+          },
+          "feature_missing_all_rows": {
+            "tmpf": 16599,
+            "dwpf": 16712,
+            "relh": 18038,
+            "sknt": 17791,
+            "gust": 616225,
+            "vsby": 16618,
+            "p01i": 17172,
+            "skyc1": 16630,
+            "wxcodes": 615776,
+            "snowdepth": 706756,
+            "metar": 16398
+          },
+          "feature_missing_matched_rows": {
+            "tmpf": 201,
+            "dwpf": 314,
+            "relh": 1640,
+            "sknt": 1393,
+            "gust": 599827,
+            "vsby": 220,
+            "p01i": 774,
+            "skyc1": 232,
+            "wxcodes": 599378,
+            "snowdepth": 690358,
+            "metar": 0
+          },
+          "feature_blank_matched_rows": {
+            "tmpf": 0,
+            "dwpf": 0,
+            "relh": 0,
+            "sknt": 0,
+            "gust": 0,
+            "vsby": 0,
+            "p01i": 0,
+            "skyc1": 0,
+            "wxcodes": 0,
+            "snowdepth": 0,
+            "metar": 0
+          }
+        },
+        "destination": {
+          "reasons": {
+            "matched": 690381,
+            "not_mapping_eligible": 15373,
+            "not_yet_available_under_latency_assumption": 140,
+            "stale_beyond_90_minutes": 864,
+            "unresolved_prediction_at": 1
+          },
+          "match_rate_all_rows": 0.9768266127491833,
+          "age_quantiles_minutes": {
+            "0": 10.0,
+            "0.1": 16.0,
+            "0.25": 24.0,
+            "0.5": 39.0,
+            "0.75": 56.0,
+            "0.9": 66.0,
+            "0.95": 67.0,
+            "0.99": 69.0,
+            "1": 90.0
+          },
+          "feature_missing_all_rows": {
+            "tmpf": 16592,
+            "dwpf": 16709,
+            "relh": 18045,
+            "sknt": 17868,
+            "gust": 616385,
+            "vsby": 16573,
+            "p01i": 17203,
+            "skyc1": 16602,
+            "wxcodes": 617381,
+            "snowdepth": 706758,
+            "metar": 16378
+          },
+          "feature_missing_matched_rows": {
+            "tmpf": 214,
+            "dwpf": 331,
+            "relh": 1667,
+            "sknt": 1490,
+            "gust": 600007,
+            "vsby": 195,
+            "p01i": 825,
+            "skyc1": 224,
+            "wxcodes": 601003,
+            "snowdepth": 690380,
+            "metar": 0
+          },
+          "feature_blank_matched_rows": {
+            "tmpf": 0,
+            "dwpf": 0,
+            "relh": 0,
+            "sknt": 0,
+            "gust": 0,
+            "vsby": 0,
+            "p01i": 0,
+            "skyc1": 0,
+            "wxcodes": 0,
+            "snowdepth": 0,
+            "metar": 0
+          }
+        }
+      }
+    },
+    {
+      "latency_minutes": 30,
+      "rows": 706759,
+      "origin_matched": 690065,
+      "destination_matched": 690130,
+      "both_matched": 688936,
+      "one_matched": 2323,
+      "none_matched": 15500,
+      "roles": {
+        "origin": {
+          "reasons": {
+            "matched": 690065,
+            "not_mapping_eligible": 15373,
+            "not_yet_available_under_latency_assumption": 481,
+            "stale_beyond_90_minutes": 839,
+            "unresolved_prediction_at": 1
+          },
+          "match_rate_all_rows": 0.9763795013576057,
+          "age_quantiles_minutes": {
+            "0": 30.0,
+            "0.1": 36.0,
+            "0.25": 42.0,
+            "0.5": 58.0,
+            "0.75": 72.0,
+            "0.9": 82.0,
+            "0.95": 87.0,
+            "0.99": 89.0,
+            "1": 90.0
+          },
+          "feature_missing_all_rows": {
+            "tmpf": 16899,
+            "dwpf": 17016,
+            "relh": 18368,
+            "sknt": 18121,
+            "gust": 616878,
+            "vsby": 16919,
+            "p01i": 17432,
+            "skyc1": 16948,
+            "wxcodes": 615533,
+            "snowdepth": 706755,
+            "metar": 16694
+          },
+          "feature_missing_matched_rows": {
+            "tmpf": 205,
+            "dwpf": 322,
+            "relh": 1674,
+            "sknt": 1427,
+            "gust": 600184,
+            "vsby": 225,
+            "p01i": 738,
+            "skyc1": 254,
+            "wxcodes": 598839,
+            "snowdepth": 690061,
+            "metar": 0
+          },
+          "feature_blank_matched_rows": {
+            "tmpf": 0,
+            "dwpf": 0,
+            "relh": 0,
+            "sknt": 0,
+            "gust": 0,
+            "vsby": 0,
+            "p01i": 0,
+            "skyc1": 0,
+            "wxcodes": 0,
+            "snowdepth": 0,
+            "metar": 0
+          }
+        },
+        "destination": {
+          "reasons": {
+            "matched": 690130,
+            "not_mapping_eligible": 15373,
+            "not_yet_available_under_latency_assumption": 391,
+            "stale_beyond_90_minutes": 864,
+            "unresolved_prediction_at": 1
+          },
+          "match_rate_all_rows": 0.9764714704729618,
+          "age_quantiles_minutes": {
+            "0": 30.0,
+            "0.1": 36.0,
+            "0.25": 42.0,
+            "0.5": 58.0,
+            "0.75": 72.0,
+            "0.9": 82.0,
+            "0.95": 87.0,
+            "0.99": 89.0,
+            "1": 90.0
+          },
+          "feature_missing_all_rows": {
+            "tmpf": 16872,
+            "dwpf": 16996,
+            "relh": 18353,
+            "sknt": 18138,
+            "gust": 616782,
+            "vsby": 16826,
+            "p01i": 17358,
+            "skyc1": 16857,
+            "wxcodes": 617186,
+            "snowdepth": 706757,
+            "metar": 16629
+          },
+          "feature_missing_matched_rows": {
+            "tmpf": 243,
+            "dwpf": 367,
+            "relh": 1724,
+            "sknt": 1509,
+            "gust": 600153,
+            "vsby": 197,
+            "p01i": 729,
+            "skyc1": 228,
+            "wxcodes": 600557,
+            "snowdepth": 690128,
+            "metar": 0
+          },
+          "feature_blank_matched_rows": {
+            "tmpf": 0,
+            "dwpf": 0,
+            "relh": 0,
+            "sknt": 0,
+            "gust": 0,
+            "vsby": 0,
+            "p01i": 0,
+            "skyc1": 0,
+            "wxcodes": 0,
+            "snowdepth": 0,
+            "metar": 0
+          }
+        }
+      }
+    },
+    {
+      "latency_minutes": 60,
+      "rows": 706759,
+      "origin_matched": 392730,
+      "destination_matched": 391927,
+      "both_matched": 357193,
+      "one_matched": 70271,
+      "none_matched": 279295,
+      "roles": {
+        "origin": {
+          "reasons": {
+            "matched": 392730,
+            "not_mapping_eligible": 15373,
+            "not_yet_available_under_latency_assumption": 297816,
+            "stale_beyond_90_minutes": 839,
+            "unresolved_prediction_at": 1
+          },
+          "match_rate_all_rows": 0.5556773949818821,
+          "age_quantiles_minutes": {
+            "0": 60.0,
+            "0.1": 63.0,
+            "0.25": 67.0,
+            "0.5": 72.0,
+            "0.75": 82.0,
+            "0.9": 87.0,
+            "0.95": 88.0,
+            "0.99": 90.0,
+            "1": 90.0
+          },
+          "feature_missing_all_rows": {
+            "tmpf": 314155,
+            "dwpf": 314236,
+            "relh": 315041,
+            "sknt": 314807,
+            "gust": 656007,
+            "vsby": 314176,
+            "p01i": 314625,
+            "skyc1": 314194,
+            "wxcodes": 642213,
+            "snowdepth": 706758,
+            "metar": 314029
+          },
+          "feature_missing_matched_rows": {
+            "tmpf": 126,
+            "dwpf": 207,
+            "relh": 1012,
+            "sknt": 778,
+            "gust": 341978,
+            "vsby": 147,
+            "p01i": 596,
+            "skyc1": 165,
+            "wxcodes": 328184,
+            "snowdepth": 392729,
+            "metar": 0
+          },
+          "feature_blank_matched_rows": {
+            "tmpf": 0,
+            "dwpf": 0,
+            "relh": 0,
+            "sknt": 0,
+            "gust": 0,
+            "vsby": 0,
+            "p01i": 0,
+            "skyc1": 0,
+            "wxcodes": 0,
+            "snowdepth": 0,
+            "metar": 0
+          }
+        },
+        "destination": {
+          "reasons": {
+            "matched": 391927,
+            "not_mapping_eligible": 15373,
+            "not_yet_available_under_latency_assumption": 298594,
+            "stale_beyond_90_minutes": 864,
+            "unresolved_prediction_at": 1
+          },
+          "match_rate_all_rows": 0.5545412226798668,
+          "age_quantiles_minutes": {
+            "0": 60.0,
+            "0.1": 63.0,
+            "0.25": 67.0,
+            "0.5": 72.0,
+            "0.75": 82.0,
+            "0.9": 87.0,
+            "0.95": 88.0,
+            "0.99": 90.0,
+            "1": 90.0
+          },
+          "feature_missing_all_rows": {
+            "tmpf": 314993,
+            "dwpf": 315079,
+            "relh": 315890,
+            "sknt": 315628,
+            "gust": 656160,
+            "vsby": 314947,
+            "p01i": 315417,
+            "skyc1": 314968,
+            "wxcodes": 643854,
+            "snowdepth": 706757,
+            "metar": 314832
+          },
+          "feature_missing_matched_rows": {
+            "tmpf": 161,
+            "dwpf": 247,
+            "relh": 1058,
+            "sknt": 796,
+            "gust": 341328,
+            "vsby": 115,
+            "p01i": 585,
+            "skyc1": 136,
+            "wxcodes": 329022,
+            "snowdepth": 391925,
+            "metar": 0
+          },
+          "feature_blank_matched_rows": {
+            "tmpf": 0,
+            "dwpf": 0,
+            "relh": 0,
+            "sknt": 0,
+            "gust": 0,
+            "vsby": 0,
+            "p01i": 0,
+            "skyc1": 0,
+            "wxcodes": 0,
+            "snowdepth": 0,
+            "metar": 0
+          }
+        }
+      }
+    }
+  ]
+}
