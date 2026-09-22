@@ -282,7 +282,7 @@ uv run --locked --offline python -u -m notebooks.join_weather_full --name baseli
 <a id="full-weather-transport"></a>
 ### 전체 weather transport 완료 근거
 
-전체 수집은 **2026-09-22 finalization과 corrected attempt audit까지 완료**했습니다. 이 단계의 완료는 IEM archive transport plan의 요청·캐시 무결성을 증명하며, 아직 706,759개 항공편 행에 날씨가 성공적으로 붙었다거나 예측 성능이 개선됐다는 뜻은 아닙니다.
+전체 수집은 **2026-09-22 finalization과 corrected attempt audit까지 완료**했습니다. 이 단계 자체가 증명하는 것은 IEM archive transport plan의 요청·캐시 무결성까지이며, row-level 결합과 모델 성능은 별도 근거가 필요합니다. 그 후속 근거는 위 [전체 행 join](#full-weather-row-join)과 5절의 paired 비교에서 각각 별도로 완료했습니다.
 
 | 항목 | 최종 확인값 |
 |---|---:|
