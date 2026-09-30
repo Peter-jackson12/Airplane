@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="756" viewBox="0 0 1000 756" role="img" aria-labelledby="title desc">
+<title id="title">분석의 두 경로가 같은 조건의 날씨 비교로 만나는 과정</title><desc id="desc">원본 100만 행에서 전처리 수정과 날짜 귀속을 진행합니다. 기존 전처리 평가는 라벨 255001행, 날씨 비교는 날짜와 라벨이 모두 있는 동일 180332행을 사용합니다. 도형의 크기와 선 길이는 수량을 뜻하지 않습니다.</desc>
+<style>text{font-family:"Noto Sans CJK KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>
+<rect x="0" y="0" width="1000" height="756" rx="20" fill="#F6F9FA"/>
+<text x="36" y="48" font-size="32" fill="#183B4E" font-weight="700">두 가지 질문, 하나의 비교 원칙</text>
+<text x="36" y="82" font-size="20" fill="#526878" font-weight="400">기존 입력의 의미를 바로잡기 → 새로운 정보의 예측력 확인하기</text>
+<rect x="260" y="108" width="480" height="113" rx="12" fill="#102D40"/>
+<text x="282" y="139" font-size="17" fill="#8EDDD1" font-weight="700">START</text>
+<text x="282" y="174" font-size="26" fill="#FFFFFF" font-weight="700">원본 1,000,000행</text>
+<text x="282" y="206" font-size="20" fill="#D4E4EC" font-weight="400">라벨 255,001행 · 미라벨 744,999행</text>
+<path d="M500 221 V239 H265 V257 M500 239 H735 V257" fill="none" stroke="#CCDAE1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M259 250 L265 257 L271 250" fill="none" stroke="#007E80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M729 250 L735 257 L741 250" fill="none" stroke="#007E80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="36" y="260" width="452" height="158" rx="12" fill="#FFFFFF"/>
+<text x="58" y="291" font-size="17" fill="#007E80" font-weight="700">01 / 전처리</text>
+<text x="58" y="326" font-size="26" fill="#183B4E" font-weight="700">무엇을 확실하게 아는가?</text>
+<text x="58" y="358" font-size="20" fill="#526878" font-weight="400">모호한 대치 중단 · 시각의 의미 수정</text>
+<text x="58" y="387" font-size="20" fill="#526878" font-weight="400">라벨 255,001행에서 전처리 조건 비교</text>
+<rect x="512" y="260" width="452" height="158" rx="12" fill="#FFFFFF"/>
+<text x="534" y="291" font-size="17" fill="#007E80" font-weight="700">02 / 정보 확장</text>
+<text x="534" y="326" font-size="26" fill="#183B4E" font-weight="700">어떤 정보를 더할 수 있는가?</text>
+<text x="534" y="358" font-size="20" fill="#526878" font-weight="400">BTS 대조 → 날짜 귀속 706,759행</text>
+<text x="534" y="387" font-size="20" fill="#526878" font-weight="400">출발·도착 공항 날씨를 시점에 맞춰 결합</text>
+<text x="58" y="452" font-size="20" fill="#526878" font-weight="400">전처리 수정만으로 Macro F1 향상 미확인</text>
+<text x="534" y="452" font-size="20" fill="#526878" font-weight="400">날짜와 라벨이 모두 있는 180,332행 선택</text>
+<path d="M265 468 V491 H500 M735 468 V491 H500 V512" fill="none" stroke="#CCDAE1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M494 505 L500 512 L506 505" fill="none" stroke="#007E80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="170" y="518" width="660" height="149" rx="12" fill="#102D40"/>
+<text x="192" y="549" font-size="17" fill="#8EDDD1" font-weight="700">03 / 동일조건 비교</text>
+<text x="192" y="584" font-size="26" fill="#FFFFFF" font-weight="700">P6_clean  +  날씨 14개 피처</text>
+<text x="192" y="616" font-size="20" fill="#D4E4EC" font-weight="400">같은 180,332행 · 같은 시드 · 같은 외부 폴드</text>
+<text x="192" y="645" font-size="20" fill="#D4E4EC" font-weight="400">트리 수·임계값은 같은 내부 절차로 각각 선택</text>
+<text x="170" y="709" font-size="21" fill="#007E80" font-weight="700">결론: 세 지표 모두 개선 · 인과 효과와 미래 운항 성능은 미검증</text>
+</svg>

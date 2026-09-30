@@ -216,3 +216,38 @@ def test_all_five_figures_and_receipt_rebuild_byte_for_byte(tmp_path, monkeypatc
     builder.check_receipt()
     for name in [*builder.FIGURES.values(), 'sources.json']:
         assert (output / name).read_bytes() == (ROOT / 'assets/readme' / name).read_bytes(), name
+
+
+def test_presentation_story_artwork_is_accessible_and_local():
+    text = (ROOT / 'README.md').read_text(encoding='utf-8')
+    for name in ('presentation_cover.svg', 'analysis_journey.svg', 'evaluation_boundary.svg'):
+        path = f'assets/readme/{name}'
+        matches = re.findall(r'!\[([^\]]+)\]\(' + re.escape(path) + r'\)', text)
+        assert len(matches) == 1 and len(matches[0]) > 20
+        raw = (ROOT / path).read_text(encoding='utf-8')
+        svg = ET.fromstring(raw)
+        assert svg.attrib['role'] == 'img'
+        assert svg.attrib['aria-labelledby'] == 'title desc'
+        assert svg.find('{http://www.w3.org/2000/svg}title') is not None
+        assert svg.find('{http://www.w3.org/2000/svg}desc') is not None
+        assert not any(n.tag.endswith('script') or n.tag.endswith('image') for n in svg.iter())
+        assert '@import' not in raw and '@font-face' not in raw
+
+
+def test_presentation_story_artwork_rebuilds_byte_for_byte(tmp_path, monkeypatch):
+    from scripts import build_readme_story as story
+    monkeypatch.setattr(story, 'OUT', tmp_path)
+    story.build()
+    for name in ('presentation_cover.svg', 'analysis_journey.svg', 'evaluation_boundary.svg'):
+        assert (tmp_path / name).read_bytes() == (ROOT / 'assets/readme' / name).read_bytes()
+
+
+def test_presentation_story_retains_population_and_evaluation_boundaries():
+    journey = (ROOT / 'assets/readme/analysis_journey.svg').read_text(encoding='utf-8')
+    for phrase in ('1,000,000행', '255,001행', '706,759행', '180,332행', '14개 피처',
+                   '같은 외부 폴드', '인과 효과와 미래 운항 성능은 미검증'):
+        assert phrase in journey
+    evaluation = (ROOT / 'assets/readme/evaluation_boundary.svg').read_text(encoding='utf-8')
+    for phrase in ('내부 학습 / 80%', '내부 검증 / 20%', '최종 채점 전용',
+                   '외부 검증으로 선택하지 않음', '라벨 누수 방지와 미래 시점'):
+        assert phrase in evaluation

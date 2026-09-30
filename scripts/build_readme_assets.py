@@ -135,8 +135,8 @@ def expected_filters() -> dict:
 FIGURES = {'models': 'model_comparison.svg', 'calibration': 'calibration_tradeoff.svg',
            'attribution': 'date_attribution.svg', 'latency': 'weather_latency.svg',
            'weather_model': 'weather_model_comparison.svg'}
-INK, MUTED, BLUE, GOLD = '#172B4D', '#52647A', '#2459B8', '#9A651B'
-GRID, SOFT = '#DEE5EE', '#F5F7FB'
+INK, MUTED, BLUE, GOLD = '#183B4E', '#526878', '#007E80', '#96661D'
+GRID, SOFT = '#DCE5EA', '#EFF6F6'
 
 
 class SVG:
@@ -149,7 +149,8 @@ class SVG:
             f'<title id="title">{escape(title)}</title><desc id="desc">{escape(description)}</desc>',
             '<style>text{font-family:"Noto Sans CJK KR","Malgun Gothic",'
             '"Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>',
-            f'<rect width="760" height="{height}" fill="#FFFFFF"/>']
+            f'<rect width="760" height="{height}" rx="14" fill="#FFFFFF"/>',
+            '<rect x="32" width="58" height="5" rx="2" fill="#007E80"/>']
 
     def text(self, x, y, text, size=18, color=INK, weight=400, anchor='start'):
         self.parts.append(f'<text x="{x:.3f}" y="{y:.3f}" font-size="{size}" '

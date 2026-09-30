@@ -1,43 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="760" height="626" viewBox="0 0 760 626" role="img" aria-labelledby="title desc">
 <title id="title">날씨 추가 전후 세 지표의 직접 비교</title><desc id="desc">P6_clean, 동일 라벨 180,332행과 외부 폴드, 시드 42/1/7. 10분 공개 지연 가정. 세 지표 모두 개선. 값과 차이는 원본 집계에서 각각 반올림. SD는 신뢰구간이 아님.</desc>
 <style>text{font-family:"Noto Sans CJK KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>
-<rect width="760" height="626" fill="#FFFFFF"/>
-<text x="32.000" y="43.000" font-size="26" fill="#172B4D" font-weight="700" text-anchor="start">날씨 정보 추가 후, 세 지표 모두 개선</text>
-<text x="32.000" y="77.000" font-size="18" fill="#52647A" font-weight="400" text-anchor="start">P6_clean · 동일 라벨 180,332행 · 시드 42 / 1 / 7</text>
-<text x="32.000" y="105.000" font-size="17" fill="#52647A" font-weight="400" text-anchor="start">10분 공개 지연 가정 · 동일 외부 폴드와 내부 선택 절차</text>
-<rect x="32.000" y="128.000" width="696.000" height="130.000" rx="8" fill="#F5F7FB"/>
-<text x="50.000" y="163.000" font-size="25" fill="#172B4D" font-weight="700" text-anchor="start">Macro F1</text>
-<text x="50.000" y="191.000" font-size="17" fill="#52647A" font-weight="400" text-anchor="start">높을수록 좋음 ↑</text>
-<text x="282.000" y="157.000" font-size="17" fill="#52647A" font-weight="400" text-anchor="start">날씨 미사용</text>
-<text x="527.000" y="157.000" font-size="17" fill="#2459B8" font-weight="600" text-anchor="start">날씨 사용</text>
-<text x="282.000" y="195.000" font-size="30" fill="#52647A" font-weight="600" text-anchor="start">0.573910</text>
-<line x1="457.000" y1="181.000" x2="498.000" y2="181.000" stroke="#52647A" stroke-width="2"/>
-<polygon points="498.000,181.000 490.000,176.000 490.000,186.000" fill="#52647A"/>
-<text x="527.000" y="195.000" font-size="30" fill="#2459B8" font-weight="700" text-anchor="start">0.598945</text>
-<text x="50.000" y="235.000" font-size="23" fill="#2459B8" font-weight="700" text-anchor="start">변화 +0.025035</text>
-<text x="355.000" y="234.000" font-size="17" fill="#52647A" font-weight="400" text-anchor="start">시드별 차이의 SD 0.000533</text>
-<rect x="32.000" y="270.000" width="696.000" height="130.000" rx="8" fill="#F5F7FB"/>
-<text x="50.000" y="305.000" font-size="25" fill="#172B4D" font-weight="700" text-anchor="start">LogLoss</text>
-<text x="50.000" y="333.000" font-size="17" fill="#52647A" font-weight="400" text-anchor="start">낮을수록 좋음 ↓</text>
-<text x="282.000" y="299.000" font-size="17" fill="#52647A" font-weight="400" text-anchor="start">날씨 미사용</text>
-<text x="527.000" y="299.000" font-size="17" fill="#2459B8" font-weight="600" text-anchor="start">날씨 사용</text>
-<text x="282.000" y="337.000" font-size="30" fill="#52647A" font-weight="600" text-anchor="start">0.448116</text>
-<line x1="457.000" y1="323.000" x2="498.000" y2="323.000" stroke="#52647A" stroke-width="2"/>
-<polygon points="498.000,323.000 490.000,318.000 490.000,328.000" fill="#52647A"/>
-<text x="527.000" y="337.000" font-size="30" fill="#2459B8" font-weight="700" text-anchor="start">0.436689</text>
-<text x="50.000" y="377.000" font-size="23" fill="#2459B8" font-weight="700" text-anchor="start">변화 -0.011428</text>
-<text x="355.000" y="376.000" font-size="17" fill="#52647A" font-weight="400" text-anchor="start">시드별 차이의 SD 0.000088</text>
-<rect x="32.000" y="412.000" width="696.000" height="130.000" rx="8" fill="#F5F7FB"/>
-<text x="50.000" y="447.000" font-size="25" fill="#172B4D" font-weight="700" text-anchor="start">ROC-AUC</text>
-<text x="50.000" y="475.000" font-size="17" fill="#52647A" font-weight="400" text-anchor="start">높을수록 좋음 ↑</text>
-<text x="282.000" y="441.000" font-size="17" fill="#52647A" font-weight="400" text-anchor="start">날씨 미사용</text>
-<text x="527.000" y="441.000" font-size="17" fill="#2459B8" font-weight="600" text-anchor="start">날씨 사용</text>
-<text x="282.000" y="479.000" font-size="30" fill="#52647A" font-weight="600" text-anchor="start">0.640618</text>
-<line x1="457.000" y1="465.000" x2="498.000" y2="465.000" stroke="#52647A" stroke-width="2"/>
-<polygon points="498.000,465.000 490.000,460.000 490.000,470.000" fill="#52647A"/>
-<text x="527.000" y="479.000" font-size="30" fill="#2459B8" font-weight="700" text-anchor="start">0.672936</text>
-<text x="50.000" y="519.000" font-size="23" fill="#2459B8" font-weight="700" text-anchor="start">변화 +0.032317</text>
-<text x="355.000" y="518.000" font-size="17" fill="#52647A" font-weight="400" text-anchor="start">시드별 차이의 SD 0.000321</text>
-<text x="32.000" y="583.000" font-size="16" fill="#52647A" font-weight="400" text-anchor="start">변화 = 사용 − 미사용 · 세 지표는 척도가 달라 변화량의 크기를 서로 비교하지 않습니다.</text>
-<text x="32.000" y="610.000" font-size="16" fill="#52647A" font-weight="400" text-anchor="start">평균과 차이는 원본 수치에서 각각 반올림했습니다. 3시드 SD는 신뢰구간이 아닙니다.</text>
+<rect width="760" height="626" rx="14" fill="#FFFFFF"/>
+<rect x="32" width="58" height="5" rx="2" fill="#007E80"/>
+<text x="32.000" y="43.000" font-size="26" fill="#183B4E" font-weight="700" text-anchor="start">날씨 정보 추가 후, 세 지표 모두 개선</text>
+<text x="32.000" y="77.000" font-size="18" fill="#526878" font-weight="400" text-anchor="start">P6_clean · 동일 라벨 180,332행 · 시드 42 / 1 / 7</text>
+<text x="32.000" y="105.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">10분 공개 지연 가정 · 동일 외부 폴드와 내부 선택 절차</text>
+<rect x="32.000" y="128.000" width="696.000" height="130.000" rx="8" fill="#EFF6F6"/>
+<text x="50.000" y="163.000" font-size="25" fill="#183B4E" font-weight="700" text-anchor="start">Macro F1</text>
+<text x="50.000" y="191.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">높을수록 좋음 ↑</text>
+<text x="282.000" y="157.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">날씨 미사용</text>
+<text x="527.000" y="157.000" font-size="17" fill="#007E80" font-weight="600" text-anchor="start">날씨 사용</text>
+<text x="282.000" y="195.000" font-size="30" fill="#526878" font-weight="600" text-anchor="start">0.573910</text>
+<line x1="457.000" y1="181.000" x2="498.000" y2="181.000" stroke="#526878" stroke-width="2"/>
+<polygon points="498.000,181.000 490.000,176.000 490.000,186.000" fill="#526878"/>
+<text x="527.000" y="195.000" font-size="30" fill="#007E80" font-weight="700" text-anchor="start">0.598945</text>
+<text x="50.000" y="235.000" font-size="23" fill="#007E80" font-weight="700" text-anchor="start">변화 +0.025035</text>
+<text x="355.000" y="234.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">시드별 차이의 SD 0.000533</text>
+<rect x="32.000" y="270.000" width="696.000" height="130.000" rx="8" fill="#EFF6F6"/>
+<text x="50.000" y="305.000" font-size="25" fill="#183B4E" font-weight="700" text-anchor="start">LogLoss</text>
+<text x="50.000" y="333.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">낮을수록 좋음 ↓</text>
+<text x="282.000" y="299.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">날씨 미사용</text>
+<text x="527.000" y="299.000" font-size="17" fill="#007E80" font-weight="600" text-anchor="start">날씨 사용</text>
+<text x="282.000" y="337.000" font-size="30" fill="#526878" font-weight="600" text-anchor="start">0.448116</text>
+<line x1="457.000" y1="323.000" x2="498.000" y2="323.000" stroke="#526878" stroke-width="2"/>
+<polygon points="498.000,323.000 490.000,318.000 490.000,328.000" fill="#526878"/>
+<text x="527.000" y="337.000" font-size="30" fill="#007E80" font-weight="700" text-anchor="start">0.436689</text>
+<text x="50.000" y="377.000" font-size="23" fill="#007E80" font-weight="700" text-anchor="start">변화 -0.011428</text>
+<text x="355.000" y="376.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">시드별 차이의 SD 0.000088</text>
+<rect x="32.000" y="412.000" width="696.000" height="130.000" rx="8" fill="#EFF6F6"/>
+<text x="50.000" y="447.000" font-size="25" fill="#183B4E" font-weight="700" text-anchor="start">ROC-AUC</text>
+<text x="50.000" y="475.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">높을수록 좋음 ↑</text>
+<text x="282.000" y="441.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">날씨 미사용</text>
+<text x="527.000" y="441.000" font-size="17" fill="#007E80" font-weight="600" text-anchor="start">날씨 사용</text>
+<text x="282.000" y="479.000" font-size="30" fill="#526878" font-weight="600" text-anchor="start">0.640618</text>
+<line x1="457.000" y1="465.000" x2="498.000" y2="465.000" stroke="#526878" stroke-width="2"/>
+<polygon points="498.000,465.000 490.000,460.000 490.000,470.000" fill="#526878"/>
+<text x="527.000" y="479.000" font-size="30" fill="#007E80" font-weight="700" text-anchor="start">0.672936</text>
+<text x="50.000" y="519.000" font-size="23" fill="#007E80" font-weight="700" text-anchor="start">변화 +0.032317</text>
+<text x="355.000" y="518.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">시드별 차이의 SD 0.000321</text>
+<text x="32.000" y="583.000" font-size="16" fill="#526878" font-weight="400" text-anchor="start">변화 = 사용 − 미사용 · 세 지표는 척도가 달라 변화량의 크기를 서로 비교하지 않습니다.</text>
+<text x="32.000" y="610.000" font-size="16" fill="#526878" font-weight="400" text-anchor="start">평균과 차이는 원본 수치에서 각각 반올림했습니다. 3시드 SD는 신뢰구간이 아닙니다.</text>
 </svg>

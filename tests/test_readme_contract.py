@@ -76,12 +76,16 @@ def test_readme_details_and_fences_are_balanced():
             summaries += 1
     assert depth == 0, 'Unclosed details element'
     assert openings == summaries and openings > 0
-    # Technical reproduction details may be folded from section 7 onward.
-    # The problem, results and interpretation limits must remain unfolded.
+    # Presentation: technical Q&A may fold early, but the visible reading path
+    # must retain the problem, headline results and interpretation limits.
     reader_body = prose.split('<a id="7-코드구조와재현"></a>', 1)[0]
-    assert '<details>' not in reader_body
-    assert '0.598945' in reader_body and '180,332' in reader_body
-    assert '인과 효과' in reader_body and '실측 공개 지연 시간이 아닙니다' in reader_body
+    visible_body = re.sub(r'<details>.*?</details>', '', reader_body, flags=re.S)
+    assert '0.598945' in visible_body and '180,332' in visible_body
+    assert '인과 효과' in visible_body and '실측 공개 지연 시간이 아닙니다' in visible_body
+    for phrase in ('지연 여부', '255,001', '706,759', '신뢰구간이 아닙니다',
+                   'Macro F1 향상을 확인하지 못했습니다', '10분은 실측 공개 지연 시간이 아닙니다'):
+        assert phrase in visible_body
+    assert '약 16분' in visible_body and '실제 낭독 측정이 아닌' in visible_body
 
 
 def test_readme_current_model_table_matches_tracked_summary():
