@@ -2,9 +2,9 @@
 
 # Airplane · 항공편 지연 예측과 날씨 정보 확장
 
-[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=design%2Fkorean-air-palette-d)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml?query=branch%3Adesign%2Fkorean-air-palette-d)
+[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml?query=branch%3Amaster)
 
-**디자인 비교 · D안 — 대한항공 홈페이지 색상:** C안의 초대형 제목·비대칭 지면·탑승권형 정보표·차트 구성을 유지하고 네이비·하늘색·흰색으로 색상만 바꿨습니다. 연구 수치·평가 범위·실행 방법은 그대로입니다. [A안](https://github.com/Peter-jackson12/Airplane/tree/master) · [B안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold) · [C안 보존](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-flight-magazine-c) · [C→D 변경 비교](https://github.com/Peter-jackson12/Airplane/compare/design/gigi-flight-magazine-c...design/korean-air-palette-d)
+**디자인 비교 · D안 — 대한항공 홈페이지 색상:** C안의 초대형 제목·비대칭 지면·탑승권형 정보표·차트 구성을 유지하고 네이비·하늘색·흰색으로 색상만 바꿨습니다. 연구 수치·평가 범위·실행 방법은 그대로입니다. [A안](https://github.com/Peter-jackson12/Airplane/tree/style/a-editorial) · [B안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold) · [C안 보존](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-flight-magazine-c) · [C→D 변경 비교](https://github.com/Peter-jackson12/Airplane/compare/design/gigi-flight-magazine-c...design/korean-air-palette-d)
 
 [핵심 결과](#5-최신검증결과) · [데이터](#2-데이터와분석범위) · [재현 방법](#7-코드구조와재현) · [실행 근거](#8-문서안내)
 
