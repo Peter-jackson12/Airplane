@@ -1,10 +1,9 @@
-"""Shared flight-magazine D Korean Air homepage-inspired SVG primitives; stdlib only and no external assets."""
+"""Shared original aviation evidence-brief E SVG primitives; stdlib only and no external assets."""
 from html import escape
 
-# Observed 2026-10-01 at https://www.koreanair.com/: navy, cyan, pale sky, white.
-# ACCENT is a darker cyan adaptation for small labels; not an official brand token.
-PAPER='#FFFFFF'; INK='#051766'; MUTED='#5E5E5E'; RULE='#D9D9D9'; ACCENT='#004766'
-CYAN='#57BBEB'; SKY='#DDF1FB'; HIGHLIGHT='#F7F7F7'
+# Original report palette; composition references are credited in README.
+PAPER='#FFFFFF'; INK='#222526'; MUTED='#595F63'; RULE='#D6DADD'; ACCENT='#A72E20'
+CYAN='#F2CFC7'; SKY='#F2F3F3'; HIGHLIGHT='#F7F7F7'
 SANS='Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif'
 HEADING=SANS
 

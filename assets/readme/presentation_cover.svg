@@ -1,33 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1110" viewBox="0 0 1600 1110" role="img" aria-labelledby="title desc">
-<title id="title">Airplane · 항공편 지연 예측과 날씨 정보 확장</title><desc id="desc">항공 연구 매거진 D안. 전처리의 타당성과 새로운 정보의 예측력을 나누어 검증한 정적 교차검증 프로젝트. 문서 기준 2026-09-22. 장식은 실제 비행 경로나 운항 데이터가 아닙니다.</desc>
-<rect width="1600" height="1110" fill="#FFFFFF"/>
-<rect x="0" y="0" width="1600" height="460" fill="#DDF1FB"/>
-<text x="58" y="59" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="21" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums" letter-spacing="3">FLIGHT RESEARCH JOURNAL</text>
-<text x="1540" y="59" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="21" font-weight="400" text-anchor="end" style="font-variant-numeric:tabular-nums" letter-spacing="2">SPECIAL EDITION / D</text>
-<text x="44" y="256" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="206" font-weight="900" text-anchor="start" style="font-variant-numeric:tabular-nums" letter-spacing="-8">AIRPLANE</text>
-<line x1="58" y1="290" x2="1540" y2="290" stroke="#051766" stroke-width="3"/>
-<text x="58" y="342" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="40" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">항공편 지연 예측과 날씨 정보 확장</text>
-<text x="58" y="402" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="27" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">전처리의 타당성과 새로운 정보의 예측력을 나누어 검증했습니다.</text>
-<text x="54" y="568" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="78" font-weight="900" text-anchor="start" style="font-variant-numeric:tabular-nums">THE</text>
-<text x="48" y="673" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="112" font-weight="900" text-anchor="start" style="font-variant-numeric:tabular-nums" letter-spacing="-4">WEATHER</text>
-<text x="52" y="776" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="94" font-weight="900" text-anchor="start" style="font-variant-numeric:tabular-nums" letter-spacing="-3">QUESTION.</text>
-<text x="60" y="842" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="35" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">날씨를 더하면,</text>
-<text x="60" y="892" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="35" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">예측은 달라지는가?</text>
-<rect x="944" y="498" width="596" height="410" fill="#57BBEB"/>
-<text x="980" y="552" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="23" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">연구의 질문</text>
-<text x="979" y="625" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="41" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">더 타당한 전처리.</text>
-<text x="979" y="683" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="41" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">더 많은 정보.</text>
-<line x1="981" y1="724" x2="1500" y2="724" stroke="#051766" stroke-width="2"/>
-<text x="981" y="774" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="25" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">같은 조건에서 따로 검증합니다.</text>
-<text x="981" y="824" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="25" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">LightGBM · 이진 분류</text>
-<text x="981" y="868" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="25" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">동일조건 정적 교차검증</text>
-<path d="M757 853 C867 836 794 595 932 555" fill="none" stroke="#004766" stroke-width="3"/>
-<path d="M912 552 L932 555 L924 575" fill="none" stroke="#004766" stroke-width="3"/>
-<circle cx="757" cy="853" r="7" fill="#051766" stroke="#051766" stroke-width="2"/>
-<rect x="0" y="952" width="1600" height="158" fill="#051766"/>
-<text x="60" y="1008" fill="#FFFFFF" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="21" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums" letter-spacing="3">READING PASS</text>
-<text x="60" y="1061" fill="#FFFFFF" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="31" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">본문 16분 + 전환·질문 3분</text>
-<text x="1016" y="1010" fill="#FFFFFF" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="23" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">연구 기록 · Peter-jackson12 TF</text>
-<text x="1016" y="1054" fill="#FFFFFF" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="23" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">문서 기준 2026-09-22</text>
-<text x="1016" y="1087" fill="#FFFFFF" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="17" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">권장 배분이며 실제 낭독 측정이 아닙니다.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1010" viewBox="0 0 1600 1010" role="img" aria-labelledby="title desc">
+<title id="title">Airplane · 항공편 지연 예측과 날씨 정보 확장</title><desc id="desc">항공 데이터 브리프 E안. 검증된 집계에 기반한 요약. 날씨 비교 180,332행과 전처리 평가 255,001행은 다른 집단. 10분은 가정. 미래 운항 성능은 미검증.</desc>
+<rect width="1600" height="1010" fill="#FFFFFF"/>
+<rect x="64" y="42" width="54" height="42" fill="#A72E20"/>
+<text x="91" y="72" fill="#FFFFFF" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="23" font-weight="700" text-anchor="middle" style="font-variant-numeric:tabular-nums">E</text>
+<text x="140" y="72" fill="#222526" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="23" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">항공 데이터 연구 / 2026.09.22</text>
+<text x="1536" y="72" fill="#595F63" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="20" font-weight="400" text-anchor="end" style="font-variant-numeric:tabular-nums" letter-spacing="1">AIRPLANE / EVIDENCE BRIEF</text>
+<line x1="64" y1="104" x2="1536" y2="104" stroke="#222526" stroke-width="2"/>
+<text x="59" y="235" fill="#222526" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="120" font-weight="900" text-anchor="start" style="font-variant-numeric:tabular-nums" letter-spacing="-4">AIRPLANE</text>
+<text x="65" y="302" fill="#222526" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="43" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">항공편 지연 예측과 날씨 정보 확장</text>
+<text x="65" y="361" fill="#595F63" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">전처리의 타당성과 새로운 정보의 예측력을 나누어 검증했습니다.</text>
+<rect x="65" y="405" width="1470" height="168" fill="#222526"/>
+<text x="98" y="453" fill="#FFFFFF" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="20" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums" letter-spacing="2">RESEARCH FINDING</text>
+<text x="98" y="512" fill="#FFFFFF" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="36" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">전처리 수정만으로는 성능 향상 미확인.</text>
+<text x="98" y="553" fill="#FFFFFF" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="31" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">날씨를 추가한 동일조건 비교에서는 세 지표 모두 개선.</text>
+<text x="65" y="641" fill="#222526" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="26" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">Macro F1 ↑</text>
+<text x="62" y="723" fill="#A72E20" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="63" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">+0.025035</text>
+<text x="65" y="769" fill="#222526" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="27" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">0.573910 → 0.598945</text>
+<text x="65" y="808" fill="#595F63" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="21" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">변화 / 사용−미사용 · 3시드 평균</text>
+<line x1="550" y1="617" x2="550" y2="824" stroke="#D6DADD" stroke-width="2"/>
+<text x="565" y="641" fill="#222526" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="26" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">LogLoss ↓</text>
+<text x="562" y="723" fill="#A72E20" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="63" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">-0.011428</text>
+<text x="565" y="769" fill="#222526" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="27" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">0.448116 → 0.436689</text>
+<text x="565" y="808" fill="#595F63" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="21" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">변화 / 사용−미사용 · 3시드 평균</text>
+<line x1="1050" y1="617" x2="1050" y2="824" stroke="#D6DADD" stroke-width="2"/>
+<text x="1065" y="641" fill="#222526" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="26" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">ROC-AUC ↑</text>
+<text x="1062" y="723" fill="#A72E20" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="63" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">+0.032317</text>
+<text x="1065" y="769" fill="#222526" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="27" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">0.640618 → 0.672936</text>
+<text x="1065" y="808" fill="#595F63" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="21" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">변화 / 사용−미사용 · 3시드 평균</text>
+<line x1="65" y1="851" x2="1535" y2="851" stroke="#222526" stroke-width="2"/>
+<text x="65" y="896" fill="#222526" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="27" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">동일 라벨 180,332행 · 시드 42 / 1 / 7 · 14개 날씨 피처</text>
+<text x="65" y="941" fill="#595F63" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="24" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">정적 교차검증 · 10분 공개 지연은 가정 · 인과 효과와 미래 운항 성능은 미검증</text>
+<text x="65" y="984" fill="#595F63" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="21" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">Peter-jackson12 TF</text>
+<text x="1535" y="984" fill="#595F63" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="21" font-weight="400" text-anchor="end" style="font-variant-numeric:tabular-nums">읽기 16분 + 전환·질문 3분 / 권장 배분</text>
 </svg>

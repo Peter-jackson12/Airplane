@@ -145,14 +145,14 @@ GRID, PAPER = editorial.RULE, editorial.PAPER
 
 
 class SVG:
-    """Deterministic 1600-unit magazine figures, with honest plotting geometry."""
+    """Deterministic 1600-unit report figures, with honest plotting geometry."""
 
     def __init__(self, height: int, title: str, description: str, chart_type: str):
         self.height = height
         self.parts = [
             f'<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="{height}" '
             f'viewBox="0 0 1600 {height}" role="img" aria-labelledby="title desc" '
-            f'data-design="korean-air-palette-d" data-chart-type="{chart_type}">',
+            f'data-design="reference-report-e" data-chart-type="{chart_type}">',
             f'<title id="title">{escape(title)}</title><desc id="desc">{escape(description)}</desc>',
             '<style>text{font-family:"Noto Sans CJK KR","Malgun Gothic",'
             '"Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>',
@@ -183,7 +183,8 @@ class SVG:
         self.parts.append(f'<polygon points="{values}" fill="{color}"/>')
 
     def running(self, number, topic):
-        self.rect(80, 38, 22, 22, CYAN)
+        self.rect(64, 31, 43, 42, BLUE)
+        self.text(85, 60, number, 22, PAPER, 700, 'middle')
         self.text(121, 58, topic, 24, weight=600)
         self.text(1516, 58, f'AIRPLANE  /  {number}', 23, MUTED, anchor='end')
         self.line(80, 82, 1516, 82, INK, 2)
@@ -352,50 +353,36 @@ def build() -> None:
     svg.footer('전처리 비교 / 02')
     finish(svg, 'models')
 
-    # One deliberately asymmetric lead result and two distinct metric strips.
-    # The three independent quantitative axes may not be compared as magnitudes.
-    svg = SVG(1380, '동일조건 비교에서 세 지표 모두 개선',
-              'P6_clean, 동일 라벨 180,332행, 시드 42/1/7. Macro F1 0.573910에서 0.598945, '
-              'LogLoss 0.448116에서 0.436689, ROC-AUC 0.640618에서 0.672936. '
-              '변화량은 사용−미사용이며 원본 집계에서 따로 반올림했습니다. 각 지표는 독립 확대 축입니다. '
-              '10분 공개 지연은 가정이고 인과 효과와 미래 운항 성능은 미검증입니다.', 'asymmetric-paired-metric-strips')
-    svg.rect(0, 334, 1035, 435, SKY)
-    svg.rect(1080, 334, 520, 435, INK)
-    svg.rect(1059, 334, 12, 435, CYAN)
-    svg.running('03', '날씨 정보 · 동일조건 비교')
-    svg.text(80, 166, '날씨를 더한 같은 조건,', 64, weight=700, heading=True)
-    svg.text(80, 248, '세 지표가 같은 결론', 64, weight=700, heading=True)
-    svg.text(84, 303, 'P6_clean · 동일 라벨 180,332행 · 시드 42 / 1 / 7', 28, MUTED)
-    first = data['weather_model'][0]
-    svg.text(84, 395, 'Macro F1 ↑ 높을수록 좋음', 31, BLUE, 600)
-    svg.text(73, 526, f"{first['delta_mean']:+.6f}", 129, BLUE, 700, heading=True)
-    svg.text(86, 574, '변화 (사용−미사용) / 3시드 평균', 26, MUTED)
-    svg.text(930, 605, '○ 미사용 · ● 사용', 22, BLUE, anchor='end')
-    svg.paired_axis(first, 110, 635, 820, 0.565, 0.605, (0.565,0.575,0.585,0.595,0.605))
-    svg.text(84, 747, 'Macro F1 · 차이를 읽기 위한 확대 축', 23, MUTED)
-    svg.text(1130, 394, '날씨 미사용', 27, SKY)
-    svg.text(1130, 461, f"{first['off_mean']:.6f}", 58, PAPER, 500, heading=True)
-    svg.line(1130, 497, 1516, 497, CYAN, 2)
-    svg.text(1130, 549, '날씨 사용', 27, SKY)
-    svg.text(1130, 616, f"{first['on_mean']:.6f}", 58, PAPER, 700, heading=True)
-    svg.text(1130, 706, f"차이의 SD {first['sd']:.6f}", 25, SKY)
-    svg.line(799, 813, 799, 1166, GRID, 1.5)
-    for row, x, lo, hi, ticks in (
-            (data['weather_model'][1], 84, 0.430, 0.455, (0.430,0.440,0.450,0.455)),
-            (data['weather_model'][2], 865, 0.630, 0.680, (0.630,0.650,0.670,0.680))):
-        guide = '높을수록 좋음 ↑' if row['higher_is_better'] else '낮을수록 좋음 ↓'
-        svg.text(x, 834, row['metric'], 35, weight=600)
-        svg.text(x+650, 833, guide, 24, MUTED, anchor='end')
-        svg.text(x-4, 923, f"{row['delta_mean']:+.6f}", 76, BLUE, 700, heading=True)
-        svg.text(x, 967, f"변화 (사용−미사용) · 차이의 SD {row['sd']:.6f}", 23, MUTED)
-        svg.text(x, 1017, f"{row['off_mean']:.6f} → {row['on_mean']:.6f}", 32, weight=500)
-        svg.text(x+650, 1017, '미사용 → 사용', 21, MUTED, anchor='end')
-        svg.paired_axis(row, x+30, 1081, 580, lo, hi, ticks)
-        svg.text(x, 1190, f"{row['metric']} · 독립 확대 축", 23, MUTED)
-    svg.line(84, 1220, 1516, 1220, INK, 2)
-    svg.text(84, 1264, '세 지표는 척도가 달라 변화량의 크기를 서로 비교하지 않습니다. 평균과 변화량은 각각 반올림했습니다.', 24, MUTED)
-    svg.text(84, 1305, '10분 공개 지연 가정 · 3시드 SD는 신뢰구간이 아닙니다 · 인과 효과와 미래 운항 성능은 미검증', 24, MUTED)
-    svg.text(84, 1346, '기존 전처리의 255,001행과 다른 평가 집단입니다. 세 시드 모두 각 지표의 개선 방향이 같았습니다.', 24, MUTED)
+    # Three equal-height report rows: each metric retains its own labelled axis.
+    svg = SVG(1220, '동일조건 날씨 비교에서 세 지표 모두 개선',
+              '동일 라벨 180,332행. 날씨 미사용과 날씨 사용의 3시드 평균, 변화량과 차이의 SD. '
+              '각 지표는 독립 확대 축. 10분 공개 지연 가정. 미래 운항 성능은 미검증.',
+              'report-grid-paired-metric-rows')
+    svg.running('03', '날씨 정보 / 동일조건 결과 명세')
+    svg.text(80, 166, '세 지표, 같은 개선 방향', 62, weight=700, heading=True)
+    svg.text(80, 225, 'P6_clean · 동일 라벨 180,332행 · 시드 42 / 1 / 7', 28, MUTED)
+    svg.rect(64, 266, 1472, 51, INK)
+    for x,label in ((85,'지표 / 변화(사용−미사용)'),(620,'날씨 미사용 ○ → 날씨 사용 ●'),(1250,'3시드 평균')):
+        svg.text(x,300,label,24,PAPER,600)
+    axes=[(.565,.605,(.565,.575,.585,.595,.605)),(.430,.455,(.430,.440,.450,.455)),(.630,.680,(.630,.650,.670,.680))]
+    for i,(row,(lo,hi,ticks)) in enumerate(zip(data['weather_model'],axes)):
+        y=340+i*234
+        if i%2==0:svg.rect(64,y-5,1472,221,SKY)
+        guide='높을수록 좋음 ↑' if row['higher_is_better'] else '낮을수록 좋음 ↓'
+        svg.text(84,y+39,row['metric'],31,weight=700)
+        svg.text(84,y+85,guide,23,MUTED)
+        svg.text(80,y+163,f"{row['delta_mean']:+.6f}",60,BLUE,700,heading=True)
+        svg.text(84,y+198,f"차이의 SD {row['sd']:.6f}",23,MUTED)
+        svg.paired_axis(row,615,y+91,535,lo,hi,ticks)
+        svg.text(882,y+198,'독립 확대 축',22,MUTED,anchor='middle')
+        svg.text(1260,y+49,'미사용',23,MUTED)
+        svg.text(1260,y+94,f"{row['off_mean']:.6f}",37,INK,500)
+        svg.text(1260,y+142,'사용',23,BLUE)
+        svg.text(1260,y+188,f"{row['on_mean']:.6f}",37,BLUE,700)
+        svg.line(64,y+218,1536,y+218,GRID,1)
+    svg.text(80,1089,'세 지표는 척도가 달라 변화량의 크기를 서로 비교하지 않습니다. 평균과 변화량은 각각 반올림했습니다.',24,MUTED)
+    svg.text(80,1134,'10분 공개 지연 가정 · 3시드 SD는 신뢰구간이 아닙니다 · 인과 효과와 미래 운항 성능은 미검증',24,MUTED)
+    svg.text(80,1179,'기존 전처리의 255,001행과 다른 평가 집단입니다. 세 시드 모두 각 지표의 개선 방향이 같았습니다.',24,MUTED)
     finish(svg, 'weather_model')
 
     # Two aligned point panels replace the old two-dimensional scatter. Every

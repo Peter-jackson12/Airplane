@@ -2,9 +2,9 @@
 
 # Airplane · 항공편 지연 예측과 날씨 정보 확장
 
-[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=design%2Fkorean-air-palette-d)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml?query=branch%3Adesign%2Fkorean-air-palette-d)
+[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=design%2Freference-report-e)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml?query=branch%3Adesign%2Freference-report-e)
 
-**디자인 비교 · D안 — 대한항공 홈페이지 색상:** C안의 초대형 제목·비대칭 지면·탑승권형 정보표·차트 구성을 유지하고 네이비·하늘색·흰색으로 색상만 바꿨습니다. 연구 수치·평가 범위·실행 방법은 그대로입니다. [A안](https://github.com/Peter-jackson12/Airplane/tree/master) · [B안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold) · [C안 보존](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-flight-magazine-c) · [C→D 변경 비교](https://github.com/Peter-jackson12/Airplane/compare/design/gigi-flight-magazine-c...design/korean-air-palette-d)
+**디자인 비교 · E안 — 항공 데이터 브리프:** EUROCONTROL·SWISS의 보고서와 데이터 시각화 프로젝트를 참고해, 정렬된 지표 요약·번호형 명세·같은 높이의 비교 행으로 새로 구성했습니다. 수치·평가 범위·실행 방법은 유지했습니다. [A안](https://github.com/Peter-jackson12/Airplane/tree/master) · [B안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold) · [C안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-flight-magazine-c) · [D안](https://github.com/Peter-jackson12/Airplane/tree/design/korean-air-palette-d) · [D→E 변경 비교](https://github.com/Peter-jackson12/Airplane/compare/design/korean-air-palette-d...design/reference-report-e)
 
 [핵심 결과](#5-최신검증결과) · [데이터](#2-데이터와분석범위) · [재현 방법](#7-코드구조와재현) · [실행 근거](#8-문서안내)
 
@@ -32,27 +32,27 @@
 **해석 범위:** 날씨 유무 동일조건 비교까지 완료했지만, 날짜가 확인된 선택 집단의 **정적 교차검증** 결과입니다. **10분은 실측 공개 지연 시간이 아닙니다.** 날씨의 인과 효과나 미래 운항 성능으로 일반화하지 않습니다. 3시드 표준편차(SD)는 신뢰구간이 아닙니다.
 
 
-## 읽기 패스 · 20분 안에 지나가는 다섯 장면
+## 발표 순서 · 20분 안에 읽는 다섯 질문
 
 **본문 설명 약 16분 + 전환·질문 여유 약 3분**을 권장합니다. 아래는 실제 낭독 측정이 아닌 권장 시간 배분입니다. 접힌 “질문 대비”는 본 발표에서 건너뛰고 질문이 나올 때 펼칩니다.
 
-**01 / 출발 · 2분**
+**01 / 문제 · 2분**
 
 [무엇을 예측하나요?](#1-목적과문제정의) — 항공편 한 건의 지연 여부, 그리고 라벨의 경계
 
-**02 / 점검 · 4분**
+**02 / 데이터 · 4분**
 
 [데이터를 어떻게 믿을 수 있나요?](#3-전처리결정과근거) — 모호한 대치를 멈추고 관측과 추정을 구별
 
-**03 / 경계 · 3분**
+**03 / 평가 · 3분**
 
 [공정하게 비교했나요?](#4-현재파이프라인) — 모델 선택과 최종 채점을 분리한 평가
 
-**04 / 발견 · 5분**
+**04 / 결과 · 5분**
 
 [날씨를 더하면 달라지나요?](#weather-model-result) — 같은 180,332행에서 세 지표 모두 개선
 
-**05 / 도착 · 2분**
+**05 / 한계 · 2분**
 
 [어디까지 말할 수 있나요?](#6-한계와다음단계) — 정적 교차검증의 결론과 미래 운영의 한계
 
@@ -63,7 +63,7 @@
 ---
 
 <a id="1-목적과문제정의"></a>
-## 01 / 출발점
+## 01 / 연구 질문
 ### 무엇을 예측할 것인가
 
 “이 항공편은 지연될까?”를 예측하되, 어떤 데이터를 쓸 수 있는지부터 확인했습니다.
@@ -344,7 +344,7 @@ uv run --locked --offline python -m pytest -q
 <a id="readme-figures"></a>
 ### README 그림의 재현과 출처 검증
 
-다음 명령은 Git에 추적된 집계 CSV·JSON만 읽습니다. IEM 호출·원본 데이터 로드·모델 학습을 하지 않습니다. 그림 파일은 네이비·하늘색·흰색 팔레트에 초대형 산세리프 제목, 비대칭 매거진 지면과 탑승권형 구성을 적용한 정적 SVG입니다. D안은 C안의 세로 평균·SD 그림, 분리된 지표 축, 출발·도착 소형 배수 차트 등 모든 도형 배치를 그대로 유지합니다. 장식 선과 바코드는 실제 운항 정보나 탑승 자격을 뜻하지 않습니다. 색상은 2026-10-01 [대한항공 공식 홈페이지](https://www.koreanair.com/)의 화면에서 확인한 네이비 `#051766`, 하늘색 `#57BBEB`, 연한 하늘색 `#DDF1FB`, 흰색 `#FFFFFF`를 참고했습니다. 작은 강조 글자에는 대비를 위해 더 짙은 청색 `#004766`을 사용합니다. 공식 브랜드 규정의 재현이 아니며, 대한항공 로고를 사용하거나 제휴 관계를 뜻하지 않습니다. 숫자·단위·해석 범위는 본문과 같은 근거를 사용합니다. 생성기는 Python 표준 라이브러리만 사용하며 한글은 시스템 글꼴로 표시합니다. 외부 글꼴·이미지·스크립트를 불러오지 않으므로 파일 자체의 재생성에는 글꼴 설치가 필요하지 않습니다. 운영체제별 글꼴 모양에는 차이가 있을 수 있으며, 본문의 표와 대체 텍스트로도 정확한 결과를 읽을 수 있습니다.
+다음 명령은 Git에 추적된 집계 CSV·JSON만 읽습니다. IEM 호출·원본 데이터 로드·모델 학습을 하지 않습니다. 그림 파일은 흰색·차콜·짙은 주홍의 항공 데이터 브리프형 정적 SVG입니다. E안은 결과를 먼저 보여주는 표지, 두 평가 집단의 평행 명세, 선택·채점의 분리 구조와 같은 높이의 지표 비교 행을 새로 구성했습니다. [디자인 참고와 적용 범위](#design-references)에 외부 보고서·README 출처를 명시했습니다. 숫자·단위·해석 범위는 본문과 같은 근거를 사용합니다. 생성기는 Python 표준 라이브러리만 사용하며 한글은 시스템 글꼴로 표시합니다. 외부 글꼴·이미지·스크립트를 불러오지 않으므로 파일 자체의 재생성에는 글꼴 설치가 필요하지 않습니다. 운영체제별 글꼴 모양에는 차이가 있을 수 있으며, 본문의 표와 대체 텍스트로도 정확한 결과를 읽을 수 있습니다.
 
 ```powershell
 # 그림·실제 사용값·출처 및 그림 해시 생성
@@ -1320,3 +1320,16 @@ uv run --locked --offline python -u -m notebooks.run_weather_full_collection --n
 </details>
 
 새 결과가 나오면 현재 상태·관련 결론·근거 링크를 먼저 갱신합니다. 상세 회차는 해당 부록에 연결하고 상단을 다시 작업 로그로 늘리지 않습니다. 지속적인 에이전트 규칙은 [AGENTS.md](AGENTS.md), 프로젝트의 현재 설명은 이 README가 담당합니다.
+
+
+<a id="design-references"></a>
+### E안 디자인 참고와 적용 범위
+
+외부 자료는 **디자인 참고**이며 Airplane의 성능 근거가 아닙니다. 아래 자료의 구성 원칙을 참고해 모든 SVG를 새로 작성했습니다. 로고·사진·지도·문구·원본 도판을 복제하지 않았습니다.
+
+- [EUROCONTROL Data Snapshot 57](https://www.eurocontrol.int/sites/default/files/2026-01/eurocontrol-data-snapshot-57.pdf): 주제 띠와 정렬된 지표·차트의 구성 → 표지의 세 지표 요약, 결과의 동일 높이 비교 행
+- [SWISS Environmental Report 2024, 4쪽](https://www.swiss.com/content/dam/swiss/pdfs/corporate/SWISS_Environmental_Report_2024_EN.pdf): 번호형 제목·넓은 여백·별도 통계 블록 → 흰 지면, 붉은 번호, 두 평가 집단의 명세판
+- [ClickHouse ADS-B Massive Visualizer](https://github.com/ClickHouse/adsb.exposed): 시각적 사례를 먼저 보여주고 데이터·구현 설명을 분리하는 README → 첫 화면의 결과 요약과 아래쪽 재현·근거 문서
+- [Observable Plot](https://github.com/observablehq/plot): 짧은 소개와 그림, 문서·예제 진입점의 분리 → 핵심 링크 유지와 제목·그림·짧은 해석의 반복
+
+참고 확인: 2026-10-01. 흰색·차콜·짙은 주홍의 자체 팔레트를 사용하며 어떤 기관의 공식 문서도 아닙니다. 8개 SVG는 저장된 집계 또는 설명용 명세에서 재생성하고, 정량 도판 5개는 원본·필터·수치·파일 해시를 검증합니다.

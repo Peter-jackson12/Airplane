@@ -253,7 +253,7 @@ def test_presentation_story_retains_population_and_evaluation_boundaries():
         assert phrase in evaluation
 
 
-def test_all_readme_artwork_retains_flat_korean_air_homepage_palette():
+def test_all_readme_artwork_retains_flat_report_palette():
     filenames = [*builder.FIGURES.values(), 'presentation_cover.svg',
                  'analysis_journey.svg', 'evaluation_boundary.svg']
     for filename in filenames:
@@ -263,9 +263,9 @@ def test_all_readme_artwork_retains_flat_korean_air_homepage_palette():
         assert rectangles and rectangles[0].attrib['fill'] == '#FFFFFF'
         assert all(float(rect.attrib.get('rx', 0)) == 0 for rect in rectangles)
         assert not any(node.tag.endswith(('linearGradient', 'radialGradient')) for node in svg.iter())
-        assert '#051766' in raw and 'Noto Sans CJK KR' in raw
+        assert '#222526' in raw and 'Noto Sans CJK KR' in raw
         if filename != 'presentation_cover.svg':
-            assert '#004766' in raw
+            assert '#A72E20' in raw
         assert 'Noto Serif CJK KR' not in raw
         for previous_color in ('#102D40', '#183B4E', '#007E80', '#EFF6F6', '#F5F2EB', '#A5442B'):
             assert previous_color not in raw
@@ -279,43 +279,43 @@ def test_figure_receipt_rejects_changed_editorial_renderer(tmp_path, monkeypatch
         builder.check_receipt()
 
 
-def test_magazine_d_uses_oversized_type_and_asymmetric_boarding_passes():
+def test_report_e_uses_evidence_grid_and_population_panels():
     cover = ET.fromstring((ROOT / 'assets/readme/presentation_cover.svg').read_text())
-    assert max(float(n.attrib.get('font-size', 0)) for n in cover.iter()) >= 200
-    assert 'THE' in ''.join(cover.itertext()) and 'WEATHER' in ''.join(cover.itertext())
+    assert 100 <= max(float(n.attrib.get('font-size', 0)) for n in cover.iter()) < 150
+    for metric in ('Macro F1', 'LogLoss', 'ROC-AUC'):
+        assert metric in ''.join(cover.itertext())
     journey = ET.fromstring((ROOT / 'assets/readme/analysis_journey.svg').read_text())
     rects = journey.findall('{http://www.w3.org/2000/svg}rect')
-    assert any(r.attrib.get('x') == '60' and r.attrib.get('fill') == '#DDF1FB' for r in rects)
-    assert any(r.attrib.get('x') == '159' and r.attrib.get('fill') == '#57BBEB' for r in rects)
+    assert sum(r.attrib.get('width') == '720' and r.attrib.get('height') == '361' for r in rects) == 2
     assert '도형 크기는 수량을 뜻하지 않습니다.' in ''.join(journey.itertext())
 
 
-def test_magazine_d_readme_identifies_four_separate_branches():
+def test_report_e_readme_identifies_five_separate_branches():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
-    assert '디자인 비교 · D안' in text
+    assert '디자인 비교 · E안' in text
     assert 'https://github.com/Peter-jackson12/Airplane/tree/master' in text
     assert 'https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold' in text
-    assert 'compare/design/gigi-flight-magazine-c...design/korean-air-palette-d' in text
-    assert 'badge.svg?branch=design%2Fkorean-air-palette-d' in text
+    assert 'compare/design/korean-air-palette-d...design/reference-report-e' in text
+    assert 'badge.svg?branch=design%2Freference-report-e' in text
     assert '본문 설명 약 16분 + 전환·질문 여유 약 3분' in text
 
 
-def test_magazine_d_preserves_all_readme_code_blocks_from_b():
+def test_report_e_preserves_all_readme_code_blocks_from_b():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
     blocks = re.findall(r'```[^\n]*\n.*?```', text, re.S)
     assert hashlib.sha256(json.dumps(blocks, ensure_ascii=False).encode()).hexdigest() == 'c8e177b591f64156f5275a938294c77773d5e98125ff7b855fee20a56c58267c'
 
 
-def test_magazine_d_quantitative_figures_use_distinct_chart_geometries():
+def test_report_e_quantitative_figures_use_distinct_chart_geometries():
     chart_types = set()
     for filename in builder.FIGURES.values():
         svg = ET.fromstring((ROOT / 'assets/readme' / filename).read_text())
-        assert svg.attrib['data-design'] == 'korean-air-palette-d'
+        assert svg.attrib['data-design'] == 'reference-report-e'
         chart_types.add(svg.attrib['data-chart-type'])
     assert len(chart_types) == 5
 
 
-def test_homepage_palette_text_contrast_is_at_least_aa():
+def test_report_palette_text_contrast_is_at_least_aa():
     from scripts import readme_editorial as style
     def luminance(color):
         channels = [int(color[i:i+2], 16) / 255 for i in (1, 3, 5)]
@@ -328,3 +328,10 @@ def test_homepage_palette_text_contrast_is_at_least_aa():
     for foreground, background in pairs:
         a, b = sorted((luminance(foreground), luminance(background)))
         assert (b + .05) / (a + .05) >= 4.5, (foreground, background)
+
+
+def test_report_e_credits_verified_external_composition_references():
+    text=(ROOT/'README.md').read_text()
+    for source in ('eurocontrol-data-snapshot-57.pdf','SWISS_Environmental_Report_2024_EN.pdf','github.com/ClickHouse/adsb.exposed','github.com/observablehq/plot'):
+        assert source in text
+    assert '로고·사진·지도·문구·원본 도판을 복제하지 않았습니다.' in text
