@@ -253,7 +253,7 @@ def test_presentation_story_retains_population_and_evaluation_boundaries():
         assert phrase in evaluation
 
 
-def test_all_readme_artwork_retains_flat_gigi_style():
+def test_all_readme_artwork_retains_flat_sky_gold_palette():
     filenames = [*builder.FIGURES.values(), 'presentation_cover.svg',
                  'analysis_journey.svg', 'evaluation_boundary.svg']
     for filename in filenames:
@@ -279,50 +279,37 @@ def test_figure_receipt_rejects_changed_editorial_renderer(tmp_path, monkeypatch
         builder.check_receipt()
 
 
-# Text fingerprints from A at 31857e83253ae5ac49bbcd394169435cc2527528.
-A_TEXT_SHA256 = {
-    'analysis_journey.svg': '347394217ced1bfeb744d7c27139a251a8e172cb310ee899900d4ff57f9c2551',
-    'calibration_tradeoff.svg': '5ce5e74c8738face6968c7c8bdcff9c21ec0a919e6b279ec974aa1b0b5b6a803',
-    'date_attribution.svg': '0de5cbec08b01b2ca4f722268fd1375121852c2e5bf0ea07b0cdc057d239161e',
-    'evaluation_boundary.svg': '672712968b0d641378107cd0ebb10215fb98bfa736641d6403285b640879b9ce',
-    'model_comparison.svg': '88bccd9e526598323bda7ffaeb252cb44f0592284d70764d05087c6c52d061c4',
-    'presentation_cover.svg': '2021e6e546d6c1bf6a61ba7bfd6ec5f0cc880130adbd79288c0ffce9d5210a4d',
-    'weather_latency.svg': '7528a4c635a14e5882ed7fc7db47051c3ac06550a501a4475de1e16d33ba47ce',
-    'weather_model_comparison.svg': '1e34696af60c7d09ec6f1864c56c8971e2812c812b9ec78cf0f12e5a987dcb59',
-}
+def test_magazine_c_uses_oversized_type_and_asymmetric_boarding_passes():
+    cover = ET.fromstring((ROOT / 'assets/readme/presentation_cover.svg').read_text())
+    assert max(float(n.attrib.get('font-size', 0)) for n in cover.iter()) >= 200
+    assert 'THE' in ''.join(cover.itertext()) and 'WEATHER' in ''.join(cover.itertext())
+    journey = ET.fromstring((ROOT / 'assets/readme/analysis_journey.svg').read_text())
+    rects = journey.findall('{http://www.w3.org/2000/svg}rect')
+    assert any(r.attrib.get('x') == '60' and r.attrib.get('fill') == '#E4F0F5' for r in rects)
+    assert any(r.attrib.get('x') == '159' and r.attrib.get('fill') == '#D5BD8F' for r in rects)
+    assert '도형 크기는 수량을 뜻하지 않습니다.' in ''.join(journey.itertext())
 
 
-def test_gigi_preserves_all_research_text_from_a():
-    for filename, expected in A_TEXT_SHA256.items():
-        svg = ET.fromstring((ROOT / 'assets/readme' / filename).read_text(encoding='utf-8'))
-        content = [(node.tag.rsplit('}', 1)[-1], node.text) for node in svg.iter()
-                   if node.tag.rsplit('}', 1)[-1] in {'title', 'desc', 'text'}]
-        digest = hashlib.sha256(json.dumps(content, ensure_ascii=False).encode()).hexdigest()
-        assert digest == expected, filename
-
-
-def test_gigi_uses_sky_panels_and_decorative_gold_rules():
-    namespace = {'svg': 'http://www.w3.org/2000/svg'}
-    for filename in ('presentation_cover.svg', 'analysis_journey.svg',
-                     'evaluation_boundary.svg', 'weather_model_comparison.svg'):
-        svg = ET.fromstring((ROOT / 'assets/readme' / filename).read_text(encoding='utf-8'))
-        rects = svg.findall('svg:rect', namespace)
-        assert any(node.attrib['fill'] == '#E4F0F5' for node in rects), filename
-        gold = [node for node in svg.iter() if '#D5BD8F' in node.attrib.values()]
-        assert gold and all(node.tag.endswith('line') for node in gold), filename
-    weather = ET.fromstring((ROOT / 'assets/readme/weather_model_comparison.svg').read_text(encoding='utf-8'))
-    panels = [node for node in weather.findall('svg:rect', namespace)
-              if node.attrib['fill'] == '#EAF2F4']
-    assert len(panels) == 1
-    assert panels[0].attrib == {'x': '853', 'y': '356', 'width': '308',
-                                'height': '490', 'fill': '#EAF2F4'}
-
-
-def test_gigi_readme_identifies_comparison_and_branch_ci():
+def test_magazine_c_readme_identifies_three_separate_branches():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
-    assert '디자인 비교 · B안 (Gigi)' in text
-    assert '산세리프 제목과 하늘색·골드 포인트' in text
-    assert '명조 제목' not in text
+    assert '디자인 비교 · C안' in text
     assert 'https://github.com/Peter-jackson12/Airplane/tree/master' in text
-    assert 'https://github.com/Peter-jackson12/Airplane/compare/master...design/gigi-sky-gold' in text
-    assert 'badge.svg?branch=design%2Fgigi-sky-gold' in text
+    assert 'https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold' in text
+    assert 'compare/design/gigi-sky-gold...design/gigi-flight-magazine-c' in text
+    assert 'badge.svg?branch=design%2Fgigi-flight-magazine-c' in text
+    assert '본문 설명 약 16분 + 전환·질문 여유 약 3분' in text
+
+
+def test_magazine_c_preserves_all_readme_code_blocks_from_b():
+    text = (ROOT / 'README.md').read_text(encoding='utf-8')
+    blocks = re.findall(r'```[^\n]*\n.*?```', text, re.S)
+    assert hashlib.sha256(json.dumps(blocks, ensure_ascii=False).encode()).hexdigest() == 'c8e177b591f64156f5275a938294c77773d5e98125ff7b855fee20a56c58267c'
+
+
+def test_magazine_c_quantitative_figures_use_distinct_chart_geometries():
+    chart_types = set()
+    for filename in builder.FIGURES.values():
+        svg = ET.fromstring((ROOT / 'assets/readme' / filename).read_text())
+        assert svg.attrib['data-design'] == 'flight-magazine-c'
+        chart_types.add(svg.attrib['data-chart-type'])
+    assert len(chart_types) == 5

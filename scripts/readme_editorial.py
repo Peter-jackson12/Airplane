@@ -1,4 +1,4 @@
-"""Shared Gigi sky-and-gold SVG primitives; stdlib only and no external assets."""
+"""Shared flight-magazine C sky-and-gold SVG primitives; stdlib only and no external assets."""
 from html import escape
 
 PAPER='#FBF8F0'; INK='#304750'; MUTED='#61727A'; RULE='#D7DCD9'; ACCENT='#356A86'

@@ -2,9 +2,9 @@
 
 # Airplane · 항공편 지연 예측과 날씨 정보 확장
 
-[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=design%2Fgigi-sky-gold)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml?query=branch%3Adesign%2Fgigi-sky-gold)
+[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=design%2Fgigi-flight-magazine-c)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml?query=branch%3Adesign%2Fgigi-flight-magazine-c)
 
-**디자인 비교 · B안 (Gigi):** 하늘색·골드와 산세리프 서체를 적용했습니다. 연구 내용과 수치는 A안과 같습니다. [A안 보기](https://github.com/Peter-jackson12/Airplane/tree/master) · [A→B 변경 비교](https://github.com/Peter-jackson12/Airplane/compare/master...design/gigi-sky-gold)
+**디자인 비교 · C안 — 항공 연구 매거진:** B안의 크림·하늘색·골드를 유지하고, 초대형 제목·비대칭 지면·탑승권형 정보표·새 차트 구성으로 다시 설계했습니다. 연구 수치·평가 범위·실행 방법은 그대로입니다. [A안](https://github.com/Peter-jackson12/Airplane/tree/master) · [B안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold) · [B→C 변경 비교](https://github.com/Peter-jackson12/Airplane/compare/design/gigi-sky-gold...design/gigi-flight-magazine-c)
 
 [핵심 결과](#5-최신검증결과) · [데이터](#2-데이터와분석범위) · [재현 방법](#7-코드구조와재현) · [실행 근거](#8-문서안내)
 
@@ -13,7 +13,9 @@
 작성: Peter-jackson12 TF · 문서 기준: 2026-09-22 · 제출물: README + 코드 + 연결된 실행 근거
 
 <a id="submission-overview"></a>
-### 연구 요약
+## 먼저 읽는 결론
+
+### 타당한 전처리와 더 나은 예측은 같은 이야기가 아니었습니다
 
 **전처리를 더 타당하게 고치는 것만으로는 Macro F1 향상을 확인하지 못했습니다. 반면 출발·도착 공항 날씨를 추가한 동일조건 교차검증에서는 세 시드 모두 지연 예측력이 개선됐습니다.**
 
@@ -30,17 +32,29 @@
 **해석 범위:** 날씨 유무 동일조건 비교까지 완료했지만, 날짜가 확인된 선택 집단의 **정적 교차검증** 결과입니다. **10분은 실측 공개 지연 시간이 아닙니다.** 날씨의 인과 효과나 미래 운항 성능으로 일반화하지 않습니다. 3시드 표준편차(SD)는 신뢰구간이 아닙니다.
 
 
-### 20분 발표를 위한 읽기 순서
+## 읽기 패스 · 20분 안에 지나가는 다섯 장면
 
 **본문 설명 약 16분 + 전환·질문 여유 약 3분**을 권장합니다. 아래는 실제 낭독 측정이 아닌 권장 시간 배분입니다. 접힌 “질문 대비”는 본 발표에서 건너뛰고 질문이 나올 때 펼칩니다.
 
-| 순서 · 권장 시간 | 질문 | 보여 줄 핵심 |
-|:---:|---|---|
-| **01 · 2분** | [무엇을 예측하나요?](#1-목적과문제정의) | 항공편 한 건의 지연 여부, 그리고 라벨의 경계 |
-| **02 · 4분** | [데이터를 어떻게 믿을 수 있나요?](#3-전처리결정과근거) | 모호한 대치를 멈추고 관측과 추정을 구별 |
-| **03 · 3분** | [공정하게 비교했나요?](#4-현재파이프라인) | 모델 선택과 최종 채점을 분리한 평가 |
-| **04 · 5분** | [날씨를 더하면 달라지나요?](#weather-model-result) | 같은 180,332행에서 세 지표 모두 개선 |
-| **05 · 2분** | [어디까지 말할 수 있나요?](#6-한계와다음단계) | 정적 교차검증의 결론과 미래 운영의 한계 |
+**01 / 출발 · 2분**
+
+[무엇을 예측하나요?](#1-목적과문제정의) — 항공편 한 건의 지연 여부, 그리고 라벨의 경계
+
+**02 / 점검 · 4분**
+
+[데이터를 어떻게 믿을 수 있나요?](#3-전처리결정과근거) — 모호한 대치를 멈추고 관측과 추정을 구별
+
+**03 / 경계 · 3분**
+
+[공정하게 비교했나요?](#4-현재파이프라인) — 모델 선택과 최종 채점을 분리한 평가
+
+**04 / 발견 · 5분**
+
+[날씨를 더하면 달라지나요?](#weather-model-result) — 같은 180,332행에서 세 지표 모두 개선
+
+**05 / 도착 · 2분**
+
+[어디까지 말할 수 있나요?](#6-한계와다음단계) — 정적 교차검증의 결론과 미래 운영의 한계
 
 **전체 목차:** [1. 목적](#1-목적과문제정의) · [2. 데이터](#2-데이터와분석범위) · [3. 전처리](#3-전처리결정과근거) · [4. 분석 흐름](#4-현재파이프라인) · [5. 결과](#5-최신검증결과) · [6. 해석 한계·날씨 결합](#6-한계와다음단계) · [7. 재현](#7-코드구조와재현) · [8. 근거 지도](#8-문서안내) · [9. 상세 부록](#evidence-appendix)
 
@@ -49,7 +63,8 @@
 ---
 
 <a id="1-목적과문제정의"></a>
-## 1. 목적과 문제 정의
+## 01 / 출발점
+### 무엇을 예측할 것인가
 
 “이 항공편은 지연될까?”를 예측하되, 어떤 데이터를 쓸 수 있는지부터 확인했습니다.
 
@@ -68,7 +83,8 @@ CSV 한 행의 `Delay`를 이진 분류합니다. `Not_Delayed=0`, `Delayed=1`�
 전처리의 **의미상 타당성**과 **실제 성능 변화**를 별도로 판단했습니다. 성능이 좋아 보이는 조건만 제시하지 않고, 개선이 확인되지 않은 전처리·확률 보정 결과도 함께 보고합니다.
 
 <a id="2-데이터와분석범위"></a>
-## 2. 데이터와 분석 범위
+## 02 / 데이터 명세
+### 백만 행이 하나의 평가 집단은 아닙니다
 
 | 항목 | 원본에서 확인한 값 |
 |---|---:|
@@ -84,7 +100,7 @@ CSV 한 행의 `Delay`를 이진 분류합니다. `Not_Delayed=0`, `Delayed=1`�
 
 ![원본 100만 행 중 날짜 귀속 채택 706759행, 결측 키의 단일 후보 291308행 및 기타 1933행은 보류](assets/readme/date_attribution.svg)
 
-**그림 1. 채택과 보류를 구분한 날짜 귀속.** 누적 막대의 세 구간은 원본 100만 행을 나눈 서로 겹치지 않는 집단입니다. 후보 연도가 하나여도 키가 결측이면 채택하지 않습니다. [원본 집계 CSV](output/baseline_recovery_v2_row_date_attribution_20260918_status_summary.csv) · [그림의 수치·출처 해시](assets/readme/sources.json)
+**그림 1. 채택과 보류를 구분한 날짜 귀속.** 세로 누적 막대의 세 구간은 원본 100만 행을 나눈 서로 겹치지 않는 집단입니다. 후보 연도가 하나여도 키가 결측이면 채택하지 않습니다. [원본 집계 CSV](output/baseline_recovery_v2_row_date_attribution_20260918_status_summary.csv) · [그림의 수치·출처 해시](assets/readme/sources.json)
 
 <details>
 <summary>질문 대비 · 결측·연도 누락·라벨 대표성의 상세 근거</summary>
@@ -104,7 +120,8 @@ CSV 한 행의 `Delay`를 이진 분류합니다. `Not_Delayed=0`, `Delayed=1`�
 </details>
 
 <a id="3-전처리결정과근거"></a>
-## 3. 전처리 결정과 근거
+## 03 / 정비 기록
+### 더 많이 채우는 대신, 더 정확히 구별하기
 
 **결측을 더 많이 채우기보다, 확실하게 아는 값과 추정한 값을 구분하도록 수정했습니다.** 다음은 `P4_clean`·`P6_clean`에 적용한 규칙입니다. 과거 조건은 비교용 이름으로 보존했습니다.
 
@@ -129,7 +146,8 @@ CSV 한 행의 `Delay`를 이진 분류합니다. `Not_Delayed=0`, `Delayed=1`�
 </details>
 
 <a id="4-현재파이프라인"></a>
-## 4. 분석 흐름과 평가 방법
+## 04 / 평가의 경계
+### 고르는 데이터와 채점하는 데이터
 
 전처리의 의미 개선과 새 정보의 효과를 나누고, 모델 선택용 데이터와 최종 채점용 데이터를 분리했습니다.
 
@@ -164,7 +182,8 @@ CSV 한 행의 `Delay`를 이진 분류합니다. `Not_Delayed=0`, `Delayed=1`�
 </details>
 
 <a id="5-최신검증결과"></a>
-## 5. 검증 결과: 무엇이 달라졌는가
+## 05 / 관측된 변화
+### 전처리와 날씨, 두 실험의 다른 결론
 
 전처리만 바꿨을 때와 날씨를 추가했을 때의 결론이 달랐습니다. 두 실험의 평가 집단도 구분해서 읽습니다.
 
@@ -209,7 +228,7 @@ clean의 평균 F1 차이는 P4 −0.000375, P6 −0.000377입니다. 작은 차
 
 ![P6_clean의 동일 180332행 교차검증에서 날씨 사용 조건이 세 시드 평균 Macro F1과 ROC-AUC를 높이고 LogLoss를 낮춘 결과](assets/readme/weather_model_comparison.svg)
 
-**그림 3. 날씨 미사용 → 사용의 전후 비교.** 각 행은 3시드 평균과 사용−미사용 변화량을 직접 보여 줍니다. LogLoss는 감소가 개선입니다. 세 지표는 척도가 다르므로 공통 축이나 막대 길이로 개선 크기를 비교하지 않았습니다. SD는 시드별 차이의 표본 표준편차이며 신뢰구간이 아닙니다. 평균과 차이는 원본에서 각각 반올림하므로 표시된 평균을 뺀 값과 마지막 자릿수가 다를 수 있습니다. 모델에는 **날씨 공개 지연 10분 가정**만 사용했으며 0/30/60분은 결합률 민감도 확인용으로만 남겼습니다. [시드별 실행](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv), [조건별 차이](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_paired_deltas.csv), [요약](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json), [실행 기록](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_manifest.json), [그림 출처](assets/readme/sources.json)
+**그림 3. 날씨 미사용 → 사용의 전후 비교.** 주요 Macro F1 비교와 아래 두 지표의 별도 지면에서 3시드 평균과 사용−미사용 변화량을 직접 보여 줍니다. LogLoss는 감소가 개선입니다. 지표마다 독립적인 확대 축을 사용했습니다. 세 지표는 척도가 다르므로 지표 간 점 간격이나 선 길이로 개선 크기를 비교하면 안 됩니다. SD는 시드별 차이의 표본 표준편차이며 신뢰구간이 아닙니다. 평균과 차이는 원본에서 각각 반올림하므로 표시된 평균을 뺀 값과 마지막 자릿수가 다를 수 있습니다. 모델에는 **날씨 공개 지연 10분 가정**만 사용했으며 0/30/60분은 결합률 민감도 확인용으로만 남겼습니다. [시드별 실행](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv), [조건별 차이](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_paired_deltas.csv), [요약](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json), [실행 기록](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_manifest.json), [그림 출처](assets/readme/sources.json)
 
 **이 결과는 제출 범위에서 관찰한 예측 성능 차이입니다.** 세 시드는 독립 데이터셋이 아니고 SD도 신뢰구간이 아닙니다. 10분은 실측 공개 지연 시간이 아닙니다. 날짜 귀속이 가능한 선택 집단의 정적 교차검증이므로 날씨의 인과 효과나 미래 운항 성능으로 일반화하지 않습니다.
 
@@ -228,7 +247,7 @@ P6 두 조건의 행별 OOF를 다시 저장·검증했고, 보정기는 **외�
 
 ![P6_clean 공유형 보정의 ECE와 LogLoss 비교: Isotonic의 ECE 감소가 LogLoss 개선으로 이어지지는 않음](assets/readme/calibration_tradeoff.svg)
 
-**그림 4. 보정 지표의 상충 관계.** P6_clean·공유형·전체 라벨 집단의 세 보정 조건만 표시했습니다. 두 축 모두 낮을수록 좋고, 정확한 Macro F1은 위 표에서 함께 읽습니다. ECE는 비율을 100배 한 %p 단위입니다. [원본 수준값 CSV](output/baseline_recovery_v2_calibration_20260917_level_summary.csv) · [그림 출처](assets/readme/sources.json)
+**그림 4. 보정 지표의 상충 관계.** P6_clean·공유형·전체 라벨 집단의 세 보정 조건만 표시했습니다. ECE와 LogLoss를 각각의 수평 축으로 나누었으며 둘 다 낮을수록 좋습니다. 정확한 Macro F1은 그림의 수치 목록과 위 표에서 함께 읽습니다. ECE는 비율을 100배 한 %p 단위입니다. [원본 수준값 CSV](output/baseline_recovery_v2_calibration_20260917_level_summary.csv) · [그림 출처](assets/readme/sources.json)
 
 표는 동일 라벨 255,001행·내부 선택을 포함한 동일 평가 절차의 3시드 평균입니다. 평균 확률 편향과 ECE는 줄었지만 Macro F1 향상은 확인되지 않았습니다. Isotonic은 ECE 감소와 함께 LogLoss 악화·순위 정보 감소가 관찰됐습니다. 분리형 대조, 12개 실험 셀, 환경 간 미세 차이는 [부록 D](#appendix-model-diagnostics)에 있습니다. [보정 보고서](output/baseline_recovery_v2_calibration_20260917_report.md), [수준값](output/baseline_recovery_v2_calibration_20260917_level_summary.csv)
 
@@ -237,7 +256,8 @@ P6 두 조건의 행별 OOF를 다시 저장·검증했고, 보정기는 **외�
 </details>
 
 <a id="6-한계와다음단계"></a>
-## 6. 해석 한계와 날씨 결합 검증
+## 06 / 도착 이후
+### 해석 한계와 날씨 결합 검증
 
 “이 조건에서 개선됐다”는 결과와 “미래에도 잘 맞는다”는 주장은 다릅니다.
 
@@ -301,7 +321,8 @@ P6 두 조건의 행별 OOF를 다시 저장·검증했고, 보정기는 **외�
 </details>
 
 <a id="7-코드구조와재현"></a>
-## 7. 재현 방법과 코드 구조
+## 07 / 정비 매뉴얼
+### 재현 방법과 코드 구조
 
 **문서와 그림 검증에는 원본 데이터가 필요하지 않습니다.** 실제 분석·수집을 다시 실행하는 명령과 구분해 아래 순서로 확인합니다.
 
@@ -323,7 +344,7 @@ uv run --locked --offline python -m pytest -q
 <a id="readme-figures"></a>
 ### README 그림의 재현과 출처 검증
 
-다음 명령은 Git에 추적된 집계 CSV·JSON만 읽습니다. IEM 호출·원본 데이터 로드·모델 학습을 하지 않습니다. 그림 파일은 산세리프 제목과 하늘색·골드 포인트를 사용한 정적 SVG입니다. 숫자·단위·해석 범위는 본문과 같은 근거를 사용합니다. 생성기는 Python 표준 라이브러리만 사용하며 한글은 시스템 글꼴로 표시합니다. 외부 글꼴·이미지·스크립트를 불러오지 않으므로 파일 자체의 재생성에는 글꼴 설치가 필요하지 않습니다. 운영체제별 글꼴 모양에는 차이가 있을 수 있으며, 본문의 표와 대체 텍스트로도 정확한 결과를 읽을 수 있습니다.
+다음 명령은 Git에 추적된 집계 CSV·JSON만 읽습니다. IEM 호출·원본 데이터 로드·모델 학습을 하지 않습니다. 그림 파일은 크림·하늘색·골드 팔레트에 초대형 산세리프 제목, 비대칭 매거진 지면과 탑승권형 구성을 적용한 정적 SVG입니다. C안은 세로 평균·SD 그림, 분리된 지표 축, 출발·도착 소형 배수 차트 등 차트의 구성도 바꿨습니다. 장식 선과 바코드는 실제 운항 정보나 탑승 자격을 뜻하지 않습니다. 숫자·단위·해석 범위는 본문과 같은 근거를 사용합니다. 생성기는 Python 표준 라이브러리만 사용하며 한글은 시스템 글꼴로 표시합니다. 외부 글꼴·이미지·스크립트를 불러오지 않으므로 파일 자체의 재생성에는 글꼴 설치가 필요하지 않습니다. 운영체제별 글꼴 모양에는 차이가 있을 수 있으며, 본문의 표와 대체 텍스트로도 정확한 결과를 읽을 수 있습니다.
 
 ```powershell
 # 그림·실제 사용값·출처 및 그림 해시 생성
@@ -539,7 +560,8 @@ uv run --locked --offline python -u -m notebooks.join_weather_full --name baseli
 </details>
 
 <a id="8-문서안내"></a>
-## 8. 문서와 실행 근거 지도
+## 08 / 기록 보관소
+### 문서와 실행 근거 지도
 
 README는 현재 상태의 기준이고, 구체적인 사실은 연결된 코드·데이터·실행 로그로 확인합니다. 파일명에 `final`·`current`가 있어도 최신을 보장하지 않습니다. 최종 결과부터 확인한 뒤 필요한 상세 근거로 이동할 수 있도록 정리했습니다.
 
@@ -601,7 +623,8 @@ README는 현재 상태의 기준이고, 구체적인 사실은 연결된 코드
 기존 분석·명령·실행 회차는 아래 같은 README 안에 남겨 두었습니다. 현재 결론은 본문, 재현·복구는 7절, 당시 판단의 변화는 부록에서 읽을 수 있습니다.
 
 <a id="evidence-appendix"></a>
-## 9. 상세 분석·검증·재현 부록
+## 09 / 상세 기록
+### 분석·검증·재현 부록
 
 상단은 **현재 판정**, 아래는 그 판정에 이른 근거와 회차별 기록입니다. 과거의 “아직 안 했다”는 문장은 해당 회차의 범위를 뜻하며 현재 미완료를 다시 선언하지 않습니다. 철회된 해석은 철회 상태로 보존합니다. 역사적 테스트 수와 실행명은 최신 테스트 수나 즉시 재실행할 기본값이 아닙니다. 당시 로그·필드명·명령과 직접 연결된 영어는 원문을 보존했으며, 현재 본문의 용어는 [용어 안내](#weather-glossary)에서 연결해 볼 수 있습니다.
 
