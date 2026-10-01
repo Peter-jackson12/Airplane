@@ -1,4 +1,4 @@
-"""Shared flight-magazine D Korean Air homepage-inspired SVG primitives; stdlib only and no external assets."""
+"""Shared evidence-first F Korean Air homepage-inspired SVG primitives; stdlib only and no external assets."""
 from html import escape
 
 # Observed 2026-10-01 at https://www.koreanair.com/: navy, cyan, pale sky, white.
@@ -7,6 +7,11 @@ PAPER='#FFFFFF'; INK='#051766'; MUTED='#5E5E5E'; RULE='#D9D9D9'; ACCENT='#004766
 CYAN='#57BBEB'; SKY='#DDF1FB'; HIGHLIGHT='#F7F7F7'
 SANS='Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif'
 HEADING=SANS
+# F evidence hierarchy: 1600-unit canvas, 80-unit inset, 8-unit spacing rhythm.
+# At 896px README width, a 28-unit annotation is 15.7px.
+TYPE = {'caption': 28, 'body': 32, 'section': 44, 'title': 64, 'result': 112}
+SPACE = {'unit': 8, 'inset': 80, 'row': 96}
+
 
 class SVG:
     def __init__(self,h,title,desc,header_band=True):

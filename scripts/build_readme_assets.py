@@ -152,13 +152,14 @@ class SVG:
         self.parts = [
             f'<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="{height}" '
             f'viewBox="0 0 1600 {height}" role="img" aria-labelledby="title desc" '
-            f'data-design="korean-air-palette-d" data-chart-type="{chart_type}">',
+            f'data-design="refined-evidence-f" data-chart-type="{chart_type}">',
             f'<title id="title">{escape(title)}</title><desc id="desc">{escape(description)}</desc>',
             '<style>text{font-family:"Noto Sans CJK KR","Malgun Gothic",'
             '"Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>',
             f'<rect width="1600" height="{height}" fill="{PAPER}"/>']
 
     def text(self, x, y, text, size=28, color=INK, weight=400, anchor='start', heading=False):
+        size = max(editorial.TYPE['caption'], size)
         family = f' style="font-family:{editorial.HEADING}"' if heading else ''
         self.parts.append(f'<text x="{x:.3f}" y="{y:.3f}" font-size="{size}" '
                           f'fill="{color}" font-weight="{weight}" text-anchor="{anchor}"{family}>'
@@ -189,7 +190,7 @@ class SVG:
         self.line(80, 82, 1516, 82, INK, 2)
 
     def footer(self, topic):
-        self.text(80, self.height-28, '정적 교차검증 연구 · 연결된 원본 집계에서 재현', 21, MUTED)
+        self.text(80, self.height-28, '출처: README의 연결된 원본 집계', 28, MUTED)
         self.text(1516, self.height-28, topic, 21, MUTED, anchor='end')
 
     def marker(self, x, y, kind, color):
@@ -348,7 +349,7 @@ def build() -> None:
     svg.text(84, 863, '3시드 평균', 24, weight=600)
     svg.text(84, 912, '±1 표본 SD', 24, MUTED)
     svg.line(84, 1009, 1516, 1009, INK, 1.5)
-    svg.text(84, 1056, '3시드 SD는 신뢰구간이 아니며, 오차막대 겹침으로 동등성·유의성을 판정하지 않습니다.', 25, MUTED)
+    svg.text(84, 1056, 'SD는 신뢰구간이 아닙니다. 오차막대 겹침으로 동등성·유의성을 판정하지 않습니다.', 25, MUTED)
     svg.footer('전처리 비교 / 02')
     finish(svg, 'models')
 
@@ -358,13 +359,13 @@ def build() -> None:
               'P6_clean, 동일 라벨 180,332행, 시드 42/1/7. Macro F1 0.573910에서 0.598945, '
               'LogLoss 0.448116에서 0.436689, ROC-AUC 0.640618에서 0.672936. '
               '변화량은 사용−미사용이며 원본 집계에서 따로 반올림했습니다. 각 지표는 독립 확대 축입니다. '
-              '10분 공개 지연은 가정이고 인과 효과와 미래 운항 성능은 미검증입니다.', 'asymmetric-paired-metric-strips')
+              '10분 공개 지연 가정. 지표마다 척도가 달라 직접 크기를 비교하지 않습니다. SD는 신뢰구간이 아닙니다. 인과 효과와 미래 운항 성능은 미검증입니다.', 'asymmetric-paired-metric-strips')
     svg.rect(0, 334, 1035, 435, SKY)
     svg.rect(1080, 334, 520, 435, INK)
     svg.rect(1059, 334, 12, 435, CYAN)
     svg.running('03', '날씨 정보 · 동일조건 비교')
-    svg.text(80, 166, '날씨를 더한 같은 조건,', 64, weight=700, heading=True)
-    svg.text(80, 248, '세 지표가 같은 결론', 64, weight=700, heading=True)
+    svg.text(80, 166, '같은 180,332행에서', 64, weight=700, heading=True)
+    svg.text(80, 248, '날씨 추가 후 세 지표 개선', 64, weight=700, heading=True)
     svg.text(84, 303, 'P6_clean · 동일 라벨 180,332행 · 시드 42 / 1 / 7', 28, MUTED)
     first = data['weather_model'][0]
     svg.text(84, 395, 'Macro F1 ↑ 높을수록 좋음', 31, BLUE, 600)
@@ -372,7 +373,7 @@ def build() -> None:
     svg.text(86, 574, '변화 (사용−미사용) / 3시드 평균', 26, MUTED)
     svg.text(930, 605, '○ 미사용 · ● 사용', 22, BLUE, anchor='end')
     svg.paired_axis(first, 110, 635, 820, 0.565, 0.605, (0.565,0.575,0.585,0.595,0.605))
-    svg.text(84, 747, 'Macro F1 · 차이를 읽기 위한 확대 축', 23, MUTED)
+    svg.text(84, 747, 'Macro F1 · 확대 축', 23, MUTED)
     svg.text(1130, 394, '날씨 미사용', 27, SKY)
     svg.text(1130, 461, f"{first['off_mean']:.6f}", 58, PAPER, 500, heading=True)
     svg.line(1130, 497, 1516, 497, CYAN, 2)
@@ -389,13 +390,13 @@ def build() -> None:
         svg.text(x-4, 923, f"{row['delta_mean']:+.6f}", 76, BLUE, 700, heading=True)
         svg.text(x, 967, f"변화 (사용−미사용) · 차이의 SD {row['sd']:.6f}", 23, MUTED)
         svg.text(x, 1017, f"{row['off_mean']:.6f} → {row['on_mean']:.6f}", 32, weight=500)
-        svg.text(x+650, 1017, '미사용 → 사용', 21, MUTED, anchor='end')
+        svg.text(x, 1055, '미사용 → 사용', 28, MUTED)
         svg.paired_axis(row, x+30, 1081, 580, lo, hi, ticks)
         svg.text(x, 1190, f"{row['metric']} · 독립 확대 축", 23, MUTED)
     svg.line(84, 1220, 1516, 1220, INK, 2)
-    svg.text(84, 1264, '세 지표는 척도가 달라 변화량의 크기를 서로 비교하지 않습니다. 평균과 변화량은 각각 반올림했습니다.', 24, MUTED)
-    svg.text(84, 1305, '10분 공개 지연 가정 · 3시드 SD는 신뢰구간이 아닙니다 · 인과 효과와 미래 운항 성능은 미검증', 24, MUTED)
-    svg.text(84, 1346, '기존 전처리의 255,001행과 다른 평가 집단입니다. 세 시드 모두 각 지표의 개선 방향이 같았습니다.', 24, MUTED)
+    svg.text(84, 1264, '지표별 독립 확대 축 · 변화량 크기의 지표 간 비교 불가 · 각각 반올림', 28, MUTED)
+    svg.text(84, 1305, '10분은 공개 지연 가정 · SD ≠ 신뢰구간 · 인과 효과·미래 운항 성능 미검증', 28, MUTED)
+    svg.text(84, 1346, '전처리 255,001행과 다른 집단 · 세 시드 모두 각 지표의 개선 방향 일치', 28, MUTED)
     finish(svg, 'weather_model')
 
     # Two aligned point panels replace the old two-dimensional scatter. Every
@@ -492,7 +493,7 @@ def build() -> None:
     svg.text(84, 1056, '출발 공항', 27, BLUE, 600)
     svg.text(84, 1118, '도착 공항', 27, INK, 600)
     svg.text(84, 1208, '0 / 10 / 30 / 60분은 실측 공개 지연 시간이 아니라 가정입니다.', 27, MUTED)
-    svg.text(84, 1252, '전체 300행·전체 날짜 귀속 집단의 결합률과 구별하며, 모델 성능을 나타내지 않습니다.', 25, MUTED)
+    svg.text(84, 1252, '300행 전체나 날짜 귀속 전체의 결합률이 아닙니다. 모델 성능과도 구별합니다.', 25, MUTED)
     svg.footer('날씨 결합 / 05')
     finish(svg, 'latency')
 

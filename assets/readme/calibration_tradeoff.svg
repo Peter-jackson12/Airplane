@@ -1,45 +1,45 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1210" viewBox="0 0 1600 1210" role="img" aria-labelledby="title desc" data-design="korean-air-palette-d" data-chart-type="aligned-independent-calibration-panels">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1210" viewBox="0 0 1600 1210" role="img" aria-labelledby="title desc" data-design="refined-evidence-f" data-chart-type="aligned-independent-calibration-panels">
 <title id="title">확률 보정은 지표마다 다른 방향</title><desc id="desc">P6_clean 공유형 보정기, 라벨 255,001행의 3시드 평균. ECE는 %p, LogLoss는 독립 확대 축이며 모두 낮을수록 좋습니다. Isotonic은 ECE가 낮아졌지만 LogLoss는 높아졌고 Macro F1 향상은 확인되지 않았습니다.</desc>
 <style>text{font-family:"Noto Sans CJK KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>
 <rect width="1600" height="1210" fill="#FFFFFF"/>
 <rect x="0.000" y="106.000" width="585.000" height="200.000" fill="#DDF1FB"/>
 <rect x="1129.000" y="106.000" width="387.000" height="200.000" fill="#57BBEB"/>
 <rect x="80.000" y="38.000" width="22.000" height="22.000" fill="#57BBEB"/>
-<text x="121.000" y="58.000" font-size="24" fill="#051766" font-weight="600" text-anchor="start">확률 보정 · 지표의 상충 관계</text>
-<text x="1516.000" y="58.000" font-size="23" fill="#5E5E5E" font-weight="400" text-anchor="end">AIRPLANE  /  04</text>
+<text x="121.000" y="58.000" font-size="28" fill="#051766" font-weight="600" text-anchor="start">확률 보정 · 지표의 상충 관계</text>
+<text x="1516.000" y="58.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">AIRPLANE  /  04</text>
 <line x1="80.000" y1="82.000" x2="1516.000" y2="82.000" stroke="#051766" stroke-width="2"/>
 <text x="80.000" y="174.000" font-size="64" fill="#051766" font-weight="700" text-anchor="start" style="font-family:Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif">확률 보정,</text>
 <text x="80.000" y="259.000" font-size="64" fill="#051766" font-weight="700" text-anchor="start" style="font-family:Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif">지표마다 다른 방향</text>
 <text x="1323.000" y="179.000" font-size="50" fill="#051766" font-weight="700" text-anchor="middle">ECE ↓</text>
 <text x="1323.000" y="237.000" font-size="44" fill="#051766" font-weight="600" text-anchor="middle">LogLoss ↑</text>
-<text x="1323.000" y="281.000" font-size="21" fill="#051766" font-weight="400" text-anchor="middle">Isotonic / 보정 없음 대비</text>
+<text x="1323.000" y="281.000" font-size="28" fill="#051766" font-weight="400" text-anchor="middle">Isotonic / 보정 없음 대비</text>
 <text x="84.000" y="346.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">P6_clean · 공유형 보정기 · 라벨 255,001행 · 3시드 평균</text>
 <text x="395.000" y="414.000" font-size="29" fill="#051766" font-weight="600" text-anchor="start">ECE (%p) ↓</text>
 <line x1="395.000" y1="448.000" x2="395.000" y2="694.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="395.000" y="738.000" font-size="23" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.0</text>
+<text x="395.000" y="738.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.0</text>
 <line x1="493.000" y1="448.000" x2="493.000" y2="694.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="493.000" y="738.000" font-size="23" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.1</text>
+<text x="493.000" y="738.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.1</text>
 <line x1="591.000" y1="448.000" x2="591.000" y2="694.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="591.000" y="738.000" font-size="23" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.2</text>
+<text x="591.000" y="738.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.2</text>
 <line x1="689.000" y1="448.000" x2="689.000" y2="694.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="689.000" y="738.000" font-size="23" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.3</text>
+<text x="689.000" y="738.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.3</text>
 <line x1="787.000" y1="448.000" x2="787.000" y2="694.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="787.000" y="738.000" font-size="23" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.4</text>
+<text x="787.000" y="738.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.4</text>
 <line x1="885.000" y1="448.000" x2="885.000" y2="694.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="885.000" y="738.000" font-size="23" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.5</text>
+<text x="885.000" y="738.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.5</text>
 <line x1="395.000" y1="694.000" x2="885.000" y2="694.000" stroke="#5E5E5E" stroke-width="1.5"/>
 <circle cx="844.662" cy="469.000" r="9" fill="#FFFFFF" stroke="#051766" stroke-width="3"/>
 <rect x="726.786" y="555.000" width="18.000" height="18.000" fill="#004766"/>
 <polygon points="578.913,647.000 567.913,667.000 589.913,667.000" fill="#051766"/>
 <text x="1070.000" y="414.000" font-size="29" fill="#051766" font-weight="600" text-anchor="start">LogLoss ↓ / 확대 축</text>
 <line x1="1131.429" y1="448.000" x2="1131.429" y2="694.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="1131.429" y="738.000" font-size="23" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.4475</text>
+<text x="1131.429" y="738.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.4475</text>
 <line x1="1233.810" y1="448.000" x2="1233.810" y2="694.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="1233.810" y="738.000" font-size="23" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.4480</text>
+<text x="1233.810" y="738.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.4480</text>
 <line x1="1336.190" y1="448.000" x2="1336.190" y2="694.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="1336.190" y="738.000" font-size="23" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.4485</text>
+<text x="1336.190" y="738.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.4485</text>
 <line x1="1438.571" y1="448.000" x2="1438.571" y2="694.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="1438.571" y="738.000" font-size="23" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.4490</text>
+<text x="1438.571" y="738.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">0.4490</text>
 <line x1="1070.000" y1="694.000" x2="1500.000" y2="694.000" stroke="#5E5E5E" stroke-width="1.5"/>
 <circle cx="1147.151" cy="469.000" r="9" fill="#FFFFFF" stroke="#051766" stroke-width="3"/>
 <rect x="1126.321" y="555.000" width="18.000" height="18.000" fill="#004766"/>
@@ -51,26 +51,26 @@
 <line x1="84.000" y1="601.000" x2="290.000" y2="601.000" stroke="#D9D9D9" stroke-width="1"/>
 <text x="84.000" y="667.000" font-size="31" fill="#051766" font-weight="600" text-anchor="start">Isotonic</text>
 <line x1="84.000" y1="696.000" x2="290.000" y2="696.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="84.000" y="795.000" font-size="25" fill="#5E5E5E" font-weight="400" text-anchor="start">두 지표 모두 낮을수록 좋음 · 각 축의 단위와 범위를 따로 읽습니다.</text>
+<text x="84.000" y="795.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">두 지표 모두 낮을수록 좋음 · 각 축의 단위와 범위를 따로 읽습니다.</text>
 <rect x="0.000" y="837.000" width="1600.000" height="258.000" fill="#DDF1FB"/>
-<text x="84.000" y="886.000" font-size="24" fill="#051766" font-weight="600" text-anchor="start">3시드 평균</text>
-<text x="770.000" y="886.000" font-size="25" fill="#5E5E5E" font-weight="400" text-anchor="end">ECE (%p) ↓</text>
-<text x="1125.000" y="886.000" font-size="25" fill="#5E5E5E" font-weight="400" text-anchor="end">LogLoss ↓</text>
-<text x="1516.000" y="886.000" font-size="25" fill="#5E5E5E" font-weight="400" text-anchor="end">Macro F1 ↑</text>
+<text x="84.000" y="886.000" font-size="28" fill="#051766" font-weight="600" text-anchor="start">3시드 평균</text>
+<text x="770.000" y="886.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">ECE (%p) ↓</text>
+<text x="1125.000" y="886.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">LogLoss ↓</text>
+<text x="1516.000" y="886.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">Macro F1 ↑</text>
 <line x1="84.000" y1="908.000" x2="1516.000" y2="908.000" stroke="#051766" stroke-width="1.5"/>
-<text x="84.000" y="954.000" font-size="27" fill="#051766" font-weight="500" text-anchor="start">보정 없음</text>
+<text x="84.000" y="954.000" font-size="28" fill="#051766" font-weight="500" text-anchor="start">보정 없음</text>
 <text x="770.000" y="954.000" font-size="30" fill="#004766" font-weight="600" text-anchor="end">0.4588</text>
 <text x="1125.000" y="954.000" font-size="30" fill="#051766" font-weight="600" text-anchor="end">0.447577</text>
 <text x="1516.000" y="954.000" font-size="30" fill="#051766" font-weight="600" text-anchor="end">0.575685</text>
-<text x="84.000" y="1012.000" font-size="27" fill="#051766" font-weight="500" text-anchor="start">Platt</text>
+<text x="84.000" y="1012.000" font-size="28" fill="#051766" font-weight="500" text-anchor="start">Platt</text>
 <text x="770.000" y="1012.000" font-size="30" fill="#004766" font-weight="600" text-anchor="end">0.3477</text>
 <text x="1125.000" y="1012.000" font-size="30" fill="#051766" font-weight="600" text-anchor="end">0.447519</text>
 <text x="1516.000" y="1012.000" font-size="30" fill="#051766" font-weight="600" text-anchor="end">0.575517</text>
-<text x="84.000" y="1070.000" font-size="27" fill="#051766" font-weight="500" text-anchor="start">Isotonic</text>
+<text x="84.000" y="1070.000" font-size="28" fill="#051766" font-weight="500" text-anchor="start">Isotonic</text>
 <text x="770.000" y="1070.000" font-size="30" fill="#004766" font-weight="600" text-anchor="end">0.1877</text>
 <text x="1125.000" y="1070.000" font-size="30" fill="#051766" font-weight="600" text-anchor="end">0.448937</text>
 <text x="1516.000" y="1070.000" font-size="30" fill="#051766" font-weight="600" text-anchor="end">0.575248</text>
-<text x="84.000" y="1138.000" font-size="25" fill="#5E5E5E" font-weight="400" text-anchor="start">ECE는 원본 비율을 100배 한 %p 단위입니다. Macro F1 향상은 확인되지 않았습니다.</text>
-<text x="80.000" y="1182.000" font-size="21" fill="#5E5E5E" font-weight="400" text-anchor="start">정적 교차검증 연구 · 연결된 원본 집계에서 재현</text>
-<text x="1516.000" y="1182.000" font-size="21" fill="#5E5E5E" font-weight="400" text-anchor="end">확률 보정 / 04</text>
+<text x="84.000" y="1138.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">ECE는 원본 비율을 100배 한 %p 단위입니다. Macro F1 향상은 확인되지 않았습니다.</text>
+<text x="80.000" y="1182.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">출처: README의 연결된 원본 집계</text>
+<text x="1516.000" y="1182.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">확률 보정 / 04</text>
 </svg>

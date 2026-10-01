@@ -279,25 +279,30 @@ def test_figure_receipt_rejects_changed_editorial_renderer(tmp_path, monkeypatch
         builder.check_receipt()
 
 
-def test_magazine_d_uses_oversized_type_and_asymmetric_boarding_passes():
+def test_f_leads_with_bounded_result_and_readable_type():
     cover = ET.fromstring((ROOT / 'assets/readme/presentation_cover.svg').read_text())
-    assert max(float(n.attrib.get('font-size', 0)) for n in cover.iter()) >= 200
-    assert 'THE' in ''.join(cover.itertext()) and 'WEATHER' in ''.join(cover.itertext())
-    journey = ET.fromstring((ROOT / 'assets/readme/analysis_journey.svg').read_text())
-    rects = journey.findall('{http://www.w3.org/2000/svg}rect')
-    assert any(r.attrib.get('x') == '60' and r.attrib.get('fill') == '#DDF1FB' for r in rects)
-    assert any(r.attrib.get('x') == '159' and r.attrib.get('fill') == '#57BBEB' for r in rects)
-    assert '도형 크기는 수량을 뜻하지 않습니다.' in ''.join(journey.itertext())
+    assert int(cover.attrib['height']) == 760
+    content = ''.join(cover.itertext())
+    for value in ('+0.025035', '180,332행', '정적 교차검증', '미래 운항 성능은 미검증'):
+        assert value in content
+    for filename in [*builder.FIGURES.values(), 'presentation_cover.svg',
+                     'analysis_journey.svg', 'evaluation_boundary.svg']:
+        svg = ET.fromstring((ROOT / 'assets/readme' / filename).read_text())
+        labels = svg.findall('{http://www.w3.org/2000/svg}text')
+        assert all(float(n.attrib['font-size']) >= 28 for n in labels), filename
+    journey = (ROOT / 'assets/readme/analysis_journey.svg').read_text()
+    assert '도형 크기는 수량을 뜻하지 않습니다.' in journey
 
 
 def test_magazine_d_main_readme_links_preserved_styles_and_current_ci():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
-    assert '디자인 비교 · D안' in text
+    assert '디자인 비교 · F안' in text
     assert '[A안](https://github.com/Peter-jackson12/Airplane/tree/style/a-editorial)' in text
     assert 'https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold' in text
-    assert 'compare/design/gigi-flight-magazine-c...design/korean-air-palette-d' in text
-    assert 'badge.svg?branch=master' in text
-    assert 'ci.yml?query=branch%3Amaster' in text
+    assert 'compare/master...design/refined-evidence-f' in text
+    assert 'tree/design/reference-report-e' in text
+    assert 'badge.svg?branch=design%2Frefined-evidence-f' in text
+    assert 'ci.yml?query=branch%3Adesign%2Frefined-evidence-f' in text
     assert '본문 설명 약 16분 + 전환·질문 여유 약 3분' in text
 
 
@@ -311,7 +316,7 @@ def test_magazine_d_quantitative_figures_use_distinct_chart_geometries():
     chart_types = set()
     for filename in builder.FIGURES.values():
         svg = ET.fromstring((ROOT / 'assets/readme' / filename).read_text())
-        assert svg.attrib['data-design'] == 'korean-air-palette-d'
+        assert svg.attrib['data-design'] == 'refined-evidence-f'
         chart_types.add(svg.attrib['data-chart-type'])
     assert len(chart_types) == 5
 
