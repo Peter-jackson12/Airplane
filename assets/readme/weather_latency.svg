@@ -1,90 +1,115 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1310" viewBox="0 0 1600 1310" role="img" aria-labelledby="title desc" data-design="refined-evidence-f" data-chart-type="latency-small-multiple-lollipops">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1660" viewBox="0 0 1600 1660" role="img" aria-labelledby="title desc" data-design="bonobono-parody-g" data-chart-type="latency-small-multiple-lollipops">
 <title id="title">공개 지연 가정별 날씨 결합률</title><desc id="desc">층화 보정 표본 300행 중 수집 가능 268행. 보류 32행은 분모에서 제외했습니다. 출발과 도착의 두 패널은 0–100% 공통 세로축과 실제 간격의 0/10/30/60분 가로축입니다. 모두 미검증 가정이며 결합률이지 모델 성능이 아닙니다.</desc>
+<defs><linearGradient id="g-rainbow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FF3FF2"/><stop offset=".24" stop-color="#FFFC4A"/><stop offset=".5" stop-color="#73FFAE"/><stop offset=".74" stop-color="#49DDFF"/><stop offset="1" stop-color="#B073FF"/></linearGradient><linearGradient id="g-body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFBCEB"/><stop offset=".35" stop-color="#FFF64F"/><stop offset=".7" stop-color="#A1FFD2"/><stop offset="1" stop-color="#B2C3FF"/></linearGradient><pattern id="g-grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0 H0 V48" fill="none" stroke="#FFFFFF" stroke-width="3" opacity=".5"/></pattern></defs>
+<rect width="1600" height="1660" fill="url(#g-rainbow)"/><rect width="1600" height="280" fill="url(#g-grid)"/>
+<text x="24" y="78" font-size="57" fill="#FFFF00" stroke="#572873" stroke-width="1">★</text><text x="1160" y="46" font-size="42" fill="#FF007F" stroke="#572873" stroke-width="1">★</text><text x="1035" y="229" font-size="67" fill="#F300B3" stroke="#572873" stroke-width="1">★</text><text x="30" y="229" font-size="62" fill="#008BFF" stroke="#572873" stroke-width="1">★</text><text x="1515" y="261" font-size="50" fill="#FBFF00" stroke="#572873" stroke-width="1">★</text>
+<g data-parody-wordart="true" transform="rotate(-3 95 137)"><text x="95" y="137" font-size="68" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" dx="7" dy="9" fill="#291142" stroke="#291142" stroke-width="10">10분... 기다린 건 아니에요!</text><text x="95" y="137" font-size="68" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" stroke="#FFFCE2" stroke-width="4" paint-order="stroke"><tspan fill="#EF005D">1</tspan><tspan fill="#EE6A00">0</tspan><tspan fill="#816900">분</tspan><tspan fill="#008C33">.</tspan><tspan fill="#0066EE">.</tspan><tspan fill="#8200B5">.</tspan><tspan fill="#EF005D"> </tspan><tspan fill="#EE6A00">기</tspan><tspan fill="#816900">다</tspan><tspan fill="#008C33">린</tspan><tspan fill="#0066EE"> </tspan><tspan fill="#8200B5">건</tspan><tspan fill="#EF005D"> </tspan><tspan fill="#EE6A00">아</tspan><tspan fill="#816900">니</tspan><tspan fill="#008C33">에</tspan><tspan fill="#0066EE">요</tspan><tspan fill="#8200B5">!</tspan></text></g><text x="130" y="232" font-size="30" font-family="Noto Serif CJK KR, serif" fill="#23103D" transform="rotate(2 130 232)">☆★ 보노보노 PPT 감성 · G안 · 디자인만 일부러 망했습니다 ★☆</text>
+<g data-parody-mascot="original-vector-fan-art" transform="translate(1394 124) scale(0.72)">
+<ellipse cx="0" cy="70" rx="105" ry="117" fill="#70BFFF" stroke="#243242" stroke-width="4"/>
+<ellipse cx="-57" cy="-41" rx="31" ry="37" fill="#70BFFF" stroke="#243242" stroke-width="4"/>
+<ellipse cx="57" cy="-41" rx="31" ry="37" fill="#70BFFF" stroke="#243242" stroke-width="4"/>
+<ellipse cx="0" cy="0" rx="118" ry="102" fill="#70BFFF" stroke="#243242" stroke-width="4"/>
+<circle cx="-56" cy="-6" r="8" fill="#17202A"/><circle cx="56" cy="-6" r="8" fill="#17202A"/>
+<ellipse cx="-28" cy="39" rx="37" ry="26" fill="#FFFDF3"/><ellipse cx="28" cy="39" rx="37" ry="26" fill="#FFFDF3"/>
+<ellipse cx="0" cy="22" rx="17" ry="13" fill="#17202A"/>
+<path d="M0 34 V58 M-71 35 l-35 -8 M-70 49 l-36 9 M71 35 l35 -8 M70 49 l36 9" fill="none" stroke="#17202A" stroke-width="3"/>
+<ellipse cx="-68" cy="113" rx="33" ry="22" fill="#70BFFF" stroke="#243242" stroke-width="3"/>
+<ellipse cx="68" cy="113" rx="33" ry="22" fill="#70BFFF" stroke="#243242" stroke-width="3"/>
+<path d="M-48 118 Q-55 67 -34 72 Q-19 50 0 64 Q19 50 34 72 Q55 67 48 118 Z" fill="#FF9FCC" stroke="#6B0059" stroke-width="4"/>
+<path d="M0 114 V70 M-18 112 l-13 -34 M18 112 l13 -34" fill="none" stroke="#B93188" stroke-width="3"/>
+<path d="M113 -53 Q94 -18 115 -17 Q136 -19 113 -53" fill="#40DEFF" stroke="#17446D" stroke-width="3"/>
+</g>
+<g data-evidence-panel="unscaled" transform="translate(0 280)">
+
+
 <style>text{font-family:"Noto Sans CJK KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>
-<rect width="1600" height="1310" fill="#FFFFFF"/>
-<rect x="0.000" y="111.000" width="546.000" height="247.000" fill="#DDF1FB"/>
-<rect x="547.000" y="111.000" width="17.000" height="247.000" fill="#57BBEB"/>
-<rect x="80.000" y="38.000" width="22.000" height="22.000" fill="#57BBEB"/>
-<text x="121.000" y="58.000" font-size="28" fill="#051766" font-weight="600" text-anchor="start">날씨 결합 · 공개 시점의 제약</text>
-<text x="1516.000" y="58.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">AIRPLANE  /  05</text>
-<line x1="80.000" y1="82.000" x2="1516.000" y2="82.000" stroke="#051766" stroke-width="2"/>
-<text x="70.000" y="282.000" font-size="170" fill="#004766" font-weight="700" text-anchor="start" style="font-family:Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif">268</text>
-<text x="84.000" y="332.000" font-size="29" fill="#5E5E5E" font-weight="400" text-anchor="start">수집 가능한 행 / 공통 분모</text>
-<text x="637.000" y="207.000" font-size="66" fill="#051766" font-weight="700" text-anchor="start" style="font-family:Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif">있어도, 제때</text>
-<text x="637.000" y="292.000" font-size="66" fill="#051766" font-weight="700" text-anchor="start" style="font-family:Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif">공개되어야 한다</text>
-<text x="84.000" y="408.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">층화 보정 표본 300행 − 보류 32행 · 관측 나이 상한 90분</text>
-<text x="153.000" y="475.000" font-size="35" fill="#004766" font-weight="700" text-anchor="start">출발 공항</text>
-<line x1="155.000" y1="815.000" x2="699.000" y2="815.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="133.000" y="823.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">0%</text>
-<line x1="155.000" y1="739.000" x2="699.000" y2="739.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="133.000" y="747.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">25%</text>
-<line x1="155.000" y1="663.000" x2="699.000" y2="663.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="133.000" y="671.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">50%</text>
-<line x1="155.000" y1="587.000" x2="699.000" y2="587.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="133.000" y="595.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">75%</text>
-<line x1="155.000" y1="511.000" x2="699.000" y2="511.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="133.000" y="519.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">100%</text>
-<line x1="155.000" y1="511.000" x2="155.000" y2="815.000" stroke="#5E5E5E" stroke-width="1.5"/>
-<line x1="155.000" y1="815.000" x2="699.000" y2="815.000" stroke="#5E5E5E" stroke-width="1.5"/>
-<line x1="155.000" y1="815.000" x2="155.000" y2="513.269" stroke="#004766" stroke-width="3"/>
-<circle cx="155.000" cy="513.269" r="9" fill="#004766" stroke="#004766" stroke-width="3"/>
-<text x="155.000" y="858.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">0</text>
-<line x1="245.667" y1="815.000" x2="245.667" y2="513.269" stroke="#004766" stroke-width="3"/>
-<circle cx="245.667" cy="513.269" r="9" fill="#004766" stroke="#004766" stroke-width="3"/>
-<text x="245.667" y="858.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">10</text>
-<line x1="427.000" y1="815.000" x2="427.000" y2="514.403" stroke="#004766" stroke-width="3"/>
-<circle cx="427.000" cy="514.403" r="9" fill="#004766" stroke="#004766" stroke-width="3"/>
-<text x="427.000" y="858.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">30</text>
-<line x1="699.000" y1="815.000" x2="699.000" y2="644.851" stroke="#004766" stroke-width="3"/>
-<circle cx="699.000" cy="644.851" r="9" fill="#004766" stroke="#004766" stroke-width="3"/>
-<text x="699.000" y="858.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">60</text>
-<text x="427.000" y="904.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">공개 지연 가정 (분)</text>
-<text x="930.000" y="475.000" font-size="35" fill="#051766" font-weight="700" text-anchor="start">도착 공항</text>
-<line x1="932.000" y1="815.000" x2="1476.000" y2="815.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="910.000" y="823.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">0%</text>
-<line x1="932.000" y1="739.000" x2="1476.000" y2="739.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="910.000" y="747.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">25%</text>
-<line x1="932.000" y1="663.000" x2="1476.000" y2="663.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="910.000" y="671.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">50%</text>
-<line x1="932.000" y1="587.000" x2="1476.000" y2="587.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="910.000" y="595.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">75%</text>
-<line x1="932.000" y1="511.000" x2="1476.000" y2="511.000" stroke="#D9D9D9" stroke-width="1"/>
-<text x="910.000" y="519.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">100%</text>
-<line x1="932.000" y1="511.000" x2="932.000" y2="815.000" stroke="#5E5E5E" stroke-width="1.5"/>
-<line x1="932.000" y1="815.000" x2="1476.000" y2="815.000" stroke="#5E5E5E" stroke-width="1.5"/>
-<line x1="932.000" y1="815.000" x2="932.000" y2="511.000" stroke="#051766" stroke-width="3"/>
-<circle cx="932.000" cy="511.000" r="9" fill="#FFFFFF" stroke="#051766" stroke-width="3"/>
-<text x="932.000" y="858.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">0</text>
-<line x1="1022.667" y1="815.000" x2="1022.667" y2="511.000" stroke="#051766" stroke-width="3"/>
-<circle cx="1022.667" cy="511.000" r="9" fill="#FFFFFF" stroke="#051766" stroke-width="3"/>
-<text x="1022.667" y="858.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">10</text>
-<line x1="1204.000" y1="815.000" x2="1204.000" y2="511.000" stroke="#051766" stroke-width="3"/>
-<circle cx="1204.000" cy="511.000" r="9" fill="#FFFFFF" stroke="#051766" stroke-width="3"/>
-<text x="1204.000" y="858.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">30</text>
-<line x1="1476.000" y1="815.000" x2="1476.000" y2="636.910" stroke="#051766" stroke-width="3"/>
-<circle cx="1476.000" cy="636.910" r="9" fill="#FFFFFF" stroke="#051766" stroke-width="3"/>
-<text x="1476.000" y="858.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">60</text>
-<text x="1204.000" y="904.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">공개 지연 가정 (분)</text>
-<line x1="797.000" y1="457.000" x2="797.000" y2="916.000" stroke="#57BBEB" stroke-width="2"/>
-<rect x="0.000" y="948.000" width="1600.000" height="215.000" fill="#DDF1FB"/>
-<text x="84.000" y="993.000" font-size="28" fill="#051766" font-weight="600" text-anchor="start">결합 / 268행</text>
-<text x="524.000" y="993.000" font-size="28" fill="#051766" font-weight="600" text-anchor="middle">0분 가정</text>
-<text x="524.000" y="1056.000" font-size="28" fill="#004766" font-weight="500" text-anchor="middle">266/268 · 99.25%</text>
-<text x="524.000" y="1118.000" font-size="28" fill="#051766" font-weight="500" text-anchor="middle">268/268 · 100.00%</text>
-<text x="817.000" y="993.000" font-size="28" fill="#051766" font-weight="600" text-anchor="middle">10분 가정</text>
-<text x="817.000" y="1056.000" font-size="28" fill="#004766" font-weight="500" text-anchor="middle">266/268 · 99.25%</text>
-<text x="817.000" y="1118.000" font-size="28" fill="#051766" font-weight="500" text-anchor="middle">268/268 · 100.00%</text>
-<text x="1110.000" y="993.000" font-size="28" fill="#051766" font-weight="600" text-anchor="middle">30분 가정</text>
-<text x="1110.000" y="1056.000" font-size="28" fill="#004766" font-weight="500" text-anchor="middle">265/268 · 98.88%</text>
-<text x="1110.000" y="1118.000" font-size="28" fill="#051766" font-weight="500" text-anchor="middle">268/268 · 100.00%</text>
-<text x="1403.000" y="993.000" font-size="28" fill="#051766" font-weight="600" text-anchor="middle">60분 가정</text>
-<text x="1403.000" y="1056.000" font-size="28" fill="#004766" font-weight="500" text-anchor="middle">150/268 · 55.97%</text>
-<text x="1403.000" y="1118.000" font-size="28" fill="#051766" font-weight="500" text-anchor="middle">157/268 · 58.58%</text>
-<line x1="84.000" y1="1012.000" x2="1516.000" y2="1012.000" stroke="#051766" stroke-width="1.5"/>
-<text x="84.000" y="1056.000" font-size="28" fill="#004766" font-weight="600" text-anchor="start">출발 공항</text>
-<text x="84.000" y="1118.000" font-size="28" fill="#051766" font-weight="600" text-anchor="start">도착 공항</text>
-<text x="84.000" y="1208.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">0 / 10 / 30 / 60분은 실측 공개 지연 시간이 아니라 가정입니다.</text>
-<text x="84.000" y="1252.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">300행 전체나 날짜 귀속 전체의 결합률이 아닙니다. 모델 성능과도 구별합니다.</text>
-<text x="80.000" y="1282.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">출처: README의 연결된 원본 집계</text>
-<text x="1516.000" y="1282.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">날씨 결합 / 05</text>
+<rect width="1600" height="1310" fill="url(#g-body)"/>
+<rect x="0.000" y="111.000" width="546.000" height="247.000" fill="#FFE1F5"/>
+<rect x="547.000" y="111.000" width="17.000" height="247.000" fill="#98FF67"/>
+<rect x="80.000" y="38.000" width="22.000" height="22.000" fill="#98FF67"/>
+<text x="121.000" y="58.000" font-size="28" fill="#221044" font-weight="600" text-anchor="start">날씨 결합 · 공개 시점의 제약</text>
+<text x="1516.000" y="58.000" font-size="28" fill="#503849" font-weight="400" text-anchor="end">AIRPLANE  /  05</text>
+<line x1="80.000" y1="82.000" x2="1516.000" y2="82.000" stroke="#221044" stroke-width="2"/>
+<text x="70.000" y="282.000" font-size="170" fill="#6B0059" font-weight="700" text-anchor="start" style="font-family:Noto Serif CJK KR, serif">268</text>
+<text x="84.000" y="332.000" font-size="29" fill="#503849" font-weight="400" text-anchor="start">수집 가능한 행 / 공통 분모</text>
+<g data-parody-wordart="true" transform="rotate(1.3 637.0 207.0)"><text x="637.0" y="207.0" font-size="66.0" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" dx="7" dy="9" fill="#291142" stroke="#291142" stroke-width="10">있어도, 제때</text><text x="637.0" y="207.0" font-size="66.0" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" stroke="#FFFCE2" stroke-width="4" paint-order="stroke"><tspan fill="#EF005D">있</tspan><tspan fill="#EE6A00">어</tspan><tspan fill="#816900">도</tspan><tspan fill="#008C33">,</tspan><tspan fill="#0066EE"> </tspan><tspan fill="#8200B5">제</tspan><tspan fill="#EF005D">때</tspan></text></g>
+<g data-parody-wordart="true" transform="rotate(1.3 637.0 292.0)"><text x="637.0" y="292.0" font-size="66.0" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" dx="7" dy="9" fill="#291142" stroke="#291142" stroke-width="10">공개되어야 한다</text><text x="637.0" y="292.0" font-size="66.0" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" stroke="#FFFCE2" stroke-width="4" paint-order="stroke"><tspan fill="#EF005D">공</tspan><tspan fill="#EE6A00">개</tspan><tspan fill="#816900">되</tspan><tspan fill="#008C33">어</tspan><tspan fill="#0066EE">야</tspan><tspan fill="#8200B5"> </tspan><tspan fill="#EF005D">한</tspan><tspan fill="#EE6A00">다</tspan></text></g>
+<text x="84.000" y="408.000" font-size="28" fill="#503849" font-weight="400" text-anchor="start">층화 보정 표본 300행 − 보류 32행 · 관측 나이 상한 90분</text>
+<text x="153.000" y="475.000" font-size="35" fill="#6B0059" font-weight="700" text-anchor="start">출발 공항</text>
+<line x1="155.000" y1="815.000" x2="699.000" y2="815.000" stroke="#CC8FDC" stroke-width="1"/>
+<text x="133.000" y="823.000" font-size="28" fill="#503849" font-weight="400" text-anchor="end">0%</text>
+<line x1="155.000" y1="739.000" x2="699.000" y2="739.000" stroke="#CC8FDC" stroke-width="1"/>
+<text x="133.000" y="747.000" font-size="28" fill="#503849" font-weight="400" text-anchor="end">25%</text>
+<line x1="155.000" y1="663.000" x2="699.000" y2="663.000" stroke="#CC8FDC" stroke-width="1"/>
+<text x="133.000" y="671.000" font-size="28" fill="#503849" font-weight="400" text-anchor="end">50%</text>
+<line x1="155.000" y1="587.000" x2="699.000" y2="587.000" stroke="#CC8FDC" stroke-width="1"/>
+<text x="133.000" y="595.000" font-size="28" fill="#503849" font-weight="400" text-anchor="end">75%</text>
+<line x1="155.000" y1="511.000" x2="699.000" y2="511.000" stroke="#CC8FDC" stroke-width="1"/>
+<text x="133.000" y="519.000" font-size="28" fill="#503849" font-weight="400" text-anchor="end">100%</text>
+<line x1="155.000" y1="511.000" x2="155.000" y2="815.000" stroke="#503849" stroke-width="1.5"/>
+<line x1="155.000" y1="815.000" x2="699.000" y2="815.000" stroke="#503849" stroke-width="1.5"/>
+<line x1="155.000" y1="815.000" x2="155.000" y2="513.269" stroke="#6B0059" stroke-width="3"/>
+<circle cx="155.000" cy="513.269" r="9" fill="#6B0059" stroke="#6B0059" stroke-width="3"/>
+<text x="155.000" y="858.000" font-size="28" fill="#503849" font-weight="400" text-anchor="middle">0</text>
+<line x1="245.667" y1="815.000" x2="245.667" y2="513.269" stroke="#6B0059" stroke-width="3"/>
+<circle cx="245.667" cy="513.269" r="9" fill="#6B0059" stroke="#6B0059" stroke-width="3"/>
+<text x="245.667" y="858.000" font-size="28" fill="#503849" font-weight="400" text-anchor="middle">10</text>
+<line x1="427.000" y1="815.000" x2="427.000" y2="514.403" stroke="#6B0059" stroke-width="3"/>
+<circle cx="427.000" cy="514.403" r="9" fill="#6B0059" stroke="#6B0059" stroke-width="3"/>
+<text x="427.000" y="858.000" font-size="28" fill="#503849" font-weight="400" text-anchor="middle">30</text>
+<line x1="699.000" y1="815.000" x2="699.000" y2="644.851" stroke="#6B0059" stroke-width="3"/>
+<circle cx="699.000" cy="644.851" r="9" fill="#6B0059" stroke="#6B0059" stroke-width="3"/>
+<text x="699.000" y="858.000" font-size="28" fill="#503849" font-weight="400" text-anchor="middle">60</text>
+<text x="427.000" y="904.000" font-size="28" fill="#503849" font-weight="400" text-anchor="middle">공개 지연 가정 (분)</text>
+<text x="930.000" y="475.000" font-size="35" fill="#221044" font-weight="700" text-anchor="start">도착 공항</text>
+<line x1="932.000" y1="815.000" x2="1476.000" y2="815.000" stroke="#CC8FDC" stroke-width="1"/>
+<text x="910.000" y="823.000" font-size="28" fill="#503849" font-weight="400" text-anchor="end">0%</text>
+<line x1="932.000" y1="739.000" x2="1476.000" y2="739.000" stroke="#CC8FDC" stroke-width="1"/>
+<text x="910.000" y="747.000" font-size="28" fill="#503849" font-weight="400" text-anchor="end">25%</text>
+<line x1="932.000" y1="663.000" x2="1476.000" y2="663.000" stroke="#CC8FDC" stroke-width="1"/>
+<text x="910.000" y="671.000" font-size="28" fill="#503849" font-weight="400" text-anchor="end">50%</text>
+<line x1="932.000" y1="587.000" x2="1476.000" y2="587.000" stroke="#CC8FDC" stroke-width="1"/>
+<text x="910.000" y="595.000" font-size="28" fill="#503849" font-weight="400" text-anchor="end">75%</text>
+<line x1="932.000" y1="511.000" x2="1476.000" y2="511.000" stroke="#CC8FDC" stroke-width="1"/>
+<text x="910.000" y="519.000" font-size="28" fill="#503849" font-weight="400" text-anchor="end">100%</text>
+<line x1="932.000" y1="511.000" x2="932.000" y2="815.000" stroke="#503849" stroke-width="1.5"/>
+<line x1="932.000" y1="815.000" x2="1476.000" y2="815.000" stroke="#503849" stroke-width="1.5"/>
+<line x1="932.000" y1="815.000" x2="932.000" y2="511.000" stroke="#221044" stroke-width="3"/>
+<circle cx="932.000" cy="511.000" r="9" fill="#FFFDED" stroke="#221044" stroke-width="3"/>
+<text x="932.000" y="858.000" font-size="28" fill="#503849" font-weight="400" text-anchor="middle">0</text>
+<line x1="1022.667" y1="815.000" x2="1022.667" y2="511.000" stroke="#221044" stroke-width="3"/>
+<circle cx="1022.667" cy="511.000" r="9" fill="#FFFDED" stroke="#221044" stroke-width="3"/>
+<text x="1022.667" y="858.000" font-size="28" fill="#503849" font-weight="400" text-anchor="middle">10</text>
+<line x1="1204.000" y1="815.000" x2="1204.000" y2="511.000" stroke="#221044" stroke-width="3"/>
+<circle cx="1204.000" cy="511.000" r="9" fill="#FFFDED" stroke="#221044" stroke-width="3"/>
+<text x="1204.000" y="858.000" font-size="28" fill="#503849" font-weight="400" text-anchor="middle">30</text>
+<line x1="1476.000" y1="815.000" x2="1476.000" y2="636.910" stroke="#221044" stroke-width="3"/>
+<circle cx="1476.000" cy="636.910" r="9" fill="#FFFDED" stroke="#221044" stroke-width="3"/>
+<text x="1476.000" y="858.000" font-size="28" fill="#503849" font-weight="400" text-anchor="middle">60</text>
+<text x="1204.000" y="904.000" font-size="28" fill="#503849" font-weight="400" text-anchor="middle">공개 지연 가정 (분)</text>
+<line x1="797.000" y1="457.000" x2="797.000" y2="916.000" stroke="#98FF67" stroke-width="2"/>
+<rect x="0.000" y="948.000" width="1600.000" height="215.000" fill="#FFE1F5"/>
+<text x="84.000" y="993.000" font-size="28" fill="#221044" font-weight="600" text-anchor="start">결합 / 268행</text>
+<text x="524.000" y="993.000" font-size="28" fill="#221044" font-weight="600" text-anchor="middle">0분 가정</text>
+<text x="524.000" y="1056.000" font-size="28" fill="#6B0059" font-weight="500" text-anchor="middle">266/268 · 99.25%</text>
+<text x="524.000" y="1118.000" font-size="28" fill="#221044" font-weight="500" text-anchor="middle">268/268 · 100.00%</text>
+<text x="817.000" y="993.000" font-size="28" fill="#221044" font-weight="600" text-anchor="middle">10분 가정</text>
+<text x="817.000" y="1056.000" font-size="28" fill="#6B0059" font-weight="500" text-anchor="middle">266/268 · 99.25%</text>
+<text x="817.000" y="1118.000" font-size="28" fill="#221044" font-weight="500" text-anchor="middle">268/268 · 100.00%</text>
+<text x="1110.000" y="993.000" font-size="28" fill="#221044" font-weight="600" text-anchor="middle">30분 가정</text>
+<text x="1110.000" y="1056.000" font-size="28" fill="#6B0059" font-weight="500" text-anchor="middle">265/268 · 98.88%</text>
+<text x="1110.000" y="1118.000" font-size="28" fill="#221044" font-weight="500" text-anchor="middle">268/268 · 100.00%</text>
+<text x="1403.000" y="993.000" font-size="28" fill="#221044" font-weight="600" text-anchor="middle">60분 가정</text>
+<text x="1403.000" y="1056.000" font-size="28" fill="#6B0059" font-weight="500" text-anchor="middle">150/268 · 55.97%</text>
+<text x="1403.000" y="1118.000" font-size="28" fill="#221044" font-weight="500" text-anchor="middle">157/268 · 58.58%</text>
+<line x1="84.000" y1="1012.000" x2="1516.000" y2="1012.000" stroke="#221044" stroke-width="1.5"/>
+<text x="84.000" y="1056.000" font-size="28" fill="#6B0059" font-weight="600" text-anchor="start">출발 공항</text>
+<text x="84.000" y="1118.000" font-size="28" fill="#221044" font-weight="600" text-anchor="start">도착 공항</text>
+<text x="84.000" y="1208.000" font-size="28" fill="#503849" font-weight="400" text-anchor="start">0 / 10 / 30 / 60분은 실측 공개 지연 시간이 아니라 가정입니다.</text>
+<text x="84.000" y="1252.000" font-size="28" fill="#503849" font-weight="400" text-anchor="start">300행 전체나 날짜 귀속 전체의 결합률이 아닙니다. 모델 성능과도 구별합니다.</text>
+<text x="80.000" y="1282.000" font-size="28" fill="#503849" font-weight="400" text-anchor="start">출처: README의 연결된 원본 집계</text>
+<text x="1516.000" y="1282.000" font-size="28" fill="#503849" font-weight="400" text-anchor="end">날씨 결합 / 05</text>
+
+</g>
+<text x="70" y="1637" font-size="30" fill="#241043" font-family="Noto Sans CJK KR, sans-serif">※ 장식은 장난, 수치는 원본 그대로!  |  패러디 실험용 · 공식 캐릭터 자료 아님</text>
 </svg>

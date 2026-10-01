@@ -1,72 +1,97 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1110" viewBox="0 0 1600 1110" role="img" aria-labelledby="title desc" data-design="refined-evidence-f" data-chart-type="vertical-mean-sd-ranges">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1460" viewBox="0 0 1600 1460" role="img" aria-labelledby="title desc" data-design="bonobono-parody-g" data-chart-type="vertical-mean-sd-ranges">
 <title id="title">전처리는 타당해졌지만 Macro F1 향상은 확인되지 않음</title><desc id="desc">동일 라벨 255,001행. 전체 10조건 중 네 기준 조건의 3시드 평균과 ±1 표본 SD. 세로축은 0.5725–0.5785의 확대 축이며 신뢰구간이 아닙니다.</desc>
+<defs><linearGradient id="g-rainbow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FF3FF2"/><stop offset=".24" stop-color="#FFFC4A"/><stop offset=".5" stop-color="#73FFAE"/><stop offset=".74" stop-color="#49DDFF"/><stop offset="1" stop-color="#B073FF"/></linearGradient><linearGradient id="g-body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFBCEB"/><stop offset=".35" stop-color="#FFF64F"/><stop offset=".7" stop-color="#A1FFD2"/><stop offset="1" stop-color="#B2C3FF"/></linearGradient><pattern id="g-grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0 H0 V48" fill="none" stroke="#FFFFFF" stroke-width="3" opacity=".5"/></pattern></defs>
+<rect width="1600" height="1460" fill="url(#g-rainbow)"/><rect width="1600" height="280" fill="url(#g-grid)"/>
+<text x="24" y="78" font-size="57" fill="#FFFF00" stroke="#572873" stroke-width="1">★</text><text x="1160" y="46" font-size="42" fill="#FF007F" stroke="#572873" stroke-width="1">★</text><text x="1035" y="229" font-size="67" fill="#F300B3" stroke="#572873" stroke-width="1">★</text><text x="30" y="229" font-size="62" fill="#008BFF" stroke="#572873" stroke-width="1">★</text><text x="1515" y="261" font-size="50" fill="#FBFF00" stroke="#572873" stroke-width="1">★</text>
+<g data-parody-wordart="true" transform="rotate(-3 95 137)"><text x="95" y="137" font-size="68" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" dx="7" dy="9" fill="#291142" stroke="#291142" stroke-width="10">전처리를 고쳤는데...?!</text><text x="95" y="137" font-size="68" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" stroke="#FFFCE2" stroke-width="4" paint-order="stroke"><tspan fill="#EF005D">전</tspan><tspan fill="#EE6A00">처</tspan><tspan fill="#816900">리</tspan><tspan fill="#008C33">를</tspan><tspan fill="#0066EE"> </tspan><tspan fill="#8200B5">고</tspan><tspan fill="#EF005D">쳤</tspan><tspan fill="#EE6A00">는</tspan><tspan fill="#816900">데</tspan><tspan fill="#008C33">.</tspan><tspan fill="#0066EE">.</tspan><tspan fill="#8200B5">.</tspan><tspan fill="#EF005D">?</tspan><tspan fill="#EE6A00">!</tspan></text></g><text x="130" y="232" font-size="30" font-family="Noto Serif CJK KR, serif" fill="#23103D" transform="rotate(2 130 232)">☆★ 보노보노 PPT 감성 · G안 · 디자인만 일부러 망했습니다 ★☆</text>
+<g data-parody-mascot="original-vector-fan-art" transform="translate(1394 124) scale(0.72)">
+<ellipse cx="0" cy="70" rx="105" ry="117" fill="#70BFFF" stroke="#243242" stroke-width="4"/>
+<ellipse cx="-57" cy="-41" rx="31" ry="37" fill="#70BFFF" stroke="#243242" stroke-width="4"/>
+<ellipse cx="57" cy="-41" rx="31" ry="37" fill="#70BFFF" stroke="#243242" stroke-width="4"/>
+<ellipse cx="0" cy="0" rx="118" ry="102" fill="#70BFFF" stroke="#243242" stroke-width="4"/>
+<circle cx="-56" cy="-6" r="8" fill="#17202A"/><circle cx="56" cy="-6" r="8" fill="#17202A"/>
+<ellipse cx="-28" cy="39" rx="37" ry="26" fill="#FFFDF3"/><ellipse cx="28" cy="39" rx="37" ry="26" fill="#FFFDF3"/>
+<ellipse cx="0" cy="22" rx="17" ry="13" fill="#17202A"/>
+<path d="M0 34 V58 M-71 35 l-35 -8 M-70 49 l-36 9 M71 35 l35 -8 M70 49 l36 9" fill="none" stroke="#17202A" stroke-width="3"/>
+<ellipse cx="-68" cy="113" rx="33" ry="22" fill="#70BFFF" stroke="#243242" stroke-width="3"/>
+<ellipse cx="68" cy="113" rx="33" ry="22" fill="#70BFFF" stroke="#243242" stroke-width="3"/>
+<path d="M-48 118 Q-55 67 -34 72 Q-19 50 0 64 Q19 50 34 72 Q55 67 48 118 Z" fill="#FF9FCC" stroke="#6B0059" stroke-width="4"/>
+<path d="M0 114 V70 M-18 112 l-13 -34 M18 112 l13 -34" fill="none" stroke="#B93188" stroke-width="3"/>
+<path d="M113 -53 Q94 -18 115 -17 Q136 -19 113 -53" fill="#40DEFF" stroke="#17446D" stroke-width="3"/>
+</g>
+<g data-evidence-panel="unscaled" transform="translate(0 280)">
+
+
 <style>text{font-family:"Noto Sans CJK KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>
-<rect width="1600" height="1110" fill="#FFFFFF"/>
-<rect x="0.000" y="811.000" width="1600.000" height="199.000" fill="#DDF1FB"/>
-<rect x="1320.000" y="112.000" width="196.000" height="174.000" fill="#57BBEB"/>
-<rect x="80.000" y="38.000" width="22.000" height="22.000" fill="#57BBEB"/>
-<text x="121.000" y="58.000" font-size="28" fill="#051766" font-weight="600" text-anchor="start">전처리 비교 · 의미와 성능의 분리</text>
-<text x="1516.000" y="58.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">AIRPLANE  /  02</text>
-<line x1="80.000" y1="82.000" x2="1516.000" y2="82.000" stroke="#051766" stroke-width="2"/>
-<text x="80.000" y="173.000" font-size="64" fill="#051766" font-weight="700" text-anchor="start" style="font-family:Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif">전처리는 더 타당하게</text>
-<text x="80.000" y="254.000" font-size="64" fill="#051766" font-weight="700" text-anchor="start" style="font-family:Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif">성능 향상은 미확인</text>
-<text x="1418.000" y="227.000" font-size="111" fill="#051766" font-weight="700" text-anchor="middle" style="font-family:Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif">04</text>
-<text x="1418.000" y="267.000" font-size="28" fill="#051766" font-weight="400" text-anchor="middle">기준 조건</text>
-<text x="84.000" y="310.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">라벨 255,001행 · 동일 평가 절차 · 시드 42 / 1 / 7</text>
-<text x="84.000" y="352.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">전체 10조건 중 네 기준 조건 · 점: 평균 / 오차막대: ±1 표본 SD</text>
-<rect x="644.000" y="385.000" width="182.000" height="370.000" fill="#DDF1FB"/>
-<rect x="1184.000" y="385.000" width="182.000" height="370.000" fill="#DDF1FB"/>
-<text x="84.000" y="405.000" font-size="29" fill="#051766" font-weight="600" text-anchor="start">Macro F1</text>
-<text x="84.000" y="447.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">↑ 높을수록 좋음</text>
-<text x="84.000" y="535.000" font-size="28" fill="#004766" font-weight="600" text-anchor="start">확대 축</text>
-<text x="84.000" y="578.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">0.5725</text>
-<text x="84.000" y="614.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">– 0.5785</text>
-<line x1="341.000" y1="724.167" x2="1492.000" y2="724.167" stroke="#D9D9D9" stroke-width="1"/>
-<text x="323.000" y="732.167" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">0.573</text>
-<line x1="341.000" y1="662.500" x2="1492.000" y2="662.500" stroke="#D9D9D9" stroke-width="1"/>
-<text x="323.000" y="670.500" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">0.574</text>
-<line x1="341.000" y1="600.833" x2="1492.000" y2="600.833" stroke="#D9D9D9" stroke-width="1"/>
-<text x="323.000" y="608.833" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">0.575</text>
-<line x1="341.000" y1="539.167" x2="1492.000" y2="539.167" stroke="#D9D9D9" stroke-width="1"/>
-<text x="323.000" y="547.167" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">0.576</text>
-<line x1="341.000" y1="477.500" x2="1492.000" y2="477.500" stroke="#D9D9D9" stroke-width="1"/>
-<text x="323.000" y="485.500" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">0.577</text>
-<line x1="341.000" y1="415.833" x2="1492.000" y2="415.833" stroke="#D9D9D9" stroke-width="1"/>
-<text x="323.000" y="423.833" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">0.578</text>
-<line x1="341.000" y1="385.000" x2="341.000" y2="755.000" stroke="#5E5E5E" stroke-width="1.5"/>
-<line x1="341.000" y1="755.000" x2="1492.000" y2="755.000" stroke="#5E5E5E" stroke-width="1.5"/>
-<line x1="465.000" y1="546.582" x2="465.000" y2="665.486" stroke="#051766" stroke-width="3"/>
-<line x1="451.000" y1="546.582" x2="479.000" y2="546.582" stroke="#051766" stroke-width="3"/>
-<line x1="451.000" y1="665.486" x2="479.000" y2="665.486" stroke="#051766" stroke-width="3"/>
-<circle cx="465.000" cy="606.034" r="10" fill="#FFFFFF" stroke="#051766" stroke-width="3"/>
-<text x="465.000" y="798.000" font-size="28" fill="#051766" font-weight="600" text-anchor="middle">P4</text>
-<text x="465.000" y="896.000" font-size="35" fill="#051766" font-weight="600" text-anchor="middle">0.574916</text>
-<text x="465.000" y="944.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">± 0.000964</text>
-<line x1="735.000" y1="584.370" x2="735.000" y2="673.907" stroke="#004766" stroke-width="3"/>
-<line x1="721.000" y1="584.370" x2="749.000" y2="584.370" stroke="#004766" stroke-width="3"/>
-<line x1="721.000" y1="673.907" x2="749.000" y2="673.907" stroke="#004766" stroke-width="3"/>
-<circle cx="735.000" cy="629.138" r="10" fill="#004766" stroke="#004766" stroke-width="3"/>
-<text x="735.000" y="798.000" font-size="28" fill="#004766" font-weight="600" text-anchor="middle">P4_clean</text>
-<text x="735.000" y="896.000" font-size="35" fill="#004766" font-weight="600" text-anchor="middle">0.574541</text>
-<text x="735.000" y="944.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">± 0.000726</text>
-<line x1="1005.000" y1="443.407" x2="1005.000" y2="627.321" stroke="#051766" stroke-width="3"/>
-<line x1="991.000" y1="443.407" x2="1019.000" y2="443.407" stroke="#051766" stroke-width="3"/>
-<line x1="991.000" y1="627.321" x2="1019.000" y2="627.321" stroke="#051766" stroke-width="3"/>
-<circle cx="1005.000" cy="535.364" r="10" fill="#FFFFFF" stroke="#051766" stroke-width="3"/>
-<text x="1005.000" y="798.000" font-size="28" fill="#051766" font-weight="600" text-anchor="middle">P6_fixed</text>
-<text x="1005.000" y="896.000" font-size="35" fill="#051766" font-weight="600" text-anchor="middle">0.576062</text>
-<text x="1005.000" y="944.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">± 0.001491</text>
-<line x1="1275.000" y1="492.316" x2="1275.000" y2="624.868" stroke="#004766" stroke-width="3"/>
-<line x1="1261.000" y1="492.316" x2="1289.000" y2="492.316" stroke="#004766" stroke-width="3"/>
-<line x1="1261.000" y1="624.868" x2="1289.000" y2="624.868" stroke="#004766" stroke-width="3"/>
-<circle cx="1275.000" cy="558.592" r="10" fill="#004766" stroke="#004766" stroke-width="3"/>
-<text x="1275.000" y="798.000" font-size="28" fill="#004766" font-weight="600" text-anchor="middle">P6_clean</text>
-<text x="1275.000" y="896.000" font-size="35" fill="#004766" font-weight="600" text-anchor="middle">0.575685</text>
-<text x="1275.000" y="944.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">± 0.001075</text>
-<text x="84.000" y="863.000" font-size="28" fill="#051766" font-weight="600" text-anchor="start">3시드 평균</text>
-<text x="84.000" y="912.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">±1 표본 SD</text>
-<line x1="84.000" y1="1009.000" x2="1516.000" y2="1009.000" stroke="#051766" stroke-width="1.5"/>
-<text x="84.000" y="1056.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">SD는 신뢰구간이 아닙니다. 오차막대 겹침으로 동등성·유의성을 판정하지 않습니다.</text>
-<text x="80.000" y="1082.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">출처: README의 연결된 원본 집계</text>
-<text x="1516.000" y="1082.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">전처리 비교 / 02</text>
+<rect width="1600" height="1110" fill="url(#g-body)"/>
+<rect x="0.000" y="811.000" width="1600.000" height="199.000" fill="#FFE1F5"/>
+<rect x="1320.000" y="112.000" width="196.000" height="174.000" fill="#98FF67"/>
+<rect x="80.000" y="38.000" width="22.000" height="22.000" fill="#98FF67"/>
+<text x="121.000" y="58.000" font-size="28" fill="#221044" font-weight="600" text-anchor="start">전처리 비교 · 의미와 성능의 분리</text>
+<text x="1516.000" y="58.000" font-size="28" fill="#503849" font-weight="400" text-anchor="end">AIRPLANE  /  02</text>
+<line x1="80.000" y1="82.000" x2="1516.000" y2="82.000" stroke="#221044" stroke-width="2"/>
+<g data-parody-wordart="true" transform="rotate(1.3 80.0 173.0)"><text x="80.0" y="173.0" font-size="64.0" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" dx="7" dy="9" fill="#291142" stroke="#291142" stroke-width="10">전처리는 더 타당하게</text><text x="80.0" y="173.0" font-size="64.0" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" stroke="#FFFCE2" stroke-width="4" paint-order="stroke"><tspan fill="#EF005D">전</tspan><tspan fill="#EE6A00">처</tspan><tspan fill="#816900">리</tspan><tspan fill="#008C33">는</tspan><tspan fill="#0066EE"> </tspan><tspan fill="#8200B5">더</tspan><tspan fill="#EF005D"> </tspan><tspan fill="#EE6A00">타</tspan><tspan fill="#816900">당</tspan><tspan fill="#008C33">하</tspan><tspan fill="#0066EE">게</tspan></text></g>
+<g data-parody-wordart="true" transform="rotate(1.3 80.0 254.0)"><text x="80.0" y="254.0" font-size="64.0" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" dx="7" dy="9" fill="#291142" stroke="#291142" stroke-width="10">성능 향상은 미확인</text><text x="80.0" y="254.0" font-size="64.0" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" stroke="#FFFCE2" stroke-width="4" paint-order="stroke"><tspan fill="#EF005D">성</tspan><tspan fill="#EE6A00">능</tspan><tspan fill="#816900"> </tspan><tspan fill="#008C33">향</tspan><tspan fill="#0066EE">상</tspan><tspan fill="#8200B5">은</tspan><tspan fill="#EF005D"> </tspan><tspan fill="#EE6A00">미</tspan><tspan fill="#816900">확</tspan><tspan fill="#008C33">인</tspan></text></g>
+<text x="1418.000" y="227.000" font-size="111" fill="#221044" font-weight="700" text-anchor="middle" style="font-family:Noto Serif CJK KR, serif">04</text>
+<text x="1418.000" y="267.000" font-size="28" fill="#221044" font-weight="400" text-anchor="middle">기준 조건</text>
+<text x="84.000" y="310.000" font-size="28" fill="#503849" font-weight="400" text-anchor="start">라벨 255,001행 · 동일 평가 절차 · 시드 42 / 1 / 7</text>
+<text x="84.000" y="352.000" font-size="28" fill="#503849" font-weight="400" text-anchor="start">전체 10조건 중 네 기준 조건 · 점: 평균 / 오차막대: ±1 표본 SD</text>
+<rect x="644.000" y="385.000" width="182.000" height="370.000" fill="#FFE1F5"/>
+<rect x="1184.000" y="385.000" width="182.000" height="370.000" fill="#FFE1F5"/>
+<text x="84.000" y="405.000" font-size="29" fill="#221044" font-weight="600" text-anchor="start">Macro F1</text>
+<text x="84.000" y="447.000" font-size="28" fill="#503849" font-weight="400" text-anchor="start">↑ 높을수록 좋음</text>
+<text x="84.000" y="535.000" font-size="28" fill="#6B0059" font-weight="600" text-anchor="start">확대 축</text>
+<text x="84.000" y="578.000" font-size="28" fill="#503849" font-weight="400" text-anchor="start">0.5725</text>
+<text x="84.000" y="614.000" font-size="28" fill="#503849" font-weight="400" text-anchor="start">– 0.5785</text>
+<line x1="341.000" y1="724.167" x2="1492.000" y2="724.167" stroke="#CC8FDC" stroke-width="1"/>
+<text x="323.000" y="732.167" font-size="28" fill="#503849" font-weight="400" text-anchor="end">0.573</text>
+<line x1="341.000" y1="662.500" x2="1492.000" y2="662.500" stroke="#CC8FDC" stroke-width="1"/>
+<text x="323.000" y="670.500" font-size="28" fill="#503849" font-weight="400" text-anchor="end">0.574</text>
+<line x1="341.000" y1="600.833" x2="1492.000" y2="600.833" stroke="#CC8FDC" stroke-width="1"/>
+<text x="323.000" y="608.833" font-size="28" fill="#503849" font-weight="400" text-anchor="end">0.575</text>
+<line x1="341.000" y1="539.167" x2="1492.000" y2="539.167" stroke="#CC8FDC" stroke-width="1"/>
+<text x="323.000" y="547.167" font-size="28" fill="#503849" font-weight="400" text-anchor="end">0.576</text>
+<line x1="341.000" y1="477.500" x2="1492.000" y2="477.500" stroke="#CC8FDC" stroke-width="1"/>
+<text x="323.000" y="485.500" font-size="28" fill="#503849" font-weight="400" text-anchor="end">0.577</text>
+<line x1="341.000" y1="415.833" x2="1492.000" y2="415.833" stroke="#CC8FDC" stroke-width="1"/>
+<text x="323.000" y="423.833" font-size="28" fill="#503849" font-weight="400" text-anchor="end">0.578</text>
+<line x1="341.000" y1="385.000" x2="341.000" y2="755.000" stroke="#503849" stroke-width="1.5"/>
+<line x1="341.000" y1="755.000" x2="1492.000" y2="755.000" stroke="#503849" stroke-width="1.5"/>
+<line x1="465.000" y1="546.582" x2="465.000" y2="665.486" stroke="#221044" stroke-width="3"/>
+<line x1="451.000" y1="546.582" x2="479.000" y2="546.582" stroke="#221044" stroke-width="3"/>
+<line x1="451.000" y1="665.486" x2="479.000" y2="665.486" stroke="#221044" stroke-width="3"/>
+<circle cx="465.000" cy="606.034" r="10" fill="#FFFDED" stroke="#221044" stroke-width="3"/>
+<text x="465.000" y="798.000" font-size="28" fill="#221044" font-weight="600" text-anchor="middle">P4</text>
+<text x="465.000" y="896.000" font-size="35" fill="#221044" font-weight="600" text-anchor="middle">0.574916</text>
+<text x="465.000" y="944.000" font-size="28" fill="#503849" font-weight="400" text-anchor="middle">± 0.000964</text>
+<line x1="735.000" y1="584.370" x2="735.000" y2="673.907" stroke="#6B0059" stroke-width="3"/>
+<line x1="721.000" y1="584.370" x2="749.000" y2="584.370" stroke="#6B0059" stroke-width="3"/>
+<line x1="721.000" y1="673.907" x2="749.000" y2="673.907" stroke="#6B0059" stroke-width="3"/>
+<circle cx="735.000" cy="629.138" r="10" fill="#6B0059" stroke="#6B0059" stroke-width="3"/>
+<text x="735.000" y="798.000" font-size="28" fill="#6B0059" font-weight="600" text-anchor="middle">P4_clean</text>
+<text x="735.000" y="896.000" font-size="35" fill="#6B0059" font-weight="600" text-anchor="middle">0.574541</text>
+<text x="735.000" y="944.000" font-size="28" fill="#503849" font-weight="400" text-anchor="middle">± 0.000726</text>
+<line x1="1005.000" y1="443.407" x2="1005.000" y2="627.321" stroke="#221044" stroke-width="3"/>
+<line x1="991.000" y1="443.407" x2="1019.000" y2="443.407" stroke="#221044" stroke-width="3"/>
+<line x1="991.000" y1="627.321" x2="1019.000" y2="627.321" stroke="#221044" stroke-width="3"/>
+<circle cx="1005.000" cy="535.364" r="10" fill="#FFFDED" stroke="#221044" stroke-width="3"/>
+<text x="1005.000" y="798.000" font-size="28" fill="#221044" font-weight="600" text-anchor="middle">P6_fixed</text>
+<text x="1005.000" y="896.000" font-size="35" fill="#221044" font-weight="600" text-anchor="middle">0.576062</text>
+<text x="1005.000" y="944.000" font-size="28" fill="#503849" font-weight="400" text-anchor="middle">± 0.001491</text>
+<line x1="1275.000" y1="492.316" x2="1275.000" y2="624.868" stroke="#6B0059" stroke-width="3"/>
+<line x1="1261.000" y1="492.316" x2="1289.000" y2="492.316" stroke="#6B0059" stroke-width="3"/>
+<line x1="1261.000" y1="624.868" x2="1289.000" y2="624.868" stroke="#6B0059" stroke-width="3"/>
+<circle cx="1275.000" cy="558.592" r="10" fill="#6B0059" stroke="#6B0059" stroke-width="3"/>
+<text x="1275.000" y="798.000" font-size="28" fill="#6B0059" font-weight="600" text-anchor="middle">P6_clean</text>
+<text x="1275.000" y="896.000" font-size="35" fill="#6B0059" font-weight="600" text-anchor="middle">0.575685</text>
+<text x="1275.000" y="944.000" font-size="28" fill="#503849" font-weight="400" text-anchor="middle">± 0.001075</text>
+<text x="84.000" y="863.000" font-size="28" fill="#221044" font-weight="600" text-anchor="start">3시드 평균</text>
+<text x="84.000" y="912.000" font-size="28" fill="#503849" font-weight="400" text-anchor="start">±1 표본 SD</text>
+<line x1="84.000" y1="1009.000" x2="1516.000" y2="1009.000" stroke="#221044" stroke-width="1.5"/>
+<text x="84.000" y="1056.000" font-size="28" fill="#503849" font-weight="400" text-anchor="start">SD는 신뢰구간이 아닙니다. 오차막대 겹침으로 동등성·유의성을 판정하지 않습니다.</text>
+<text x="80.000" y="1082.000" font-size="28" fill="#503849" font-weight="400" text-anchor="start">출처: README의 연결된 원본 집계</text>
+<text x="1516.000" y="1082.000" font-size="28" fill="#503849" font-weight="400" text-anchor="end">전처리 비교 / 02</text>
+
+</g>
+<text x="70" y="1437" font-size="30" fill="#241043" font-family="Noto Sans CJK KR, sans-serif">※ 장식은 장난, 수치는 원본 그대로!  |  패러디 실험용 · 공식 캐릭터 자료 아님</text>
 </svg>

@@ -1,31 +1,56 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1470" viewBox="0 0 1600 1470" role="img" aria-labelledby="title desc" data-design="bonobono-parody-g">
 <title id="title">모델 선택은 내부에서, 외부 검증은 최종 채점만</title><desc id="desc">층화 5분할 외부 학습 데이터 안에서 80대20으로 분리. 내부 학습 경계에서 TE를 계산하고 내부 검증으로 트리 수와 임계값을 선택. 외부 검증은 최종 채점 전용.</desc>
-<rect width="1600" height="1120" fill="#FFFFFF"/>
-<text x="80" y="62" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">02 / EVALUATION BOUNDARY</text>
-<text x="1520" y="62" fill="#5E5E5E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="end" style="font-variant-numeric:tabular-nums">AIRPLANE / F</text>
-<line x1="80" y1="90" x2="1520" y2="90" stroke="#051766" stroke-width="2"/>
-<text x="80" y="178" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="64" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">선택은 안쪽에서, 채점은 바깥에서</text>
-<text x="80" y="246" fill="#5E5E5E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">층화 5분할 × 시드 42 / 1 / 7 · 각 조건에서 같은 선택 절차</text>
-<rect x="80" y="304" width="928" height="586" fill="#DDF1FB"/>
-<text x="112" y="363" fill="#004766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="32" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">외부 학습 데이터 안에서만 선택</text>
-<text x="112" y="438" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="52" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">01</text>
-<text x="240" y="438" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="38" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">내부 학습 / 80%</text>
-<text x="240" y="500" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="32" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">학습 경계에서 TE 계산</text>
-<text x="240" y="552" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="32" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">트리 수 후보별 모델 학습</text>
-<text x="112" y="672" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="52" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">02</text>
-<text x="240" y="672" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="38" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">내부 검증 / 20%</text>
-<text x="240" y="734" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="32" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">LogLoss → 트리 수</text>
-<text x="240" y="786" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="32" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">Macro F1 → 임계값</text>
-<line x1="112" y1="590" x2="976" y2="590" stroke="#051766" stroke-width="2"/>
-<line x1="1056" y1="304" x2="1056" y2="890" stroke="#051766" stroke-width="3"/>
-<text x="1100" y="360" fill="#004766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">03 / 최종 채점 전용</text>
-<text x="1100" y="468" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="48" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">외부 검증</text>
-<text x="1100" y="540" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">선택에 사용하지 않음</text>
-<text x="1100" y="612" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">각 폴드의 예측 → OOF</text>
-<text x="1100" y="676" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">OOF = 최종 평가</text>
-<text x="1100" y="798" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">선택한 모델 그대로</text>
-<text x="1100" y="846" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">최종 성능을 채점</text>
-<text x="80" y="962" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="34" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">외부 검증으로 선택하지 않음</text>
-<text x="80" y="1016" fill="#5E5E5E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">각 행을 학습에 쓰지 않은 모델의 예측을 모아 평가합니다.</text>
-<text x="80" y="1076" fill="#5E5E5E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">라벨 누수 방지와 미래 시점의 입력 확보 가능성은 서로 다른 문제입니다.</text>
+<defs><linearGradient id="g-rainbow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FF3FF2"/><stop offset=".24" stop-color="#FFFC4A"/><stop offset=".5" stop-color="#73FFAE"/><stop offset=".74" stop-color="#49DDFF"/><stop offset="1" stop-color="#B073FF"/></linearGradient><linearGradient id="g-body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFBCEB"/><stop offset=".35" stop-color="#FFF64F"/><stop offset=".7" stop-color="#A1FFD2"/><stop offset="1" stop-color="#B2C3FF"/></linearGradient><pattern id="g-grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0 H0 V48" fill="none" stroke="#FFFFFF" stroke-width="3" opacity=".5"/></pattern></defs>
+<rect width="1600" height="1470" fill="url(#g-rainbow)"/><rect width="1600" height="280" fill="url(#g-grid)"/>
+<text x="24" y="78" font-size="57" fill="#FFFF00" stroke="#572873" stroke-width="1">★</text><text x="1160" y="46" font-size="42" fill="#FF007F" stroke="#572873" stroke-width="1">★</text><text x="1035" y="229" font-size="67" fill="#F300B3" stroke="#572873" stroke-width="1">★</text><text x="30" y="229" font-size="62" fill="#008BFF" stroke="#572873" stroke-width="1">★</text><text x="1515" y="261" font-size="50" fill="#FBFF00" stroke="#572873" stroke-width="1">★</text>
+<g data-parody-wordart="true" transform="rotate(-3 95 137)"><text x="95" y="137" font-size="68" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" dx="7" dy="9" fill="#291142" stroke="#291142" stroke-width="10">시험 답안은 보면 안 돼요!!</text><text x="95" y="137" font-size="68" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" stroke="#FFFCE2" stroke-width="4" paint-order="stroke"><tspan fill="#EF005D">시</tspan><tspan fill="#EE6A00">험</tspan><tspan fill="#816900"> </tspan><tspan fill="#008C33">답</tspan><tspan fill="#0066EE">안</tspan><tspan fill="#8200B5">은</tspan><tspan fill="#EF005D"> </tspan><tspan fill="#EE6A00">보</tspan><tspan fill="#816900">면</tspan><tspan fill="#008C33"> </tspan><tspan fill="#0066EE">안</tspan><tspan fill="#8200B5"> </tspan><tspan fill="#EF005D">돼</tspan><tspan fill="#EE6A00">요</tspan><tspan fill="#816900">!</tspan><tspan fill="#008C33">!</tspan></text></g><text x="130" y="232" font-size="30" font-family="Noto Serif CJK KR, serif" fill="#23103D" transform="rotate(2 130 232)">☆★ 보노보노 PPT 감성 · G안 · 디자인만 일부러 망했습니다 ★☆</text>
+<g data-parody-mascot="original-vector-fan-art" transform="translate(1394 124) scale(0.72)">
+<ellipse cx="0" cy="70" rx="105" ry="117" fill="#70BFFF" stroke="#243242" stroke-width="4"/>
+<ellipse cx="-57" cy="-41" rx="31" ry="37" fill="#70BFFF" stroke="#243242" stroke-width="4"/>
+<ellipse cx="57" cy="-41" rx="31" ry="37" fill="#70BFFF" stroke="#243242" stroke-width="4"/>
+<ellipse cx="0" cy="0" rx="118" ry="102" fill="#70BFFF" stroke="#243242" stroke-width="4"/>
+<circle cx="-56" cy="-6" r="8" fill="#17202A"/><circle cx="56" cy="-6" r="8" fill="#17202A"/>
+<ellipse cx="-28" cy="39" rx="37" ry="26" fill="#FFFDF3"/><ellipse cx="28" cy="39" rx="37" ry="26" fill="#FFFDF3"/>
+<ellipse cx="0" cy="22" rx="17" ry="13" fill="#17202A"/>
+<path d="M0 34 V58 M-71 35 l-35 -8 M-70 49 l-36 9 M71 35 l35 -8 M70 49 l36 9" fill="none" stroke="#17202A" stroke-width="3"/>
+<ellipse cx="-68" cy="113" rx="33" ry="22" fill="#70BFFF" stroke="#243242" stroke-width="3"/>
+<ellipse cx="68" cy="113" rx="33" ry="22" fill="#70BFFF" stroke="#243242" stroke-width="3"/>
+<path d="M-48 118 Q-55 67 -34 72 Q-19 50 0 64 Q19 50 34 72 Q55 67 48 118 Z" fill="#FF9FCC" stroke="#6B0059" stroke-width="4"/>
+<path d="M0 114 V70 M-18 112 l-13 -34 M18 112 l13 -34" fill="none" stroke="#B93188" stroke-width="3"/>
+<path d="M113 -53 Q94 -18 115 -17 Q136 -19 113 -53" fill="#40DEFF" stroke="#17446D" stroke-width="3"/>
+</g>
+<g data-evidence-panel="unscaled" transform="translate(0 280)">
+
+
+<rect width="1600" height="1120" fill="url(#g-body)"/>
+<text x="80" y="62" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">02 / EVALUATION BOUNDARY</text>
+<text x="1520" y="62" fill="#503849" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="end" style="font-variant-numeric:tabular-nums">AIRPLANE / G</text>
+<line x1="80" y1="90" x2="1520" y2="90" stroke="#221044" stroke-width="2"/>
+<g data-parody-wordart="true" transform="rotate(1.3 80.0 178.0)"><text x="80.0" y="178.0" font-size="64.0" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" dx="7" dy="9" fill="#291142" stroke="#291142" stroke-width="10">선택은 안쪽에서, 채점은 바깥에서</text><text x="80.0" y="178.0" font-size="64.0" font-family="Noto Sans CJK KR, sans-serif" font-weight="900" stroke="#FFFCE2" stroke-width="4" paint-order="stroke"><tspan fill="#EF005D">선</tspan><tspan fill="#EE6A00">택</tspan><tspan fill="#816900">은</tspan><tspan fill="#008C33"> </tspan><tspan fill="#0066EE">안</tspan><tspan fill="#8200B5">쪽</tspan><tspan fill="#EF005D">에</tspan><tspan fill="#EE6A00">서</tspan><tspan fill="#816900">,</tspan><tspan fill="#008C33"> </tspan><tspan fill="#0066EE">채</tspan><tspan fill="#8200B5">점</tspan><tspan fill="#EF005D">은</tspan><tspan fill="#EE6A00"> </tspan><tspan fill="#816900">바</tspan><tspan fill="#008C33">깥</tspan><tspan fill="#0066EE">에</tspan><tspan fill="#8200B5">서</tspan></text></g>
+<text x="80" y="246" fill="#503849" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">층화 5분할 × 시드 42 / 1 / 7 · 각 조건에서 같은 선택 절차</text>
+<rect x="80" y="304" width="928" height="586" fill="#FFE1F5"/>
+<text x="112" y="363" fill="#6B0059" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="32" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">외부 학습 데이터 안에서만 선택</text>
+<text x="112" y="438" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="52" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">01</text>
+<text x="240" y="438" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="38" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">내부 학습 / 80%</text>
+<text x="240" y="500" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="32" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">학습 경계에서 TE 계산</text>
+<text x="240" y="552" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="32" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">트리 수 후보별 모델 학습</text>
+<text x="112" y="672" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="52" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">02</text>
+<text x="240" y="672" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="38" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">내부 검증 / 20%</text>
+<text x="240" y="734" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="32" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">LogLoss → 트리 수</text>
+<text x="240" y="786" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="32" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">Macro F1 → 임계값</text>
+<line x1="112" y1="590" x2="976" y2="590" stroke="#221044" stroke-width="2"/>
+<line x1="1056" y1="304" x2="1056" y2="890" stroke="#221044" stroke-width="3"/>
+<text x="1100" y="360" fill="#6B0059" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">03 / 최종 채점 전용</text>
+<text x="1100" y="468" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="48" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">외부 검증</text>
+<text x="1100" y="540" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">선택에 사용하지 않음</text>
+<text x="1100" y="612" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">각 폴드의 예측 → OOF</text>
+<text x="1100" y="676" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">OOF = 최종 평가</text>
+<text x="1100" y="798" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">선택한 모델 그대로</text>
+<text x="1100" y="846" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">최종 성능을 채점</text>
+<text x="80" y="962" fill="#221044" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="34" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">외부 검증으로 선택하지 않음</text>
+<text x="80" y="1016" fill="#503849" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">각 행을 학습에 쓰지 않은 모델의 예측을 모아 평가합니다.</text>
+<text x="80" y="1076" fill="#503849" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">라벨 누수 방지와 미래 시점의 입력 확보 가능성은 서로 다른 문제입니다.</text>
+
+</g>
+<text x="70" y="1447" font-size="30" fill="#241043" font-family="Noto Sans CJK KR, sans-serif">※ 장식은 장난, 수치는 원본 그대로!  |  패러디 실험용 · 공식 캐릭터 자료 아님</text>
 </svg>

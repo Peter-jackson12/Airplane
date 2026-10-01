@@ -186,7 +186,8 @@ def test_all_five_svg_have_korean_accessible_titles_and_no_external_font_depende
         assert title is not None and re.search('[가-힣]', title.text)
         assert desc is not None and len(desc.text) > 20
         raw = ET.tostring(svg, encoding='unicode')
-        assert '@import' not in raw and '@font-face' not in raw and 'url(' not in raw
+        assert '@import' not in raw and '@font-face' not in raw
+        assert all(value.startswith('#') for value in re.findall(r'url\(([^)]+)\)', raw))
 
 
 @pytest.mark.parametrize('field', ['filters', 'sources', 'figures'])
@@ -253,22 +254,25 @@ def test_presentation_story_retains_population_and_evaluation_boundaries():
         assert phrase in evaluation
 
 
-def test_all_readme_artwork_retains_flat_korean_air_homepage_palette():
+def test_g_parody_wraps_all_figures_without_scaling_evidence():
     filenames = [*builder.FIGURES.values(), 'presentation_cover.svg',
                  'analysis_journey.svg', 'evaluation_boundary.svg']
     for filename in filenames:
         raw = (ROOT / 'assets/readme' / filename).read_text(encoding='utf-8')
         svg = ET.fromstring(raw)
-        rectangles = svg.findall('{http://www.w3.org/2000/svg}rect')
-        assert rectangles and rectangles[0].attrib['fill'] == '#FFFFFF'
-        assert all(float(rect.attrib.get('rx', 0)) == 0 for rect in rectangles)
-        assert not any(node.tag.endswith(('linearGradient', 'radialGradient')) for node in svg.iter())
-        assert '#051766' in raw and 'Noto Sans CJK KR' in raw
-        if filename != 'presentation_cover.svg':
-            assert '#004766' in raw
-        assert 'Noto Serif CJK KR' not in raw
-        for previous_color in ('#102D40', '#183B4E', '#007E80', '#EFF6F6', '#F5F2EB', '#A5442B'):
-            assert previous_color not in raw
+        assert svg.attrib['data-design'] == 'bonobono-parody-g'
+        assert any(n.tag.endswith('linearGradient') for n in svg.iter())
+        assert any(n.attrib.get('data-parody-mascot') == 'original-vector-fan-art' for n in svg.iter())
+        assert any(n.attrib.get('data-parody-wordart') == 'true' for n in svg.iter())
+        panels = [n for n in svg.iter() if n.attrib.get('data-evidence-panel') == 'unscaled']
+        assert len(panels) == 1
+        assert panels[0].attrib['transform'] == 'translate(0 280)'
+        for group in svg.iter():
+            if group.attrib.get('data-parody-wordart') == 'true':
+                for label in group:
+                    assert not re.fullmatch(r'[0-9.,+−% /-]+', ''.join(label.itertext()))
+        assert '장식은 장난, 수치는 원본 그대로!' in raw
+        assert not any(n.tag.endswith(('script', 'image')) for n in svg.iter())
 
 
 def test_figure_receipt_rejects_changed_editorial_renderer(tmp_path, monkeypatch):
@@ -279,30 +283,30 @@ def test_figure_receipt_rejects_changed_editorial_renderer(tmp_path, monkeypatch
         builder.check_receipt()
 
 
-def test_f_leads_with_bounded_result_and_readable_type():
+def test_g_keeps_bounded_result_and_readable_numerical_type():
     cover = ET.fromstring((ROOT / 'assets/readme/presentation_cover.svg').read_text())
-    assert int(cover.attrib['height']) == 760
+    assert int(cover.attrib['height']) == 1410
     content = ''.join(cover.itertext())
     for value in ('+0.025035', '180,332행', '정적 교차검증', '미래 운항 성능은 미검증'):
         assert value in content
     for filename in [*builder.FIGURES.values(), 'presentation_cover.svg',
                      'analysis_journey.svg', 'evaluation_boundary.svg']:
         svg = ET.fromstring((ROOT / 'assets/readme' / filename).read_text())
-        labels = svg.findall('{http://www.w3.org/2000/svg}text')
+        labels = list(svg.iter('{http://www.w3.org/2000/svg}text'))
         assert all(float(n.attrib['font-size']) >= 28 for n in labels), filename
     journey = (ROOT / 'assets/readme/analysis_journey.svg').read_text()
     assert '도형 크기는 수량을 뜻하지 않습니다.' in journey
 
 
-def test_f_main_readme_links_preserved_styles_and_current_ci():
+def test_g_readme_links_f_main_preserved_styles_and_own_ci():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
-    assert '메인 디자인 · F안' in text
+    assert '디자인 비교 · G안' in text
     assert '[A안](https://github.com/Peter-jackson12/Airplane/tree/style/a-editorial)' in text
     assert 'https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold' in text
-    assert 'compare/8b4592b598dae5edd222afa63aa3982f6692d1c4...design/refined-evidence-f' in text
+    assert 'compare/097fefdc0d9bc71f72f1258940c47f3efc2291ea...design/bonobono-parody-g' in text
     assert 'tree/design/reference-report-e' in text
-    assert 'badge.svg?branch=master' in text
-    assert 'ci.yml?query=branch%3Amaster' in text
+    assert 'badge.svg?branch=design%2Fbonobono-parody-g' in text
+    assert 'ci.yml?query=branch%3Adesign%2Fbonobono-parody-g' in text
     assert '본문 설명 약 16분 + 전환·질문 여유 약 3분' in text
 
 
@@ -316,12 +320,12 @@ def test_magazine_d_quantitative_figures_use_distinct_chart_geometries():
     chart_types = set()
     for filename in builder.FIGURES.values():
         svg = ET.fromstring((ROOT / 'assets/readme' / filename).read_text())
-        assert svg.attrib['data-design'] == 'refined-evidence-f'
+        assert svg.attrib['data-design'] == 'bonobono-parody-g'
         chart_types.add(svg.attrib['data-chart-type'])
     assert len(chart_types) == 5
 
 
-def test_homepage_palette_text_contrast_is_at_least_aa():
+def test_g_numerical_panel_palette_text_contrast_is_at_least_aa():
     from scripts import readme_editorial as style
     def luminance(color):
         channels = [int(color[i:i+2], 16) / 255 for i in (1, 3, 5)]

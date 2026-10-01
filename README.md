@@ -2,9 +2,9 @@
 
 # Airplane · 항공편 지연 예측과 날씨 정보 확장
 
-[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml?query=branch%3Amaster)
+[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=design%2Fbonobono-parody-g)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml?query=branch%3Adesign%2Fbonobono-parody-g)
 
-**메인 디자인 · F안 — 결과와 근거를 먼저 읽는 지면:** D안의 네이비·하늘색을 유지하고, 표지를 질문에서 검증 결과로 바꿨습니다. 평가 집단·비교 절차·해석 한계를 같은 지면에서 읽도록 재구성했습니다. [D 기준안](https://github.com/Peter-jackson12/Airplane/tree/design/korean-air-palette-d) · [D→F 비교](https://github.com/Peter-jackson12/Airplane/compare/8b4592b598dae5edd222afa63aa3982f6692d1c4...design/refined-evidence-f) · [F안 보존](https://github.com/Peter-jackson12/Airplane/tree/design/refined-evidence-f) · [A안](https://github.com/Peter-jackson12/Airplane/tree/style/a-editorial) · [B안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold) · [C안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-flight-magazine-c) · [E안](https://github.com/Peter-jackson12/Airplane/tree/design/reference-report-e)
+**디자인 비교 · G안 — 보노보노 PPT 패러디:** 무지개 글자·기울어진 제목·과한 그라데이션·별 장식·직접 그린 보노보노 팬아트로 일부러 촌스럽게 만든 재미용 실험입니다. 연구 수치·평가 범위·코드·실행 방법은 그대로이며, 공식 캐릭터 자료나 제출 권장안이 아닙니다. [F 메인](https://github.com/Peter-jackson12/Airplane/tree/master) · [F→G 비교](https://github.com/Peter-jackson12/Airplane/compare/097fefdc0d9bc71f72f1258940c47f3efc2291ea...design/bonobono-parody-g) · [A안](https://github.com/Peter-jackson12/Airplane/tree/style/a-editorial) · [B안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold) · [C안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-flight-magazine-c) · [D안](https://github.com/Peter-jackson12/Airplane/tree/design/korean-air-palette-d) · [E안](https://github.com/Peter-jackson12/Airplane/tree/design/reference-report-e) · [F안 보존](https://github.com/Peter-jackson12/Airplane/tree/design/refined-evidence-f)
 
 [핵심 결과](#5-최신검증결과) · [데이터](#2-데이터와분석범위) · [재현 방법](#7-코드구조와재현) · [실행 근거](#8-문서안내)
 
@@ -344,10 +344,9 @@ uv run --locked --offline python -m pytest -q
 <a id="readme-figures"></a>
 ### README 그림의 재현과 출처 검증
 
-다음 명령은 Git에 추적된 집계 CSV·JSON만 읽습니다. IEM 호출·원본 데이터 로드·모델 학습을 하지 않습니다. 그림 파일은 네이비·하늘색·흰색의 정적 SVG입니다. F안은 결과 → 비교 집단 → 검증 절차 → 해석 한계의 위계를 사용합니다. 1,600단위 캔버스에서 주석 최소 28단위(896px 표시 시 약 15.7px), 본문 32단위, 제목 64단위, 핵심 수치 112단위를 기준으로 삼았습니다. 표지 높이는 D안 1,110단위에서 760단위로 줄이고 결과와 평가 범위를 함께 배치했습니다. 집단 설명의 장식 바코드·절취선은 제거했습니다. 정량 그림의 실제 축·분모·평균·SD·원본 집계는 보존합니다. 색상은 2026-10-01 [대한항공 공식 홈페이지](https://www.koreanair.com/)의 화면에서 확인한 네이비 `#051766`, 하늘색 `#57BBEB`, 연한 하늘색 `#DDF1FB`, 흰색 `#FFFFFF`를 참고했습니다. 작은 강조 글자에는 대비를 위해 더 짙은 청색 `#004766`을 사용합니다. 공식 브랜드 규정의 재현이 아니며, 대한항공 로고를 사용하거나 제휴 관계를 뜻하지 않습니다. 숫자·단위·해석 범위는 본문과 같은 근거를 사용합니다. 생성기는 Python 표준 라이브러리만 사용하며 한글은 시스템 글꼴로 표시합니다. 외부 글꼴·이미지·스크립트를 불러오지 않으므로 파일 자체의 재생성에는 글꼴 설치가 필요하지 않습니다. 운영체제별 글꼴 모양에는 차이가 있을 수 있으며, 본문의 표와 대체 텍스트로도 정확한 결과를 읽을 수 있습니다.
+다음 명령은 Git에 추적된 집계 CSV·JSON만 읽습니다. IEM 호출·원본 데이터 로드·모델 학습을 하지 않습니다. G안은 “망한 보노보노 PPT” 인터넷 밈을 떠올리는 재미용 패러디입니다. 직접 작성한 벡터 팬아트, 무지개 글자, 제목 그림자, 비뚤어진 정렬, 별 장식과 강한 그라데이션을 사용합니다. 외부 이미지·캐릭터 파일·글꼴·스크립트를 불러오지 않으며, 공식 캐릭터 자료나 권장 발표 디자인을 뜻하지 않습니다.
 
-
-**적용한 작업 방식.** [Chelsea Lensing의 사례](https://www.chelsealensing.design/case-studies/portfolio)에서 컴포넌트·글자 크기·간격 규칙을 먼저 정하는 순서를, [문경덕의 워크플로우](https://brunch.co.kr/@dad8d14cac41474/20)에서 문제 정의와 공통 기준을, [루프리의 실전 사례](https://brunch.co.kr/@yeoooni/9)에서 화면을 보고 좁은 범위로 수정하는 반복 방식을 참고했습니다. 이 저장소에서는 별도 유료 도구 대신 `scripts/readme_editorial.py`의 공통 토큰과 생성기를 사용합니다. 대표 표지를 먼저 흑백·896px 크기로 검토한 뒤 나머지 7개 그림에 적용했습니다. 색을 없애도 제목·핵심 수치·범위 문장이 구분되는지, 글자가 잘리거나 겹치지 않는지, 축과 해석 제한이 남아 있는지를 점검했습니다. 이는 디자인 검수이며 사용자 이해도 향상을 측정한 실험은 아닙니다.
+장식만 과장했습니다. 정량 그림은 F안의 실제 축·분모·평균·SD·도형 좌표를 유지하고, 위쪽에 280단위 장식 영역을 더한 뒤 그림 전체를 같은 좌표로 내려 배치합니다. 축이나 수치에 회전·비율 변경을 적용하지 않습니다. 원본 결과와 출처 해시는 계속 검사하며, `scripts/readme_editorial.py`의 공통 렌더러가 8개 그림의 패러디 장식을 재현합니다. 한글은 시스템 글꼴로 표시하므로 운영체제별 모양에는 차이가 있을 수 있으며, 본문 표와 대체 텍스트로 정확한 결과를 확인할 수 있습니다. 읽기 좋은 정식 버전은 [F 메인](https://github.com/Peter-jackson12/Airplane/tree/master)에 보존되어 있습니다.
 
 ```powershell
 # 그림·실제 사용값·출처 및 그림 해시 생성
