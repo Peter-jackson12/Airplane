@@ -1,17 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="410" viewBox="0 0 1000 410" role="img" aria-labelledby="title desc">
-<title id="title">Airplane · 항공편 지연 예측과 날씨 정보 확장</title><desc id="desc">전처리의 타당성과 새로운 정보의 예측력을 나누어 검증한 항공편 지연 이진 분류 프로젝트. 장식용 항로는 실제 운항 노선을 나타내지 않습니다.</desc>
-<style>text{font-family:"Noto Sans CJK KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>
-<rect x="0" y="0" width="1000" height="410" rx="20" fill="#102D40"/>
-<path d="M660 350 C800 335 925 260 904 167 C890 98 829 104 802 141 C757 204 853 262 933 201" fill="none" stroke="#294E61" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M708 304 C784 300 880 255 904 184" fill="none" stroke="#8EDDD1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-<g transform="translate(905 172) rotate(18)"><path d="M0 -25 L6 -3 L28 10 L28 17 L5 10 L4 27 L13 32 L13 37 L0 33 L-13 37 L-13 32 L-4 27 L-5 10 L-28 17 L-28 10 L-6 -3 Z" fill="#8EDDD1"/></g>
-<text x="48" y="55" font-size="16" fill="#8EDDD1" font-weight="700">FLIGHT DELAY  /  EVIDENCE-LED MACHINE LEARNING</text>
-<text x="44" y="151" font-size="78" fill="#FFFFFF" font-weight="700">Airplane</text>
-<text x="48" y="205" font-size="31" fill="#FFFFFF" font-weight="500">항공편 지연 예측과 날씨 정보 확장</text>
-<text x="48" y="255" font-size="23" fill="#C8DBE4" font-weight="400">전처리의 타당성과 새로운 정보의 예측력을</text>
-<text x="48" y="290" font-size="23" fill="#C8DBE4" font-weight="400">나누어 검증했습니다.</text>
-<path d="M48 330 L628 330" fill="none" stroke="#35566A" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="48" y="366" font-size="19" fill="#FFFFFF" font-weight="500">이진 분류</text>
-<text x="195" y="366" font-size="19" fill="#FFFFFF" font-weight="500">LightGBM</text>
-<text x="354" y="366" font-size="19" fill="#FFFFFF" font-weight="500">동일조건 교차검증</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="570" viewBox="0 0 1600 570" role="img" aria-labelledby="title desc">
+<title id="title">Airplane · 항공편 지연 예측과 날씨 정보 확장</title><desc id="desc">전처리의 타당성과 새로운 정보의 예측력을 나누어 검증한 정적 교차검증 프로젝트. 문서 기준 2026-09-22.</desc>
+<rect width="1600" height="570" fill="#F5F2EB"/>
+<text x="84" y="60" fill="#20201E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="23" font-weight="500" text-anchor="start" style="font-variant-numeric:tabular-nums">Airplane</text>
+<text x="1516" y="60" fill="#62635D" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="19" font-weight="400" text-anchor="end" style="font-variant-numeric:tabular-nums" letter-spacing="1.8">FLIGHT DELAY STUDY</text>
+<line x1="84" y1="86" x2="1516" y2="86" stroke="#20201E" stroke-width="2"/>
+<text x="80" y="208" fill="#20201E" font-family="Noto Serif CJK KR, Nanum Myeongjo, Batang, serif" font-size="76" font-weight="500" text-anchor="start" style="font-variant-numeric:tabular-nums">항공편 지연 예측과</text>
+<text x="80" y="314" fill="#20201E" font-family="Noto Serif CJK KR, Nanum Myeongjo, Batang, serif" font-size="76" font-weight="500" text-anchor="start" style="font-variant-numeric:tabular-nums">날씨 정보 확장</text>
+<line x1="84" y1="357" x2="235" y2="357" stroke="#A5442B" stroke-width="5"/>
+<text x="84" y="420" fill="#20201E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">전처리의 타당성과 새로운 정보의 예측력을</text>
+<text x="84" y="468" fill="#20201E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">나누어 검증했습니다.</text>
+<line x1="1160" y1="144" x2="1160" y2="472" stroke="#D4D1C8" stroke-width="1"/>
+<text x="1210" y="177" fill="#62635D" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="22" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">분석 방법</text>
+<text x="1210" y="224" fill="#20201E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="29" font-weight="500" text-anchor="start" style="font-variant-numeric:tabular-nums">LightGBM</text>
+<text x="1210" y="270" fill="#20201E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="29" font-weight="500" text-anchor="start" style="font-variant-numeric:tabular-nums">이진 분류</text>
+<text x="1210" y="341" fill="#62635D" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="22" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">검증 범위</text>
+<text x="1210" y="387" fill="#20201E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="29" font-weight="500" text-anchor="start" style="font-variant-numeric:tabular-nums">동일조건</text>
+<text x="1210" y="431" fill="#20201E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="29" font-weight="500" text-anchor="start" style="font-variant-numeric:tabular-nums">정적 교차검증</text>
+<line x1="84" y1="514" x2="1516" y2="514" stroke="#D4D1C8" stroke-width="1"/>
+<text x="84" y="548" fill="#62635D" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="19" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">연구 기록</text>
+<text x="1516" y="548" fill="#62635D" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="19" font-weight="400" text-anchor="end" style="font-variant-numeric:tabular-nums">문서 기준 2026-09-22</text>
 </svg>

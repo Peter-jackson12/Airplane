@@ -1,47 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="590" viewBox="0 0 760 590" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1242.105" viewBox="0 0 760 590" role="img" aria-labelledby="title desc">
 <title id="title">공개 지연 가정별 날씨 결합률</title><desc id="desc">층화 보정 표본 300행 중 수집 가능 268행. 0/10/30/60분은 미검증 가정. 60분에서 출발 150/268, 도착 157/268. 결합률이며 모델 성능이 아님.</desc>
 <style>text{font-family:"Noto Sans CJK KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>
-<rect width="760" height="590" rx="14" fill="#FFFFFF"/>
-<rect x="32" width="58" height="5" rx="2" fill="#007E80"/>
-<text x="32.000" y="43.000" font-size="26" fill="#183B4E" font-weight="700" text-anchor="start">날씨가 있어도 예측 시점에 공개돼 있어야 사용</text>
-<text x="32.000" y="77.000" font-size="18" fill="#526878" font-weight="400" text-anchor="start">층화 보정 표본 300행 중 수집 가능 268행 · 관측 나이 상한 90분</text>
-<text x="32.000" y="105.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">공개 지연 가정별 결합률 · 분모에서 보류 32행은 제외한 표본 비교</text>
-<rect x="455.000" y="125.000" width="13.000" height="13.000" rx="0" fill="#007E80"/>
-<text x="477.000" y="137.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">출발 공항</text>
-<rect x="596.000" y="125.000" width="13.000" height="13.000" rx="0" fill="#526878"/>
-<text x="618.000" y="137.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">도착 공항</text>
-<line x1="135.000" y1="164.000" x2="135.000" y2="463.000" stroke="#DCE5EA" stroke-width="1"/>
-<text x="135.000" y="490.000" font-size="17" fill="#526878" font-weight="400" text-anchor="middle">0</text>
-<line x1="222.500" y1="164.000" x2="222.500" y2="463.000" stroke="#DCE5EA" stroke-width="1"/>
-<text x="222.500" y="490.000" font-size="17" fill="#526878" font-weight="400" text-anchor="middle">25</text>
-<line x1="310.000" y1="164.000" x2="310.000" y2="463.000" stroke="#DCE5EA" stroke-width="1"/>
-<text x="310.000" y="490.000" font-size="17" fill="#526878" font-weight="400" text-anchor="middle">50</text>
-<line x1="397.500" y1="164.000" x2="397.500" y2="463.000" stroke="#DCE5EA" stroke-width="1"/>
-<text x="397.500" y="490.000" font-size="17" fill="#526878" font-weight="400" text-anchor="middle">75</text>
-<line x1="485.000" y1="164.000" x2="485.000" y2="463.000" stroke="#DCE5EA" stroke-width="1"/>
-<text x="485.000" y="490.000" font-size="17" fill="#526878" font-weight="400" text-anchor="middle">100</text>
-<text x="32.000" y="202.000" font-size="18" fill="#183B4E" font-weight="600" text-anchor="start">0분 가정</text>
-<rect x="135.000" y="178.000" width="347.388" height="17.000" rx="0" fill="#007E80"/>
-<text x="510.000" y="193.000" font-size="17" fill="#007E80" font-weight="400" text-anchor="start">출발 266/268 · 99.25%</text>
-<rect x="135.000" y="204.000" width="350.000" height="17.000" rx="0" fill="#526878"/>
-<text x="510.000" y="219.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">도착 268/268 · 100.00%</text>
-<text x="32.000" y="278.000" font-size="18" fill="#183B4E" font-weight="600" text-anchor="start">10분 가정</text>
-<rect x="135.000" y="254.000" width="347.388" height="17.000" rx="0" fill="#007E80"/>
-<text x="510.000" y="269.000" font-size="17" fill="#007E80" font-weight="400" text-anchor="start">출발 266/268 · 99.25%</text>
-<rect x="135.000" y="280.000" width="350.000" height="17.000" rx="0" fill="#526878"/>
-<text x="510.000" y="295.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">도착 268/268 · 100.00%</text>
-<text x="32.000" y="354.000" font-size="18" fill="#183B4E" font-weight="600" text-anchor="start">30분 가정</text>
-<rect x="135.000" y="330.000" width="346.082" height="17.000" rx="0" fill="#007E80"/>
-<text x="510.000" y="345.000" font-size="17" fill="#007E80" font-weight="400" text-anchor="start">출발 265/268 · 98.88%</text>
-<rect x="135.000" y="356.000" width="350.000" height="17.000" rx="0" fill="#526878"/>
-<text x="510.000" y="371.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">도착 268/268 · 100.00%</text>
-<text x="32.000" y="430.000" font-size="18" fill="#183B4E" font-weight="600" text-anchor="start">60분 가정</text>
-<rect x="135.000" y="406.000" width="195.896" height="17.000" rx="0" fill="#007E80"/>
-<text x="510.000" y="421.000" font-size="17" fill="#007E80" font-weight="400" text-anchor="start">출발 150/268 · 55.97%</text>
-<rect x="135.000" y="432.000" width="205.037" height="17.000" rx="0" fill="#526878"/>
-<text x="510.000" y="447.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">도착 157/268 · 58.58%</text>
-<line x1="135.000" y1="463.000" x2="485.000" y2="463.000" stroke="#526878" stroke-width="1"/>
-<text x="205.000" y="519.000" font-size="18" fill="#526878" font-weight="400" text-anchor="start">수집 가능 행 중 결합률 (%)</text>
-<text x="32.000" y="558.000" font-size="17" fill="#526878" font-weight="400" text-anchor="start">0 / 10 / 30 / 60분은 실측 공개 지연 시간이 아니라 가정입니다.</text>
-<text x="32.000" y="582.000" font-size="16" fill="#526878" font-weight="400" text-anchor="start">전체 300행·전체 날짜 귀속 집단의 결합률과 구별하며, 모델 성능을 나타내지 않습니다.</text>
+<rect width="760" height="590" fill="#F5F2EB"/>
+<line x1="32" y1="10" x2="728" y2="10" stroke="#20201E" stroke-width="1"/>
+<text x="32.000" y="46.000" font-size="25" fill="#20201E" font-weight="500" text-anchor="start" style="font-family:Noto Serif CJK KR, Nanum Myeongjo, Batang, serif">날씨가 있어도 예측 시점에 공개돼 있어야 사용</text>
+<text x="32.000" y="77.000" font-size="18" fill="#62635D" font-weight="400" text-anchor="start">층화 보정 표본 300행 중 수집 가능 268행 · 관측 나이 상한 90분</text>
+<text x="32.000" y="105.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="start">공개 지연 가정별 결합률 · 분모에서 보류 32행은 제외한 표본 비교</text>
+<rect x="455.000" y="125.000" width="13.000" height="13.000" rx="0" fill="#A5442B"/>
+<text x="477.000" y="137.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="start">출발 공항</text>
+<rect x="596.000" y="125.000" width="13.000" height="13.000" rx="0" fill="#62635D"/>
+<text x="618.000" y="137.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="start">도착 공항</text>
+<line x1="135.000" y1="164.000" x2="135.000" y2="463.000" stroke="#D4D1C8" stroke-width="1"/>
+<text x="135.000" y="490.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="middle">0</text>
+<line x1="222.500" y1="164.000" x2="222.500" y2="463.000" stroke="#D4D1C8" stroke-width="1"/>
+<text x="222.500" y="490.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="middle">25</text>
+<line x1="310.000" y1="164.000" x2="310.000" y2="463.000" stroke="#D4D1C8" stroke-width="1"/>
+<text x="310.000" y="490.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="middle">50</text>
+<line x1="397.500" y1="164.000" x2="397.500" y2="463.000" stroke="#D4D1C8" stroke-width="1"/>
+<text x="397.500" y="490.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="middle">75</text>
+<line x1="485.000" y1="164.000" x2="485.000" y2="463.000" stroke="#D4D1C8" stroke-width="1"/>
+<text x="485.000" y="490.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="middle">100</text>
+<text x="32.000" y="202.000" font-size="18" fill="#20201E" font-weight="600" text-anchor="start">0분 가정</text>
+<rect x="135.000" y="178.000" width="347.388" height="17.000" rx="0" fill="#A5442B"/>
+<text x="510.000" y="193.000" font-size="17" fill="#A5442B" font-weight="400" text-anchor="start">출발 266/268 · 99.25%</text>
+<rect x="135.000" y="204.000" width="350.000" height="17.000" rx="0" fill="#62635D"/>
+<text x="510.000" y="219.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="start">도착 268/268 · 100.00%</text>
+<text x="32.000" y="278.000" font-size="18" fill="#20201E" font-weight="600" text-anchor="start">10분 가정</text>
+<rect x="135.000" y="254.000" width="347.388" height="17.000" rx="0" fill="#A5442B"/>
+<text x="510.000" y="269.000" font-size="17" fill="#A5442B" font-weight="400" text-anchor="start">출발 266/268 · 99.25%</text>
+<rect x="135.000" y="280.000" width="350.000" height="17.000" rx="0" fill="#62635D"/>
+<text x="510.000" y="295.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="start">도착 268/268 · 100.00%</text>
+<text x="32.000" y="354.000" font-size="18" fill="#20201E" font-weight="600" text-anchor="start">30분 가정</text>
+<rect x="135.000" y="330.000" width="346.082" height="17.000" rx="0" fill="#A5442B"/>
+<text x="510.000" y="345.000" font-size="17" fill="#A5442B" font-weight="400" text-anchor="start">출발 265/268 · 98.88%</text>
+<rect x="135.000" y="356.000" width="350.000" height="17.000" rx="0" fill="#62635D"/>
+<text x="510.000" y="371.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="start">도착 268/268 · 100.00%</text>
+<text x="32.000" y="430.000" font-size="18" fill="#20201E" font-weight="600" text-anchor="start">60분 가정</text>
+<rect x="135.000" y="406.000" width="195.896" height="17.000" rx="0" fill="#A5442B"/>
+<text x="510.000" y="421.000" font-size="17" fill="#A5442B" font-weight="400" text-anchor="start">출발 150/268 · 55.97%</text>
+<rect x="135.000" y="432.000" width="205.037" height="17.000" rx="0" fill="#62635D"/>
+<text x="510.000" y="447.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="start">도착 157/268 · 58.58%</text>
+<line x1="135.000" y1="463.000" x2="485.000" y2="463.000" stroke="#62635D" stroke-width="1"/>
+<text x="205.000" y="519.000" font-size="18" fill="#62635D" font-weight="400" text-anchor="start">수집 가능 행 중 결합률 (%)</text>
+<text x="32.000" y="558.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="start">0 / 10 / 30 / 60분은 실측 공개 지연 시간이 아니라 가정입니다.</text>
+<text x="32.000" y="582.000" font-size="16" fill="#62635D" font-weight="400" text-anchor="start">전체 300행·전체 날짜 귀속 집단의 결합률과 구별하며, 모델 성능을 나타내지 않습니다.</text>
 </svg>

@@ -251,3 +251,26 @@ def test_presentation_story_retains_population_and_evaluation_boundaries():
     for phrase in ('내부 학습 / 80%', '내부 검증 / 20%', '최종 채점 전용',
                    '외부 검증으로 선택하지 않음', '라벨 누수 방지와 미래 시점'):
         assert phrase in evaluation
+
+
+def test_all_readme_artwork_retains_flat_editorial_style():
+    filenames = [*builder.FIGURES.values(), 'presentation_cover.svg',
+                 'analysis_journey.svg', 'evaluation_boundary.svg']
+    for filename in filenames:
+        raw = (ROOT / 'assets/readme' / filename).read_text(encoding='utf-8')
+        svg = ET.fromstring(raw)
+        rectangles = svg.findall('{http://www.w3.org/2000/svg}rect')
+        assert rectangles and rectangles[0].attrib['fill'] == '#F5F2EB'
+        assert all(float(rect.attrib.get('rx', 0)) == 0 for rect in rectangles)
+        assert not any(node.tag.endswith(('linearGradient', 'radialGradient')) for node in svg.iter())
+        assert '#A5442B' in raw and 'Noto Serif CJK KR' in raw
+        for previous_color in ('#102D40', '#183B4E', '#007E80', '#EFF6F6'):
+            assert previous_color not in raw
+
+
+def test_figure_receipt_rejects_changed_editorial_renderer(tmp_path, monkeypatch):
+    changed_renderer = tmp_path / 'readme_editorial.py'
+    changed_renderer.write_text('# Changed drawing primitives\n', encoding='utf-8')
+    monkeypatch.setattr(builder.editorial, '__file__', str(changed_renderer))
+    with pytest.raises(ValueError, match='Editorial renderer changed'):
+        builder.check_receipt()

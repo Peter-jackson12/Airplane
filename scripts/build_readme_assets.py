@@ -14,6 +14,10 @@ from html import escape
 from math import isclose
 from collections import Counter
 from pathlib import Path
+try:
+    from . import readme_editorial as editorial
+except ImportError:
+    import readme_editorial as editorial
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'assets/readme'
@@ -135,8 +139,8 @@ def expected_filters() -> dict:
 FIGURES = {'models': 'model_comparison.svg', 'calibration': 'calibration_tradeoff.svg',
            'attribution': 'date_attribution.svg', 'latency': 'weather_latency.svg',
            'weather_model': 'weather_model_comparison.svg'}
-INK, MUTED, BLUE, GOLD = '#183B4E', '#526878', '#007E80', '#96661D'
-GRID, SOFT = '#DCE5EA', '#EFF6F6'
+INK, MUTED, BLUE, GOLD = '#20201E', '#62635D', '#A5442B', '#8A795B'
+GRID, SOFT, PAPER = '#D4D1C8', '#ECE8DF', '#F5F2EB'
 
 
 class SVG:
@@ -144,17 +148,18 @@ class SVG:
 
     def __init__(self, height: int, title: str, description: str):
         self.parts = [
-            f'<svg xmlns="http://www.w3.org/2000/svg" width="760" height="{height}" '
+            f'<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="{height * 1600 / 760:.3f}" '
             f'viewBox="0 0 760 {height}" role="img" aria-labelledby="title desc">',
             f'<title id="title">{escape(title)}</title><desc id="desc">{escape(description)}</desc>',
             '<style>text{font-family:"Noto Sans CJK KR","Malgun Gothic",'
             '"Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>',
-            f'<rect width="760" height="{height}" rx="14" fill="#FFFFFF"/>',
-            '<rect x="32" width="58" height="5" rx="2" fill="#007E80"/>']
+            f'<rect width="760" height="{height}" fill="{PAPER}"/>',
+            f'<line x1="32" y1="10" x2="728" y2="10" stroke="{INK}" stroke-width="1"/>']
 
-    def text(self, x, y, text, size=18, color=INK, weight=400, anchor='start'):
+    def text(self, x, y, text, size=18, color=INK, weight=400, anchor='start', serif=False):
+        family = f' style="font-family:{editorial.SERIF}"' if serif else ''
         self.parts.append(f'<text x="{x:.3f}" y="{y:.3f}" font-size="{size}" '
-                          f'fill="{color}" font-weight="{weight}" text-anchor="{anchor}">'
+                          f'fill="{color}" font-weight="{weight}" text-anchor="{anchor}"{family}>'
                           f'{escape(str(text))}</text>')
 
     def line(self, x1, y1, x2, y2, color=GRID, width=1):
@@ -166,7 +171,7 @@ class SVG:
                           f'height="{h:.3f}" rx="{radius}" fill="{color}"/>')
 
     def dot(self, x, y, color=BLUE, hollow=False, radius=6):
-        fill = '#FFFFFF' if hollow else color
+        fill = PAPER if hollow else color
         self.parts.append(f'<circle cx="{x:.3f}" cy="{y:.3f}" r="{radius}" '
                           f'fill="{fill}" stroke="{color}" stroke-width="2"/>')
 
@@ -175,7 +180,7 @@ class SVG:
         self.parts.append(f'<polygon points="{values}" fill="{color}"/>')
 
     def header(self, title, scope, detail=None):
-        self.text(32, 43, title, 26, weight=700)
+        self.text(32, 46, title, 25, weight=500, serif=True)
         self.text(32, 77, scope, 18, MUTED)
         if detail:
             self.text(32, 105, detail, 17, MUTED)
@@ -190,6 +195,8 @@ def check_receipt() -> dict:
         raise ValueError('Unsupported figure receipt schema')
     if receipt['generator_sha256'] != sha256(Path(__file__)):
         raise ValueError('Figure builder changed; regenerate the README assets')
+    if receipt.get('editorial_renderer_sha256') != sha256(Path(editorial.__file__)):
+        raise ValueError('Editorial renderer changed; regenerate the README assets')
     if receipt['reviewed_data'] != reviewed_data():
         raise ValueError('Plotted rows differ from tracked aggregate evidence')
     if receipt['filters'] != expected_filters():
@@ -265,27 +272,42 @@ def build() -> None:
     svg.text(32, 466, '3시드 SD는 신뢰구간이 아니며, 오차막대 겹침으로 유의성을 판정하지 않습니다.', 16, MUTED)
     finish(svg, 'models')
 
-    svg = SVG(626, '날씨 추가 전후 세 지표의 직접 비교',
-              'P6_clean, 동일 라벨 180,332행과 외부 폴드, 시드 42/1/7. 10분 공개 지연 가정. '
-              '세 지표 모두 개선. 값과 차이는 원본 집계에서 각각 반올림. SD는 신뢰구간이 아님.')
-    svg.header('날씨 정보 추가 후, 세 지표 모두 개선', 'P6_clean · 동일 라벨 180,332행 · 시드 42 / 1 / 7',
-               '10분 공개 지연 가정 · 동일 외부 폴드와 내부 선택 절차')
-    for i, row in enumerate(data['weather_model']):
-        y = 128 + i * 142
-        svg.rect(32, y, 696, 130, SOFT, 8)
-        svg.text(50, y+35, row['metric'], 25, weight=700)
-        svg.text(50, y+63, '높을수록 좋음 ↑' if row['higher_is_better'] else '낮을수록 좋음 ↓', 17, MUTED)
-        svg.text(282, y+29, '날씨 미사용', 17, MUTED)
-        svg.text(527, y+29, '날씨 사용', 17, BLUE, 600)
-        svg.text(282, y+67, f"{row['off_mean']:.6f}", 30, MUTED, 600)
-        svg.line(457, y+53, 498, y+53, MUTED, 2)
-        svg.polygon([(498, y+53), (490, y+48), (490, y+58)], MUTED)
-        svg.text(527, y+67, f"{row['on_mean']:.6f}", 30, BLUE, 700)
-        svg.text(50, y+107, f"변화 {row['delta_mean']:+.6f}", 23, BLUE, 700)
-        svg.text(355, y+106, f"시드별 차이의 SD {row['sd']:.6f}", 17, MUTED)
-    svg.text(32, 583, '변화 = 사용 − 미사용 · 세 지표는 척도가 달라 변화량의 크기를 서로 비교하지 않습니다.', 16, MUTED)
-    svg.text(32, 610, '평균과 차이는 원본 수치에서 각각 반올림했습니다. 3시드 SD는 신뢰구간이 아닙니다.', 16, MUTED)
-    finish(svg, 'weather_model')
+    # A comparison ledger uses no shared quantitative axis across different metrics.
+    a=editorial.SVG(1150,'동일조건 비교에서 세 지표 모두 개선','P6_clean, 같은 180,332행, 시드 42/1/7. Macro F1 0.573910에서 0.598945, LogLoss 0.448116에서 0.436689, ROC-AUC 0.640618에서 0.672936. 변화량은 원본 집계에서 따로 반올림했습니다. 10분 공개 지연은 가정이며 인과 효과와 미래 운항 성능은 미검증입니다.')
+    a.running('날씨 정보의 효과','PAIRED WEATHER COMPARISON')
+    a.text(80,175,'동일조건 비교에서,',56,family=editorial.SERIF,weight=500)
+    a.text(80,252,'세 지표 모두 개선',56,family=editorial.SERIF,weight=500)
+    a.text(84,307,'P6_clean · 동일 라벨 180,332행 · 시드 42 / 1 / 7',28,MUTED)
+    a.text(84,391,'평가 지표',24,MUTED)
+    a.circle(560,381,7,PAPER,MUTED,2)
+    a.text(585,391,'날씨 미사용',24,MUTED)
+    a.circle(887,381,7,BLUE,BLUE,2)
+    a.text(912,391,'날씨 사용',24,BLUE,500)
+    a.text(1516,391,'변화 (사용−미사용)',24,MUTED,anchor='end')
+    a.line(84,416,1516,416,INK,2)
+    rows=data['weather_model']
+    for i,row in enumerate(rows):
+        label=row['metric']
+        guide='높을수록 좋음 ↑' if row['higher_is_better'] else '낮을수록 좋음 ↓'
+        off=f"{row['off_mean']:.6f}"
+        on=f"{row['on_mean']:.6f}"
+        delta=f"{row['delta_mean']:+.6f}"
+        y=487+i*143
+        a.text(84,y,label,39,weight=500)
+        a.text(84,y+40,guide,22,MUTED)
+        a.text(552,y+12,off,43,INK,400,family=editorial.SERIF)
+        a.text(879,y+12,on,43,BLUE,500,family=editorial.SERIF)
+        a.text(1516,y+12,delta,43,BLUE,500,family=editorial.SERIF,anchor='end')
+        a.text(1516,y+48,f"차이의 SD {row['sd']:.6f}",20,MUTED,anchor='end')
+        a.line(84,y+73,1516,y+73,GRID,1)
+    a.text(84,912,'3시드 평균 · 평균과 변화량은 원본 집계에서 각각 반올림',24,MUTED)
+    a.text(84,953,'10분 공개 지연 가정 · 3시드 SD는 신뢰구간이 아닙니다',24,MUTED)
+    a.text(84,994,'세 지표는 척도가 달라 변화량의 크기를 서로 비교하지 않습니다.',24,MUTED)
+    a.line(84,1040,1516,1040,INK,1)
+    a.text(84,1090,'인과 효과와 미래 운항 성능은 미검증',25,INK,500)
+    a.text(1516,1090,'Airplane / 검증 결과',20,MUTED,anchor='end')
+    finish(a, 'weather_model')
+
 
     svg = SVG(508, '확률 보정의 상충 관계: ECE와 LogLoss',
               'P6_clean 공유형 보정기, 라벨 255,001행의 3시드 평균. ECE는 %p, LogLoss와 모두 낮을수록 좋음.')
@@ -351,6 +373,7 @@ def build() -> None:
     finish(svg, 'latency')
 
     receipt = {'schema_version': 1, 'generator_sha256': sha256(Path(__file__)),
+               'editorial_renderer_sha256': sha256(Path(editorial.__file__)),
                'sources': {key: {'path': path, 'sha256': sha256(ROOT / path)} for key, path in SOURCES.items()},
                'filters': expected_filters(), 'reviewed_data': data, 'figures': figures,
                'limitations': ['No raw data access, network calls or model retraining.',
