@@ -2,9 +2,9 @@
 
 # Airplane · 항공편 지연 예측과 날씨 정보 확장
 
-[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=design%2Frefined-evidence-f)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml?query=branch%3Adesign%2Frefined-evidence-f)
+[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml?query=branch%3Amaster)
 
-**디자인 비교 · F안 — 결과와 근거를 먼저 읽는 지면:** D안의 네이비·하늘색을 유지하고, 표지를 질문에서 검증 결과로 바꿨습니다. 평가 집단·비교 절차·해석 한계를 같은 지면에서 읽도록 재구성했습니다. [D 기준안](https://github.com/Peter-jackson12/Airplane/tree/design/korean-air-palette-d) · [D→F 비교](https://github.com/Peter-jackson12/Airplane/compare/master...design/refined-evidence-f) · [A안](https://github.com/Peter-jackson12/Airplane/tree/style/a-editorial) · [B안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold) · [C안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-flight-magazine-c) · [E안](https://github.com/Peter-jackson12/Airplane/tree/design/reference-report-e)
+**메인 디자인 · F안 — 결과와 근거를 먼저 읽는 지면:** D안의 네이비·하늘색을 유지하고, 표지를 질문에서 검증 결과로 바꿨습니다. 평가 집단·비교 절차·해석 한계를 같은 지면에서 읽도록 재구성했습니다. [D 기준안](https://github.com/Peter-jackson12/Airplane/tree/design/korean-air-palette-d) · [D→F 비교](https://github.com/Peter-jackson12/Airplane/compare/8b4592b598dae5edd222afa63aa3982f6692d1c4...design/refined-evidence-f) · [F안 보존](https://github.com/Peter-jackson12/Airplane/tree/design/refined-evidence-f) · [A안](https://github.com/Peter-jackson12/Airplane/tree/style/a-editorial) · [B안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold) · [C안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-flight-magazine-c) · [E안](https://github.com/Peter-jackson12/Airplane/tree/design/reference-report-e)
 
 [핵심 결과](#5-최신검증결과) · [데이터](#2-데이터와분석범위) · [재현 방법](#7-코드구조와재현) · [실행 근거](#8-문서안내)
 

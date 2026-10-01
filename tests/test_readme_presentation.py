@@ -294,15 +294,15 @@ def test_f_leads_with_bounded_result_and_readable_type():
     assert '도형 크기는 수량을 뜻하지 않습니다.' in journey
 
 
-def test_magazine_d_main_readme_links_preserved_styles_and_current_ci():
+def test_f_main_readme_links_preserved_styles_and_current_ci():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
-    assert '디자인 비교 · F안' in text
+    assert '메인 디자인 · F안' in text
     assert '[A안](https://github.com/Peter-jackson12/Airplane/tree/style/a-editorial)' in text
     assert 'https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold' in text
-    assert 'compare/master...design/refined-evidence-f' in text
+    assert 'compare/8b4592b598dae5edd222afa63aa3982f6692d1c4...design/refined-evidence-f' in text
     assert 'tree/design/reference-report-e' in text
-    assert 'badge.svg?branch=design%2Frefined-evidence-f' in text
-    assert 'ci.yml?query=branch%3Adesign%2Frefined-evidence-f' in text
+    assert 'badge.svg?branch=master' in text
+    assert 'ci.yml?query=branch%3Amaster' in text
     assert '본문 설명 약 16분 + 전환·질문 여유 약 3분' in text
 
 
