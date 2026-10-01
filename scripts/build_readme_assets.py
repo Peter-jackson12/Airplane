@@ -140,7 +140,7 @@ FIGURES = {'models': 'model_comparison.svg', 'calibration': 'calibration_tradeof
            'attribution': 'date_attribution.svg', 'latency': 'weather_latency.svg',
            'weather_model': 'weather_model_comparison.svg'}
 INK, MUTED, BLUE = editorial.INK, editorial.MUTED, editorial.ACCENT
-GOLD, SKY = editorial.GOLD, editorial.SKY
+CYAN, SKY = editorial.CYAN, editorial.SKY
 GRID, PAPER = editorial.RULE, editorial.PAPER
 
 
@@ -152,7 +152,7 @@ class SVG:
         self.parts = [
             f'<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="{height}" '
             f'viewBox="0 0 1600 {height}" role="img" aria-labelledby="title desc" '
-            f'data-design="flight-magazine-c" data-chart-type="{chart_type}">',
+            f'data-design="korean-air-palette-d" data-chart-type="{chart_type}">',
             f'<title id="title">{escape(title)}</title><desc id="desc">{escape(description)}</desc>',
             '<style>text{font-family:"Noto Sans CJK KR","Malgun Gothic",'
             '"Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>',
@@ -183,7 +183,7 @@ class SVG:
         self.parts.append(f'<polygon points="{values}" fill="{color}"/>')
 
     def running(self, number, topic):
-        self.rect(80, 38, 22, 22, GOLD)
+        self.rect(80, 38, 22, 22, CYAN)
         self.text(121, 58, topic, 24, weight=600)
         self.text(1516, 58, f'AIRPLANE  /  {number}', 23, MUTED, anchor='end')
         self.line(80, 82, 1516, 82, INK, 2)
@@ -264,7 +264,7 @@ def build() -> None:
               '채택 706,759행, 결측 키의 단일 후보 연도 291,308행과 그 밖의 1,933행은 보류합니다.',
               'vertical-population-stack')
     svg.rect(1072, 0, 528, 1060, SKY)
-    svg.rect(1056, 110, 16, 836, GOLD)
+    svg.rect(1056, 110, 16, 836, CYAN)
     svg.running('01', '날짜 귀속 · 원본 전체 대조')
     svg.text(80, 170, '확인한 날짜만,', 66, weight=700, heading=True)
     svg.text(80, 254, '다음 단계로', 66, weight=700, heading=True)
@@ -284,7 +284,7 @@ def build() -> None:
     svg.text(1134, 225, '원본 중 날짜 귀속 채택', 25, MUTED)
     bar_x, bar_y, bar_w, bar_h = 1150, 326, 172, 530
     bottom = bar_y+bar_h
-    for row, color in zip(data['attribution'], (BLUE, GOLD, INK)):
+    for row, color in zip(data['attribution'], (BLUE, CYAN, INK)):
         height = bar_h*row['rows']/1000000
         bottom -= height
         svg.rect(bar_x, bottom, bar_w, height, color)
@@ -310,7 +310,7 @@ def build() -> None:
               '동일 라벨 255,001행. 전체 10조건 중 네 기준 조건의 3시드 평균과 ±1 표본 SD. '
               '세로축은 0.5725–0.5785의 확대 축이며 신뢰구간이 아닙니다.', 'vertical-mean-sd-ranges')
     svg.rect(0, 811, 1600, 199, SKY)
-    svg.rect(1320, 112, 196, 174, GOLD)
+    svg.rect(1320, 112, 196, 174, CYAN)
     svg.running('02', '전처리 비교 · 의미와 성능의 분리')
     svg.text(80, 173, '전처리는 더 타당하게', 64, weight=700, heading=True)
     svg.text(80, 254, '성능 향상은 미확인', 64, weight=700, heading=True)
@@ -361,7 +361,7 @@ def build() -> None:
               '10분 공개 지연은 가정이고 인과 효과와 미래 운항 성능은 미검증입니다.', 'asymmetric-paired-metric-strips')
     svg.rect(0, 334, 1035, 435, SKY)
     svg.rect(1080, 334, 520, 435, INK)
-    svg.rect(1059, 334, 12, 435, GOLD)
+    svg.rect(1059, 334, 12, 435, CYAN)
     svg.running('03', '날씨 정보 · 동일조건 비교')
     svg.text(80, 166, '날씨를 더한 같은 조건,', 64, weight=700, heading=True)
     svg.text(80, 248, '세 지표가 같은 결론', 64, weight=700, heading=True)
@@ -375,7 +375,7 @@ def build() -> None:
     svg.text(84, 747, 'Macro F1 · 차이를 읽기 위한 확대 축', 23, MUTED)
     svg.text(1130, 394, '날씨 미사용', 27, SKY)
     svg.text(1130, 461, f"{first['off_mean']:.6f}", 58, PAPER, 500, heading=True)
-    svg.line(1130, 497, 1516, 497, GOLD, 2)
+    svg.line(1130, 497, 1516, 497, CYAN, 2)
     svg.text(1130, 549, '날씨 사용', 27, SKY)
     svg.text(1130, 616, f"{first['on_mean']:.6f}", 58, PAPER, 700, heading=True)
     svg.text(1130, 706, f"차이의 SD {first['sd']:.6f}", 25, SKY)
@@ -406,7 +406,7 @@ def build() -> None:
               'Isotonic은 ECE가 낮아졌지만 LogLoss는 높아졌고 Macro F1 향상은 확인되지 않았습니다.',
               'aligned-independent-calibration-panels')
     svg.rect(0, 106, 585, 200, SKY)
-    svg.rect(1129, 106, 387, 200, GOLD)
+    svg.rect(1129, 106, 387, 200, CYAN)
     svg.running('04', '확률 보정 · 지표의 상충 관계')
     svg.text(80, 174, '확률 보정,', 64, weight=700, heading=True)
     svg.text(80, 259, '지표마다 다른 방향', 64, weight=700, heading=True)
@@ -427,7 +427,7 @@ def build() -> None:
         for i, (row, color) in enumerate(zip(data['calibration'], (INK, BLUE, INK))):
             y = 469+i*95
             svg.marker(xx(row[key]), y, row['calibrator'], color)
-    svg.line(980, 394, 980, 751, GOLD, 3)
+    svg.line(980, 394, 980, 751, CYAN, 3)
     for i, label in enumerate(('보정 없음', 'Platt', 'Isotonic')):
         y=469+i*95
         svg.text(84, y+8, label, 31, weight=600)
@@ -455,7 +455,7 @@ def build() -> None:
               '출발과 도착의 두 패널은 0–100% 공통 세로축과 실제 간격의 0/10/30/60분 가로축입니다. '
               '모두 미검증 가정이며 결합률이지 모델 성능이 아닙니다.', 'latency-small-multiple-lollipops')
     svg.rect(0, 111, 546, 247, SKY)
-    svg.rect(547, 111, 17, 247, GOLD)
+    svg.rect(547, 111, 17, 247, CYAN)
     svg.running('05', '날씨 결합 · 공개 시점의 제약')
     svg.text(70, 282, '268', 170, BLUE, 700, heading=True)
     svg.text(84, 332, '수집 가능한 행 / 공통 분모', 29, MUTED)
@@ -480,7 +480,7 @@ def build() -> None:
             svg.dot(x, y, color, hollow=(role=='destination'), radius=9)
             svg.text(x, bottom+43, str(latency), 25, MUTED, anchor='middle')
         svg.text(px+width/2, bottom+89, '공개 지연 가정 (분)', 26, MUTED, anchor='middle')
-    svg.line(797, 457, 797, 916, GOLD, 2)
+    svg.line(797, 457, 797, 916, CYAN, 2)
     svg.rect(0, 948, 1600, 215, SKY)
     svg.text(84, 993, '결합 / 268행', 26, weight=600)
     for latency,x in zip((0,10,30,60),(524,817,1110,1403)):

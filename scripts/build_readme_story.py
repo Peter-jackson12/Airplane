@@ -1,4 +1,4 @@
-"""Reproducible flight-magazine C artwork using verified aggregate evidence.
+"""Reproducible flight-magazine D artwork using verified aggregate evidence.
 
 Decorative flight paths and ticket geometry never encode observed quantities.
 """
@@ -6,10 +6,10 @@ from pathlib import Path
 import json
 try:
     from .build_readme_assets import reviewed_data
-    from .readme_editorial import SVG, PAPER, INK, MUTED, RULE, ACCENT, HEADING, GOLD, SKY
+    from .readme_editorial import SVG, PAPER, INK, MUTED, RULE, ACCENT, HEADING, CYAN, SKY
 except ImportError:
     from build_readme_assets import reviewed_data
-    from readme_editorial import SVG, PAPER, INK, MUTED, RULE, ACCENT, HEADING, GOLD, SKY
+    from readme_editorial import SVG, PAPER, INK, MUTED, RULE, ACCENT, HEADING, CYAN, SKY
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'assets/readme'
 
@@ -27,10 +27,10 @@ def build():
     weather=json.loads((ROOT/'output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json').read_text())
     assert weather['evaluation_rows']==180332 and weather['weather_feature_count']==14
     OUT.mkdir(parents=True,exist_ok=True)
-    a=SVG(1110,'Airplane · 항공편 지연 예측과 날씨 정보 확장','항공 연구 매거진 C안. 전처리의 타당성과 새로운 정보의 예측력을 나누어 검증한 정적 교차검증 프로젝트. 문서 기준 2026-09-22. 장식은 실제 비행 경로나 운항 데이터가 아닙니다.',False)
+    a=SVG(1110,'Airplane · 항공편 지연 예측과 날씨 정보 확장','항공 연구 매거진 D안. 전처리의 타당성과 새로운 정보의 예측력을 나누어 검증한 정적 교차검증 프로젝트. 문서 기준 2026-09-22. 장식은 실제 비행 경로나 운항 데이터가 아닙니다.',False)
     a.rect(0,0,1600,460,SKY)
     a.text(58,59,'FLIGHT RESEARCH JOURNAL',21,weight=700,spacing=3)
-    a.text(1540,59,'SPECIAL EDITION / C',21,anchor='end',spacing=2)
+    a.text(1540,59,'SPECIAL EDITION / D',21,anchor='end',spacing=2)
     a.text(44,256,'AIRPLANE',206,weight=900,spacing=-8)
     a.line(58,290,1540,290,INK,3)
     a.text(58,342,'항공편 지연 예측과 날씨 정보 확장', 40,weight=700)
@@ -41,7 +41,7 @@ def build():
     a.text(52,776,'QUESTION.',94,weight=900,spacing=-3)
     a.text(60,842,'날씨를 더하면,',35,weight=700)
     a.text(60,892,'예측은 달라지는가?',35,weight=700)
-    a.rect(944,498,596,410,GOLD)
+    a.rect(944,498,596,410,CYAN)
     a.text(980,552,'연구의 질문',23,weight=700)
     a.text(979,625,'더 타당한 전처리.',41,weight=700)
     a.text(979,683,'더 많은 정보.',41,weight=700)
@@ -83,7 +83,7 @@ def build():
     a.text(897,527,'Macro F1 향상은',28,weight=700)
     a.text(897,574,'확인되지 않았습니다.',28,weight=700)
     barcode(a,900,608,38)
-    a.rect(159,730,1381,364,GOLD)
+    a.rect(159,730,1381,364,CYAN)
     a.rect(159,730,115,364,INK)
     a.text(184,799,'B',60,PAPER,900)
     a.text(308,782,'날짜 귀속 채택 706,759행',28,weight=700)
@@ -123,8 +123,8 @@ def build():
     a.text(278,798,'Macro F1 → 임계값',27)
     a.rect(95,852,897,71,INK)
     a.text(125,898,'선택한 모델 그대로 평가',30,PAPER,700)
-    for y in range(406,969,37):a.line(1072,y,1100,y-20,GOLD,9)
-    a.rect(1140,528,400,436,GOLD)
+    for y in range(406,969,37):a.line(1072,y,1100,y-20,CYAN,9)
+    a.rect(1140,528,400,436,CYAN)
     a.text(1170,583,'최종 채점 전용',27,weight=700)
     a.text(1170,689,'03', 90,weight=900)
     a.text(1170,746,'외부 검증',34,weight=700)
@@ -136,5 +136,5 @@ def build():
     a.text(60,1127,'각 행을 학습에 쓰지 않은 모델의 예측을 모아 평가합니다.',27)
     a.text(60,1190,'라벨 누수 방지와 미래 시점의 입력 확보 가능성은 서로 다른 문제입니다.',25,MUTED)
     a.save(OUT/'evaluation_boundary.svg')
-    print('Built three flight-magazine C story assets; no network, raw data or training.')
+    print('Built three flight-magazine D story assets; no network, raw data or training.')
 if __name__=='__main__':build()

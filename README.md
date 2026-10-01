@@ -2,9 +2,9 @@
 
 # Airplane · 항공편 지연 예측과 날씨 정보 확장
 
-[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=design%2Fgigi-flight-magazine-c)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml?query=branch%3Adesign%2Fgigi-flight-magazine-c)
+[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=design%2Fkorean-air-palette-d)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml?query=branch%3Adesign%2Fkorean-air-palette-d)
 
-**디자인 비교 · C안 — 항공 연구 매거진:** B안의 크림·하늘색·골드를 유지하고, 초대형 제목·비대칭 지면·탑승권형 정보표·새 차트 구성으로 다시 설계했습니다. 연구 수치·평가 범위·실행 방법은 그대로입니다. [A안](https://github.com/Peter-jackson12/Airplane/tree/master) · [B안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold) · [B→C 변경 비교](https://github.com/Peter-jackson12/Airplane/compare/design/gigi-sky-gold...design/gigi-flight-magazine-c)
+**디자인 비교 · D안 — 대한항공 홈페이지 색상:** C안의 초대형 제목·비대칭 지면·탑승권형 정보표·차트 구성을 유지하고 네이비·하늘색·흰색으로 색상만 바꿨습니다. 연구 수치·평가 범위·실행 방법은 그대로입니다. [A안](https://github.com/Peter-jackson12/Airplane/tree/master) · [B안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold) · [C안 보존](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-flight-magazine-c) · [C→D 변경 비교](https://github.com/Peter-jackson12/Airplane/compare/design/gigi-flight-magazine-c...design/korean-air-palette-d)
 
 [핵심 결과](#5-최신검증결과) · [데이터](#2-데이터와분석범위) · [재현 방법](#7-코드구조와재현) · [실행 근거](#8-문서안내)
 
@@ -344,7 +344,7 @@ uv run --locked --offline python -m pytest -q
 <a id="readme-figures"></a>
 ### README 그림의 재현과 출처 검증
 
-다음 명령은 Git에 추적된 집계 CSV·JSON만 읽습니다. IEM 호출·원본 데이터 로드·모델 학습을 하지 않습니다. 그림 파일은 크림·하늘색·골드 팔레트에 초대형 산세리프 제목, 비대칭 매거진 지면과 탑승권형 구성을 적용한 정적 SVG입니다. C안은 세로 평균·SD 그림, 분리된 지표 축, 출발·도착 소형 배수 차트 등 차트의 구성도 바꿨습니다. 장식 선과 바코드는 실제 운항 정보나 탑승 자격을 뜻하지 않습니다. 숫자·단위·해석 범위는 본문과 같은 근거를 사용합니다. 생성기는 Python 표준 라이브러리만 사용하며 한글은 시스템 글꼴로 표시합니다. 외부 글꼴·이미지·스크립트를 불러오지 않으므로 파일 자체의 재생성에는 글꼴 설치가 필요하지 않습니다. 운영체제별 글꼴 모양에는 차이가 있을 수 있으며, 본문의 표와 대체 텍스트로도 정확한 결과를 읽을 수 있습니다.
+다음 명령은 Git에 추적된 집계 CSV·JSON만 읽습니다. IEM 호출·원본 데이터 로드·모델 학습을 하지 않습니다. 그림 파일은 네이비·하늘색·흰색 팔레트에 초대형 산세리프 제목, 비대칭 매거진 지면과 탑승권형 구성을 적용한 정적 SVG입니다. D안은 C안의 세로 평균·SD 그림, 분리된 지표 축, 출발·도착 소형 배수 차트 등 모든 도형 배치를 그대로 유지합니다. 장식 선과 바코드는 실제 운항 정보나 탑승 자격을 뜻하지 않습니다. 색상은 2026-10-01 [대한항공 공식 홈페이지](https://www.koreanair.com/)의 화면에서 확인한 네이비 `#051766`, 하늘색 `#57BBEB`, 연한 하늘색 `#DDF1FB`, 흰색 `#FFFFFF`를 참고했습니다. 작은 강조 글자에는 대비를 위해 더 짙은 청색 `#004766`을 사용합니다. 공식 브랜드 규정의 재현이 아니며, 대한항공 로고를 사용하거나 제휴 관계를 뜻하지 않습니다. 숫자·단위·해석 범위는 본문과 같은 근거를 사용합니다. 생성기는 Python 표준 라이브러리만 사용하며 한글은 시스템 글꼴로 표시합니다. 외부 글꼴·이미지·스크립트를 불러오지 않으므로 파일 자체의 재생성에는 글꼴 설치가 필요하지 않습니다. 운영체제별 글꼴 모양에는 차이가 있을 수 있으며, 본문의 표와 대체 텍스트로도 정확한 결과를 읽을 수 있습니다.
 
 ```powershell
 # 그림·실제 사용값·출처 및 그림 해시 생성
