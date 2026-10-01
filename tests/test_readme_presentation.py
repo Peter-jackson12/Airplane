@@ -290,13 +290,14 @@ def test_magazine_d_uses_oversized_type_and_asymmetric_boarding_passes():
     assert '도형 크기는 수량을 뜻하지 않습니다.' in ''.join(journey.itertext())
 
 
-def test_magazine_d_readme_identifies_four_separate_branches():
+def test_magazine_d_main_readme_links_preserved_styles_and_current_ci():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
     assert '디자인 비교 · D안' in text
-    assert 'https://github.com/Peter-jackson12/Airplane/tree/master' in text
+    assert '[A안](https://github.com/Peter-jackson12/Airplane/tree/style/a-editorial)' in text
     assert 'https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold' in text
     assert 'compare/design/gigi-flight-magazine-c...design/korean-air-palette-d' in text
-    assert 'badge.svg?branch=design%2Fkorean-air-palette-d' in text
+    assert 'badge.svg?branch=master' in text
+    assert 'ci.yml?query=branch%3Amaster' in text
     assert '본문 설명 약 16분 + 전환·질문 여유 약 3분' in text
 
 
