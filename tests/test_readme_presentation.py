@@ -321,6 +321,8 @@ def test_gigi_uses_sky_panels_and_decorative_gold_rules():
 def test_gigi_readme_identifies_comparison_and_branch_ci():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
     assert '디자인 비교 · B안 (Gigi)' in text
+    assert '산세리프 제목과 하늘색·골드 포인트' in text
+    assert '명조 제목' not in text
     assert 'https://github.com/Peter-jackson12/Airplane/tree/master' in text
     assert 'https://github.com/Peter-jackson12/Airplane/compare/master...design/gigi-sky-gold' in text
     assert 'badge.svg?branch=design%2Fgigi-sky-gold' in text
