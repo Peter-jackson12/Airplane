@@ -1,24 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="947.368" viewBox="0 0 760 450" role="img" aria-labelledby="title desc">
 <title id="title">날짜를 확인한 행만 채택</title><desc id="desc">원본 1,000,000행의 날짜 귀속: 채택 706,759행, 보류 293,241행.</desc>
 <style>text{font-family:"Noto Sans CJK KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>
-<rect width="760" height="450" fill="#F5F2EB"/>
-<line x1="32" y1="10" x2="728" y2="10" stroke="#20201E" stroke-width="1"/>
-<text x="32.000" y="46.000" font-size="25" fill="#20201E" font-weight="500" text-anchor="start" style="font-family:Noto Serif CJK KR, Nanum Myeongjo, Batang, serif">날짜를 확인한 706,759행만 채택</text>
-<text x="32.000" y="77.000" font-size="18" fill="#62635D" font-weight="400" text-anchor="start">원본 1,000,000행 전체를 대조 · 나머지 293,241행은 보류</text>
-<text x="32.000" y="105.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="start">대조 정보가 빠져 있다면 후보 연도가 하나여도 채택하지 않음</text>
-<rect x="32.000" y="135.000" width="491.904" height="34.000" rx="0" fill="#A5442B"/>
+<rect width="760" height="450" fill="#FBF8F0"/>
+<line x1="32" y1="10" x2="728" y2="10" stroke="#304750" stroke-width="1"/>
+<text x="32.000" y="46.000" font-size="25" fill="#304750" font-weight="500" text-anchor="start" style="font-family:Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif">날짜를 확인한 706,759행만 채택</text>
+<text x="32.000" y="77.000" font-size="18" fill="#61727A" font-weight="400" text-anchor="start">원본 1,000,000행 전체를 대조 · 나머지 293,241행은 보류</text>
+<text x="32.000" y="105.000" font-size="17" fill="#61727A" font-weight="400" text-anchor="start">대조 정보가 빠져 있다면 후보 연도가 하나여도 채택하지 않음</text>
+<rect x="32.000" y="135.000" width="491.904" height="34.000" rx="0" fill="#356A86"/>
 <rect x="523.904" y="135.000" width="202.750" height="34.000" rx="0" fill="#8A795B"/>
-<rect x="726.655" y="135.000" width="1.345" height="34.000" rx="0" fill="#62635D"/>
-<rect x="32.000" y="201.000" width="10.000" height="18.000" rx="0" fill="#A5442B"/>
-<text x="54.000" y="216.000" font-size="18" fill="#20201E" font-weight="400" text-anchor="start">채택 · 완전한 대조 정보 + 단일 후보 연도</text>
-<text x="728.000" y="216.000" font-size="23" fill="#A5442B" font-weight="700" text-anchor="end">706,759행</text>
+<rect x="726.655" y="135.000" width="1.345" height="34.000" rx="0" fill="#61727A"/>
+<rect x="32.000" y="201.000" width="10.000" height="18.000" rx="0" fill="#356A86"/>
+<text x="54.000" y="216.000" font-size="18" fill="#304750" font-weight="400" text-anchor="start">채택 · 완전한 대조 정보 + 단일 후보 연도</text>
+<text x="728.000" y="216.000" font-size="23" fill="#356A86" font-weight="700" text-anchor="end">706,759행</text>
 <rect x="32.000" y="261.000" width="10.000" height="18.000" rx="0" fill="#8A795B"/>
-<text x="54.000" y="276.000" font-size="18" fill="#20201E" font-weight="400" text-anchor="start">보류 · 대조 정보 결측 + 단일 후보 연도</text>
+<text x="54.000" y="276.000" font-size="18" fill="#304750" font-weight="400" text-anchor="start">보류 · 대조 정보 결측 + 단일 후보 연도</text>
 <text x="728.000" y="276.000" font-size="23" fill="#8A795B" font-weight="700" text-anchor="end">291,308행</text>
-<rect x="32.000" y="321.000" width="10.000" height="18.000" rx="0" fill="#62635D"/>
-<text x="54.000" y="336.000" font-size="18" fill="#20201E" font-weight="400" text-anchor="start">보류 · 그 밖의 대조 결과</text>
-<text x="728.000" y="336.000" font-size="23" fill="#62635D" font-weight="700" text-anchor="end">1,933행</text>
-<line x1="32.000" y1="372.000" x2="728.000" y2="372.000" stroke="#D4D1C8" stroke-width="1"/>
-<text x="32.000" y="403.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="start">세 집단은 서로 겹치지 않으며 합계는 원본 100만 행입니다.</text>
-<text x="32.000" y="429.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="start">보류는 미검사가 아니라 날짜 채택 기준을 충족하지 못했다는 뜻입니다.</text>
+<rect x="32.000" y="321.000" width="10.000" height="18.000" rx="0" fill="#61727A"/>
+<text x="54.000" y="336.000" font-size="18" fill="#304750" font-weight="400" text-anchor="start">보류 · 그 밖의 대조 결과</text>
+<text x="728.000" y="336.000" font-size="23" fill="#61727A" font-weight="700" text-anchor="end">1,933행</text>
+<line x1="32.000" y1="372.000" x2="728.000" y2="372.000" stroke="#D7DCD9" stroke-width="1"/>
+<text x="32.000" y="403.000" font-size="17" fill="#61727A" font-weight="400" text-anchor="start">세 집단은 서로 겹치지 않으며 합계는 원본 100만 행입니다.</text>
+<text x="32.000" y="429.000" font-size="17" fill="#61727A" font-weight="400" text-anchor="start">보류는 미검사가 아니라 날짜 채택 기준을 충족하지 못했다는 뜻입니다.</text>
 </svg>

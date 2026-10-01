@@ -139,8 +139,10 @@ def expected_filters() -> dict:
 FIGURES = {'models': 'model_comparison.svg', 'calibration': 'calibration_tradeoff.svg',
            'attribution': 'date_attribution.svg', 'latency': 'weather_latency.svg',
            'weather_model': 'weather_model_comparison.svg'}
-INK, MUTED, BLUE, GOLD = '#20201E', '#62635D', '#A5442B', '#8A795B'
-GRID, SOFT, PAPER = '#D4D1C8', '#ECE8DF', '#F5F2EB'
+INK, MUTED, BLUE = editorial.INK, editorial.MUTED, editorial.ACCENT
+# The compact quantitative charts retain their distinct dark secondary series.
+GOLD = '#8A795B'
+GRID, SOFT, PAPER = editorial.RULE, '#ECE8DF', editorial.PAPER
 
 
 class SVG:
@@ -156,8 +158,8 @@ class SVG:
             f'<rect width="760" height="{height}" fill="{PAPER}"/>',
             f'<line x1="32" y1="10" x2="728" y2="10" stroke="{INK}" stroke-width="1"/>']
 
-    def text(self, x, y, text, size=18, color=INK, weight=400, anchor='start', serif=False):
-        family = f' style="font-family:{editorial.SERIF}"' if serif else ''
+    def text(self, x, y, text, size=18, color=INK, weight=400, anchor='start', heading=False):
+        family = f' style="font-family:{editorial.HEADING}"' if heading else ''
         self.parts.append(f'<text x="{x:.3f}" y="{y:.3f}" font-size="{size}" '
                           f'fill="{color}" font-weight="{weight}" text-anchor="{anchor}"{family}>'
                           f'{escape(str(text))}</text>')
@@ -180,7 +182,7 @@ class SVG:
         self.parts.append(f'<polygon points="{values}" fill="{color}"/>')
 
     def header(self, title, scope, detail=None):
-        self.text(32, 46, title, 25, weight=500, serif=True)
+        self.text(32, 46, title, 25, weight=500, heading=True)
         self.text(32, 77, scope, 18, MUTED)
         if detail:
             self.text(32, 105, detail, 17, MUTED)
@@ -274,9 +276,10 @@ def build() -> None:
 
     # A comparison ledger uses no shared quantitative axis across different metrics.
     a=editorial.SVG(1150,'동일조건 비교에서 세 지표 모두 개선','P6_clean, 같은 180,332행, 시드 42/1/7. Macro F1 0.573910에서 0.598945, LogLoss 0.448116에서 0.436689, ROC-AUC 0.640618에서 0.672936. 변화량은 원본 집계에서 따로 반올림했습니다. 10분 공개 지연은 가정이며 인과 효과와 미래 운항 성능은 미검증입니다.')
+    a.rect(853,356,308,490,editorial.HIGHLIGHT)
     a.running('날씨 정보의 효과','PAIRED WEATHER COMPARISON')
-    a.text(80,175,'동일조건 비교에서,',56,family=editorial.SERIF,weight=500)
-    a.text(80,252,'세 지표 모두 개선',56,family=editorial.SERIF,weight=500)
+    a.text(80,175,'동일조건 비교에서,',56,family=editorial.HEADING,weight=500)
+    a.text(80,252,'세 지표 모두 개선',56,family=editorial.HEADING,weight=500)
     a.text(84,307,'P6_clean · 동일 라벨 180,332행 · 시드 42 / 1 / 7',28,MUTED)
     a.text(84,391,'평가 지표',24,MUTED)
     a.circle(560,381,7,PAPER,MUTED,2)
@@ -295,9 +298,9 @@ def build() -> None:
         y=487+i*143
         a.text(84,y,label,39,weight=500)
         a.text(84,y+40,guide,22,MUTED)
-        a.text(552,y+12,off,43,INK,400,family=editorial.SERIF)
-        a.text(879,y+12,on,43,BLUE,500,family=editorial.SERIF)
-        a.text(1516,y+12,delta,43,BLUE,500,family=editorial.SERIF,anchor='end')
+        a.text(552,y+12,off,43,INK,400,family=editorial.HEADING)
+        a.text(879,y+12,on,43,BLUE,500,family=editorial.HEADING)
+        a.text(1516,y+12,delta,43,BLUE,500,family=editorial.HEADING,anchor='end')
         a.text(1516,y+48,f"차이의 SD {row['sd']:.6f}",20,MUTED,anchor='end')
         a.line(84,y+73,1516,y+73,GRID,1)
     a.text(84,912,'3시드 평균 · 평균과 변화량은 원본 집계에서 각각 반올림',24,MUTED)

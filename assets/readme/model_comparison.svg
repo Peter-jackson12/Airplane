@@ -1,47 +1,47 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1027.368" viewBox="0 0 760 488" role="img" aria-labelledby="title desc">
 <title id="title">전처리 수정만으로 Macro F1 향상은 확인되지 않음</title><desc id="desc">동일 라벨 255,001행. 네 기준 조건의 3시드 평균과 ±1 표본 SD. 확대 축이며 신뢰구간이 아님.</desc>
 <style>text{font-family:"Noto Sans CJK KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>
-<rect width="760" height="488" fill="#F5F2EB"/>
-<line x1="32" y1="10" x2="728" y2="10" stroke="#20201E" stroke-width="1"/>
-<text x="32.000" y="46.000" font-size="25" fill="#20201E" font-weight="500" text-anchor="start" style="font-family:Noto Serif CJK KR, Nanum Myeongjo, Batang, serif">전처리는 타당해졌지만, 성능 향상은 미확인</text>
-<text x="32.000" y="77.000" font-size="18" fill="#62635D" font-weight="400" text-anchor="start">라벨 255,001행 · 동일 평가 절차 · 시드 42 / 1 / 7</text>
-<text x="32.000" y="105.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="start">전체 10조건 중 네 기준 조건 · 점: 평균 / 오차막대: ±1 SD</text>
-<line x1="214.000" y1="137.000" x2="214.000" y2="369.000" stroke="#D4D1C8" stroke-width="1"/>
-<text x="214.000" y="399.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="middle">0.573</text>
-<line x1="326.000" y1="137.000" x2="326.000" y2="369.000" stroke="#D4D1C8" stroke-width="1"/>
-<text x="326.000" y="399.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="middle">0.575</text>
-<line x1="438.000" y1="137.000" x2="438.000" y2="369.000" stroke="#D4D1C8" stroke-width="1"/>
-<text x="438.000" y="399.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="middle">0.577</text>
-<text x="623.000" y="139.000" font-size="16" fill="#62635D" font-weight="400" text-anchor="middle">평균 ± SD</text>
-<text x="32.000" y="178.000" font-size="20" fill="#20201E" font-weight="600" text-anchor="start">P4</text>
-<line x1="267.288" y1="172.000" x2="375.266" y2="172.000" stroke="#62635D" stroke-width="2"/>
-<line x1="267.288" y1="166.000" x2="267.288" y2="178.000" stroke="#62635D" stroke-width="2"/>
-<line x1="375.266" y1="166.000" x2="375.266" y2="178.000" stroke="#62635D" stroke-width="2"/>
-<circle cx="321.277" cy="172.000" r="6" fill="#F5F2EB" stroke="#62635D" stroke-width="2"/>
-<text x="575.000" y="171.000" font-size="21" fill="#62635D" font-weight="600" text-anchor="start">0.574916</text>
-<text x="575.000" y="193.000" font-size="16" fill="#62635D" font-weight="400" text-anchor="start">± 0.000964</text>
-<text x="32.000" y="238.000" font-size="20" fill="#20201E" font-weight="600" text-anchor="start">P4_clean</text>
-<line x1="259.641" y1="232.000" x2="340.951" y2="232.000" stroke="#A5442B" stroke-width="2"/>
-<line x1="259.641" y1="226.000" x2="259.641" y2="238.000" stroke="#A5442B" stroke-width="2"/>
-<line x1="340.951" y1="226.000" x2="340.951" y2="238.000" stroke="#A5442B" stroke-width="2"/>
-<circle cx="300.296" cy="232.000" r="6" fill="#A5442B" stroke="#A5442B" stroke-width="2"/>
-<text x="575.000" y="231.000" font-size="21" fill="#A5442B" font-weight="600" text-anchor="start">0.574541</text>
-<text x="575.000" y="253.000" font-size="16" fill="#62635D" font-weight="400" text-anchor="start">± 0.000726</text>
-<text x="32.000" y="298.000" font-size="20" fill="#20201E" font-weight="600" text-anchor="start">P6_fixed</text>
-<line x1="301.946" y1="292.000" x2="468.960" y2="292.000" stroke="#62635D" stroke-width="2"/>
-<line x1="301.946" y1="286.000" x2="301.946" y2="298.000" stroke="#62635D" stroke-width="2"/>
-<line x1="468.960" y1="286.000" x2="468.960" y2="298.000" stroke="#62635D" stroke-width="2"/>
-<circle cx="385.453" cy="292.000" r="6" fill="#F5F2EB" stroke="#62635D" stroke-width="2"/>
-<text x="575.000" y="291.000" font-size="21" fill="#62635D" font-weight="600" text-anchor="start">0.576062</text>
-<text x="575.000" y="313.000" font-size="16" fill="#62635D" font-weight="400" text-anchor="start">± 0.001491</text>
-<text x="32.000" y="358.000" font-size="20" fill="#20201E" font-weight="600" text-anchor="start">P6_clean</text>
-<line x1="304.174" y1="352.000" x2="424.546" y2="352.000" stroke="#A5442B" stroke-width="2"/>
-<line x1="304.174" y1="346.000" x2="304.174" y2="358.000" stroke="#A5442B" stroke-width="2"/>
-<line x1="424.546" y1="346.000" x2="424.546" y2="358.000" stroke="#A5442B" stroke-width="2"/>
-<circle cx="364.360" cy="352.000" r="6" fill="#A5442B" stroke="#A5442B" stroke-width="2"/>
-<text x="575.000" y="351.000" font-size="21" fill="#A5442B" font-weight="600" text-anchor="start">0.575685</text>
-<text x="575.000" y="373.000" font-size="16" fill="#62635D" font-weight="400" text-anchor="start">± 0.001075</text>
-<line x1="186.000" y1="369.000" x2="522.000" y2="369.000" stroke="#62635D" stroke-width="1"/>
-<text x="186.000" y="430.000" font-size="17" fill="#62635D" font-weight="400" text-anchor="start">Macro F1 ↑ 높을수록 좋음 · 차이를 읽기 위한 확대 축</text>
-<text x="32.000" y="466.000" font-size="16" fill="#62635D" font-weight="400" text-anchor="start">3시드 SD는 신뢰구간이 아니며, 오차막대 겹침으로 유의성을 판정하지 않습니다.</text>
+<rect width="760" height="488" fill="#FBF8F0"/>
+<line x1="32" y1="10" x2="728" y2="10" stroke="#304750" stroke-width="1"/>
+<text x="32.000" y="46.000" font-size="25" fill="#304750" font-weight="500" text-anchor="start" style="font-family:Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif">전처리는 타당해졌지만, 성능 향상은 미확인</text>
+<text x="32.000" y="77.000" font-size="18" fill="#61727A" font-weight="400" text-anchor="start">라벨 255,001행 · 동일 평가 절차 · 시드 42 / 1 / 7</text>
+<text x="32.000" y="105.000" font-size="17" fill="#61727A" font-weight="400" text-anchor="start">전체 10조건 중 네 기준 조건 · 점: 평균 / 오차막대: ±1 SD</text>
+<line x1="214.000" y1="137.000" x2="214.000" y2="369.000" stroke="#D7DCD9" stroke-width="1"/>
+<text x="214.000" y="399.000" font-size="17" fill="#61727A" font-weight="400" text-anchor="middle">0.573</text>
+<line x1="326.000" y1="137.000" x2="326.000" y2="369.000" stroke="#D7DCD9" stroke-width="1"/>
+<text x="326.000" y="399.000" font-size="17" fill="#61727A" font-weight="400" text-anchor="middle">0.575</text>
+<line x1="438.000" y1="137.000" x2="438.000" y2="369.000" stroke="#D7DCD9" stroke-width="1"/>
+<text x="438.000" y="399.000" font-size="17" fill="#61727A" font-weight="400" text-anchor="middle">0.577</text>
+<text x="623.000" y="139.000" font-size="16" fill="#61727A" font-weight="400" text-anchor="middle">평균 ± SD</text>
+<text x="32.000" y="178.000" font-size="20" fill="#304750" font-weight="600" text-anchor="start">P4</text>
+<line x1="267.288" y1="172.000" x2="375.266" y2="172.000" stroke="#61727A" stroke-width="2"/>
+<line x1="267.288" y1="166.000" x2="267.288" y2="178.000" stroke="#61727A" stroke-width="2"/>
+<line x1="375.266" y1="166.000" x2="375.266" y2="178.000" stroke="#61727A" stroke-width="2"/>
+<circle cx="321.277" cy="172.000" r="6" fill="#FBF8F0" stroke="#61727A" stroke-width="2"/>
+<text x="575.000" y="171.000" font-size="21" fill="#61727A" font-weight="600" text-anchor="start">0.574916</text>
+<text x="575.000" y="193.000" font-size="16" fill="#61727A" font-weight="400" text-anchor="start">± 0.000964</text>
+<text x="32.000" y="238.000" font-size="20" fill="#304750" font-weight="600" text-anchor="start">P4_clean</text>
+<line x1="259.641" y1="232.000" x2="340.951" y2="232.000" stroke="#356A86" stroke-width="2"/>
+<line x1="259.641" y1="226.000" x2="259.641" y2="238.000" stroke="#356A86" stroke-width="2"/>
+<line x1="340.951" y1="226.000" x2="340.951" y2="238.000" stroke="#356A86" stroke-width="2"/>
+<circle cx="300.296" cy="232.000" r="6" fill="#356A86" stroke="#356A86" stroke-width="2"/>
+<text x="575.000" y="231.000" font-size="21" fill="#356A86" font-weight="600" text-anchor="start">0.574541</text>
+<text x="575.000" y="253.000" font-size="16" fill="#61727A" font-weight="400" text-anchor="start">± 0.000726</text>
+<text x="32.000" y="298.000" font-size="20" fill="#304750" font-weight="600" text-anchor="start">P6_fixed</text>
+<line x1="301.946" y1="292.000" x2="468.960" y2="292.000" stroke="#61727A" stroke-width="2"/>
+<line x1="301.946" y1="286.000" x2="301.946" y2="298.000" stroke="#61727A" stroke-width="2"/>
+<line x1="468.960" y1="286.000" x2="468.960" y2="298.000" stroke="#61727A" stroke-width="2"/>
+<circle cx="385.453" cy="292.000" r="6" fill="#FBF8F0" stroke="#61727A" stroke-width="2"/>
+<text x="575.000" y="291.000" font-size="21" fill="#61727A" font-weight="600" text-anchor="start">0.576062</text>
+<text x="575.000" y="313.000" font-size="16" fill="#61727A" font-weight="400" text-anchor="start">± 0.001491</text>
+<text x="32.000" y="358.000" font-size="20" fill="#304750" font-weight="600" text-anchor="start">P6_clean</text>
+<line x1="304.174" y1="352.000" x2="424.546" y2="352.000" stroke="#356A86" stroke-width="2"/>
+<line x1="304.174" y1="346.000" x2="304.174" y2="358.000" stroke="#356A86" stroke-width="2"/>
+<line x1="424.546" y1="346.000" x2="424.546" y2="358.000" stroke="#356A86" stroke-width="2"/>
+<circle cx="364.360" cy="352.000" r="6" fill="#356A86" stroke="#356A86" stroke-width="2"/>
+<text x="575.000" y="351.000" font-size="21" fill="#356A86" font-weight="600" text-anchor="start">0.575685</text>
+<text x="575.000" y="373.000" font-size="16" fill="#61727A" font-weight="400" text-anchor="start">± 0.001075</text>
+<line x1="186.000" y1="369.000" x2="522.000" y2="369.000" stroke="#61727A" stroke-width="1"/>
+<text x="186.000" y="430.000" font-size="17" fill="#61727A" font-weight="400" text-anchor="start">Macro F1 ↑ 높을수록 좋음 · 차이를 읽기 위한 확대 축</text>
+<text x="32.000" y="466.000" font-size="16" fill="#61727A" font-weight="400" text-anchor="start">3시드 SD는 신뢰구간이 아니며, 오차막대 겹침으로 유의성을 판정하지 않습니다.</text>
 </svg>

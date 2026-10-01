@@ -2,7 +2,10 @@
 
 # Airplane · 항공편 지연 예측과 날씨 정보 확장
 
-[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml)
+[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=design%2Fgigi-sky-gold)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml?query=branch%3Adesign%2Fgigi-sky-gold)
+
+**디자인 비교 · B안 (Gigi):** 하늘색·골드와 산세리프 서체를 적용했습니다. 연구 내용과 수치는 A안과 같습니다. [A안 보기](https://github.com/Peter-jackson12/Airplane/tree/master) · [A→B 변경 비교](https://github.com/Peter-jackson12/Airplane/compare/master...design/gigi-sky-gold)
+
 [핵심 결과](#5-최신검증결과) · [데이터](#2-데이터와분석범위) · [재현 방법](#7-코드구조와재현) · [실행 근거](#8-문서안내)
 
 **항공편 한 건의 지연 여부(`Delay`)를 예측하고, 전처리 수정과 날씨 정보 추가가 예측 성능을 바꾸는지 검증한 프로젝트입니다.**
