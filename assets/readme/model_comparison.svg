@@ -1,72 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1110" viewBox="0 0 1600 1110" role="img" aria-labelledby="title desc" data-design="refined-evidence-f" data-chart-type="vertical-mean-sd-ranges">
-<title id="title">전처리는 타당해졌지만 Macro F1 향상은 확인되지 않음</title><desc id="desc">동일 라벨 255,001행. 전체 10조건 중 네 기준 조건의 3시드 평균과 ±1 표본 SD. 세로축은 0.5725–0.5785의 확대 축이며 신뢰구간이 아닙니다.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1070" viewBox="0 0 1600 1070" role="img" aria-labelledby="title desc" data-design="technical-launch-h" data-chart-type="highlighted-benchmark-table">
+<title id="title">전처리 타당성과 성능 변화는 다릅니다</title><desc id="desc">동일 라벨 255,001행. 네 기준 조건의 Macro F1 평균과 SD. P6_clean 강조는 우승 표기가 아닙니다.</desc>
 <style>text{font-family:"Noto Sans CJK KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>
-<rect width="1600" height="1110" fill="#FFFFFF"/>
-<rect x="0.000" y="811.000" width="1600.000" height="199.000" fill="#DDF1FB"/>
-<rect x="1320.000" y="112.000" width="196.000" height="174.000" fill="#57BBEB"/>
-<rect x="80.000" y="38.000" width="22.000" height="22.000" fill="#57BBEB"/>
-<text x="121.000" y="58.000" font-size="28" fill="#051766" font-weight="600" text-anchor="start">전처리 비교 · 의미와 성능의 분리</text>
-<text x="1516.000" y="58.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">AIRPLANE  /  02</text>
-<line x1="80.000" y1="82.000" x2="1516.000" y2="82.000" stroke="#051766" stroke-width="2"/>
-<text x="80.000" y="173.000" font-size="64" fill="#051766" font-weight="700" text-anchor="start" style="font-family:Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif">전처리는 더 타당하게</text>
-<text x="80.000" y="254.000" font-size="64" fill="#051766" font-weight="700" text-anchor="start" style="font-family:Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif">성능 향상은 미확인</text>
-<text x="1418.000" y="227.000" font-size="111" fill="#051766" font-weight="700" text-anchor="middle" style="font-family:Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif">04</text>
-<text x="1418.000" y="267.000" font-size="28" fill="#051766" font-weight="400" text-anchor="middle">기준 조건</text>
-<text x="84.000" y="310.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">라벨 255,001행 · 동일 평가 절차 · 시드 42 / 1 / 7</text>
-<text x="84.000" y="352.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">전체 10조건 중 네 기준 조건 · 점: 평균 / 오차막대: ±1 표본 SD</text>
-<rect x="644.000" y="385.000" width="182.000" height="370.000" fill="#DDF1FB"/>
-<rect x="1184.000" y="385.000" width="182.000" height="370.000" fill="#DDF1FB"/>
-<text x="84.000" y="405.000" font-size="29" fill="#051766" font-weight="600" text-anchor="start">Macro F1</text>
-<text x="84.000" y="447.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">↑ 높을수록 좋음</text>
-<text x="84.000" y="535.000" font-size="28" fill="#004766" font-weight="600" text-anchor="start">확대 축</text>
-<text x="84.000" y="578.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">0.5725</text>
-<text x="84.000" y="614.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">– 0.5785</text>
-<line x1="341.000" y1="724.167" x2="1492.000" y2="724.167" stroke="#D9D9D9" stroke-width="1"/>
-<text x="323.000" y="732.167" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">0.573</text>
-<line x1="341.000" y1="662.500" x2="1492.000" y2="662.500" stroke="#D9D9D9" stroke-width="1"/>
-<text x="323.000" y="670.500" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">0.574</text>
-<line x1="341.000" y1="600.833" x2="1492.000" y2="600.833" stroke="#D9D9D9" stroke-width="1"/>
-<text x="323.000" y="608.833" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">0.575</text>
-<line x1="341.000" y1="539.167" x2="1492.000" y2="539.167" stroke="#D9D9D9" stroke-width="1"/>
-<text x="323.000" y="547.167" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">0.576</text>
-<line x1="341.000" y1="477.500" x2="1492.000" y2="477.500" stroke="#D9D9D9" stroke-width="1"/>
-<text x="323.000" y="485.500" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">0.577</text>
-<line x1="341.000" y1="415.833" x2="1492.000" y2="415.833" stroke="#D9D9D9" stroke-width="1"/>
-<text x="323.000" y="423.833" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">0.578</text>
-<line x1="341.000" y1="385.000" x2="341.000" y2="755.000" stroke="#5E5E5E" stroke-width="1.5"/>
-<line x1="341.000" y1="755.000" x2="1492.000" y2="755.000" stroke="#5E5E5E" stroke-width="1.5"/>
-<line x1="465.000" y1="546.582" x2="465.000" y2="665.486" stroke="#051766" stroke-width="3"/>
-<line x1="451.000" y1="546.582" x2="479.000" y2="546.582" stroke="#051766" stroke-width="3"/>
-<line x1="451.000" y1="665.486" x2="479.000" y2="665.486" stroke="#051766" stroke-width="3"/>
-<circle cx="465.000" cy="606.034" r="10" fill="#FFFFFF" stroke="#051766" stroke-width="3"/>
-<text x="465.000" y="798.000" font-size="28" fill="#051766" font-weight="600" text-anchor="middle">P4</text>
-<text x="465.000" y="896.000" font-size="35" fill="#051766" font-weight="600" text-anchor="middle">0.574916</text>
-<text x="465.000" y="944.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">± 0.000964</text>
-<line x1="735.000" y1="584.370" x2="735.000" y2="673.907" stroke="#004766" stroke-width="3"/>
-<line x1="721.000" y1="584.370" x2="749.000" y2="584.370" stroke="#004766" stroke-width="3"/>
-<line x1="721.000" y1="673.907" x2="749.000" y2="673.907" stroke="#004766" stroke-width="3"/>
-<circle cx="735.000" cy="629.138" r="10" fill="#004766" stroke="#004766" stroke-width="3"/>
-<text x="735.000" y="798.000" font-size="28" fill="#004766" font-weight="600" text-anchor="middle">P4_clean</text>
-<text x="735.000" y="896.000" font-size="35" fill="#004766" font-weight="600" text-anchor="middle">0.574541</text>
-<text x="735.000" y="944.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">± 0.000726</text>
-<line x1="1005.000" y1="443.407" x2="1005.000" y2="627.321" stroke="#051766" stroke-width="3"/>
-<line x1="991.000" y1="443.407" x2="1019.000" y2="443.407" stroke="#051766" stroke-width="3"/>
-<line x1="991.000" y1="627.321" x2="1019.000" y2="627.321" stroke="#051766" stroke-width="3"/>
-<circle cx="1005.000" cy="535.364" r="10" fill="#FFFFFF" stroke="#051766" stroke-width="3"/>
-<text x="1005.000" y="798.000" font-size="28" fill="#051766" font-weight="600" text-anchor="middle">P6_fixed</text>
-<text x="1005.000" y="896.000" font-size="35" fill="#051766" font-weight="600" text-anchor="middle">0.576062</text>
-<text x="1005.000" y="944.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">± 0.001491</text>
-<line x1="1275.000" y1="492.316" x2="1275.000" y2="624.868" stroke="#004766" stroke-width="3"/>
-<line x1="1261.000" y1="492.316" x2="1289.000" y2="492.316" stroke="#004766" stroke-width="3"/>
-<line x1="1261.000" y1="624.868" x2="1289.000" y2="624.868" stroke="#004766" stroke-width="3"/>
-<circle cx="1275.000" cy="558.592" r="10" fill="#004766" stroke="#004766" stroke-width="3"/>
-<text x="1275.000" y="798.000" font-size="28" fill="#004766" font-weight="600" text-anchor="middle">P6_clean</text>
-<text x="1275.000" y="896.000" font-size="35" fill="#004766" font-weight="600" text-anchor="middle">0.575685</text>
-<text x="1275.000" y="944.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="middle">± 0.001075</text>
-<text x="84.000" y="863.000" font-size="28" fill="#051766" font-weight="600" text-anchor="start">3시드 평균</text>
-<text x="84.000" y="912.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">±1 표본 SD</text>
-<line x1="84.000" y1="1009.000" x2="1516.000" y2="1009.000" stroke="#051766" stroke-width="1.5"/>
-<text x="84.000" y="1056.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">SD는 신뢰구간이 아닙니다. 오차막대 겹침으로 동등성·유의성을 판정하지 않습니다.</text>
-<text x="80.000" y="1082.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="start">출처: README의 연결된 원본 집계</text>
-<text x="1516.000" y="1082.000" font-size="28" fill="#5E5E5E" font-weight="400" text-anchor="end">전처리 비교 / 02</text>
+<rect width="1600" height="1070" fill="#FFFFFF"/>
+<text x="800.000" y="105.000" font-size="58" fill="#202124" font-weight="500" text-anchor="middle">전처리 타당성과 성능 변화는 다릅니다</text>
+<text x="800.000" y="171.000" font-size="30" fill="#5F6368" font-weight="400" text-anchor="middle">동일 라벨 255,001행 · 전체 10조건 중 네 기준 조건 · 3시드 평균</text>
+<rect x="1190" y="256" width="290" height="446" fill="#E8F0FE" data-focus-column="P6_clean"/>
+<text x="570.000" y="320.000" font-size="31" fill="#202124" font-weight="600" text-anchor="middle">P4</text>
+<text x="570.000" y="454.000" font-size="35" fill="#202124" font-weight="600" text-anchor="middle">0.574916</text>
+<text x="570.000" y="610.000" font-size="32" fill="#5F6368" font-weight="400" text-anchor="middle">0.000964</text>
+<text x="825.000" y="320.000" font-size="31" fill="#202124" font-weight="600" text-anchor="middle">P4_clean</text>
+<text x="825.000" y="454.000" font-size="35" fill="#202124" font-weight="600" text-anchor="middle">0.574541</text>
+<text x="825.000" y="610.000" font-size="32" fill="#5F6368" font-weight="400" text-anchor="middle">0.000726</text>
+<text x="1080.000" y="320.000" font-size="31" fill="#202124" font-weight="600" text-anchor="middle">P6_fixed</text>
+<text x="1080.000" y="454.000" font-size="35" fill="#202124" font-weight="600" text-anchor="middle">0.576062</text>
+<text x="1080.000" y="610.000" font-size="32" fill="#5F6368" font-weight="400" text-anchor="middle">0.001491</text>
+<text x="1335.000" y="320.000" font-size="31" fill="#185ABC" font-weight="600" text-anchor="middle">P6_clean</text>
+<text x="1335.000" y="454.000" font-size="35" fill="#202124" font-weight="600" text-anchor="middle">0.575685</text>
+<text x="1335.000" y="610.000" font-size="32" fill="#5F6368" font-weight="400" text-anchor="middle">0.001075</text>
+<text x="120.000" y="454.000" font-size="34" fill="#202124" font-weight="600" text-anchor="start">Macro F1 ↑</text>
+<text x="120.000" y="610.000" font-size="32" fill="#5F6368" font-weight="400" text-anchor="start">표본 SD</text>
+<line x1="120.000" y1="366.000" x2="1480.000" y2="366.000" stroke="#DADCE0" stroke-width="2"/>
+<line x1="120.000" y1="524.000" x2="1480.000" y2="524.000" stroke="#DADCE0" stroke-width="2"/>
+<line x1="120.000" y1="700.000" x2="1480.000" y2="700.000" stroke="#DADCE0" stroke-width="2"/>
+<text x="120.000" y="798.000" font-size="42" fill="#202124" font-weight="500" text-anchor="start">전처리는 더 타당해졌지만</text>
+<text x="120.000" y="862.000" font-size="42" fill="#202124" font-weight="500" text-anchor="start">Macro F1 향상은 확인되지 않았습니다.</text>
+<text x="120.000" y="952.000" font-size="28" fill="#5F6368" font-weight="400" text-anchor="start">SD는 신뢰구간이 아닙니다. 강조 열은 현재 기준 조건을 뜻합니다.</text>
+<text x="80.000" y="1042.000" font-size="28" fill="#5F6368" font-weight="400" text-anchor="start">출처: README의 연결된 원본 집계</text>
+<text x="1516.000" y="1042.000" font-size="28" fill="#5F6368" font-weight="400" text-anchor="end">전처리 비교</text>
 </svg>

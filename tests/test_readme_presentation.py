@@ -11,6 +11,15 @@ from pathlib import Path
 from scripts import build_readme_assets as builder
 
 ROOT = Path(__file__).resolve().parents[1]
+SVG_NS = '{http://www.w3.org/2000/svg}'
+STORY_FIGURES = ('presentation_cover.svg', 'analysis_journey.svg', 'evaluation_boundary.svg')
+DESIGN_REFERENCE = 'https://blog.google/intl/ko-kr/products/gemini-4-argon-kr/'
+
+
+def canonical_hash(value):
+    return hashlib.sha256(json.dumps(
+        value, ensure_ascii=False, sort_keys=True, separators=(',', ':')
+    ).encode()).hexdigest()
 
 
 def test_readme_figure_receipt_matches_sources_filters_and_hashes():
@@ -253,21 +262,26 @@ def test_presentation_story_retains_population_and_evaluation_boundaries():
         assert phrase in evaluation
 
 
-def test_all_readme_artwork_retains_flat_korean_air_homepage_palette():
-    filenames = [*builder.FIGURES.values(), 'presentation_cover.svg',
-                 'analysis_journey.svg', 'evaluation_boundary.svg']
+def test_all_readme_artwork_uses_the_h_technical_launch_palette():
+    from scripts import readme_editorial as style
+    assert style.PAPER == '#FFFFFF'
+    assert style.INK == '#202124'
+    assert style.ACCENT == '#185ABC'
+    assert style.RULE == '#DADCE0'
+    filenames = [*builder.FIGURES.values(), *STORY_FIGURES]
     for filename in filenames:
         raw = (ROOT / 'assets/readme' / filename).read_text(encoding='utf-8')
         svg = ET.fromstring(raw)
-        rectangles = svg.findall('{http://www.w3.org/2000/svg}rect')
+        rectangles = svg.findall(SVG_NS + 'rect')
         assert rectangles and rectangles[0].attrib['fill'] == '#FFFFFF'
-        assert all(float(rect.attrib.get('rx', 0)) == 0 for rect in rectangles)
+        assert svg.attrib['data-design'] == 'technical-launch-h'
         assert not any(node.tag.endswith(('linearGradient', 'radialGradient')) for node in svg.iter())
-        assert '#051766' in raw and 'Noto Sans CJK KR' in raw
-        if filename != 'presentation_cover.svg':
-            assert '#004766' in raw
-        assert 'Noto Serif CJK KR' not in raw
-        for previous_color in ('#102D40', '#183B4E', '#007E80', '#EFF6F6', '#F5F2EB', '#A5442B'):
+        assert '#202124' in raw and '#185ABC' in raw
+        assert 'Noto Sans CJK KR' in raw and 'Noto Serif CJK KR' not in raw
+        # Gray controls are shape encodings, never unreadable text labels.
+        assert all(node.attrib.get('fill') != '#DADCE0' for node in svg.iter(SVG_NS + 'text'))
+        for previous_color in ('#051766', '#004766', '#57BBEB', '#DDF1FB',
+                               '#102D40', '#183B4E', '#007E80', '#EFF6F6', '#F5F2EB', '#A5442B'):
             assert previous_color not in raw
 
 
@@ -279,9 +293,10 @@ def test_figure_receipt_rejects_changed_editorial_renderer(tmp_path, monkeypatch
         builder.check_receipt()
 
 
-def test_f_leads_with_bounded_result_and_readable_type():
+def test_h_leads_with_bounded_result_and_readable_type():
     cover = ET.fromstring((ROOT / 'assets/readme/presentation_cover.svg').read_text())
-    assert int(cover.attrib['height']) == 760
+    assert int(cover.attrib['width']) == 1600
+    assert int(cover.attrib['height']) == 1000
     content = ''.join(cover.itertext())
     for value in ('+0.025035', '180,332행', '정적 교차검증', '미래 운항 성능은 미검증'):
         assert value in content
@@ -294,34 +309,43 @@ def test_f_leads_with_bounded_result_and_readable_type():
     assert '도형 크기는 수량을 뜻하지 않습니다.' in journey
 
 
-def test_f_main_readme_links_preserved_styles_and_current_ci():
+def test_h_readme_credits_reference_preserves_styles_and_uses_its_branch_ci():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
-    assert '메인 디자인 · F안' in text
+    opening = text.split('<a id="1-목적과문제정의"></a>', 1)[0]
+    assert 'H안' in opening
+    assert DESIGN_REFERENCE in text
     assert '[A안](https://github.com/Peter-jackson12/Airplane/tree/style/a-editorial)' in text
-    assert 'https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold' in text
-    assert 'compare/8b4592b598dae5edd222afa63aa3982f6692d1c4...design/refined-evidence-f' in text
-    assert 'tree/design/reference-report-e' in text
-    assert 'badge.svg?branch=master' in text
-    assert 'ci.yml?query=branch%3Amaster' in text
+    for branch in ('design/gigi-sky-gold', 'design/gigi-flight-magazine-c',
+                   'design/korean-air-palette-d', 'design/reference-report-e',
+                   'design/refined-evidence-f'):
+        assert f'https://github.com/Peter-jackson12/Airplane/tree/{branch}' in text
+    assert 'badge.svg?branch=design%2Ftechnical-launch-h' in opening
+    assert 'ci.yml?query=branch%3Adesign%2Ftechnical-launch-h' in opening
+    assert 'badge.svg?branch=master' not in opening
     assert '본문 설명 약 16분 + 전환·질문 여유 약 3분' in text
+    design_doc = (ROOT / 'assets/readme/DESIGN.md').read_text(encoding='utf-8')
+    assert DESIGN_REFERENCE in design_doc
+    for token in ('technical-launch-h', '#202124', '#185ABC', '#DADCE0'):
+        assert token in design_doc
 
 
-def test_magazine_d_preserves_all_readme_code_blocks_from_b():
+def test_h_preserves_all_19_readme_code_blocks_byte_for_byte():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
     blocks = re.findall(r'```[^\n]*\n.*?```', text, re.S)
+    assert len(blocks) == 19
     assert hashlib.sha256(json.dumps(blocks, ensure_ascii=False).encode()).hexdigest() == 'c8e177b591f64156f5275a938294c77773d5e98125ff7b855fee20a56c58267c'
 
 
-def test_magazine_d_quantitative_figures_use_distinct_chart_geometries():
+def test_h_quantitative_figures_use_five_distinct_chart_geometries():
     chart_types = set()
     for filename in builder.FIGURES.values():
         svg = ET.fromstring((ROOT / 'assets/readme' / filename).read_text())
-        assert svg.attrib['data-design'] == 'refined-evidence-f'
+        assert svg.attrib['data-design'] == 'technical-launch-h'
         chart_types.add(svg.attrib['data-chart-type'])
     assert len(chart_types) == 5
 
 
-def test_homepage_palette_text_contrast_is_at_least_aa():
+def test_h_technical_launch_palette_text_contrast_is_at_least_aa():
     from scripts import readme_editorial as style
     def luminance(color):
         channels = [int(color[i:i+2], 16) / 255 for i in (1, 3, 5)]
@@ -334,3 +358,90 @@ def test_homepage_palette_text_contrast_is_at_least_aa():
     for foreground, background in pairs:
         a, b = sorted((luminance(foreground), luminance(background)))
         assert (b + .05) / (a + .05) >= 4.5, (foreground, background)
+
+
+def test_h_preserves_all_eight_local_images_exactly_once():
+    text = (ROOT / 'README.md').read_text(encoding='utf-8')
+    images = re.findall(r'!\[[^\]]+\]\((assets/readme/[^)]+)\)', text)
+    expected = [f'assets/readme/{name}' for name in [*builder.FIGURES.values(), *STORY_FIGURES]]
+    assert len(images) == 8
+    assert sorted(images) == sorted(expected)
+
+
+def test_h_keeps_the_frozen_evidence_sources_filters_and_exact_values():
+    # Captured from the reviewed pre-H aggregate receipt, before visual changes.
+    # These contracts are independent of the generator's own implementation:
+    # changing a renderer and its receipt together cannot change the evidence.
+    receipt = builder.check_receipt()
+    expected_hashes = {
+        'sources': 'c8f4c8450e4e67501cbd895f9986d29fb45ffd7c8789ebf5f904a5a2f43a8925',
+        'filters': '407bbb75126489247734380f69604b95dcc6b852395be76b38f8b97c9be500f7',
+        'reviewed_data': 'a71d41a0d130de95f698c69d51ceb8ce680cc5b1a23cf7ec5a543fa350749020',
+    }
+    for field, expected in expected_hashes.items():
+        assert canonical_hash(receipt[field]) == expected, f'Frozen H evidence drift: {field}'
+    assert canonical_hash(builder.reviewed_data()) == expected_hashes['reviewed_data']
+
+
+def test_h_benchmark_table_retains_all_four_conditions_and_highlights_focus_column():
+    svg = ET.fromstring((ROOT / 'assets/readme/model_comparison.svg').read_text(encoding='utf-8'))
+    text = ' '.join(svg.itertext())
+    for row in builder.reviewed_data()['models']:
+        assert row['phase'] in text
+        assert f"{row['mean']:.6f}" in text
+        assert f"{row['sd']:.6f}" in text
+    assert '255,001행' in text and '신뢰구간이 아닙니다' in text
+    highlights = [node for node in svg.iter() if node.attrib.get('data-focus-column') == 'P6_clean']
+    assert len(highlights) == 1
+    focus = highlights[0]
+    assert focus.tag == SVG_NS + 'rect' and focus.attrib['fill'] == '#E8F0FE'
+    headings = [node for node in svg.iter(SVG_NS + 'text') if node.text == 'P6_clean']
+    assert len(headings) == 1 and headings[0].attrib['fill'] == '#185ABC'
+    x, y = float(headings[0].attrib['x']), float(headings[0].attrib['y'])
+    assert float(focus.attrib['x']) < x < float(focus.attrib['x']) + float(focus.attrib['width'])
+    assert float(focus.attrib['y']) < y < float(focus.attrib['y']) + float(focus.attrib['height'])
+
+
+def test_h_weather_bars_encode_original_levels_from_true_zero_baselines():
+    svg = ET.fromstring((ROOT / 'assets/readme/weather_model_comparison.svg').read_text(encoding='utf-8'))
+    bars = [node for node in svg.iter(SVG_NS + 'rect') if 'data-condition' in node.attrib]
+    assert len(bars) == 6
+    expected = {(row['metric'], condition): row[field]
+                for row in builder.reviewed_data()['weather_model']
+                for condition, field in (('weather_off', 'off_mean'), ('weather_on', 'on_mean'))}
+    actual = {}
+    for bar in bars:
+        attrs = bar.attrib
+        key = (attrs['data-metric'], attrs['data-condition'])
+        assert key in expected and key not in actual
+        actual[key] = attrs
+        value = float(attrs['data-value'])
+        assert value == pytest.approx(expected[key], rel=0, abs=1e-12)
+        assert float(attrs['data-axis-min']) == 0
+        maximum = float(attrs['data-axis-max'])
+        length = float(attrs['data-axis-length'])
+        baseline = float(attrs['data-baseline'])
+        assert maximum >= value > 0 and length > 0
+        assert attrs['fill'] == ('#DADCE0' if key[1] == 'weather_off' else '#185ABC')
+        if attrs['data-orientation'] == 'vertical':
+            extent = float(attrs['height'])
+            assert float(attrs['y']) + extent == pytest.approx(baseline, abs=.002)
+        else:
+            assert attrs['data-orientation'] == 'horizontal'
+            extent = float(attrs['width'])
+            assert float(attrs['x']) == pytest.approx(baseline, abs=.002)
+        assert extent == pytest.approx(length * value / maximum, abs=.002)
+    assert set(actual) == set(expected)
+    for metric, _ in expected:
+        off, on = actual[metric, 'weather_off'], actual[metric, 'weather_on']
+        for field in ('data-axis-min', 'data-axis-max', 'data-axis-length',
+                      'data-baseline', 'data-orientation'):
+            assert off[field] == on[field], (metric, field)
+
+
+def test_h_preserves_all_137_existing_aggregate_evidence_destinations():
+    text = (ROOT / 'README.md').read_text(encoding='utf-8')
+    destinations = re.findall(r'!?\[[^\]\n]*\]\((output/[^\s)]+)\)', text)
+    unique = sorted(set(destinations))
+    assert len(unique) == 137
+    assert canonical_hash(unique) == '6345edc5f985d27e886e78b9ed73484251626dc8ae75a975f1d9ccd036ba286a'

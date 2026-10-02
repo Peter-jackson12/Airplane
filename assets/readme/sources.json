@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generator_sha256": "340d1805689e96f0ab334624a4e8d3beb2eecb08b9ffa9c201f020c4f2a65e73",
-  "editorial_renderer_sha256": "b985507438b6583e2f5e2ae19600b0d4ed105ab18718f059f08005c26a62ca6d",
+  "generator_sha256": "6ea7c09c7e1c0b09d04c39800e2894c6cec59aaa3a4dde93d3cae11d3ae5cb5d",
+  "editorial_renderer_sha256": "53887cc814525563c1c75b63e28531a5f02fa593753314b03eef33ed58f76132",
   "sources": {
     "models": {
       "path": "output/preprocessing_full_summary.csv",
@@ -209,32 +209,32 @@
   "figures": {
     "attribution": {
       "path": "assets/readme/date_attribution.svg",
-      "sha256": "c9eea174a8ce13e19bdb7c426d66bc36fe84d1f4ddefb29af8313cc7f64f58c3"
+      "sha256": "b0e7dd4c67aac45fb82bd5f1ff1f66ee6418b82c41e700372c012562176953a0"
     },
     "models": {
       "path": "assets/readme/model_comparison.svg",
-      "sha256": "21add5c8b821fd18db87ed2271d1a05e5159f97031dcc1aae4d66db096788261"
+      "sha256": "e3114bbf987dbb941effe3fad4d75d398240581b04fde5009f29641ae664d51b"
     },
     "weather_model": {
       "path": "assets/readme/weather_model_comparison.svg",
-      "sha256": "deeca3b8bf3b0c4c7a7d30b7741d12291c2abd5cdb1e4f7f674510757e1c4a04"
+      "sha256": "0d503ec5cbf3bd3d34a21f777c2fc312efbbf0ea6f98fc63783578ea8d2fdab4"
     },
     "calibration": {
       "path": "assets/readme/calibration_tradeoff.svg",
-      "sha256": "e16eb5d1104ea0d059a8583d8d0174fee35fe65f25d64a45cca36b06935fdc68"
+      "sha256": "f950121d6ab9a9447a173b2cebb51842de02d469bac595be620a7df14a5ab75d"
     },
     "latency": {
       "path": "assets/readme/weather_latency.svg",
-      "sha256": "9b5bcdcf4af2b76cf4d847cc9babad35c6b4bc079049ea45fab95cb8d855be2c"
+      "sha256": "0d5831b183024b8e4b72d66838381dfae8c65d7cfeda64902c746fbefb134765"
     }
   },
   "limitations": [
     "No raw data access, network calls or model retraining.",
     "No live collection progress is inferred.",
-    "Korean SVG text uses system font fallbacks; no font files or external assets are embedded.",
-    "Weather levels and signed paired deltas are rounded independently from tracked evidence.",
-    "Three-seed SD is not a confidence interval; each weather metric uses a labelled independent zoomed axis.",
-    "Latency scenarios are discrete marks on proportional minute axes; no interpolation is plotted.",
-    "The attribution stack uses the complete population without inflating small segments."
+    "Korean text uses system fonts; no external assets.",
+    "Means and signed paired deltas rounded independently.",
+    "Three-seed SD is not a confidence interval; weather panels use zero-start axes.",
+    "Latency scenarios are discrete marks on proportional minute axes; no interpolation.",
+    "Attribution stack includes the full population without inflating small segments."
   ]
 }

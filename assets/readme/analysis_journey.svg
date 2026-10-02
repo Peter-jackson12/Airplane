@@ -1,28 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1060" viewBox="0 0 1600 1060" role="img" aria-labelledby="title desc">
-<title id="title">비교할 수 있는 집단부터 구분합니다</title><desc id="desc">원본 1,000,000행. 전처리 평가 255,001행. 날짜 귀속 채택 706,759행 중 날짜와 라벨이 모두 있는 180,332행에서 날씨 14개 피처를 비교합니다. 같은 외부 폴드. 인과 효과와 미래 운항 성능은 미검증. 도형 크기는 수량을 뜻하지 않습니다.</desc>
-<rect width="1600" height="1060" fill="#FFFFFF"/>
-<text x="80" y="62" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">01 / POPULATIONS</text>
-<text x="1520" y="62" fill="#5E5E5E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="end" style="font-variant-numeric:tabular-nums">AIRPLANE / F</text>
-<line x1="80" y1="90" x2="1520" y2="90" stroke="#051766" stroke-width="2"/>
-<text x="80" y="178" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="58" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">두 질문은 서로 다른 집단에서 검증했습니다</text>
-<text x="80" y="244" fill="#5E5E5E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">출발점: 원본 1,000,000행 · 숫자를 이어 성능 변화로 읽지 않습니다</text>
-<line x1="80" y1="306" x2="1520" y2="306" stroke="#051766" stroke-width="2"/>
-<text x="80" y="370" fill="#004766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="44" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">A</text>
-<text x="164" y="370" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="36" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">전처리 비교</text>
-<text x="164" y="466" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="80" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">255,001</text>
-<text x="164" y="528" fill="#5E5E5E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">라벨이 있는 행</text>
-<text x="840" y="408" fill="#004766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">질문에 대한 답</text>
-<text x="840" y="462" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="34" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">Macro F1 향상은</text>
-<text x="840" y="514" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="34" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">확인되지 않았습니다</text>
-<line x1="80" y1="600" x2="1520" y2="600" stroke="#051766" stroke-width="2"/>
-<text x="80" y="664" fill="#004766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="44" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">B</text>
-<text x="164" y="664" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="36" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">날씨 유무 비교</text>
-<text x="164" y="760" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="80" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">180,332</text>
-<text x="164" y="822" fill="#5E5E5E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">날짜 귀속 채택 706,759행 중 라벨이 있는 행</text>
-<text x="840" y="702" fill="#004766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">질문에 대한 답</text>
-<text x="840" y="756" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="34" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">날씨 14개 피처 추가 후</text>
-<text x="840" y="808" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="34" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">세 지표가 개선됐습니다</text>
-<rect x="80" y="904" width="1440" height="80" fill="#DDF1FB"/>
-<text x="104" y="955" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="32" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">날씨 비교 원칙: 같은 180,332행 · 같은 시드 · 같은 외부 폴드</text>
-<text x="80" y="1030" fill="#5E5E5E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">도형 크기는 수량을 뜻하지 않습니다.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1050" viewBox="0 0 1600 1050" role="img" aria-labelledby="title desc" data-design="technical-launch-h">
+<title id="title">다른 질문에는 다른 평가 집단</title><desc id="desc">원본 1,000,000행. 전처리 평가 255,001행. 날짜 귀속 채택 706,759행 중 라벨 180,332행에서 날씨 14개 피처 비교. 같은 외부 폴드. 인과 효과와 미래 운항 성능은 미검증. 도형 크기는 수량을 뜻하지 않습니다.</desc>
+<rect width="1600" height="1050" fill="#FFFFFF"/>
+<text x="800" y="110" fill="#202124" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="64" font-weight="500" text-anchor="middle" style="font-variant-numeric:tabular-nums">어떤 데이터에서 확인했나요?</text>
+<text x="800" y="174" fill="#5F6368" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="middle" style="font-variant-numeric:tabular-nums">원본 1,000,000행에서 두 질문을 나누어 검증했습니다</text>
+<rect x="120" y="246" width="1360" height="166" fill="#F8F9FA" rx="24"/>
+<text x="170" y="308" fill="#5F6368" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">전체 입력</text>
+<text x="170" y="375" fill="#202124" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="58" font-weight="600" text-anchor="start" style="font-variant-numeric:tabular-nums">1,000,000행</text>
+<text x="824" y="308" fill="#5F6368" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">날짜 귀속 채택</text>
+<text x="824" y="375" fill="#202124" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="58" font-weight="600" text-anchor="start" style="font-variant-numeric:tabular-nums">706,759행</text>
+<line x1="120" y1="462" x2="1480" y2="462" stroke="#DADCE0" stroke-width="2"/>
+<rect x="810" y="464" width="670" height="418" fill="#E8F0FE" rx="24"/>
+<text x="170" y="538" fill="#202124" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="38" font-weight="600" text-anchor="start" style="font-variant-numeric:tabular-nums">전처리 비교</text>
+<text x="170" y="630" fill="#202124" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="64" font-weight="600" text-anchor="start" style="font-variant-numeric:tabular-nums">255,001행</text>
+<text x="170" y="701" fill="#5F6368" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">라벨이 있는 전체 집단</text>
+<text x="170" y="774" fill="#202124" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="600" text-anchor="start" style="font-variant-numeric:tabular-nums">Macro F1 향상은 확인되지 않음</text>
+<text x="860" y="538" fill="#202124" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="38" font-weight="600" text-anchor="start" style="font-variant-numeric:tabular-nums">날씨 유무 비교</text>
+<text x="860" y="630" fill="#185ABC" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="64" font-weight="600" text-anchor="start" style="font-variant-numeric:tabular-nums">180,332행</text>
+<text x="860" y="701" fill="#5F6368" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">날짜와 라벨이 모두 있는 집단</text>
+<text x="860" y="774" fill="#202124" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="600" text-anchor="start" style="font-variant-numeric:tabular-nums">날씨 14개 피처 추가 후 세 지표 개선</text>
+<text x="800" y="950" fill="#185ABC" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="32" font-weight="600" text-anchor="middle" style="font-variant-numeric:tabular-nums">날씨 비교: 같은 평가행 · 같은 시드 · 같은 외부 폴드</text>
+<text x="800" y="1004" fill="#5F6368" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="middle" style="font-variant-numeric:tabular-nums">도형 크기는 수량을 뜻하지 않습니다.</text>
 </svg>

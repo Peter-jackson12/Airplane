@@ -152,7 +152,7 @@ class SVG:
         self.parts = [
             f'<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="{height}" '
             f'viewBox="0 0 1600 {height}" role="img" aria-labelledby="title desc" '
-            f'data-design="refined-evidence-f" data-chart-type="{chart_type}">',
+            f'data-design="technical-launch-h" data-chart-type="{chart_type}">',
             f'<title id="title">{escape(title)}</title><desc id="desc">{escape(description)}</desc>',
             '<style>text{font-family:"Noto Sans CJK KR","Malgun Gothic",'
             '"Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>',
@@ -249,267 +249,108 @@ def check_receipt() -> dict:
 
 
 def build() -> None:
-    data = reviewed_data()
-    ASSETS.mkdir(parents=True, exist_ok=True)
-    figures = {}
-
-    def finish(svg, key):
-        path = ASSETS / FIGURES[key]
-        svg.save(path)
-        figures[key] = {'path': path.relative_to(ROOT).as_posix(), 'sha256': sha256(path)}
-
-    # A vertical 100% stack: segment heights use the complete 1,000,000-row
-    # denominator, including the 1,933-row sliver without a minimum-height lie.
-    svg = SVG(1060, '날짜를 확인한 706,759행만 채택',
-              '원본 1,000,000행을 모두 대조했습니다. 세로 누적 막대의 세 집단은 서로 겹치지 않습니다. '
-              '채택 706,759행, 결측 키의 단일 후보 연도 291,308행과 그 밖의 1,933행은 보류합니다.',
-              'vertical-population-stack')
-    svg.rect(1072, 0, 528, 1060, SKY)
-    svg.rect(1056, 110, 16, 836, CYAN)
-    svg.running('01', '날짜 귀속 · 원본 전체 대조')
-    svg.text(80, 170, '확인한 날짜만,', 66, weight=700, heading=True)
-    svg.text(80, 254, '다음 단계로', 66, weight=700, heading=True)
-    svg.text(70, 420, f"{data['attribution'][0]['rows']:,}", 154, BLUE, 700, heading=True)
-    svg.text(84, 466, '채택한 행 / 원본 1,000,000행', 29, MUTED)
-    labels = (('채택', '완전한 대조 정보 + 단일 후보 연도'),
-              ('보류', '대조 정보 결측 + 단일 후보 연도'),
-              ('보류', '그 밖의 대조 결과'))
-    for i, (row, labels_i, color) in enumerate(zip(data['attribution'], labels, (BLUE, INK, MUTED))):
-        y = 550 + i*123
-        svg.line(84, y-29, 1000, y-29, GRID, 1.5)
-        svg.text(84, y+6, f'{i+1:02d}', 23, color, 700)
-        svg.text(150, y+6, labels_i[0], 27, color, 700)
-        svg.text(250, y+6, labels_i[1], 26)
-        svg.text(1000, y+63, f"{row['rows']:,}행", 42, color, 600, 'end')
-    svg.text(1130, 179, '70.68%', 78, BLUE, 700, heading=True)
-    svg.text(1134, 225, '원본 중 날짜 귀속 채택', 25, MUTED)
-    bar_x, bar_y, bar_w, bar_h = 1150, 326, 172, 530
-    bottom = bar_y+bar_h
-    for row, color in zip(data['attribution'], (BLUE, CYAN, INK)):
-        height = bar_h*row['rows']/1000000
-        bottom -= height
-        svg.rect(bar_x, bottom, bar_w, height, color)
-    for tick in (0,25,50,75,100):
-        y = bar_y+bar_h*(1-tick/100)
-        svg.line(1340, y, 1360, y, MUTED, 1.5)
-        svg.text(1380, y+8, f'{tick}%', 24, MUTED)
-    svg.text(1236, 659, '채택', 30, PAPER, 600, 'middle')
-    svg.text(1236, 701, '70.68%', 27, PAPER, 500, 'middle')
-    svg.text(1236, 394, '보류', 28, INK, 600, 'middle')
-    svg.text(1236, 435, '29.13%', 25, INK, 500, 'middle')
-    svg.line(1236, bar_y, 1236, 294, INK, 1.5)
-    svg.text(1236, 281, '기타 0.19%', 23, INK, anchor='middle')
-    svg.text(1134, 906, '세 집단 합계 100%', 26, weight=600)
-    svg.text(84, 948, '보류 293,241행도 모두 대조했습니다. 미검사 집단이 아닙니다.', 27, MUTED)
-    svg.text(84, 991, '대조 정보가 빠져 있다면 후보 연도가 하나여도 채택하지 않습니다.', 26, MUTED)
-    svg.footer('날짜 귀속 / 01')
-    finish(svg, 'attribution')
-
-    # Change from the old horizontal forest plot to vertical mean/SD ranges.
-    # The plotting domain is shared across all four conditions and labelled.
-    svg = SVG(1110, '전처리는 타당해졌지만 Macro F1 향상은 확인되지 않음',
-              '동일 라벨 255,001행. 전체 10조건 중 네 기준 조건의 3시드 평균과 ±1 표본 SD. '
-              '세로축은 0.5725–0.5785의 확대 축이며 신뢰구간이 아닙니다.', 'vertical-mean-sd-ranges')
-    svg.rect(0, 811, 1600, 199, SKY)
-    svg.rect(1320, 112, 196, 174, CYAN)
-    svg.running('02', '전처리 비교 · 의미와 성능의 분리')
-    svg.text(80, 173, '전처리는 더 타당하게', 64, weight=700, heading=True)
-    svg.text(80, 254, '성능 향상은 미확인', 64, weight=700, heading=True)
-    svg.text(1418, 227, '04', 111, INK, 700, 'middle', heading=True)
-    svg.text(1418, 267, '기준 조건', 23, INK, anchor='middle')
-    svg.text(84, 310, '라벨 255,001행 · 동일 평가 절차 · 시드 42 / 1 / 7', 28, MUTED)
-    svg.text(84, 352, '전체 10조건 중 네 기준 조건 · 점: 평균 / 오차막대: ±1 표본 SD', 25, MUTED)
-    lo, hi = 0.5725, 0.5785
-    yy = lambda v: 755 - (v-lo)/(hi-lo)*370
-    xs = (465, 735, 1005, 1275)
-    for x in (xs[1], xs[3]):
-        svg.rect(x-91, 385, 182, 370, SKY)
-    svg.text(84, 405, 'Macro F1', 29, weight=600)
-    svg.text(84, 447, '↑ 높을수록 좋음', 23, MUTED)
-    svg.text(84, 535, '확대 축', 28, BLUE, 600)
-    svg.text(84, 578, '0.5725', 24, MUTED)
-    svg.text(84, 614, '– 0.5785', 24, MUTED)
-    for tick in (0.573,0.574,0.575,0.576,0.577,0.578):
-        y = yy(tick)
-        svg.line(341, y, 1492, y, GRID, 1)
-        svg.text(323, y+8, f'{tick:.3f}', 23, MUTED, anchor='end')
-    svg.line(341, 385, 341, 755, MUTED, 1.5)
-    svg.line(341, 755, 1492, 755, MUTED, 1.5)
-    for x, row in zip(xs, data['models']):
-        clean = row['phase'].endswith('clean')
-        color = BLUE if clean else INK
-        top, bottom, center = yy(row['mean']+row['sd']), yy(row['mean']-row['sd']), yy(row['mean'])
-        svg.line(x, top, x, bottom, color, 3)
-        svg.line(x-14, top, x+14, top, color, 3)
-        svg.line(x-14, bottom, x+14, bottom, color, 3)
-        svg.dot(x, center, color, hollow=not clean, radius=10)
-        svg.text(x, 798, row['phase'], 28, color, 600, 'middle')
-        svg.text(x, 896, f"{row['mean']:.6f}", 35, color, 600, 'middle')
-        svg.text(x, 944, f"± {row['sd']:.6f}", 26, MUTED, anchor='middle')
-    svg.text(84, 863, '3시드 평균', 24, weight=600)
-    svg.text(84, 912, '±1 표본 SD', 24, MUTED)
-    svg.line(84, 1009, 1516, 1009, INK, 1.5)
-    svg.text(84, 1056, 'SD는 신뢰구간이 아닙니다. 오차막대 겹침으로 동등성·유의성을 판정하지 않습니다.', 25, MUTED)
-    svg.footer('전처리 비교 / 02')
-    finish(svg, 'models')
-
-    # One deliberately asymmetric lead result and two distinct metric strips.
-    # The three independent quantitative axes may not be compared as magnitudes.
-    svg = SVG(1380, '동일조건 비교에서 세 지표 모두 개선',
-              'P6_clean, 동일 라벨 180,332행, 시드 42/1/7. Macro F1 0.573910에서 0.598945, '
-              'LogLoss 0.448116에서 0.436689, ROC-AUC 0.640618에서 0.672936. '
-              '변화량은 사용−미사용이며 원본 집계에서 따로 반올림했습니다. 각 지표는 독립 확대 축입니다. '
-              '10분 공개 지연 가정. 지표마다 척도가 달라 직접 크기를 비교하지 않습니다. SD는 신뢰구간이 아닙니다. 인과 효과와 미래 운항 성능은 미검증입니다.', 'asymmetric-paired-metric-strips')
-    svg.rect(0, 334, 1035, 435, SKY)
-    svg.rect(1080, 334, 520, 435, INK)
-    svg.rect(1059, 334, 12, 435, CYAN)
-    svg.running('03', '날씨 정보 · 동일조건 비교')
-    svg.text(80, 166, '같은 180,332행에서', 64, weight=700, heading=True)
-    svg.text(80, 248, '날씨 추가 후 세 지표 개선', 64, weight=700, heading=True)
-    svg.text(84, 303, 'P6_clean · 동일 라벨 180,332행 · 시드 42 / 1 / 7', 28, MUTED)
-    first = data['weather_model'][0]
-    svg.text(84, 395, 'Macro F1 ↑ 높을수록 좋음', 31, BLUE, 600)
-    svg.text(73, 526, f"{first['delta_mean']:+.6f}", 129, BLUE, 700, heading=True)
-    svg.text(86, 574, '변화 (사용−미사용) / 3시드 평균', 26, MUTED)
-    svg.text(930, 605, '○ 미사용 · ● 사용', 22, BLUE, anchor='end')
-    svg.paired_axis(first, 110, 635, 820, 0.565, 0.605, (0.565,0.575,0.585,0.595,0.605))
-    svg.text(84, 747, 'Macro F1 · 확대 축', 23, MUTED)
-    svg.text(1130, 394, '날씨 미사용', 27, SKY)
-    svg.text(1130, 461, f"{first['off_mean']:.6f}", 58, PAPER, 500, heading=True)
-    svg.line(1130, 497, 1516, 497, CYAN, 2)
-    svg.text(1130, 549, '날씨 사용', 27, SKY)
-    svg.text(1130, 616, f"{first['on_mean']:.6f}", 58, PAPER, 700, heading=True)
-    svg.text(1130, 706, f"차이의 SD {first['sd']:.6f}", 25, SKY)
-    svg.line(799, 813, 799, 1166, GRID, 1.5)
-    for row, x, lo, hi, ticks in (
-            (data['weather_model'][1], 84, 0.430, 0.455, (0.430,0.440,0.450,0.455)),
-            (data['weather_model'][2], 865, 0.630, 0.680, (0.630,0.650,0.670,0.680))):
-        guide = '높을수록 좋음 ↑' if row['higher_is_better'] else '낮을수록 좋음 ↓'
-        svg.text(x, 834, row['metric'], 35, weight=600)
-        svg.text(x+650, 833, guide, 24, MUTED, anchor='end')
-        svg.text(x-4, 923, f"{row['delta_mean']:+.6f}", 76, BLUE, 700, heading=True)
-        svg.text(x, 967, f"변화 (사용−미사용) · 차이의 SD {row['sd']:.6f}", 23, MUTED)
-        svg.text(x, 1017, f"{row['off_mean']:.6f} → {row['on_mean']:.6f}", 32, weight=500)
-        svg.text(x, 1055, '미사용 → 사용', 28, MUTED)
-        svg.paired_axis(row, x+30, 1081, 580, lo, hi, ticks)
-        svg.text(x, 1190, f"{row['metric']} · 독립 확대 축", 23, MUTED)
-    svg.line(84, 1220, 1516, 1220, INK, 2)
-    svg.text(84, 1264, '지표별 독립 확대 축 · 변화량 크기의 지표 간 비교 불가 · 각각 반올림', 28, MUTED)
-    svg.text(84, 1305, '10분은 공개 지연 가정 · SD ≠ 신뢰구간 · 인과 효과·미래 운항 성능 미검증', 28, MUTED)
-    svg.text(84, 1346, '전처리 255,001행과 다른 집단 · 세 시드 모두 각 지표의 개선 방향 일치', 28, MUTED)
-    finish(svg, 'weather_model')
-
-    # Two aligned point panels replace the old two-dimensional scatter. Every
-    # marker remains keyed to a calibrator; metric domains/units are independent.
-    svg = SVG(1210, '확률 보정은 지표마다 다른 방향',
-              'P6_clean 공유형 보정기, 라벨 255,001행의 3시드 평균. '
-              'ECE는 %p, LogLoss는 독립 확대 축이며 모두 낮을수록 좋습니다. '
-              'Isotonic은 ECE가 낮아졌지만 LogLoss는 높아졌고 Macro F1 향상은 확인되지 않았습니다.',
-              'aligned-independent-calibration-panels')
-    svg.rect(0, 106, 585, 200, SKY)
-    svg.rect(1129, 106, 387, 200, CYAN)
-    svg.running('04', '확률 보정 · 지표의 상충 관계')
-    svg.text(80, 174, '확률 보정,', 64, weight=700, heading=True)
-    svg.text(80, 259, '지표마다 다른 방향', 64, weight=700, heading=True)
-    svg.text(1323, 179, 'ECE ↓', 50, INK, 700, 'middle')
-    svg.text(1323, 237, 'LogLoss ↑', 44, INK, 600, 'middle')
-    svg.text(1323, 281, 'Isotonic / 보정 없음 대비', 21, INK, anchor='middle')
-    svg.text(84, 346, 'P6_clean · 공유형 보정기 · 라벨 255,001행 · 3시드 평균', 28, MUTED)
-    panels = ((395, 490, 'ECE (%p) ↓', 0.0, 0.5, (0,.1,.2,.3,.4,.5), 'ece_percentage_points'),
-              (1070, 430, 'LogLoss ↓ / 확대 축', .4472, .4493, (.4475,.4480,.4485,.4490), 'log_loss'))
-    for px, width, label, lo, hi, ticks, key in panels:
-        svg.text(px, 414, label, 29, weight=600)
-        xx = lambda value: px+(value-lo)/(hi-lo)*width
-        for tick in ticks:
-            x = xx(tick)
-            svg.line(x, 448, x, 694, GRID, 1)
-            svg.text(x, 738, f'{tick:.1f}' if key == 'ece_percentage_points' else f'{tick:.4f}', 23, MUTED, anchor='middle')
-        svg.line(px, 694, px+width, 694, MUTED, 1.5)
-        for i, (row, color) in enumerate(zip(data['calibration'], (INK, BLUE, INK))):
-            y = 469+i*95
-            svg.marker(xx(row[key]), y, row['calibrator'], color)
-    svg.line(980, 394, 980, 751, CYAN, 3)
-    for i, label in enumerate(('보정 없음', 'Platt', 'Isotonic')):
-        y=469+i*95
-        svg.text(84, y+8, label, 31, weight=600)
-        svg.line(84, y+37, 290, y+37, GRID, 1)
-    svg.text(84, 795, '두 지표 모두 낮을수록 좋음 · 각 축의 단위와 범위를 따로 읽습니다.', 25, MUTED)
-    svg.rect(0, 837, 1600, 258, SKY)
-    svg.text(84, 886, '3시드 평균', 24, weight=600)
-    for x, label in ((770,'ECE (%p) ↓'),(1125,'LogLoss ↓'),(1516,'Macro F1 ↑')):
-        svg.text(x, 886, label, 25, MUTED, anchor='end')
-    svg.line(84, 908, 1516, 908, INK, 1.5)
+    data=reviewed_data(); ASSETS.mkdir(parents=True,exist_ok=True); figures={}
+    def finish(svg,key):
+        path=ASSETS/FIGURES[key];svg.save(path)
+        figures[key]={'path':path.relative_to(ROOT).as_posix(),'sha256':sha256(path)}
+    def head(svg,title,subtitle):
+        svg.text(800,105,title,58,weight=500,anchor='middle')
+        svg.text(800,171,subtitle,30,MUTED,anchor='middle')
+    # One complete 100% population; no enlarged sliver.
+    a=SVG(900,'백만 행 중 날짜를 확인한 집단','서로 겹치지 않는 세 집단. 채택 706,759행, 결측 키 단일 후보 291,308행과 기타 1,933행은 보류.','horizontal-population-stack')
+    head(a,'백만 행 중 날짜를 확인한 집단','원본 1,000,000행 전체를 대조 · 미검사 집단 없음')
+    a.text(120,269,'날짜 귀속 채택',32,BLUE,600);a.text(1480,269,'706,759행 · 70.68%',42,BLUE,600,'end')
+    x=120
+    for row,color in zip(data['attribution'],(BLUE,'#DADCE0',INK)):
+        width=1360*row['rows']/1000000;a.rect(x,310,width,90,color);x+=width
+    for i,(row,label) in enumerate(zip(data['attribution'],('채택 · 완전한 키 + 단일 후보 연도','보류 · 결측 키 + 단일 후보 연도','보류 · 그 밖의 대조 결과'))):
+        y=492+i*98;a.text(120,y,label,32);a.text(1480,y,f"{row['rows']:,}행",38,BLUE if i==0 else INK,600,'end');a.line(120,y+34,1480,y+34)
+    a.text(120,815,'후보 연도가 하나여도 대조 키가 결측이면 채택하지 않습니다.',30,MUTED)
+    a.footer('날짜 귀속');finish(a,'attribution')
+    # Direct benchmark table with a blue highlighted focus column.
+    a=SVG(1070,'전처리 타당성과 성능 변화는 다릅니다','동일 라벨 255,001행. 네 기준 조건의 Macro F1 평균과 SD. P6_clean 강조는 우승 표기가 아닙니다.','highlighted-benchmark-table')
+    head(a,'전처리 타당성과 성능 변화는 다릅니다','동일 라벨 255,001행 · 전체 10조건 중 네 기준 조건 · 3시드 평균')
+    a.parts.append('<rect x="1190" y="256" width="290" height="446" fill="#E8F0FE" data-focus-column="P6_clean"/>')
+    for x,row in zip((570,825,1080,1335),data['models']):
+        a.text(x,320,row['phase'],31,BLUE if row['phase']=='P6_clean' else INK,600,'middle')
+        a.text(x,454,f"{row['mean']:.6f}",35,weight=600,anchor='middle')
+        a.text(x,610,f"{row['sd']:.6f}",32,MUTED,anchor='middle')
+    a.text(120,454,'Macro F1 ↑',34,weight=600);a.text(120,610,'표본 SD',32,MUTED)
+    for y in (366,524,700):a.line(120,y,1480,y,GRID,2)
+    a.text(120,798,'전처리는 더 타당해졌지만',42,weight=500)
+    a.text(120,862,'Macro F1 향상은 확인되지 않았습니다.',42,weight=500)
+    a.text(120,952,'SD는 신뢰구간이 아닙니다. 강조 열은 현재 기준 조건을 뜻합니다.',28,MUTED)
+    a.footer('전처리 비교');finish(a,'models')
+    # Three independent zero-start panels. Bars use actual means, never deltas.
+    a=SVG(1710,'날씨 추가 후 세 지표 모두 개선','180,332행에서 동일 평가행·시드·외부 폴드. 지표별 0 기준 축. 각 지표의 척도가 달라 지표 간 막대 길이로 개선 크기를 비교하지 않습니다.','zero-baseline-weather-bars')
+    head(a,'날씨 정보가 더해진 뒤, 세 지표 모두 개선','동일 라벨 180,332행 · P6_clean · 10분 공개 지연 가정 · 3시드 평균')
+    for i,row in enumerate(data['weather_model']):
+        top=252+i*436;bottom=top+252;axis_x=560;length=680;hi=1.0
+        a.rect(80,top-30,1440,396,'#F8F9FA')
+        a.text(120,top+44,row['metric'],42,weight=600)
+        a.text(120,top+96,'높을수록 좋음' if row['higher_is_better'] else '낮을수록 좋음',28,MUTED)
+        a.text(120,top+182,f"{row['delta_mean']:+.6f}",44,BLUE,600)
+        a.text(120,top+230,'변화 · 사용−미사용',28,MUTED)
+        a.text(120,top+298,f"차이 SD {row['sd']:.6f}",28,MUTED)
+        for tick in (0,.25,.5,.75,1):
+            x=axis_x+tick*length;a.line(x,top+22,x,bottom,GRID,1);a.text(x,bottom+42,f'{tick:g}',28,MUTED,anchor='middle')
+        for j,(cond,key,label,color) in enumerate((('weather_off','off_mean','날씨 미사용','#DADCE0'),('weather_on','on_mean','날씨 사용',BLUE))):
+            y=top+64+j*108;value=row[key];width=value/hi*length
+            a.text(530,y+35,label,28,MUTED,anchor='end')
+            a.parts.append(f'<rect x="{axis_x}" y="{y}" width="{width:.9f}" height="54" fill="{color}" data-metric="{row["metric"]}" data-condition="{cond}" data-value="{value}" data-axis-min="0" data-axis-max="{hi}" data-axis-length="{length}" data-baseline="{axis_x}" data-orientation="horizontal"/>')
+            a.text(1280,y+39,f'{value:.6f}',32,BLUE if j else INK,600)
+        a.text(1240,top+337,'0부터 시작하는 원래 값의 축',28,MUTED,anchor='end')
+    a.text(120,1590,'지표별 척도가 달라 지표 간 막대 길이로 개선 크기를 비교하지 않습니다.',28,MUTED)
+    a.text(120,1642,'SD는 신뢰구간이 아닙니다. 인과 효과와 미래 운항 성능은 미검증입니다.',28,MUTED)
+    a.footer('날씨 유무 비교');finish(a,'weather_model')
+    # Readable table instead of decorative/rank-confounding geometry.
+    a=SVG(1000,'확률 보정은 지연 탐지 개선과 같지 않습니다','P6_clean 공유형 전체 라벨 255,001행. ECE는 비율을 100배 한 %p. 3시드 평균. ECE와 LogLoss는 낮을수록 좋습니다.','calibration-tradeoff-scorecard')
+    head(a,'확률의 정확성과 지연 탐지 능력은 달랐습니다','P6_clean · 공유형 · 전체 라벨 255,001행 · 3시드 평균')
+    a.rect(80,250,1440,100,SKY)
+    for x,label in ((120,'보정 방법'),(760,'ECE (%p) ↓'),(1130,'LogLoss ↓'),(1480,'Macro F1 ↑')):
+        a.text(x,310,label,32,BLUE,600,'start' if x==120 else 'end')
     for i,(row,label) in enumerate(zip(data['calibration'],('보정 없음','Platt','Isotonic'))):
-        y=954+i*58
-        svg.text(84, y, label, 27, weight=500)
-        svg.text(770, y, f"{row['ece_percentage_points']:.4f}", 30, BLUE, 600, 'end')
-        svg.text(1125, y, f"{row['log_loss']:.6f}", 30, INK, 600, 'end')
-        svg.text(1516, y, f"{row['macro_f1']:.6f}", 30, INK, 600, 'end')
-    svg.text(84, 1138, 'ECE는 원본 비율을 100배 한 %p 단위입니다. Macro F1 향상은 확인되지 않았습니다.', 25, MUTED)
-    svg.footer('확률 보정 / 04')
-    finish(svg, 'calibration')
-
-    # The scenarios are discrete lollipops on true, proportional minute axes.
-    # No connecting line invents values or a continuous response between them.
-    svg = SVG(1310, '공개 지연 가정별 날씨 결합률',
-              '층화 보정 표본 300행 중 수집 가능 268행. 보류 32행은 분모에서 제외했습니다. '
-              '출발과 도착의 두 패널은 0–100% 공통 세로축과 실제 간격의 0/10/30/60분 가로축입니다. '
-              '모두 미검증 가정이며 결합률이지 모델 성능이 아닙니다.', 'latency-small-multiple-lollipops')
-    svg.rect(0, 111, 546, 247, SKY)
-    svg.rect(547, 111, 17, 247, CYAN)
-    svg.running('05', '날씨 결합 · 공개 시점의 제약')
-    svg.text(70, 282, '268', 170, BLUE, 700, heading=True)
-    svg.text(84, 332, '수집 가능한 행 / 공통 분모', 29, MUTED)
-    svg.text(637, 207, '있어도, 제때', 66, weight=700, heading=True)
-    svg.text(637, 292, '공개되어야 한다', 66, weight=700, heading=True)
-    svg.text(84, 408, '층화 보정 표본 300행 − 보류 32행 · 관측 나이 상한 90분', 28, MUTED)
-    for role, label, px, color in (('origin','출발 공항',155,BLUE),('destination','도착 공항',932,INK)):
-        width, top, bottom = 544, 511, 815
-        svg.text(px-2, 475, label, 35, color, 700)
-        xx = lambda value: px+value/60*width
-        yy = lambda value: bottom-value/100*(bottom-top)
+        y=444+i*134;a.text(120,y,label,36,weight=600)
+        a.text(760,y,f"{row['ece_percentage_points']:.4f}",38,anchor='end')
+        a.text(1130,y,f"{row['log_loss']:.6f}",38,anchor='end')
+        a.text(1480,y,f"{row['macro_f1']:.6f}",38,anchor='end');a.line(120,y+48,1480,y+48)
+    a.text(120,844,'ECE와 LogLoss는 낮을수록 좋음 · Macro F1은 높을수록 좋음',30,MUTED)
+    a.text(120,910,'보정이 일부 확률 지표를 바꿨지만 Macro F1 향상은 확인되지 않았습니다.',30,MUTED)
+    a.footer('확률 보정');finish(a,'calibration')
+    # True minute positions and no interpolation between unmeasured scenarios.
+    a=SVG(1160,'날씨는 있어도 제때 공개되어야 합니다','층화 보정 표본 300행 중 수집 가능 268행. 0/10/30/60분은 공개 지연 가정. 결합률이지 모델 성능이 아닙니다.','discrete-latency-dot-panels')
+    head(a,'날씨는 있어도, 제때 공개되어야 합니다','층화 보정 표본 300행 중 수집 가능 268행 · 관측 나이 상한 90분')
+    for role,label,px,color in (('origin','출발 공항',190,BLUE),('destination','도착 공항',960,INK)):
+        width=440;top=310;bottom=620
+        a.text(px+width/2,254,label,38,weight=600,anchor='middle')
         for tick in (0,25,50,75,100):
-            y=yy(tick)
-            svg.line(px, y, px+width, y, GRID, 1)
-            svg.text(px-22, y+8, f'{tick}%', 23, MUTED, anchor='end')
-        svg.line(px, top, px, bottom, MUTED, 1.5)
-        svg.line(px, bottom, px+width, bottom, MUTED, 1.5)
-        for latency in (0,10,30,60):
-            row=next(r for r in data['latency'] if (r['role'],r['latency_minutes']) == (role,latency))
-            x,y=xx(latency),yy(row['match_rate_percent'])
-            svg.line(x, bottom, x, y, color, 3)
-            svg.dot(x, y, color, hollow=(role=='destination'), radius=9)
-            svg.text(x, bottom+43, str(latency), 25, MUTED, anchor='middle')
-        svg.text(px+width/2, bottom+89, '공개 지연 가정 (분)', 26, MUTED, anchor='middle')
-    svg.line(797, 457, 797, 916, CYAN, 2)
-    svg.rect(0, 948, 1600, 215, SKY)
-    svg.text(84, 993, '결합 / 268행', 26, weight=600)
-    for latency,x in zip((0,10,30,60),(524,817,1110,1403)):
-        svg.text(x, 993, f'{latency}분 가정', 27, weight=600, anchor='middle')
-        for i,(role,label) in enumerate((('origin','출발'),('destination','도착'))):
-            row=next(r for r in data['latency'] if (r['role'],r['latency_minutes']) == (role,latency))
-            svg.text(x, 1056+i*62, f"{row['matched_rows']}/268 · {row['match_rate_percent']:.2f}%", 26, BLUE if role=='origin' else INK, 500, 'middle')
-    svg.line(84, 1012, 1516, 1012, INK, 1.5)
-    svg.text(84, 1056, '출발 공항', 27, BLUE, 600)
-    svg.text(84, 1118, '도착 공항', 27, INK, 600)
-    svg.text(84, 1208, '0 / 10 / 30 / 60분은 실측 공개 지연 시간이 아니라 가정입니다.', 27, MUTED)
-    svg.text(84, 1252, '300행 전체나 날짜 귀속 전체의 결합률이 아닙니다. 모델 성능과도 구별합니다.', 25, MUTED)
-    svg.footer('날씨 결합 / 05')
-    finish(svg, 'latency')
-
-    receipt = {'schema_version': 1, 'generator_sha256': sha256(Path(__file__)),
-               'editorial_renderer_sha256': sha256(Path(editorial.__file__)),
-               'sources': {key: {'path': path, 'sha256': sha256(ROOT / path)} for key, path in SOURCES.items()},
-               'filters': expected_filters(), 'reviewed_data': data, 'figures': figures,
-               'limitations': ['No raw data access, network calls or model retraining.',
-                               'No live collection progress is inferred.',
-                               'Korean SVG text uses system font fallbacks; no font files or external assets are embedded.',
-                               'Weather levels and signed paired deltas are rounded independently from tracked evidence.',
-                               'Three-seed SD is not a confidence interval; each weather metric uses a labelled independent zoomed axis.',
-                               'Latency scenarios are discrete marks on proportional minute axes; no interpolation is plotted.',
-                               'The attribution stack uses the complete population without inflating small segments.']}
-    (ASSETS / 'sources.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print('Built five README figures and their source receipt; no network or raw data used.')
+            y=bottom-tick/100*(bottom-top);a.line(px,y,px+width,y);a.text(px-22,y+9,f'{tick}%',28,MUTED,anchor='end')
+        for t in (0,10,30,60):
+            row=next(r for r in data['latency'] if (r['role'],r['latency_minutes'])==(role,t));x=px+t/60*width;y=bottom-row['match_rate_percent']/100*(bottom-top)
+            a.line(x,bottom,x,y,color,3);a.dot(x,y,color,hollow=role=='destination',radius=10);a.text(x,bottom+45,str(t),28,MUTED,anchor='middle')
+        a.text(px+width/2,714,'공개 지연 가정 (분)',28,MUTED,anchor='middle')
+    a.rect(80,760,1440,244,SKY)
+    a.text(120,813,'결합 / 268행',28,weight=600)
+    for t,x in zip((0,10,30,60),(500,800,1100,1400)):
+        a.text(x,813,f'{t}분',30,weight=600,anchor='middle')
+        for i,role in enumerate(('origin','destination')):
+            row=next(r for r in data['latency'] if (r['role'],r['latency_minutes'])==(role,t));a.text(x,880+i*65,f"{row['matched_rows']}/268 · {row['match_rate_percent']:.2f}%",28,anchor='middle')
+    a.text(120,880,'출발',30);a.text(120,945,'도착',30)
+    a.text(120,1066,'실측 지연값이 아닌 가정입니다. 전체 집단 결합률이나 모델 성능이 아닙니다.',28,MUTED)
+    a.footer('공개 시점');finish(a,'latency')
+    receipt={'schema_version':1,'generator_sha256':sha256(Path(__file__)),
+        'editorial_renderer_sha256':sha256(Path(editorial.__file__)),
+        'sources':{k:{'path':v,'sha256':sha256(ROOT/v)} for k,v in SOURCES.items()},
+        'filters':expected_filters(),'reviewed_data':data,'figures':figures,
+        'limitations':['No raw data access, network calls or model retraining.',
+        'No live collection progress is inferred.',
+        'Korean text uses system fonts; no external assets.',
+        'Means and signed paired deltas rounded independently.',
+        'Three-seed SD is not a confidence interval; weather panels use zero-start axes.',
+        'Latency scenarios are discrete marks on proportional minute axes; no interpolation.',
+        'Attribution stack includes the full population without inflating small segments.']}
+    (ASSETS/'sources.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    print('Built five technical-announcement H figures and source receipt.')
 
 
 def main() -> None:

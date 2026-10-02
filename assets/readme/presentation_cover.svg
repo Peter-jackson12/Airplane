@@ -1,19 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="760" viewBox="0 0 1600 760" role="img" aria-labelledby="title desc">
-<title id="title">날씨 추가 후 Macro F1 +0.025035 · 정적 교차검증</title><desc id="desc">F안. 동일 라벨 180,332행, P6_clean, 시드 42/1/7의 평균. 날씨 14개 피처를 추가한 정적 교차검증에서 Macro F1 0.573910에서 0.598945. 10분은 공개 지연 가정이며 인과 효과와 미래 운항 성능은 미검증.</desc>
-<rect width="1600" height="760" fill="#FFFFFF"/>
-<text x="80" y="62" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">AIRPLANE / RESEARCH FINDINGS</text>
-<text x="1520" y="62" fill="#5E5E5E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="end" style="font-variant-numeric:tabular-nums">F · 2026-09-22</text>
-<line x1="80" y1="90" x2="1520" y2="90" stroke="#051766" stroke-width="2"/>
-<text x="80" y="172" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="64" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">날씨를 더한 동일조건 비교에서</text>
-<text x="80" y="252" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="64" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">지연 예측 세 지표가 개선됐습니다</text>
-<text x="80" y="318" fill="#5E5E5E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">동일 라벨 180,332행 · P6_clean · 날씨 14개 피처 · 3시드 평균</text>
-<rect x="80" y="366" width="1440" height="222" fill="#DDF1FB"/>
-<rect x="80" y="366" width="8" height="222" fill="#57BBEB"/>
-<text x="120" y="420" fill="#004766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">Macro F1 변화 · 사용−미사용</text>
-<text x="112" y="546" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="112" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">+0.025035</text>
-<text x="990" y="430" fill="#5E5E5E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">미사용 → 사용</text>
-<text x="990" y="498" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="44" font-weight="500" text-anchor="start" style="font-variant-numeric:tabular-nums">0.573910</text>
-<text x="990" y="553" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="44" font-weight="800" text-anchor="start" style="font-variant-numeric:tabular-nums">→ 0.598945</text>
-<text x="80" y="642" fill="#051766" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="32" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">범위  날짜가 확인된 선택 집단의 정적 교차검증</text>
-<text x="80" y="696" fill="#5E5E5E" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">10분은 공개 지연 가정 · 인과 효과와 미래 운항 성능은 미검증</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc" data-design="technical-launch-h">
+<title id="title">항공편 지연 예측, 날씨 정보로 넓힌 검증</title><desc id="desc">H안. 동일 라벨 180,332행의 정적 교차검증. Macro F1 +0.025035. 10분은 공개 지연 가정. 인과 효과와 미래 운항 성능은 미검증.</desc>
+<rect width="1600" height="1000" fill="#FFFFFF"/>
+<rect x="0" y="0" width="1600" height="648" fill="#E8F0FE" rx="0"/>
+<text x="120" y="100" fill="#185ABC" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="600" text-anchor="start" style="font-variant-numeric:tabular-nums">AIRPLANE  /  연구 업데이트</text>
+<text x="120" y="212" fill="#202124" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="80" font-weight="500" text-anchor="start" style="font-variant-numeric:tabular-nums">항공편 지연 예측,</text>
+<text x="120" y="318" fill="#202124" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="80" font-weight="500" text-anchor="start" style="font-variant-numeric:tabular-nums">날씨 정보로 넓힌 검증</text>
+<text x="120" y="418" fill="#5F6368" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">2026.09.22</text>
+<text x="120" y="464" fill="#5F6368" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">Peter-jackson12 TF</text>
+<text x="524" y="416" fill="#202124" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="34" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">날씨 14개 피처를 더한 동일조건 비교에서</text>
+<text x="524" y="472" fill="#202124" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="34" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">Macro F1 · LogLoss · ROC-AUC가 개선됐습니다.</text>
+<line x1="120" y1="528" x2="1480" y2="528" stroke="#DADCE0" stroke-width="2"/>
+<text x="120" y="590" fill="#5F6368" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="30" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">동일 라벨 180,332행 · P6_clean · 시드 42 / 1 / 7</text>
+<text x="120" y="720" fill="#202124" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="38" font-weight="600" text-anchor="start" style="font-variant-numeric:tabular-nums">Macro F1 ↑</text>
+<text x="690" y="716" fill="#5F6368" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="middle" style="font-variant-numeric:tabular-nums">날씨 미사용</text>
+<text x="1180" y="716" fill="#185ABC" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="600" text-anchor="middle" style="font-variant-numeric:tabular-nums">날씨 사용</text>
+<rect x="946" y="742" width="470" height="104" fill="#E8F0FE" rx="18"/>
+<text x="690" y="814" fill="#202124" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="64" font-weight="400" text-anchor="middle" style="font-variant-numeric:tabular-nums">0.573910</text>
+<text x="1180" y="814" fill="#185ABC" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="64" font-weight="600" text-anchor="middle" style="font-variant-numeric:tabular-nums">0.598945</text>
+<text x="120" y="804" fill="#185ABC" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="36" font-weight="600" text-anchor="start" style="font-variant-numeric:tabular-nums">변화 +0.025035</text>
+<line x1="120" y1="884" x2="1480" y2="884" stroke="#DADCE0" stroke-width="2"/>
+<text x="120" y="936" fill="#5F6368" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">정적 교차검증 · 10분 공개 지연 가정 · 인과 효과와 미래 운항 성능은 미검증</text>
 </svg>
