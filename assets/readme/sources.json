@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generator_sha256": "340d1805689e96f0ab334624a4e8d3beb2eecb08b9ffa9c201f020c4f2a65e73",
-  "editorial_renderer_sha256": "b985507438b6583e2f5e2ae19600b0d4ed105ab18718f059f08005c26a62ca6d",
+  "generator_sha256": "6ba1499ef28f1f43864674275e1fb6c762afa76c91bb67ccb99cfd3b6fbaa57e",
+  "editorial_renderer_sha256": "c43520edd6aa65ec01c6d927084a68379f584d5e0c8adb29801e06aab835f8a4",
   "sources": {
     "models": {
       "path": "output/preprocessing_full_summary.csv",
@@ -209,23 +209,23 @@
   "figures": {
     "attribution": {
       "path": "assets/readme/date_attribution.svg",
-      "sha256": "c9eea174a8ce13e19bdb7c426d66bc36fe84d1f4ddefb29af8313cc7f64f58c3"
+      "sha256": "32c9d9429a18efaf6806a2c3dab634ec3c5a3ea6a604d4d84731ebc4e992ad87"
     },
     "models": {
       "path": "assets/readme/model_comparison.svg",
-      "sha256": "21add5c8b821fd18db87ed2271d1a05e5159f97031dcc1aae4d66db096788261"
+      "sha256": "79b0e120732d13aee1844f5692eb2ad2e9ecde44a3d5c8490af1a551059d8c63"
     },
     "weather_model": {
       "path": "assets/readme/weather_model_comparison.svg",
-      "sha256": "deeca3b8bf3b0c4c7a7d30b7741d12291c2abd5cdb1e4f7f674510757e1c4a04"
+      "sha256": "2df41df1b3a172f234eabcede8aa6d1c0f40495a5a5f550c7c52c81510eb1395"
     },
     "calibration": {
       "path": "assets/readme/calibration_tradeoff.svg",
-      "sha256": "e16eb5d1104ea0d059a8583d8d0174fee35fe65f25d64a45cca36b06935fdc68"
+      "sha256": "bffaa589d46653af253dbc78f643699ddedf54a1eb0aab009543d0965086c5da"
     },
     "latency": {
       "path": "assets/readme/weather_latency.svg",
-      "sha256": "9b5bcdcf4af2b76cf4d847cc9babad35c6b4bc079049ea45fab95cb8d855be2c"
+      "sha256": "e0ea51272a829f25608b4abc9fc0d888c8798da9fb5bd95088e47b337144a3c4"
     }
   },
   "limitations": [
