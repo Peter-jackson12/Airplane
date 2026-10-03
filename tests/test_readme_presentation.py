@@ -253,19 +253,19 @@ def test_presentation_story_retains_population_and_evaluation_boundaries():
         assert phrase in evaluation
 
 
-def test_all_readme_artwork_retains_flat_korean_air_homepage_palette():
+def test_all_readme_artwork_uses_cohesive_cat_playground_palette():
     filenames = [*builder.FIGURES.values(), 'presentation_cover.svg',
                  'analysis_journey.svg', 'evaluation_boundary.svg']
     for filename in filenames:
         raw = (ROOT / 'assets/readme' / filename).read_text(encoding='utf-8')
         svg = ET.fromstring(raw)
         rectangles = svg.findall('{http://www.w3.org/2000/svg}rect')
-        assert rectangles and rectangles[0].attrib['fill'] == '#FFFFFF'
-        assert all(float(rect.attrib.get('rx', 0)) == 0 for rect in rectangles)
+        assert rectangles and rectangles[0].attrib['fill'] == '#FFF9EF'
+        assert any(float(rect.attrib.get('rx', 0)) > 0 for rect in rectangles)
         assert not any(node.tag.endswith(('linearGradient', 'radialGradient')) for node in svg.iter())
-        assert '#051766' in raw and 'Noto Sans CJK KR' in raw
+        assert '#51413D' in raw and 'Noto Sans CJK KR' in raw
         if filename != 'presentation_cover.svg':
-            assert '#004766' in raw
+            assert '#704156' in raw
         assert 'Noto Serif CJK KR' not in raw
         for previous_color in ('#102D40', '#183B4E', '#007E80', '#EFF6F6', '#F5F2EB', '#A5442B'):
             assert previous_color not in raw
@@ -279,30 +279,33 @@ def test_figure_receipt_rejects_changed_editorial_renderer(tmp_path, monkeypatch
         builder.check_receipt()
 
 
-def test_f_leads_with_bounded_result_and_readable_type():
+def test_i_keeps_bounded_result_and_readable_evidence_type():
     cover = ET.fromstring((ROOT / 'assets/readme/presentation_cover.svg').read_text())
-    assert int(cover.attrib['height']) == 760
+    assert int(cover.attrib['height']) == 990
     content = ''.join(cover.itertext())
     for value in ('+0.025035', '180,332행', '정적 교차검증', '미래 운항 성능은 미검증'):
         assert value in content
     for filename in [*builder.FIGURES.values(), 'presentation_cover.svg',
                      'analysis_journey.svg', 'evaluation_boundary.svg']:
         svg = ET.fromstring((ROOT / 'assets/readme' / filename).read_text())
-        labels = svg.findall('{http://www.w3.org/2000/svg}text')
+        panel = svg.find('{http://www.w3.org/2000/svg}g[@transform="translate(0 138)"]')
+        assert panel is not None
+        labels = panel.findall('.//{http://www.w3.org/2000/svg}text')
         assert all(float(n.attrib['font-size']) >= 28 for n in labels), filename
     journey = (ROOT / 'assets/readme/analysis_journey.svg').read_text()
     assert '도형 크기는 수량을 뜻하지 않습니다.' in journey
 
 
-def test_f_main_readme_links_preserved_styles_and_current_ci():
+def test_i_readme_links_comparison_current_ci_and_motion_controls():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
-    assert '메인 디자인 · F안' in text
-    assert '[A안](https://github.com/Peter-jackson12/Airplane/tree/style/a-editorial)' in text
-    assert 'https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold' in text
-    assert 'compare/8b4592b598dae5edd222afa63aa3982f6692d1c4...design/refined-evidence-f' in text
-    assert 'tree/design/reference-report-e' in text
-    assert 'badge.svg?branch=master' in text
-    assert 'ci.yml?query=branch%3Amaster' in text
+    assert '디자인 비교 · I안' in text
+    assert 'tree/master' in text and 'tree/design/technical-launch-h' in text
+    assert 'compare/master...design/cat-playground-i' in text
+    assert 'badge.svg?branch=design%2Fcat-playground-i' in text
+    assert 'ci.yml?query=branch%3Adesign%2Fcat-playground-i' in text
+    assert '<details open>' in text and '접으면 쉬어요' in text
+    assert 'assets/readme/cat_playground.gif' in text
+    assert 'assets/readme/cat_playground_still.svg' in text
     assert '본문 설명 약 16분 + 전환·질문 여유 약 3분' in text
 
 
@@ -316,7 +319,7 @@ def test_magazine_d_quantitative_figures_use_distinct_chart_geometries():
     chart_types = set()
     for filename in builder.FIGURES.values():
         svg = ET.fromstring((ROOT / 'assets/readme' / filename).read_text())
-        assert svg.attrib['data-design'] == 'refined-evidence-f'
+        assert svg.attrib['data-design'] == 'cat-playground-i'
         chart_types.add(svg.attrib['data-chart-type'])
     assert len(chart_types) == 5
 
