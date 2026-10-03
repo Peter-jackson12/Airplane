@@ -1,10 +1,9 @@
-"""Shared evidence-first F Korean Air homepage-inspired SVG primitives; stdlib only and no external assets."""
+"""Shared cat-playground I SVG primitives; stdlib only and no external assets."""
 from html import escape
 
-# Observed 2026-10-01 at https://www.koreanair.com/: navy, cyan, pale sky, white.
-# ACCENT is a darker cyan adaptation for small labels; not an official brand token.
-PAPER='#FFFFFF'; INK='#051766'; MUTED='#5E5E5E'; RULE='#D9D9D9'; ACCENT='#004766'
-CYAN='#57BBEB'; SKY='#DDF1FB'; HIGHLIGHT='#F7F7F7'
+# I: warm paper, cocoa ink, muted rose and sage. Original cat artwork.
+PAPER='#FFF9EF'; INK='#51413D'; MUTED='#72645D'; RULE='#DCCFC0'; ACCENT='#704156'
+CYAN='#ECD0D9'; SKY='#F2E4ED'; HIGHLIGHT='#EFF2E5'
 SANS='Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif'
 HEADING=SANS
 # F evidence hierarchy: 1600-unit canvas, 80-unit inset, 8-unit spacing rhythm.
@@ -32,5 +31,9 @@ class SVG:
         self.text(1516,60,right,19,color=MUTED,anchor='end',spacing=1.8)
         self.line(84,86,1516,86,CYAN,2)
     def save(self,path):
-        path.write_text('\n'.join(self.parts+['</svg>'])+'\n',encoding='utf-8')
+        try:
+            from .cat_playground import frame
+        except ImportError:
+            from cat_playground import frame
+        path.write_text(frame(self.parts,self.h,'story'),encoding='utf-8')
 

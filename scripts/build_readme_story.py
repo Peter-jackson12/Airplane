@@ -21,9 +21,9 @@ def build():
     OUT.mkdir(parents=True,exist_ok=True)
     first=d['weather_model'][0]
     a=SVG(760,'날씨 추가 후 Macro F1 +0.025035 · 정적 교차검증',
-          'F안. 동일 라벨 180,332행, P6_clean, 시드 42/1/7의 평균. 날씨 14개 피처를 추가한 정적 교차검증에서 Macro F1 0.573910에서 0.598945. 10분은 공개 지연 가정이며 인과 효과와 미래 운항 성능은 미검증.',False)
+          'I안. 동일 라벨 180,332행, P6_clean, 시드 42/1/7의 평균. 날씨 14개 피처를 추가한 정적 교차검증에서 Macro F1 0.573910에서 0.598945. 10분은 공개 지연 가정이며 인과 효과와 미래 운항 성능은 미검증.',False)
     a.text(80,62,'AIRPLANE / RESEARCH FINDINGS',28,weight=700)
-    a.text(1520,62,'F · 2026-09-22',28,MUTED,anchor='end')
+    a.text(1520,62,'I · 2026-09-22',28,MUTED,anchor='end')
     a.line(80,90,1520,90,INK,2)
     a.text(80,172,'날씨를 더한 동일조건 비교에서',64,weight=800)
     a.text(80,252,'지연 예측 세 지표가 개선됐습니다',64,weight=800)
@@ -42,7 +42,7 @@ def build():
     a=SVG(1060,'비교할 수 있는 집단부터 구분합니다',
           '원본 1,000,000행. 전처리 평가 255,001행. 날짜 귀속 채택 706,759행 중 날짜와 라벨이 모두 있는 180,332행에서 날씨 14개 피처를 비교합니다. 같은 외부 폴드. 인과 효과와 미래 운항 성능은 미검증. 도형 크기는 수량을 뜻하지 않습니다.',False)
     a.text(80,62,'01 / POPULATIONS',28,weight=700)
-    a.text(1520,62,'AIRPLANE / F',28,MUTED,anchor='end')
+    a.text(1520,62,'AIRPLANE / I',28,MUTED,anchor='end')
     a.line(80,90,1520,90,INK,2)
     a.text(80,178,'두 질문은 서로 다른 집단에서 검증했습니다',58,weight=800)
     a.text(80,244,'출발점: 원본 1,000,000행 · 숫자를 이어 성능 변화로 읽지 않습니다',30,MUTED)
@@ -70,7 +70,7 @@ def build():
     a=SVG(1120,'모델 선택은 내부에서, 외부 검증은 최종 채점만',
           '층화 5분할 외부 학습 데이터 안에서 80대20으로 분리. 내부 학습 경계에서 TE를 계산하고 내부 검증으로 트리 수와 임계값을 선택. 외부 검증은 최종 채점 전용.',False)
     a.text(80,62,'02 / EVALUATION BOUNDARY',28,weight=700)
-    a.text(1520,62,'AIRPLANE / F',28,MUTED,anchor='end')
+    a.text(1520,62,'AIRPLANE / I',28,MUTED,anchor='end')
     a.line(80,90,1520,90,INK,2)
     a.text(80,178,'선택은 안쪽에서, 채점은 바깥에서',64,weight=800)
     a.text(80,246,'층화 5분할 × 시드 42 / 1 / 7 · 각 조건에서 같은 선택 절차',30,MUTED)

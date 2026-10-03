@@ -152,7 +152,7 @@ class SVG:
         self.parts = [
             f'<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="{height}" '
             f'viewBox="0 0 1600 {height}" role="img" aria-labelledby="title desc" '
-            f'data-design="refined-evidence-f" data-chart-type="{chart_type}">',
+            f'data-design="cat-playground-i" data-chart-type="{chart_type}">',
             f'<title id="title">{escape(title)}</title><desc id="desc">{escape(description)}</desc>',
             '<style>text{font-family:"Noto Sans CJK KR","Malgun Gothic",'
             '"Apple SD Gothic Neo",sans-serif;font-variant-numeric:tabular-nums}</style>',
@@ -219,7 +219,11 @@ class SVG:
         self.dot(on, y, BLUE, radius=10)
 
     def save(self, path):
-        path.write_text('\n'.join(self.parts + ['</svg>']) + '\n', encoding='utf-8')
+        try:
+            from .cat_playground import frame
+        except ImportError:
+            from cat_playground import frame
+        path.write_text(frame(self.parts,self.height,'evidence'),encoding='utf-8')
 
 
 def check_receipt() -> dict:
