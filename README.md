@@ -1,10 +1,21 @@
+# Airplane · 고양이 연구실 🐾
+
+항공편 지연 예측과 날씨 정보 확장 · 작은 발자국으로 따라가는 연구 기록
+
+[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=design%2Fcat-playground-i)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml?query=branch%3Adesign%2Fcat-playground-i)
+
+**디자인 비교 · I안 — 고양이 놀이터:** 크림색 노트 위에 파스텔 메모, 작은 발자국, 뛰노는 두 고양이를 담은 재미용 디자인입니다. 연구 내용과 수치·평가 경계는 F 메인 그대로입니다. [F 메인](https://github.com/Peter-jackson12/Airplane/tree/master) · [F→I 비교](https://github.com/Peter-jackson12/Airplane/compare/master...design/cat-playground-i) · [H안](https://github.com/Peter-jackson12/Airplane/tree/design/technical-launch-h)
+
+<details open>
+<summary>🐾 잠깐 쉬어 가는 고양이 놀이터 · 접으면 쉬어요</summary>
+
+![크림색 놀이터에서 치즈 고양이와 민트 고양이가 공을 따라 뛰노는 반복 애니메이션. 연구 수치와 관계없는 장식입니다.](assets/readme/cat_playground.gif)
+
+움직임이 부담스러우면 접어 주세요. [정지 그림 보기](assets/readme/cat_playground_still.svg) · 고양이와 발자국은 직접 그린 장식이며 데이터 표시가 아닙니다.
+
+</details>
+
 ![동일 라벨 180332행의 정적 교차검증에서 날씨 추가 후 Macro F1이 0.025035 개선됨. 인과 효과와 미래 운항 성능은 미검증](assets/readme/presentation_cover.svg)
-
-# Airplane · 항공편 지연 예측과 날씨 정보 확장
-
-[![Git-only CI](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Peter-jackson12/Airplane/actions/workflows/ci.yml?query=branch%3Amaster)
-
-**메인 디자인 · F안 — 결과와 근거를 먼저 읽는 지면:** D안의 네이비·하늘색을 유지하고, 표지를 질문에서 검증 결과로 바꿨습니다. 평가 집단·비교 절차·해석 한계를 같은 지면에서 읽도록 재구성했습니다. [D 기준안](https://github.com/Peter-jackson12/Airplane/tree/design/korean-air-palette-d) · [D→F 비교](https://github.com/Peter-jackson12/Airplane/compare/8b4592b598dae5edd222afa63aa3982f6692d1c4...design/refined-evidence-f) · [F안 보존](https://github.com/Peter-jackson12/Airplane/tree/design/refined-evidence-f) · [A안](https://github.com/Peter-jackson12/Airplane/tree/style/a-editorial) · [B안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold) · [C안](https://github.com/Peter-jackson12/Airplane/tree/design/gigi-flight-magazine-c) · [E안](https://github.com/Peter-jackson12/Airplane/tree/design/reference-report-e)
 
 [핵심 결과](#5-최신검증결과) · [데이터](#2-데이터와분석범위) · [재현 방법](#7-코드구조와재현) · [실행 근거](#8-문서안내)
 
