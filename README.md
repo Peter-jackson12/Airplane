@@ -570,6 +570,7 @@ README는 현재 상태의 기준이고, 구체적인 사실은 연결된 코드
 
 | 확인할 내용 | 유효한 근거·읽는 방법 |
 |---|---|
+| 튜터 피드백 후속 검토 | [2026-10-07 피드백 보존·로컬 인계](docs/TUTOR_FEEDBACK_HANDOFF_KO.md) — 원 요청 11개와 기준 커밋의 상태 구분; 새 실험은 미실행 |
 | **최종 날씨 성능 비교** | [요약](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json), [시드별 실행](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv), [동일조건 차이](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_paired_deltas.csv), [실행 기록](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_manifest.json) |
 | **전체 706,759행 날씨 결합** | [결합 요약](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_summary.json), [실행 기록](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json) |
 | **전체 날씨 수집 완료** | [수집 계획](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_plan_manifest.json), [원본 최종 수집 기록](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_manifest.json), [별도 정정 감사](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_audit.json) |
