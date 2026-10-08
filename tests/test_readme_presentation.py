@@ -1,5 +1,6 @@
 """README presentation checks: tracked aggregate evidence only, no network."""
 import ast
+import csv
 import hashlib
 import json
 import re
@@ -80,23 +81,28 @@ def test_weather_model_plot_uses_frozen_paired_submission_result():
         assert all(v > 0 if higher else v < 0 for v in row['deltas_by_seed'].values())
 
 
-def test_submission_readme_keeps_scope_and_completed_results_explicit():
+PORTFOLIO_ANCHORS = ('overview', 'results', 'engineering', 'limits', 'reproduce', 'docs',
+                     'full-weather-row-join', 'full-weather-transport', 'join-reproduction',
+                     'evidence-appendix')
+
+
+def test_portfolio_readme_keeps_sections_scope_and_figure_sources_explicit():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
-    for anchor in ('submission-overview', 'weather-glossary', 'submission-completion',
-                   'reliability-design', 'readme-figures', 'presentation-route'):
-        assert f'<a id="{anchor}"></a>' in text
-    for boundary in ('실시간 다운로드 모니터가 아닙니다', '신뢰구간이 아닙니다',
-                     '날씨 모델의 성능 그래프가 아닙니다', '10분은 실측 공개 지연 시간이 아닙니다',
-                     '원인 프로세스를 특정하지 못한', '중간에 pull하지 않습니다'):
-        assert boundary in text
-    assert text.count('```mermaid') >= 3
-    assert '[그림 생성기](scripts/build_readme_assets.py)' in text
+    for anchor in PORTFOLIO_ANCHORS:
+        assert text.count(f'<a id="{anchor}"></a>') == 1, anchor
+    for heading in ('## 1. 프로젝트 한눈에', '## 2. 핵심 결과', '## 3. 문제 해결 과정과 기술적 의사결정',
+                    '## 4. 한계와 다음 단계', '## 5. 재현 방법', '## 6. 문서·근거 안내'):
+        assert heading in text, heading
+    for boundary in ('신뢰구간이 아닙니다', '날씨 모델의 성능이 아닙니다',
+                     '10분은 실측 공개 지연 시간이 아닙니다', '인과 효과의 증명이 아닙니다',
+                     '서로 다른 평가 집단'):
+        assert boundary in text, boundary
+    assert '(assets/readme/sources.json)' in text
+    assert 'scripts/build_readme_assets.py --check' in text
 
 
 def test_readme_records_completed_weather_transport_join_and_model_comparison():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
-    assert '<a id="full-weather-transport"></a>' in text
-    assert '<a id="full-weather-row-join"></a>' in text
     for evidence in (
         'output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_plan_manifest.json',
         'output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_manifest.json',
@@ -105,13 +111,13 @@ def test_readme_records_completed_weather_transport_join_and_model_comparison():
         'output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json',
         'output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json',
         'output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_manifest.json',
+        'output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv',
     ):
         assert f'({evidence})' in text
-    for value in ('1,317 / 27', '1,317 / 7,299,100', '1,093,058,768 bytes',
-                  'HTTP 503 25건 + 중단 상태 불명(`interrupted_unknown`) 1건',
-                  '689,457', '180,332', '0.598945', '+0.025035'):
+    for value in ('1,317개 요청 묶음, 27개 분할', '7,299,100', '1,093,058,768 bytes',
+                  'HTTP 503 25건 + 중단 상태 불명 1건', '689,457', '180,332', '0.598945', '+0.025035'):
         assert value in text
-    assert '날씨 유무 동일조건 비교까지 완료' in text
+    assert '정적 교차검증' in text
     assert '미래 운항 성능으로 일반화하지 않습니다' in text
 
 
@@ -126,33 +132,92 @@ def test_figure_builder_does_not_import_collection_or_network_code():
     assert not imports.intersection({'requests', 'httpx', 'urllib', 'socket', 'subprocess', 'notebooks', 'src'})
 
 
-def test_opening_summary_matches_all_frozen_weather_levels_and_signed_deltas():
+def test_headline_results_match_all_frozen_weather_levels_and_signed_deltas():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
-    opening = text.split('<a id="1-목적과문제정의"></a>', 1)[0]
+    overview = text.split('<a id="results"></a>', 1)[0]
     for count in ('1,000,000행', '255,001행', '706,759행', '180,332행'):
-        assert count in opening
-    assert '`Delay`' in opening and '14개 피처' in opening
-    assert '동일 평가행·동일 시드·동일 외부 폴드' in opening
-    assert 'Macro F1 향상을 확인하지 못했습니다' in opening
+        assert count in overview
+    assert '`Delay`' in overview
+    # The headline result and its evaluation scope are visible before any fold.
+    headline = text.split('<a id="results"></a>', 1)[1].split('<details>', 1)[0]
+    assert '동일 평가행·동일 시드(42/1/7)·동일 외부 5폴드' in headline
+    assert 'Macro F1 향상을 확인하지 못했' in headline
     for row in builder.reviewed_data()['weather_model']:
         direction = '↑' if row['higher_is_better'] else '↓'
         delta = f"{row['delta_mean']:+.6f}".replace('-', '−')
         expected = (f"| {row['metric']} {direction} | {row['off_mean']:.6f} | "
                     f"**{row['on_mean']:.6f}** | **{delta}** |")
-        assert expected in opening
-    assert '실측 공개 지연 시간이 아닙니다' in opening
-    assert '인과 효과나 미래 운항 성능으로 일반화하지 않습니다' in opening
-    assert '신뢰구간이 아닙니다' in opening
-    assert '<details>' not in opening
+        assert expected in headline
+    assert '10분은 실측 공개 지연 시간이 아닙니다' in headline
+    assert '인과 효과나 미래 운항 성능으로 일반화하지 않습니다' in headline
+    assert '신뢰구간이 아닙니다' in headline
+
+
+def _weather_runs():
+    path = ROOT / 'output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv'
+    with path.open(encoding='utf-8', newline='') as handle:
+        rows = list(csv.DictReader(handle))
+    by_condition = {}
+    for row in rows:
+        by_condition.setdefault(row['condition'], []).append(row)
+    assert set(by_condition) == {'weather_off', 'weather_on'}
+    assert all(len(v) == 3 and {r['seed'] for r in v} == {'42', '1', '7'} for v in by_condition.values())
+    return by_condition
+
+
+def test_class_metrics_are_derived_from_tracked_confusion_matrices():
+    text = (ROOT / 'README.md').read_text(encoding='utf-8')
+    runs = _weather_runs()
+
+    def mean_metric(rows, metric):
+        values = []
+        for r in rows:
+            tn, fp, fn, tp = (int(r[k]) for k in ('tn', 'fp', 'fn', 'tp'))
+            assert tn + fp + fn + tp == int(r['n_rows']) == 180332
+            values.append(metric(tn, fp, fn, tp))
+        return sum(values) / len(values)
+
+    metrics = {
+        'Delayed precision': lambda tn, fp, fn, tp: tp / (tp + fp),
+        'Delayed recall': lambda tn, fp, fn, tp: tp / (tp + fn),
+        'Delayed F1': lambda tn, fp, fn, tp: 2 * tp / (2 * tp + fp + fn),
+        'Not_Delayed F1': lambda tn, fp, fn, tp: 2 * tn / (2 * tn + fn + fp),
+    }
+    for name, metric in metrics.items():
+        off = mean_metric(runs['weather_off'], metric)
+        on = mean_metric(runs['weather_on'], metric)
+        assert f'| {name} | {off:.6f} | {on:.6f} |' in text, name
+    precision = [mean_metric(runs[c], metrics['Delayed precision']) for c in ('weather_off', 'weather_on')]
+    recall = [mean_metric(runs[c], metrics['Delayed recall']) for c in ('weather_off', 'weather_on')]
+    assert f'약 {precision[0]:.2%}→{precision[1]:.2%}' in text
+    assert f'약 {recall[0]:.2%}→{recall[1]:.2%}(+{(recall[1] - recall[0]) * 100:.2f}%p)' in text
+    # Interpretation agreed with tutor feedback: precision moved, recall barely did.
+    assert '지연 경보의 정확성이 개선됐다' in text
+    assert '지연을 훨씬 많이 잡아낸 것이 아닙니다' in text
+
+
+def test_selected_thresholds_and_tree_counts_match_tracked_runs():
+    text = (ROOT / 'README.md').read_text(encoding='utf-8')
+    summary = {}
+    for condition, rows in _weather_runs().items():
+        thresholds = [t for r in rows for t in json.loads(r['per_fold_thresholds'])]
+        trees = [t for r in rows for t in json.loads(r['selected_n_estimators'])]
+        assert len(thresholds) == len(trees) == 15
+        summary[condition] = (min(thresholds), max(thresholds), min(trees), max(trees))
+    off, on = summary['weather_off'], summary['weather_on']
+    assert off[2] == off[3]
+    assert (f'임계값은 미사용 {off[0]:.2f}~{off[1]:.2f}, 사용 {on[0]:.2f}~{on[1]:.2f}, '
+            f'트리 수는 미사용 {off[2]}, 사용 {on[2]}~{on[3]}') in text
+    assert '3시드 × 5폴드 = 15개 선택값' in text
 
 
 def test_current_prose_uses_korean_work_terms_without_translating_identifiers():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
-    body = text.split('<a id="weather-glossary"></a>', 1)[0]
-    # Code, paths and explicit identifiers are not reader-facing prose.
-    body = re.sub(r'```.*?```', '', body, flags=re.S)
+    # Code, paths, anchors and explicit identifiers are not reader-facing prose.
+    body = re.sub(r'```.*?```', '', text, flags=re.S)
     body = re.sub(r'`[^`]+`', '', body)
     body = re.sub(r'\]\([^)]+\)', ']', body)
+    body = re.sub(r'<a id="[^"]+"></a>', '', body)
     for term in ('shard', 'request group', 'weather-off', 'weather-on', 'paired',
                  'transport', 'checkpoint', 'manifest', 'latency', 'finalize',
                  'outer', 'inner', 'resume', 'cache-only', 'fail-closed'):
@@ -290,19 +355,40 @@ def test_magazine_c_uses_oversized_type_and_asymmetric_boarding_passes():
     assert '도형 크기는 수량을 뜻하지 않습니다.' in ''.join(journey.itertext())
 
 
-def test_magazine_c_readme_identifies_three_separate_branches():
+def test_portfolio_readme_drops_presentation_only_material():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
-    assert '메인 디자인 · C안' in text
-    assert 'https://github.com/Peter-jackson12/Airplane/tree/design/gigi-flight-magazine-c' in text
-    assert 'https://github.com/Peter-jackson12/Airplane/tree/design/gigi-sky-gold' in text
     assert 'badge.svg?branch=master' in text
-    assert '본문 설명 약 16분 + 전환·질문 여유 약 3분' in text
+    assert 'actions/workflows/ci.yml' in text
+    for presentation_only in ('본문 설명 약 16분', '낭독', '발표를 마무리하는', '발표할 때는',
+                              '메인 디자인 · C안', '읽기 패스', '질문 대비'):
+        assert presentation_only not in text, presentation_only
+    for design_branch in ('style/a-editorial', 'design/gigi-sky-gold',
+                          'design/korean-air-palette-d', 'design/refined-evidence-f'):
+        assert design_branch not in text, design_branch
+    # The README stays skimmable: substantially shorter than the presentation version.
+    assert len(text.splitlines()) <= 400
 
 
-def test_magazine_c_preserves_all_readme_code_blocks_from_b():
+def test_readme_code_blocks_reference_existing_entrypoints_and_locked_environment():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
-    blocks = re.findall(r'```[^\n]*\n.*?```', text, re.S)
-    assert hashlib.sha256(json.dumps(blocks, ensure_ascii=False).encode()).hexdigest() == 'c8e177b591f64156f5275a938294c77773d5e98125ff7b855fee20a56c58267c'
+    blocks = re.findall(r'```[^\n]*\n(.*?)```', text, re.S)
+    assert blocks
+    commands = [line.strip() for block in blocks for line in block.splitlines()
+                if line.strip() and not line.strip().startswith('#')]
+    assert 'uv sync --locked --python 3.14 --dev' in commands
+    assert 'uv run --locked --offline python -m pytest -q' in commands
+    scripts = []
+    for command in commands:
+        assert command.startswith(('uv sync --locked', 'uv run --locked --offline ')), command
+        scripts += re.findall(r'\bpython(?:\s+-u)?\s+([\w/]+\.py)\b', command)
+    assert scripts
+    for script in scripts:
+        assert (ROOT / script).is_file(), script
+    # The documented default test selection is the one CI runs.
+    ci = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
+    pyproject = (ROOT / 'pyproject.toml').read_text(encoding='utf-8')
+    assert '-m "not local_data"' in ci and "-m 'not local_data'" in pyproject
+    assert 'requires-python = ">=3.14"' in pyproject and 'python-version: "3.14"' in ci
 
 
 def test_magazine_c_quantitative_figures_use_distinct_chart_geometries():

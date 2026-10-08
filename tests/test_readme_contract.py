@@ -9,10 +9,11 @@ from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 README = ROOT / 'README.md'
-LEGACY_ANCHORS = {
-    '1-목적과문제정의', '2-데이터와분석범위', '3-전처리결정과근거',
-    '4-현재파이프라인', '5-최신검증결과', '6-한계와다음단계',
-    '7-코드구조와재현', '8-문서안내',
+# Section anchors of the portfolio README. `evidence-appendix` is also the
+# inbound target of docs/README_EXPLAINED_KO.md and must keep resolving.
+REQUIRED_ANCHORS = {
+    'overview', 'results', 'engineering', 'limits', 'reproduce', 'docs',
+    'evidence-appendix',
 }
 
 
@@ -34,15 +35,34 @@ def markdown_destinations(text: str) -> list[str]:
     return re.findall(r'!?\[[^\]\n]*\]\(([^\s)]+)\)', prose_without_fences(text))
 
 
-def test_readme_keeps_legacy_entry_anchors_and_resolves_internal_links():
+def readme_ids() -> list[str]:
+    return re.findall(r'<a\s+id="([^"]+)"\s*>', README.read_text(encoding='utf-8'))
+
+
+def test_readme_keeps_section_anchors_and_resolves_internal_links():
     text = README.read_text(encoding='utf-8')
-    ids = re.findall(r'<a\s+id="([^"]+)"\s*>', text)
+    ids = readme_ids()
     assert len(ids) == len(set(ids)), 'Duplicate explicit README anchors'
-    assert LEGACY_ANCHORS <= set(ids)
-    assert {'project-status', 'next-local-run', 'evidence-appendix'} <= set(ids)
+    assert REQUIRED_ANCHORS <= set(ids)
     for destination in markdown_destinations(text):
         if destination.startswith('#'):
             assert unquote(destination[1:]) in ids, destination
+
+
+def test_repository_docs_links_into_readme_resolve():
+    ids = set(readme_ids())
+    checked = 0
+    for doc in sorted((ROOT / 'docs').glob('*.md')):
+        for destination in markdown_destinations(doc.read_text(encoding='utf-8')):
+            parts = urlsplit(destination)
+            if parts.scheme or parts.netloc or not parts.path.endswith('README.md'):
+                continue
+            if (doc.parent / unquote(parts.path)).resolve() != README.resolve():
+                continue
+            if parts.fragment:
+                assert unquote(parts.fragment) in ids, f'{doc.name}: {destination}'
+                checked += 1
+    assert checked, 'Expected at least one docs link into a README section'
 
 
 def test_readme_relative_evidence_links_exist_in_git_checkout():
@@ -57,6 +77,9 @@ def test_readme_relative_evidence_links_exist_in_git_checkout():
         assert path.exists(), f'Broken README link: {destination}'
         checked.append(destination)
     assert checked, 'No repository-relative evidence links were checked'
+    # The documentation guide links the deep-dive, tutor feedback and wiki hub.
+    for required in ('docs/README_EXPLAINED_KO.md', 'docs/TUTOR_FEEDBACK_HANDOFF_KO.md', 'AGENTS.md'):
+        assert required in checked, required
 
 
 def test_readme_details_and_fences_are_balanced():
@@ -76,16 +99,16 @@ def test_readme_details_and_fences_are_balanced():
             summaries += 1
     assert depth == 0, 'Unclosed details element'
     assert openings == summaries and openings > 0
-    # Presentation: technical Q&A may fold early, but the visible reading path
-    # must retain the problem, headline results and interpretation limits.
-    reader_body = prose.split('<a id="7-코드구조와재현"></a>', 1)[0]
+    # Supplementary analyses may fold, but the visible reading path must
+    # retain the problem, headline results and interpretation limits.
+    reader_body = prose.split('<a id="reproduce"></a>', 1)[0]
     visible_body = re.sub(r'<details>.*?</details>', '', reader_body, flags=re.S)
     assert '0.598945' in visible_body and '180,332' in visible_body
     assert '인과 효과' in visible_body and '실측 공개 지연 시간이 아닙니다' in visible_body
     for phrase in ('지연 여부', '255,001', '706,759', '신뢰구간이 아닙니다',
-                   'Macro F1 향상을 확인하지 못했습니다', '10분은 실측 공개 지연 시간이 아닙니다'):
-        assert phrase in visible_body
-    assert '약 16분' in visible_body and '실제 낭독 측정이 아닌' in visible_body
+                   'Macro F1 향상을 확인하지 못했', '10분은 실측 공개 지연 시간이 아닙니다',
+                   '지연 경보의 정확성이 개선됐다', 'Logistic Regression'):
+        assert phrase in visible_body, phrase
 
 
 def test_readme_current_model_table_matches_tracked_summary():
@@ -107,12 +130,22 @@ def test_readme_stratafix_denominators_match_selection_manifest():
     manifest = json.loads((ROOT / (
         'output/baseline_recovery_v2_weather_expanded_stratafix_20260918_selection_manifest.json'
     )).read_text(encoding='utf-8'))
-    expected = (
-        f"| 층화 보정 표본 (`stratafix`) | {manifest['selected_rows']} | {manifest['collectible_rows']} | "
-        f"{manifest['not_collectible_rows']} |"
-    )
+    expected = f"{manifest['selected_rows']}행(수집 가능 {manifest['collectible_rows']}행)"
     assert expected in text
     assert manifest['collectible_rows'] + manifest['not_collectible_rows'] == manifest['selected_rows']
+
+
+def test_readme_weather_population_matches_tracked_summary():
+    text = README.read_text(encoding='utf-8')
+    summary = json.loads((ROOT / (
+        'output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json'
+    )).read_text(encoding='utf-8'))
+    assert f"**{summary['evaluation_rows']:,}행**(지연 {summary['positive_rows']:,}행)" in text
+    assert "날씨 14개 피처" in text and summary['weather_feature_count'] == 14
+    assert f"{summary['full_join_10min_coverage']['both_matched']:,}행" in text
+    assert f"미결합 {summary['full_join_10min_coverage']['none_matched']:,}행" in text
+    assert summary['headline_latency_minutes'] == 10 and summary['headline_latency_is_measured'] is False
+    assert sorted(summary['seeds']) == [1, 7, 42] and '42/1/7' in text
 
 
 def test_readme_notebook_module_commands_have_entry_files():
