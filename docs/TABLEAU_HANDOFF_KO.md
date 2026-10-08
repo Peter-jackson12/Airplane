@@ -38,7 +38,7 @@
 
 ```text
 // 매개변수
-[최소 행 수]      정수, 기본값 100, 범위 1~5000         (작은 칸 숨김용)
+[최소 행 수]      정수, 기본값 100, 범위 1~5000         (D1·D3 작은 칸 숨김용, D2 표본 주의 표시용)
 [노선 Top N]      정수, 기본값 20, 범위 5~100
 [구간 피처]       문자열 목록: tmpf, sknt, vsby, p01i, age_minutes, matched_status (표시 별칭: 기온, 풍속, 시정, 1시간 강수, 관측 나이, 결합 상태)
 [공항 역할]       문자열 목록: origin, destination (별칭: 출발 공항, 도착 공항)
@@ -158,12 +158,12 @@
 
 | 시트 | 원본 | 열/행 | 마크 | 색상/레이블 | 필터 |
 |---|---|---|---|---|---|
-| D2-구간 | `d2_weather_bins_long` | 행: `bin_label`(정렬: `bin_order` 오름차순), 열: `[지연율]`; 열 분할 `role_ko` | 막대 | 색 `bin_kind`: value=ACCENT, special=ACCENT 70% 투명도, field_missing=MUTED, unmatched=MUTED 빗금 없음·연한 회색 `#B9C3C7`, partial=GOLD; 참조선 `[집단 지연율]` GOLD 점선 | `feature` = `[구간 피처]`; `role` ≠ `both`(결합 상태 선택 시에는 `role = both`) |
-| D2-구간 행 수 | 같음 | D2-구간과 같은 행, 열: `SUM(n_rows)` | 막대(가늘게) | MUTED, 레이블 천 단위 | 같음 |
+| D2-구간 | `d2_weather_bins_long` | 행: `[구간 표시명]`(정렬: `bin_order` 오름차순), 열: `[지연율]`; 열 분할 `role_ko` | 막대 | 색 `bin_kind`: value=ACCENT, special=ACCENT 70% 투명도, field_missing=MUTED, unmatched=MUTED 빗금 없음·연한 회색 `#B9C3C7`, partial=GOLD; 참조선 `[집단 지연율]` GOLD 점선 | `feature` = `[구간 피처]`; `role` ≠ `both`(결합 상태 선택 시에는 `role = both`) |
+| D2-구간 행 수 | 같음 | D2-구간과 같은 행, 열: `SUM(n_rows)` | 막대(가늘게) | MUTED, 레이블 천 단위 + `[표본 주의]` | 같음(최소 행 수로 숨기지 않음) |
 | D2-연월 | `d2_delay_by_year_month` | 열: `year_month`(불연속), 행: `[지연율]` | 선 | ACCENT | 없음 |
 | D2-혼동행렬 | `model_confusion_long` | 행: `actual`, 열: `predicted`, 열 분할: `variant` | 사각형 + 텍스트 | 색 `[칸 유형]`, 레이블 `cell` + `SUM(n)` + `[실제 클래스 대비 비율]` | `experiment = weather_on_off_lightgbm`, `seed`(단일 값 목록: 42/1/7, 기본 42) |
 | D2-FP·FN 시드별 | `model_confusion_long` | 열: `seed`, 행: `SUM(n)`; 열 분할 `cell`(FP, FN만) | 막대(나란히) | 색 `variant`: weather_off=MUTED, weather_on=ACCENT | `experiment = weather_on_off_lightgbm`, `cell` ∈ {FP, FN} |
-| D2-지표 | `model_metrics_long` | 행: `metric`(macro_f1_nested, log_loss, roc_auc, precision_delayed, recall_delayed), 열: `AVG(value)` | 원(시드별 점은 `seed` 세부, 투명도 40%) + 평균 막대 표시 | 색 `variant` 동일 | `experiment = weather_on_off_lightgbm` |
+| D2-지표 | `model_metrics_long` | 행: `metric`(macro_f1_nested, log_loss, roc_auc, precision_delayed, recall_delayed), 열: `AVG(value)` + `MIN([3시드 평균])`(동기화 이중 축) | 시드점 마크에만 `seed` 세부(투명도 40%), 평균 막대는 별도 마크(`seed` 없음) | 색 `variant` 동일 | `experiment = weather_on_off_lightgbm` |
 
 `variant` 별칭: weather_off → "날씨 미사용", weather_on → "날씨 사용". `role_ko`는 이미 한글입니다.
 
@@ -174,9 +174,14 @@
             WHEN "FP" THEN "오경보(FP)" WHEN "FN" THEN "놓침(FN)" END
 [실제 클래스 대비 비율] = SUM([n]) / SUM([actual_class_rows])
        // 실제 지연 행 중 TP·FN 비율, 실제 정상 행 중 TN·FP 비율. 여러 시드를 합쳐도 분모가 함께 늘어남
-[구간 표시명] = IF ATTR([bin_kind]) = "special" AND ATTR([feature]) = "p01i" AND MIN([bin_order]) = 1
-              THEN "미량(trace) — 0.0001 표기, 측정량 아님" ELSE ATTR([bin_label]) END
+[구간 표시명] = IF [bin_kind] = "special" AND [feature] = "p01i" AND [bin_order] = 1
+              THEN "미량(trace) — 0.0001 표기, 측정량 아님" ELSE [bin_label] END
+[표본 주의] = IF SUM([n_rows]) < [최소 행 수] THEN "표본 주의: 최소 행 수 미만" ELSE "" END
+// model_metrics_long: variant가 날씨 조건을 구분하며 모델은 LightGBM, 보정 없음
+[3시드 평균] = {FIXED [experiment], [variant], [metric] : AVG([value])}
 ```
+
+D2 구간·행 수 시트에는 `[표본 충분]` 필터를 걸지 않습니다. 작은 구간과 미결합·필드 결측 구간도 모두 남겨 역할별 합계 180,332행을 유지하고, `[표본 주의]`를 레이블·툴팁에 표시합니다. 강수 축과 툴팁에는 `[구간 표시명]`을 사용합니다. D2-지표의 평균 마크에는 `seed`를 넣지 않으며, 시드 선택 필터는 혼동행렬에만 적용합니다(지표 시트는 42/1/7을 모두 유지).
 
 ### 제목·캡션
 
@@ -184,7 +189,7 @@
 - 부제: `날씨 평가 집단 180,332행(날짜 귀속 + 라벨) · 실제 지연 31,805행 · 날씨 공개 지연 10분 가정`
 - 시트 제목: "날씨 구간별 실제 지연 비율", "구간별 행 수", "귀속 연-월별 지연 비율", "혼동행렬: 날씨 미사용 vs 사용 (시드 <seed>)", "시드별 오경보(FP)·놓침(FN) 수", "3시드 지표(점 = 시드, 막대 = 평균)"
 - 캡션:
-  > 구간별 지연 비율은 같은 시각대·공항·계절 등과 겹쳐 있는 연관이며 날씨가 지연을 일으켰다는 근거가 아닙니다. 날씨는 예정 출발 60분 전까지 이용 가능했다고 가정한 관측(공개 지연 10분 가정, 실측 아님, 관측 나이 90분 이하)입니다. 미결합·필드 결측 행도 분모에 남겼습니다. 강수 0.0001은 미량 강수 표기입니다. 모델 비교는 같은 180,332행·같은 외부 5폴드·같은 시드(같은 행의 재분할 3회)의 정적 교차검증이며, 혼동행렬은 폴드별 내부 선택 임계값 기준입니다. 미래 운항 성능을 뜻하지 않습니다. 출처: output/tableau/d2_*.csv, model_*.csv (원본 runs CSV와 칸별 일치 확인)
+  > 구간별 지연 비율은 같은 시각대·공항·계절 등과 겹쳐 있는 연관이며 날씨가 지연을 일으켰다는 근거가 아닙니다. 날씨는 예정 출발 60분 전까지 이용 가능했다고 가정한 관측(공개 지연 10분 가정, 실측 아님, 관측 나이 90분 이하)입니다. 미결합·필드 결측 행도 분모에 남겼고, 최소 행 수 미만 구간은 숨기지 않고 표본 주의를 표시했습니다. 강수 0.0001은 미량 강수 표기입니다. 모델 비교는 같은 180,332행·같은 외부 5폴드·같은 시드(같은 행의 재분할 3회)의 정적 교차검증이며, 혼동행렬은 폴드별 내부 선택 임계값 기준입니다. 미래 운항 성능을 뜻하지 않습니다. 출처: output/tableau/d2_*.csv, model_*.csv (원본 runs CSV와 칸별 일치 확인)
 
 README와 같은 결론 문장만 씁니다: "날씨 사용 조건에서 Macro F1·LogLoss·ROC-AUC가 세 시드 모두 개선, 주된 구성은 오경보(FP) 감소, 지연 recall 증가는 작고 시드별로 고르지 않음."
 
@@ -206,10 +211,10 @@ README와 같은 결론 문장만 씁니다: "날씨 사용 조건에서 Macro F
 ### 툴팁
 
 ```text
-D2-구간: <role_ko> · <feature_label_ko> · <bin_label>
+D2-구간: <role_ko> · <feature_label_ko> · <[구간 표시명]>
          지연 비율 <[지연율]> (참고 95% 구간 <[Wilson 하한]>–<[Wilson 상한]>)
          행 <SUM(n_rows)> (집단의 <SUM(share_of_population)>) · 실제 지연 <SUM(n_delayed)>
-         구간 종류: <bin_kind>
+         구간 종류: <bin_kind> · <[표본 주의]>
 D2-혼동행렬: <variant> · 시드 <seed> · <[칸 유형]>
          행 <SUM(n)> / 실제 <actual> <SUM(actual_class_rows)>행 중 <[실제 클래스 대비 비율]>
          평가 행 180,332 · 임계값은 각 외부 폴드의 내부 검증에서 선택
@@ -228,11 +233,11 @@ D2-혼동행렬: <variant> · 시드 <seed> · <[칸 유형]>
 | 시트 | 원본 | 열/행 | 마크 | 색상/레이블 | 필터 |
 |---|---|---|---|---|---|
 | D3-그룹 recall·FPR | `d3_oof_errors_by_group` | 행: `group`(정렬: `group_sort` 오름차순, 없으면 `[시드합산 놓침률]` 내림차순), 열: `[시드합산 recall]`, `[시드합산 FPR]`(이중 축 아님, 나란히) | 막대 | recall=ACCENT, FPR=GOLD; 참조선 각 지표의 `[dimension 전체 recall]`/`[dimension 전체 FPR]` | `dimension`(단일 값 목록, 기본 `raw_time_pattern`), `[표본 충분(OOF)]` = 참 |
-| D3-3,031행 강조 | `d3_oof_errors_by_group` | 열: `seed`, 행: `[시드합산 recall]` | 막대 | `group = both_missing`이면 GOLD, 나머지 MUTED | `dimension = raw_time_pattern` |
+| D3-3,031행 강조 | `d3_oof_errors_by_group` | 열: `seed`, 행: `[시드합산 recall]` | 막대 | GOLD | `dimension = raw_time_pattern`, `group = both_missing`(이 시트는 세 시드 모두 유지) |
 | D3-오류 안정성 | `d3_oof_error_stability` | 행: `group`, 열: `SUM(n_wrong_0_of_3)` … `SUM(n_wrong_3_of_3)`를 측정값 이름/값으로 누적 | 누적 막대(100% 비율: 표 계산 '구간 합계 비율') | 0회 SKY, 1회 `#B9C3C7`, 2회 MUTED, 3회 INK | `dimension` 같은 매개변수, `SUM(n_rows) >= [최소 행 수]` |
 | D3-분류기 혼동행렬 | `model_confusion_long` | 행: `actual`, 열: `predicted`, 열 분할: `variant` | 사각형 + 텍스트 | D2와 같은 `[칸 유형]` 색 | `experiment = classifier_compare_weather_on`, `seed` |
-| D3-예산별 분류기 비교 | `model_comparison_all` | 행: `[예산 표시]`(정렬: `[예산 순서]`), 열: `AVG(value)`; 열 분할 `metric`(macro_f1_nested, log_loss, roc_auc만, 축 독립) | 원(3시드 평균) + 시드별 점(`seed` 세부, 투명도 40%) | 색 `model_family`: lightgbm=ACCENT, logistic_regression=MUTED, random_forest=GOLD; 레이블 `AVG(value)` 소수 4자리 | `experiment` ≠ `classifier_calibration_20261008`, `condition = weather_on`, `metric` ∈ {macro_f1_nested, log_loss, roc_auc} |
-| D3-보정 신뢰도 곡선 | `model_calibration_reliability` | 열: `[구간 평균 예측 확률]`, 행: `[구간 실제 지연율]`; 대각선 참조(아래 계산 필드 `[완전 보정선]`을 이중 축 선으로) | 선 + 원(원 크기 `SUM(n)`) | 색 `model_label`(D3-예산별과 같은 색), 모양 없음 | `binning = equal_frequency_15`, `seed`(단일 값, 기본 42), `[보정 조건]`(단일 값 목록: none / platt_crossfit / isotonic_crossfit, 기본 none) |
+| D3-예산별 분류기 비교 | `model_comparison_all` | 행: `[예산 표시]`(정렬: `[예산 순서]`), 열: `AVG(value)` + `MIN([3시드 평균])`(동기화 이중 축); 열 분할 `metric`(macro_f1_nested, log_loss, roc_auc만, 지표별 축 독립) | 평균 원은 별도 마크(`seed` 없음), 시드점 마크에만 `seed` 세부(투명도 40%) | 색 `model_family`: lightgbm=ACCENT, logistic_regression=MUTED, random_forest=GOLD; 평균 레이블 `MIN([3시드 평균])` 소수 4자리 | `experiment` ≠ `classifier_calibration_20261008`, `condition = weather_on`, `metric` ∈ {macro_f1_nested, log_loss, roc_auc} |
+| D3-보정 신뢰도 곡선 | `model_calibration_reliability` | 열: `[구간 평균 예측 확률]`, 행: `[구간 실제 지연율]`; `bin`을 세부(Detail)·경로(Path)에 배치하고 오름차순 정렬; 대각선 참조(아래 계산 필드 `[완전 보정선]`을 이중 축 선으로) | 선 + 원(원 크기 `SUM(n)`) | 색 `model_label`(D3-예산별과 같은 색), 모양 없음 | `binning = equal_frequency_15`, `seed`(단일 값, 기본 42), `[보정 조건]`(단일 값 목록: none / platt_crossfit / isotonic_crossfit, 기본 none) |
 
 `variant` 별칭: lightgbm → "LightGBM", logistic_regression → "Logistic Regression", random_forest → "Random Forest". `model_comparison_all`과 `model_calibration_reliability`의 `model_label`·`calibration_arm_ko`·`binning_ko`는 이미 한글·표시명입니다. `metric` 별칭: macro_f1_nested → "Macro F1 ↑", log_loss → "LogLoss ↓", roc_auc → "ROC-AUC ↑". `dimension` 별칭: airline → 항공사, dep_hour → 예정 출발 시(원본), month → 월, origin_airport → 출발 공항, route → 노선(라벨 100행 이상, 나머지 기타), raw_time_pattern → 원본 시각 결측 유형. `raw_time_pattern` 별칭: both_observed → 출발·도착 시각 모두 있음, departure_missing → 출발 시각 결측, arrival_missing → 도착 시각 결측, both_missing → 양쪽 결측(3,031행).
 
@@ -252,6 +257,7 @@ D2-혼동행렬: <variant> · 시드 <seed> · <[칸 유형]>
 [3회 모두 틀림 비율] = SUM([n_wrong_3_of_3]) / SUM([n_rows])
 
 // model_comparison_all (D3-예산별 분류기 비교)
+[3시드 평균] = {FIXED [experiment], [condition], [model], [calibration_arm], [metric] : AVG([value])}
 [예산 표시] = [model_label] + " · " + [search_budget]
 [예산 순서] = CASE [experiment]
                 WHEN "classifier_compare_20261008" THEN 1
@@ -260,6 +266,7 @@ D2-혼동행렬: <variant> · 시드 <seed> · <[칸 유형]>
                 WHEN "classifier_grid_ext_20261008_rf" THEN 3 END
 // 보정 실험(classifier_calibration_20261008)은 이 시트의 experiment 필터에서 제외
 // (그 실험의 none 행은 위 실험들의 재적합 결과라 같은 점이 두 번 찍힘)
+// 평균 마크의 레이블은 MIN([3시드 평균]), 시드점의 툴팁은 AVG([value])
 
 // model_calibration_reliability (D3-보정 신뢰도 곡선) — 개수로 다시 계산, AVG 금지
 [구간 실제 지연율]     = SUM([n_delayed]) / SUM([n])
@@ -270,7 +277,9 @@ D2-혼동행렬: <variant> · 시드 <seed> · <[칸 유형]>
 [보정 조건 필터]      = [calibration_arm] = [보정 조건]   // 필터 선반에 놓고 '참'
 ```
 
-- `seed`를 하나만 고르는 것이 기본입니다. 동일 빈도 구간의 경계는 시드마다 달라 여러 시드를 합치면 근사가 됩니다(툴팁에 "시드 <seed>"를 항상 표시).
+D3-예산별 시트는 `experiment`·`condition`·`model`·`calibration_arm`·`metric`별로 평균을 고정합니다. 평균 마크에는 `seed`를 넣지 않고, `seed`는 시드점 마크에만 놓습니다. 시드 선택 필터는 분류기 혼동행렬·신뢰도 곡선에만 적용하고 예산 비교와 3,031행 강조에는 적용하지 않습니다. 신뢰도 곡선은 모델별 15개 구간이 별도 마크가 되도록 `bin`을 Detail/Path에 넣습니다.
+
+- 신뢰도 곡선은 `seed`를 하나만 고르는 것이 기본입니다. 동일 빈도 구간의 경계는 시드마다 달라 여러 시드를 합치면 근사가 됩니다(툴팁에 "시드 <seed>"를 항상 표시).
 - 동일 빈도 구간의 평균 예측 확률이 약 0.04~0.46 범위라 축을 0~0.6으로 고정하고, 축 제목은 "구간 평균 예측 확률", "구간 실제 지연율"로 씁니다.
 
 (`dimension` 필터는 FIXED보다 먼저 적용되도록 **컨텍스트에 추가**합니다.)
@@ -309,7 +318,8 @@ D3-그룹: <dimension 별칭> · <group>
          세 시드 합산 칸: TN <SUM(tn)> / FP <SUM(fp)> / FN <SUM(fn)> / TP <SUM(tp)>
 D3-분류기: <variant> · 시드 <seed> · <[칸 유형]> <SUM(n)>행 (평가 180,332행)
 D3-예산별: <model_label> · <search_budget> (<n_configurations>개 설정) · <metric 별칭>
-         3시드 평균 <AVG(value)> · 실험 <experiment> · 날씨 사용 조건 · 보정 없음
+         3시드 평균 <MIN([3시드 평균])> · 실험 <experiment> · 날씨 사용 조건 · 보정 없음
+         (시드점 툴팁에는 시드 <seed> · 해당 시드 값 <AVG(value)>를 추가)
 D3-신뢰도: <model_label> · <calibration_arm_ko> · 시드 <seed> · 구간 <bin>
          평균 예측 확률 <[구간 평균 예측 확률]> · 실제 지연율 <[구간 실제 지연율]>
          구간 행 <SUM(n)> · 실제 지연 <SUM(n_delayed)> · <binning_ko>
