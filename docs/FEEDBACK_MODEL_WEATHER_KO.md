@@ -5,7 +5,7 @@
 > - 대조 기준: `master`의 `54f011f` 시점 코드와 추적된 실행 근거, 그리고 로컬에만 있는 결합 산출물·IEM 캐시.
 > - **모델 학습, 외부 수집, 기존 `output/` 파일 수정은 하지 않았습니다.** 2.3~2.5절의 범위·개수는 로컬 결합 파일과 캐시를 읽기 전용으로 집계한 값입니다(재현 방법은 2.7절).
 > - 확인하지 못한 부분은 **미확인**으로 표시했습니다.
-> - LightGBM과 다른 분류기(Logistic Regression, Random Forest)의 공정 비교는 별도로 진행 중이며 그 결과는 이 문서에 없습니다.
+> - LightGBM과 다른 분류기(Logistic Regression, Random Forest)의 공정 비교는 2026-10-08에 별도로 수행했습니다. 결과는 [README 분류기 3종 비교](../README.md#classifier-comparison)를 참고하세요.
 
 ## 목차
 
@@ -191,7 +191,7 @@
 - 입력은 범주형(공항·항공사·노선·기체번호), 수치형, 결측이 섞인 표 형식이며 약 18만~25만 행입니다. LightGBM은 pandas `category` 범주형과 결측 수치를 별도의 대치나 원-핫 인코딩 없이 받습니다. 이 저장소의 날씨 계약도 이 성질에 기대어 "날씨 결측을 대치하지 않는다"고 정했습니다([`src/weather_model.py`](../src/weather_model.py) 독스트링).
 - Phase 1~6의 초기 스크립트(`run_baseline.py` 등)부터 LightGBM을 사용했습니다. 이후 통일 프로토콜 재측정도 같은 모델 계열을 유지해, **모델을 고정하고 전처리·정보 추가의 효과만 비교**하는 실험 설계를 택했습니다.
 - 정직한 한계: 이 선택은 다른 알고리즘보다 우수하다는 비교를 근거로 하지 않습니다. 고정 하이퍼파라미터도 체계적 탐색의 결과가 아닙니다. 과거 Phase 2 스크립트가 `num_leaves 47→63`, `max_depth 7→8`로 수동으로 늘린 값을 Phase 4(`run_hybrid.py`) 기준으로 이어받았습니다([`run_tuned.py`](../run_tuned.py) 독스트링, [`rerun_all_phases.py`](../rerun_all_phases.py) `LGBM_PARAMS` 주석).
-- Logistic Regression / Random Forest / LightGBM의 공정 비교는 별도로 진행 중이며 결과는 이 문서에 포함하지 않습니다. 비교 결과가 나오기 전까지 "LightGBM이 최적"이라고 쓰지 않습니다.
+- Logistic Regression / Random Forest / LightGBM의 공정 비교 결과는 [README 분류기 3종 비교](../README.md#classifier-comparison)에 있습니다. 같은 조건에서 Random Forest가 더 높은 점수를 냈으므로 "LightGBM이 최적"이라고 쓰지 않습니다.
 
 ### 3.2 고정 설정과 탐색 설정
 
@@ -240,7 +240,7 @@
 - 증상: 20260922 날씨 비교의 [`runs.csv`](../output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv) `protocol` 열과 [manifest](../output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_manifest.json) `experiment_identity.cfg`에 `"inner_early_stopping": true`, `"stopping_rounds": 40`이 기록되어 있습니다.
 - 실제 경로: 이 실행은 `run_fold_nested_grid`로 트리 수를 골랐습니다. 이 함수는 `callbacks`를 제거하고 각 후보 트리 수를 조기 종료 없이 끝까지 학습합니다([`src/cv.py`](../src/cv.py)). `stopping_rounds`는 이 경로에서 쓰이지 않습니다. `runs.csv`의 `selected_n_estimators`와 `grid_scores`(8개 후보 각각의 inner LogLoss)가 이 경로의 산출물입니다.
 - 원인: `CVConfig.describe()`가 `inner_early_stopping=True`를 하드코딩합니다. Phase 러너는 `protocol_description()`에서 이를 `False`로 덮어쓰지만, 20260922 시점의 날씨 비교 러너는 `describe()` 값을 그대로 저장했습니다.
-- 판정: **라벨 기록 오류이며, 저장된 지표·선택값은 nested grid 경로로 계산된 값이므로 수치에는 영향이 없습니다.** 기존 출력 파일은 덮어쓰지 않습니다. 러너의 라벨 수정은 별도 작업으로 진행 중이며 이 문서의 범위가 아닙니다.
+- 판정: **라벨 기록 오류이며, 저장된 지표·선택값은 nested grid 경로로 계산된 값이므로 수치에는 영향이 없습니다.** 기존 출력 파일은 덮어쓰지 않습니다. 러너의 라벨은 2026-10-08 커밋 15a0b3c에서 수정되어 이후 실행부터 정확한 프로토콜을 기록합니다.
 
 ### 3.5 추가로 확인한 사실
 

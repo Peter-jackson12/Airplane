@@ -29,12 +29,43 @@ def test_limits_distinguish_paired_result_from_causality_and_open_followups():
     assert "인과 효과의 증명이 아닙니다" in limits
     assert "선택 집단의 정적 교차검증" in limits
     assert "docs/TUTOR_FEEDBACK_HANDOFF_KO.md" in limits
-    # An unexecuted algorithm comparison must never read as done.
-    rows = [line for line in limits.splitlines() if "Random Forest" in line]
-    assert rows and all("미실시" in line for line in rows)
+    # The executed classifier comparison is recorded as done, with evidence,
+    # and nothing in the README still claims it was not run.
+    assert "미실시" not in readme
+    rows = [line for line in limits.splitlines()
+            if line.startswith("| 1)") and "Random Forest" in line]
+    assert len(rows) == 1
+    assert "완료" in rows[0]
+    assert "(output/baseline_recovery_v2_classifier_compare_20261008_summary.json)" in rows[0]
+    assert "(#classifier-comparison)" in rows[0]
+    # Every tutor item 1-11 has a row, and items resolved by the feedback
+    # documents link to them.
+    for item in ("1)", "2)", "3)", "4)", "5)", "6)", "7)", "8)", "9)", "10)", "11)"):
+        assert f"| {item}" in limits or f"·{item}" in limits, item
+    assert "docs/FEEDBACK_PREPROCESSING_KO.md" in limits
+    assert "docs/FEEDBACK_MODEL_WEATHER_KO.md" in limits
     assert "기존 CSV에서 도출 가능(재학습 불필요)" in limits
-    for overclaim in ("Random Forest보다", "Logistic Regression보다", "알고리즘 비교 결과"):
-        assert overclaim not in readme
+    # Open next steps stay framed as candidates, not as completed work.
+    nxt = limits.split("### 다음 단계 후보", 1)[1]
+    for candidate in ("더 넓은 탐색 예산", "`max_features` 후보 확장",
+                      "Random Forest에서 날씨 사용/미사용 비교", "확률 보정"):
+        assert candidate in nxt, candidate
+
+
+def test_classifier_comparison_is_interpreted_within_its_budget():
+    readme = _readme()
+    results = readme.split('<a id="results"></a>', 1)[1].split('<a id="engineering"></a>', 1)[0]
+    section = results.split('<a id="classifier-comparison"></a>', 1)[1].split("\n### ", 2)[1]
+    # Honest reading: settings likely not optimal, not a general algorithm
+    # ranking, and the paired weather conclusion is untouched.
+    assert "현재 LightGBM 설정은 이 데이터에 최적이 아닐 가능성이 큽니다" in section
+    assert "Random Forest가 일반적으로 더 나은 알고리즘이라는 증거는 아닙니다" in section
+    assert "날씨 사용/미사용 결론은 바뀌지 않습니다" in section
+    assert "전역 하이퍼파라미터 탐색이 아니므로" in section
+    assert "`max_features=0.5`" in section and "확률 보정은 하지 않았고" in section
+    for overclaim in ("Random Forest보다", "Logistic Regression보다", "최적 알고리즘",
+                      "Random Forest가 더 우수", "알고리즘 비교 결과"):
+        assert overclaim not in readme, overclaim
 
 
 def test_figure_reproduction_documents_tracked_sources():

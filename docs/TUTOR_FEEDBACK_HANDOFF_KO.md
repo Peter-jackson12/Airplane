@@ -4,6 +4,28 @@
 >
 > 현재 설명과 결론의 기준은 [README](../README.md)입니다. 이 인계 문서는 별도의 최신 사양이나 실행 승인서가 아닙니다. 후속 실행은 그때의 사용자 요청과 범위를 먼저 확인합니다.
 
+## 0. 2026-10-08 반영 현황
+
+11개 항목은 2026-10-08까지 모두 반영됐습니다. 아래 표가 현재 상태이며, 1~4절은 수정하지 않고 기준 커밋 시점의 판정 기록으로 보존합니다. 수치와 결론은 [README](../README.md)와 연결된 실행 근거가 기준입니다.
+
+| 항목 | 현재 상태 | 반영 위치 | 근거·커밋 |
+|---|---|---|---|
+| 1) 서로 다른 분류기 3종 비교 | 완료(새 실험) | [README 2절 분류기 3종 비교](../README.md#classifier-comparison), [README 4절](../README.md#limits) | [요약](../output/baseline_recovery_v2_classifier_compare_20261008_summary.json), [시드별 실행](../output/baseline_recovery_v2_classifier_compare_20261008_runs.csv), [실행 기록](../output/baseline_recovery_v2_classifier_compare_20261008_manifest.json), [비교 코드](../src/classifier_compare.py), [드라이버](../notebooks/run_classifier_comparison.py), [테스트](../tests/test_classifier_comparison.py) · [`e949d68`](https://github.com/Peter-jackson12/Airplane/commit/e949d689bf6cf5f0be0f5e716784a01ccdaf3063) |
+| 2) 결측 대치의 분모와 전후 | 완료 | [전처리 피드백 문서 1절](FEEDBACK_PREPROCESSING_KO.md#1-피드백-2-결측-대치의-분모와-전후), [README 3절 ③](../README.md#engineering) | [재집계 JSON](../output/feedback_missing_audit_20261008.json), [집계 스크립트](../scripts/feedback_missing_audit.py) · [`e3ce73e`](https://github.com/Peter-jackson12/Airplane/commit/e3ce73ebdc18edf13916be74ebb78334f2907621), [`998d980`](https://github.com/Peter-jackson12/Airplane/commit/998d980ebbe44dfcb6b52e9035293fb2db5afbd2) |
+| 3) 시각 복원 규칙 | 완료 | [전처리 피드백 문서 2절](FEEDBACK_PREPROCESSING_KO.md#2-피드백-3-시각-복원-규칙) | [`e3ce73e`](https://github.com/Peter-jackson12/Airplane/commit/e3ce73ebdc18edf13916be74ebb78334f2907621) |
+| 4) Traffic의 의미와 집계 경계 | 완료 | [전처리 피드백 문서 3절](FEEDBACK_PREPROCESSING_KO.md#3-피드백-4-traffic의-의미와-집계-경계), [README 4절](../README.md#limits), [`build_traffic_features` 설명](../src/features.py) | [재집계 JSON](../output/feedback_missing_audit_20261008.json) · [`e3ce73e`](https://github.com/Peter-jackson12/Airplane/commit/e3ce73ebdc18edf13916be74ebb78334f2907621), [`998d980`](https://github.com/Peter-jackson12/Airplane/commit/998d980ebbe44dfcb6b52e9035293fb2db5afbd2) |
+| 5) 날씨 피처의 의미·단위·결측 계약 | 완료(원천에서 확인하지 못한 부분은 미확인으로 표시) | [모델·날씨 피드백 문서 2절](FEEDBACK_MODEL_WEATHER_KO.md#weather) | [`20c5946`](https://github.com/Peter-jackson12/Airplane/commit/20c5946cc3ac995e4e314b440019b1be7030fe64) |
+| 6) LightGBM 선택 이유와 고정/탐색 설정 | 완료(protocol 라벨 정오표 포함) | [모델·날씨 피드백 문서 3절](FEEDBACK_MODEL_WEATHER_KO.md#lightgbm), [README 3절 ①](../README.md#engineering) | [`20c5946`](https://github.com/Peter-jackson12/Airplane/commit/20c5946cc3ac995e4e314b440019b1be7030fe64), [`15a0b3c`](https://github.com/Peter-jackson12/Airplane/commit/15a0b3cfe22d48faf7e59537bf3ed32123e6b8fc) |
+| 7) Macro F1과 지연 클래스 F1 구분 | 완료 | [모델·날씨 피드백 문서 1절·4절](FEEDBACK_MODEL_WEATHER_KO.md#metrics) | [`20c5946`](https://github.com/Peter-jackson12/Airplane/commit/20c5946cc3ac995e4e314b440019b1be7030fe64) |
+| 8) 날씨 비교의 클래스별 지표·혼동행렬 | 완료(기존 CSV, 재학습 없음) | [README 2절](../README.md#results), 아래 3절 | [`54f011f`](https://github.com/Peter-jackson12/Airplane/commit/54f011f80774af490210c4d5ae4ed4776463661a) |
+| 9) 날씨 조건별 선택 트리 수·임계값 | 완료(기존 CSV, 재학습 없음) | [README 2절](../README.md#results), 아래 3절 | [`54f011f`](https://github.com/Peter-jackson12/Airplane/commit/54f011f80774af490210c4d5ae4ed4776463661a) |
+| 10) 양쪽 원시 시각 결측 3,031행 | 완료 | [전처리 피드백 문서 4절](FEEDBACK_PREPROCESSING_KO.md#4-피드백-10-양쪽-시각-결측-3031행), [README 4절](../README.md#limits) | [`e3ce73e`](https://github.com/Peter-jackson12/Airplane/commit/e3ce73ebdc18edf13916be74ebb78334f2907621) |
+| 11) 가정한 가용성과 실제 가용성 구분 | 유지(기준 커밋에 이미 반영) | [해설 6절](README_EXPLAINED_KO.md), [README 3절 ⑤](../README.md#full-weather-row-join) | [`ffc6e44`](https://github.com/Peter-jackson12/Airplane/commit/ffc6e441c3f5bebee15a2af250f5cd014dd451a9) |
+
+남은 후속 후보(제안·미실행)는 [README 4절의 다음 단계 후보](../README.md#limits)에 있습니다: LightGBM·Random Forest의 더 넓은 탐색 예산, Random Forest `max_features` 후보 확장, Random Forest의 날씨 사용/미사용 비교, 분류기별 확률 보정.
+
+> 아래 1~4절은 2026-10-07 저장 당시, 기준 커밋 [`ffc6e44`](https://github.com/Peter-jackson12/Airplane/commit/ffc6e441c3f5bebee15a2af250f5cd014dd451a9) 시점의 상태를 기록한 것입니다. 현재 상태는 위 0절을 따릅니다.
+
 ## 1. 피드백과 현재 상태의 기준 시점
 
 - 원 피드백의 검토 대상: 2026-09-22 기준 README.

@@ -155,3 +155,47 @@ def test_readme_notebook_module_commands_have_entry_files():
     for module in modules:
         path = ROOT.joinpath(*module.split('.')).with_suffix('.py')
         assert path.is_file(), f'Missing module in README command: {module}'
+
+
+def test_readme_classifier_table_matches_tracked_summary():
+    text = README.read_text(encoding='utf-8')
+    summary = json.loads((ROOT / (
+        'output/baseline_recovery_v2_classifier_compare_20261008_summary.json'
+    )).read_text(encoding='utf-8'))
+    assert summary['smoke_only_not_evidence'] is False
+    assert summary['population']['rows'] == 180332
+    assert sorted(summary['seeds']) == [1, 7, 42]
+    assert summary['lightgbm_reproduction_vs_20260922_weather_on']['all_exact'] is True
+    names = {'lightgbm': 'LightGBM', 'logistic_regression': 'Logistic Regression',
+             'random_forest': 'Random Forest'}
+    for key, label in names.items():
+        metrics = summary['models'][key]
+        expected = (
+            f"| {label} | {metrics['macro_f1_nested']['mean']:.6f} ± "
+            f"{metrics['macro_f1_nested']['std']:.6f} | {metrics['log_loss']['mean']:.6f} | "
+            f"{metrics['roc_auc']['mean']:.6f} |"
+        )
+        assert expected in text, f'Classifier table drift: {key}'
+    deltas = summary['paired_deltas_model_minus_lightgbm']
+    for key in ('logistic_regression', 'random_forest'):
+        for metric, label in (('macro_f1_nested', 'Macro F1'), ('log_loss', 'LogLoss'),
+                              ('roc_auc', 'ROC-AUC')):
+            delta = deltas[key][metric]
+            assert delta['sign_consistent_across_seeds'] is True, (key, metric)
+            value = f"{delta['mean']:+.6f}".replace('-', '−')
+            assert re.search(re.escape(label) + r'(?:는)? ' + re.escape(value), text), (key, metric)
+    # Random Forest leads LightGBM on all three metrics in every seed.
+    rf = deltas['random_forest']
+    assert all(v > 0 for v in rf['macro_f1_nested']['values_by_seed'].values())
+    assert all(v < 0 for v in rf['log_loss']['values_by_seed'].values())
+    assert all(v > 0 for v in rf['roc_auc']['values_by_seed'].values())
+    # The grid-edge caveat in the README is backed by the per-run selections.
+    with (ROOT / 'output/baseline_recovery_v2_classifier_compare_20261008_runs.csv').open(
+            encoding='utf-8', newline='') as handle:
+        rf_params = [p for row in csv.DictReader(handle) if row['model'] == 'random_forest'
+                     for p in json.loads(row['selected_params'])]
+    assert len(rf_params) == 15
+    assert max(summary['grids']['random_forest']['max_features_grid'],
+               key=lambda v: -1 if v == 'sqrt' else v) == 0.5
+    assert all(p['max_features'] == 0.5 for p in rf_params)
+    assert '15개 폴드 모두 후보의 끝값(`max_features=0.5`)' in text

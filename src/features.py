@@ -352,24 +352,24 @@ def build_traffic_features(
     exclude_missing_hour: bool = True,
     add_missing_flag: bool = True,
 ) -> pd.DataFrame:
-    """공항×날짜×시간대 운항 편수(혼잡도) `Origin_Traffic` / `Dest_Traffic`.
+    """입력 묶음 안의 (Month, Day, 공항, 시) 표본 레코드 수 `Origin_Traffic` / `Dest_Traffic`.
 
-    `exclude_missing_hour=True` (기본, 권장)
-        `hour == -1` 인 행을 **집계에서 제외**하고 해당 행의 Traffic 을 NaN 으로 둔다.
-        추가로 `Origin_Hour_Missing` / `Dest_Hour_Missing` 플래그 컬럼을 만들어
-        "시각 결측"이라는 정보를 Traffic 값과 분리해 보존한다.
+    정의: 같은 묶음에서 키 (date_keys, 공항, 시)가 같은 행 수(`groupby(...).size`).
+    연도는 키에 없고(연도 혼합), 자기 행을 포함하며(최솟값 1), 집계 안에서 중복을
+    제거하지 않는다. 앞 단계에서 복원(추정)된 시각도 실제 시각처럼 센다.
+    실제 공항 운항량·혼잡도가 아니며, 표본에 없는 항공편은 세지 않는다. 값은 호출자가
+    넘긴 묶음에 따라 달라진다(전처리 비교: 원본 전체, 날씨 비교: 날짜 귀속 행 묶음).
 
-    `exclude_missing_hour=False`
-        run_advanced_features.py / run_phase7_weather_model.py 의 현행 동작 재현용.
-        `-1` 이 하나의 거대한 버킷으로 묶여 혼잡도가 아니라 **결측 밀도**를 측정하게
-        된다 (AUDIT.md §2.3-c). 재현 실험 외에는 사용하지 말 것.
+    `exclude_missing_hour=True` (기본, 권장): `hour == -1`(미상 시간대) 행은 집계에서 제외,
+    그 행의 값은 NaN. `add_missing_flag=True`(기본)면 `*_Hour_Missing` 플래그도 만든다.
+    `exclude_missing_hour=False`: run_advanced_features.py / run_phase7_weather_model.py
+    재현용. `-1` 이 하나의 버킷이 되어 결측 밀도를 센다(AUDIT.md §2.3-c). 재현 외 사용 금지.
 
-    누수 판정
-    ---------
-    집계 대상이 편수(count)이고 `Delay` 가 groupby 키·집계 대상·필터 어디에도
-    등장하지 않으므로 **타깃 누수가 아니다**. 전체 데이터 기준 집계이나 운항
-    스케줄은 예측 시점에 이미 확정·공개된 정보이므로 배포 시 재현 가능하다
-    (AUDIT.md §2.3-a).
+    누수·가용성: `Delay` 는 키·집계 대상·필터 어디에도 없으므로 타깃 누수는 아니다.
+    그러나 묶음 전체(미래 행 포함)를 한 번에 세므로, 예측 시점에 같은 값을 확보할 수
+    있는지(운항 계획 자료의 출처·공개 시점)는 **검증되지 않았다**. 배포 시 재현 가능하다고
+    가정하지 않는다. 출처 계약 전에는 제외 후보다.
+    근거: output/pipeline_data_contract.md, docs/FEEDBACK_PREPROCESSING_KO.md 3절.
     """
     if not df.index.is_unique:
         raise ValueError(

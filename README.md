@@ -55,6 +55,23 @@
 
 **해석 범위.** 날짜를 확인할 수 있었던 선택 집단의 **정적 교차검증** 결과입니다. 날씨의 인과 효과나 미래 운항 성능으로 일반화하지 않습니다. 모델에는 **날씨 공개 지연 10분 가정**을 사용했으며, **10분은 실측 공개 지연 시간이 아닙니다.** 세 시드는 독립 데이터셋이 아니고 3시드 표준편차(SD)는 신뢰구간이 아닙니다.
 
+<a id="classifier-comparison"></a>
+### 분류기 3종 비교: 현재 LightGBM 고정 설정은 최적이 아닐 가능성이 큼
+
+위 날씨 사용 조건과 **같은 180,332행·같은 외부 5폴드(분할 지문 대조)·같은 시드(42/1/7)** 에서 Logistic Regression과 Random Forest를 LightGBM과 비교했습니다. 모델마다 자기 전처리(Logistic Regression은 대치·표준화·원-핫, 트리 모델은 결측 그대로)를 내부 학습 행에만 적합하고, 작은 사전 선언 후보 중 하나를 내부 검증 LogLoss로, 임계값을 내부 검증 Macro F1로 골랐습니다. 후보는 LightGBM 트리 수 8개, Logistic Regression 규제 강도 `C` 5개, Random Forest(300그루) `min_samples_leaf` 3개 × `max_features` 2개입니다.
+
+| 분류기 (3시드 평균) | Macro F1 평균 ± SD ↑ | LogLoss 평균 ↓ | ROC-AUC 평균 ↑ |
+|---|---:|---:|---:|
+| LightGBM | 0.598945 ± 0.000417 | 0.436689 | 0.672936 |
+| Logistic Regression | 0.596816 ± 0.000442 | 0.437144 | 0.674405 |
+| Random Forest | 0.608557 ± 0.001033 | 0.431664 | 0.687514 |
+
+Random Forest−LightGBM 차이는 Macro F1 +0.009612, LogLoss −0.005025, ROC-AUC +0.014578이며 **세 시드 모두 세 지표에서 Random Forest가 앞섰습니다.** Logistic Regression은 LightGBM 대비 Macro F1 −0.002129, LogLoss +0.000455(낮을수록 좋음)로 조금 뒤졌고 ROC-AUC는 +0.001469로 조금 앞섰습니다(세 시드 같은 방향). 이번 LightGBM 재실행은 위 날씨 사용 결과를 시드별로 정확히 재현했습니다.
+
+**해석.** 이 후보 범위에서 Random Forest 점수가 더 높았으므로, 트리 수만 탐색하고 `learning_rate=0.05`·`num_leaves=63`·`max_depth=8`을 손으로 고정한 **현재 LightGBM 설정은 이 데이터에 최적이 아닐 가능성이 큽니다.** 그러나 모델별 작은 후보 안의 비교이지 전역 하이퍼파라미터 탐색이 아니므로 **Random Forest가 일반적으로 더 나은 알고리즘이라는 증거는 아닙니다.** Random Forest는 15개 폴드 모두 후보의 끝값(`max_features=0.5`)을 골라 범위를 넓히면 결과가 달라질 수 있습니다. 확률 보정은 하지 않았고(LogLoss에는 보정 품질도 섞임), 시드는 같은 행의 재분할이며 Random Forest·LightGBM의 모델 시드는 42로 고정했습니다. **날씨 사용/미사용 결론은 바뀌지 않습니다.** 그 결론은 LightGBM 안에서 날씨 유무만 바꾼 동일조건 쌍비교이기 때문입니다.
+
+[비교 요약](output/baseline_recovery_v2_classifier_compare_20261008_summary.json) · [시드별 실행 CSV](output/baseline_recovery_v2_classifier_compare_20261008_runs.csv) · [폴드별 선택값](output/baseline_recovery_v2_classifier_compare_20261008_folds.csv) · [동일조건 차이](output/baseline_recovery_v2_classifier_compare_20261008_paired_deltas.csv) · [실행 기록](output/baseline_recovery_v2_classifier_compare_20261008_manifest.json) · [비교 코드](src/classifier_compare.py) · [실행 드라이버](notebooks/run_classifier_comparison.py)
+
 ### 전처리 수정: 의미는 타당해졌지만 Macro F1 향상은 확인하지 못함
 
 라벨 **255,001행** 전체에서 **10조건 × 3시드 × 5폴드(150개 외부 폴드)** 를 비교했습니다. 아래는 그중 네 기준 조건입니다. 이 집단은 위 날씨 비교의 180,332행과 **서로 다른 평가 집단**이므로 두 표의 점수를 직접 비교하지 않습니다.
@@ -164,17 +181,29 @@ IEM에서 관측소 355개·관측소-월 7,816개 조합을 **1,317개 요청 �
 - **전체 입력 묶음 가정이 남아 있습니다.** 노선 중앙값·코드 대응 사전·혼잡도(`Traffic`, 실제 공항 혼잡도가 아닌 표본 행 수) 등은 입력 묶음 전체의 비타깃 정보로 만듭니다. 전처리 비교는 원본 1,000,000행, 날씨 비교는 날짜 귀속 706,759행 묶음에서 다시 만들며, `Traffic` 집계 키에는 연도가 없습니다. 라벨 누수가 없다는 것과 미래 예측 시점에 그 입력을 확보할 수 있다는 것은 다릅니다. [데이터 사용 계약](output/pipeline_data_contract.md)
 - **취약 집단이 있습니다.** 원본 출발·도착 시각이 모두 결측인 라벨 3,031행(실제 지연 519행)에서 `P6_clean`의 지연 recall은 3시드 평균 10.02%였습니다. 이 집단은 날짜 귀속 키가 불완전해 날씨 평가 집단에 포함되지 않으므로, 날씨 개선을 이 집단의 개선 근거로 쓰지 않습니다. [OOF 그룹 CSV](output/baseline_recovery_v2_oof_20260916_v2_groups.csv) · [오분류 분석](output/baseline_recovery_v2_error_profile_20260917_report.md)
 
-### 아직 하지 않은 일 (튜터 피드백 기반)
+### 튜터 피드백 반영 현황
 
-강의 튜터의 피드백 11개 항목과 현재 상태는 [피드백 보존 문서](docs/TUTOR_FEEDBACK_HANDOFF_KO.md)에 정리했습니다. 이 중 실행이 필요한 것과 보고 보완 항목은 다음과 같습니다.
+강의 튜터의 피드백 11개 항목은 모두 반영했습니다. 항목별 원 요청과 반영 위치는 [피드백 보존 문서](docs/TUTOR_FEEDBACK_HANDOFF_KO.md)의 0절 표에 정리했습니다.
 
-| 항목 | 현재 상태 |
+| 피드백 항목 | 현재 상태 |
 |---|---|
-| Logistic Regression / Random Forest / LightGBM의 공정한 알고리즘 비교 | **미실시.** 같은 평가행·폴드·시드와 모델별 내부 선택 예산을 맞춘 새 실험이 필요합니다. 현재 P4/P6/clean은 LightGBM의 전처리 조건이고 Platt/Isotonic은 확률 보정이므로 서로 다른 분류기 비교가 아닙니다. |
-| 날씨 비교의 클래스별 지표·혼동행렬·선택값 | 기존 CSV에서 도출 가능(재학습 불필요). 위 2절에 지연 클래스 중심으로 반영했으며, 시드별 전체 표는 피드백 문서 3절에 있습니다. |
-| 결측 대치 수치의 분모·전후 관계 표 | 일부 정리. Airline 외 시각 필드까지 같은 집단 기준의 한 표로 연결하는 작업이 남아 있습니다. |
-| 날씨 피처의 단위·결측·미량 강수 표기 계약 | 일부 정리. 원천 자료 계약과 대조해 확정이 필요합니다. |
-| 실측 날씨 공개 지연 시간 | 수신 이력이 없어 확인 불가. 10분은 사전에 고정한 가정입니다. |
+| 1) Logistic Regression / Random Forest / LightGBM 비교 | **완료.** 같은 180,332행·폴드·시드와 모델별 내부 선택 후보로 비교했습니다(위 [2절 분류기 3종 비교](#classifier-comparison), [비교 요약](output/baseline_recovery_v2_classifier_compare_20261008_summary.json)). |
+| 2) 결측 대치 수치의 분모·전후 관계 | 완료. 같은 집단 기준 "원래 결측 = 복원 + 잔여" 표 — [전처리 피드백 문서 1절](docs/FEEDBACK_PREPROCESSING_KO.md#1-피드백-2-결측-대치의-분모와-전후) |
+| 3) 시각 복원 규칙 | 완료. 노선 키·0 처리·중앙값 순서·`% 1440`·양쪽 결측 — [같은 문서 2절](docs/FEEDBACK_PREPROCESSING_KO.md#2-피드백-3-시각-복원-규칙) |
+| 4) `Traffic`의 의미와 집계 경계 | 완료. 표본 레코드 수이며 연도 혼합·자기 행 포함 — [같은 문서 3절](docs/FEEDBACK_PREPROCESSING_KO.md#3-피드백-4-traffic의-의미와-집계-경계) |
+| 5) 날씨 피처의 단위·결측·미량 강수 표기 | 완료(원천에서 확인하지 못한 부분은 미확인으로 표시) — [모델·날씨 피드백 문서 2절](docs/FEEDBACK_MODEL_WEATHER_KO.md#weather) |
+| 6) LightGBM 고정/탐색 설정 | 완료. 설정표·버전·기록 라벨 정오표 — [같은 문서 3절](docs/FEEDBACK_MODEL_WEATHER_KO.md#lightgbm) |
+| 7) Macro F1과 Delayed F1 표기 | 완료 — [같은 문서 1절](docs/FEEDBACK_MODEL_WEATHER_KO.md#metrics) |
+| 8)·9) 날씨 비교의 클래스별 지표·혼동행렬·선택값 | 완료. 기존 CSV에서 도출 가능(재학습 불필요)했으며 위 2절에 반영, 시드별 전체 표는 [피드백 보존 문서 3절](docs/TUTOR_FEEDBACK_HANDOFF_KO.md#3-기존-결과에서-확인-가능한-값-새-실험-아님) |
+| 10) 양쪽 시각 결측 3,031행 | 완료. 날씨 평가 집단 포함 0행 확인 — [전처리 피드백 문서 4절](docs/FEEDBACK_PREPROCESSING_KO.md#4-피드백-10-양쪽-시각-결측-3031행) |
+| 11) 가정한 가용성과 실제 수신 이력 | 이미 반영(유지). 실측 날씨 공개 지연 시간은 수신 이력이 없어 확인할 수 없으며 10분은 사전에 고정한 가정입니다 — [해설 6절](docs/README_EXPLAINED_KO.md) |
+
+### 다음 단계 후보
+
+- **LightGBM·Random Forest의 더 넓은 탐색 예산.** 같은 내부 선택 경계에서 LightGBM의 학습률·잎 수·깊이와 Random Forest 설정을 함께 탐색해, 위 분류기 차이가 설정 예산 때문인지 확인합니다.
+- **Random Forest `max_features` 후보 확장.** 15개 폴드 모두 후보의 끝값 0.5를 선택했으므로 더 큰 값까지 넓힙니다.
+- **Random Forest에서 날씨 사용/미사용 비교.** 날씨 효과가 LightGBM에만 해당하는지 같은 동일조건 쌍비교로 확인합니다.
+- **분류기별 확률 보정.** 현재 분류기 비교의 LogLoss는 보정 전 값입니다.
 
 <a id="reproduce"></a>
 ## 5. 재현 방법
@@ -197,13 +226,14 @@ uv run --locked --offline python scripts/build_readme_assets.py --check
 
 <a id="join-reproduction"></a>
 <details>
-<summary>실데이터 재현 명령 · 전체 행 날씨 결합과 날씨 유무 모델 비교</summary>
+<summary>실데이터 재현 명령 · 전체 행 날씨 결합, 날씨 유무 모델 비교, 분류기 3종 비교</summary>
 
 아래 명령은 로컬 원본·날짜 귀속·검증된 날씨 캐시가 있어야 하며 새 수집은 하지 않습니다. 기존 이름의 최종 실행 근거가 있으면 덮어쓰지 않습니다.
 
 ```powershell
 uv run --locked --offline python -u -m notebooks.join_weather_full --name baseline_recovery_v2_weather_full_join_20260922 --transport-name baseline_recovery_v2_weather_full_bulk_20260921 --mapping-name baseline_recovery_v2_weather_scope_fix_20260918
 uv run --locked --offline python -u -m notebooks.run_weather_model_comparison --name baseline_recovery_v2_weather_model_compare_20260922
+uv run --locked --offline python -u notebooks/run_classifier_comparison.py --name baseline_recovery_v2_classifier_compare_20261008
 ```
 
 두 드라이버의 `--validate-inputs-only`는 학습·결합 출력을 만들지 않고 입력 출처·행 식별·해시만 검사합니다. 전처리 10조건 실험은 [실험 드라이버](notebooks/run_preprocessing_experiments.py)와 [rerun_all_phases.py](rerun_all_phases.py)에서 실행합니다.
@@ -219,6 +249,7 @@ uv run --locked --offline python -u -m notebooks.run_weather_model_comparison --
 | [src/run_store.py](src/run_store.py) | 스키마·실험 지문 검사, 원자적 저장 |
 | [src/oof.py](src/oof.py), [src/calibration.py](src/calibration.py) | 행별 OOF 진단, 확률 보정 |
 | [src/weather.py](src/weather.py), [src/weather_full.py](src/weather_full.py), [src/weather_model.py](src/weather_model.py) | 시점 기준 날씨 결합, 전체 결합, 날씨 피처 계약 |
+| [src/classifier_compare.py](src/classifier_compare.py) | 분류기 3종 동일조건 비교(모델별 전처리·내부 선택 후보) |
 | [rerun_all_phases.py](rerun_all_phases.py) | 전처리 단계 정의와 학습 진입점 |
 | [notebooks/](notebooks/) | 날짜 귀속·날씨 수집/결합·모델 비교 드라이버 |
 | [tests/](tests/) | 코드 계약·README 정합성 회귀 테스트 |
@@ -229,9 +260,13 @@ uv run --locked --offline python -u -m notebooks.run_weather_model_comparison --
 | 문서 | 내용 |
 |---|---|
 | [docs/README_EXPLAINED_KO.md](docs/README_EXPLAINED_KO.md) | 용어·평가 경계·날씨 결합 규칙을 풀어 쓴 한국어 심화 해설 |
-| [docs/TUTOR_FEEDBACK_HANDOFF_KO.md](docs/TUTOR_FEEDBACK_HANDOFF_KO.md) | 튜터 피드백 11개 항목, 현재 상태, 클래스별 지표 도출표 |
+| [docs/TUTOR_FEEDBACK_HANDOFF_KO.md](docs/TUTOR_FEEDBACK_HANDOFF_KO.md) | 튜터 피드백 11개 항목, 반영 현황표(0절), 클래스별 지표 도출표 |
+| [docs/FEEDBACK_PREPROCESSING_KO.md](docs/FEEDBACK_PREPROCESSING_KO.md) | 피드백 2·3·4·10: 결측 복원의 집단·분모, 시각 복원 규칙, `Traffic` 집계 경계, 양쪽 시각 결측 3,031행 |
+| [docs/FEEDBACK_MODEL_WEATHER_KO.md](docs/FEEDBACK_MODEL_WEATHER_KO.md) | 피드백 5·6·7: 날씨 피처 계약, LightGBM 고정/탐색 설정과 정오표, Macro F1 정의 |
 | [AGENTS.md](AGENTS.md) | 작업용 위키/문서 지도 — 저장소 작업 규칙과 문서 위치 |
 | [날씨 비교 요약](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json) | 최종 날씨 유무 비교의 평균·SD·시드별 차이 |
+| [분류기 비교 요약](output/baseline_recovery_v2_classifier_compare_20261008_summary.json) | 분류기 3종 비교의 후보·평균·SD·LightGBM 대비 차이·재현 대조 |
+| [결측 재집계 결과](output/feedback_missing_audit_20261008.json) | 피드백 2·4·10 수치의 원자료 읽기 전용 재집계 |
 | [전처리 10조건 보고서](output/preprocessing_full_evaluation.md) | 전처리 조건별 전체 결과 |
 | [라벨 분포 보고서](output/label_coverage_review.md) | 라벨·미라벨 집단의 분포 비교 |
 | [그림 출처 기록](assets/readme/sources.json) | README 그림의 입력 파일·필터·SHA-256 |

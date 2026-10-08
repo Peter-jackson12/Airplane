@@ -15,7 +15,7 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | [문서 지도](#doc-map) | 현행 참조 문서와 과거 기록 문서 |
 | [코드 지도](#code-map) | `src/`, `scripts/`, `notebooks/`, 루트 스크립트, `tests/` |
 | [실행 근거 지도](#evidence-map) | `output/` 근거 파일을 실험별로 분류 |
-| [작업 현황·백로그](#backlog) | 열려 있는 후속 작업(제안·미실행) |
+| [작업 현황·백로그](#backlog) | 튜터 피드백 반영 현황과 열린 후속 작업(제안·미실행) |
 | [작업 규칙](#rules) | 시작 절차, 역할, Git, 문서 관리, 데이터·평가 경계, 실행·보존, 보고 |
 
 <a id="quick-nav"></a>
@@ -25,7 +25,10 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 |---|---|
 | 현재 결론·파이프라인·한계 확인 | [README.md](README.md) |
 | README를 쉬운 말로 깊게 읽기 | [docs/README_EXPLAINED_KO.md](docs/README_EXPLAINED_KO.md) |
-| 튜터 피드백 11개와 후속 작업 확인 | [docs/TUTOR_FEEDBACK_HANDOFF_KO.md](docs/TUTOR_FEEDBACK_HANDOFF_KO.md) |
+| 튜터 피드백 11개와 반영 현황 확인 | [docs/TUTOR_FEEDBACK_HANDOFF_KO.md](docs/TUTOR_FEEDBACK_HANDOFF_KO.md) (0절이 현재 반영 현황) |
+| 결측 복원의 집단·분모, 시각 복원 규칙, Traffic 집계 경계, 양쪽 시각 결측 집단 | [docs/FEEDBACK_PREPROCESSING_KO.md](docs/FEEDBACK_PREPROCESSING_KO.md), 재집계 [scripts/feedback_missing_audit.py](scripts/feedback_missing_audit.py) |
+| 날씨 피처 명세, LightGBM 고정/탐색 설정·정오표, Macro F1 정의 | [docs/FEEDBACK_MODEL_WEATHER_KO.md](docs/FEEDBACK_MODEL_WEATHER_KO.md) |
+| 분류기 3종(Logistic Regression / Random Forest / LightGBM) 동일조건 비교 | [src/classifier_compare.py](src/classifier_compare.py), [notebooks/run_classifier_comparison.py](notebooks/run_classifier_comparison.py), 결과는 README 2절 |
 | 평가 경로(nested grid, inner 경계 TE) | [src/cv.py](src/cv.py) |
 | 전처리·피처 엔지니어링 | [src/features.py](src/features.py) |
 | 날씨 피처 계약(예측 시점·가정 지연) | [src/weather_model.py](src/weather_model.py), [src/weather.py](src/weather.py) |
@@ -56,7 +59,9 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 |---|---|---|
 | [README.md](README.md) | 현재 결론·유효한 결과·남은 한계·재현 안내의 기준 문서(포트폴리오 README) | 현행 |
 | [docs/README_EXPLAINED_KO.md](docs/README_EXPLAINED_KO.md) | README의 한국어 심화 해설(분모 구분, 날씨 피처, 가용 시점 등) | 현행 |
-| [docs/TUTOR_FEEDBACK_HANDOFF_KO.md](docs/TUTOR_FEEDBACK_HANDOFF_KO.md) | 튜터 피드백 11개의 보존본, 기준 커밋 시점의 상태 대조, 후속 작업 제안 | 현행(후속 작업 지도, 실행 승인서 아님) |
+| [docs/TUTOR_FEEDBACK_HANDOFF_KO.md](docs/TUTOR_FEEDBACK_HANDOFF_KO.md) | 튜터 피드백 11개의 보존본. 0절은 현재 반영 현황, 1~4절은 기준 커밋 시점의 상태 대조 기록 | 현행(0절) / 과거 기록(1~4절) |
+| [docs/FEEDBACK_PREPROCESSING_KO.md](docs/FEEDBACK_PREPROCESSING_KO.md) | 피드백 2·3·4·10: 결측 복원의 집단·분모, 시각 복원 규칙, Traffic 집계 경계, 양쪽 시각 결측 집단 | 현행 참조 |
+| [docs/FEEDBACK_MODEL_WEATHER_KO.md](docs/FEEDBACK_MODEL_WEATHER_KO.md) | 피드백 5·6·7: 날씨 피처 명세, LightGBM 고정/탐색 설정과 protocol 라벨 정오표, 지표 정의 | 현행 참조 |
 | [output/pipeline_data_contract.md](output/pipeline_data_contract.md) | 현재 파이프라인의 데이터 사용 계약 | 현행 참조 |
 | [output/preprocessing_decisions.md](output/preprocessing_decisions.md) | 전처리 결정표 | 현행 참조 |
 | [output/preprocessing_clean_implementation.md](output/preprocessing_clean_implementation.md) | 전처리 개선 구현 및 전수 검증 | 현행 참조 |
@@ -96,14 +101,16 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | [src/weather.py](src/weather.py) | 날씨 정렬 원시 연산. 연도·도착일을 추측하지 않고 `available_at`을 명시적으로 받음 |
 | [src/weather_full.py](src/weather_full.py) | 캐시 전용·메모리 제한 전체 날씨 결합. 타깃·모델 코드 없음 |
 | [src/weather_model.py](src/weather_model.py) | 사전 선언된 날씨 모델 계약(10분 공개 지연 가정이 대표 시나리오). 모델 적합 없음 |
+| [src/classifier_compare.py](src/classifier_compare.py) | 분류기 3종 동일조건 비교 하네스. 모델별 전처리·후보를 내부 경계 안에서만 적합. 데이터 로드·파일 쓰기 없음 |
 
-### `scripts/` — README 그림 생성
+### `scripts/` — README 그림 생성·문서 근거 재집계
 
 | 파일 | 역할 |
 |---|---|
 | [scripts/build_readme_assets.py](scripts/build_readme_assets.py) | 추적된 집계 근거만으로 README 그림 생성, 출처·해시 영수증 기록, `--check` 검증 |
 | [scripts/build_readme_story.py](scripts/build_readme_story.py) | 검증된 집계 근거 기반의 표지·흐름·경계 그림 |
 | [scripts/readme_editorial.py](scripts/readme_editorial.py) | 위 두 생성기가 공유하는 표준 라이브러리 전용 SVG 구성 요소 |
+| [scripts/feedback_missing_audit.py](scripts/feedback_missing_audit.py) | 피드백 2·4·10 수치를 원자료에서 읽기 전용으로 재집계(로컬 원자료 필요, 학습 없음) |
 
 ### `notebooks/` — 실행·분석 스크립트(대부분 `.py`)
 
@@ -117,6 +124,7 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | 라벨 커버리지 | [build_label_coverage_review.py](notebooks/build_label_coverage_review.py), [label_coverage_review.ipynb](notebooks/label_coverage_review.ipynb) |
 | 날씨 조사·표본 | [weather_feasibility.py](notebooks/weather_feasibility.py), [build_weather_review.py](notebooks/build_weather_review.py), [weather_recovery_review.ipynb](notebooks/weather_recovery_review.ipynb), [map_weather_stations.py](notebooks/map_weather_stations.py), [verify_priority_station_identity.py](notebooks/verify_priority_station_identity.py), [scope_weather_collection.py](notebooks/scope_weather_collection.py), [scope_weather_collection_refined.py](notebooks/scope_weather_collection_refined.py), [select_weather_sample.py](notebooks/select_weather_sample.py), [select_weather_sample_expanded.py](notebooks/select_weather_sample_expanded.py), [fetch_weather_sample.py](notebooks/fetch_weather_sample.py), [fetch_weather_sample_expanded.py](notebooks/fetch_weather_sample_expanded.py), [join_weather_sample.py](notebooks/join_weather_sample.py), [join_weather_sample_expanded.py](notebooks/join_weather_sample_expanded.py), [diagnose_weather_expanded_cache.py](notebooks/diagnose_weather_expanded_cache.py), [reconcile_weather_cache_recombination.py](notebooks/reconcile_weather_cache_recombination.py) |
 | 날씨 전체 수집·결합·비교 | [fetch_weather_full_sharded.py](notebooks/fetch_weather_full_sharded.py), [run_weather_full_collection.py](notebooks/run_weather_full_collection.py)(실패 시 중단하는 순차 오케스트레이션), [join_weather_full.py](notebooks/join_weather_full.py), [run_weather_model_comparison.py](notebooks/run_weather_model_comparison.py) |
+| 분류기 비교 | [run_classifier_comparison.py](notebooks/run_classifier_comparison.py)(날씨 사용 집단에서 Logistic Regression / Random Forest / LightGBM, 기존 출력 덮어쓰기 거부) |
 
 ### 루트 스크립트
 
@@ -136,9 +144,11 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | 범위 | 파일 |
 |---|---|
 | 핵심 파이프라인 | [test_features.py](tests/test_features.py), [test_oof.py](tests/test_oof.py), [test_calibration.py](tests/test_calibration.py), [test_pipeline_regressions.py](tests/test_pipeline_regressions.py), [test_preprocessing_clean.py](tests/test_preprocessing_clean.py) |
+| 분류기 비교 | [test_classifier_comparison.py](tests/test_classifier_comparison.py) |
+| 문서 근거 재집계 | [test_feedback_missing_audit.py](tests/test_feedback_missing_audit.py)(순수 로직, 원자료 불필요) |
 | README·문서 계약 | [test_readme_contract.py](tests/test_readme_contract.py), [test_readme_presentation.py](tests/test_readme_presentation.py), [test_final_submission_status.py](tests/test_final_submission_status.py) |
 | 날짜·BTS 대조 | [test_assign_row_dates.py](tests/test_assign_row_dates.py), [test_bts_november.py](tests/test_bts_november.py), [test_bts_november_diagnosis.py](tests/test_bts_november_diagnosis.py), [test_bts_marketing.py](tests/test_bts_marketing.py), [test_bts_marketing_months.py](tests/test_bts_marketing_months.py) |
-| 날씨 | [test_weather.py](tests/test_weather.py), [test_weather_model.py](tests/test_weather_model.py), [test_weather_full.py](tests/test_weather_full.py), [test_weather_full_artifact_boundaries.py](tests/test_weather_full_artifact_boundaries.py), [test_weather_full_collection_runner.py](tests/test_weather_full_collection_runner.py), [test_weather_full_finalize.py](tests/test_weather_full_finalize.py), [test_weather_full_serialization.py](tests/test_weather_full_serialization.py), [test_weather_full_sharded.py](tests/test_weather_full_sharded.py), [test_join_weather_full_driver.py](tests/test_join_weather_full_driver.py), [test_weather_sample.py](tests/test_weather_sample.py), [test_weather_expanded_diagnostics.py](tests/test_weather_expanded_diagnostics.py), [test_weather_expanded_pipeline.py](tests/test_weather_expanded_pipeline.py), [test_weather_reconciliation.py](tests/test_weather_reconciliation.py), [test_weather_scope_and_mapping.py](tests/test_weather_scope_and_mapping.py), [test_verify_priority_station_identity.py](tests/test_verify_priority_station_identity.py) |
+| 날씨 | [test_weather.py](tests/test_weather.py), [test_weather_model.py](tests/test_weather_model.py), [test_weather_protocol_label.py](tests/test_weather_protocol_label.py), [test_weather_full.py](tests/test_weather_full.py), [test_weather_full_artifact_boundaries.py](tests/test_weather_full_artifact_boundaries.py), [test_weather_full_collection_runner.py](tests/test_weather_full_collection_runner.py), [test_weather_full_finalize.py](tests/test_weather_full_finalize.py), [test_weather_full_serialization.py](tests/test_weather_full_serialization.py), [test_weather_full_sharded.py](tests/test_weather_full_sharded.py), [test_join_weather_full_driver.py](tests/test_join_weather_full_driver.py), [test_weather_sample.py](tests/test_weather_sample.py), [test_weather_expanded_diagnostics.py](tests/test_weather_expanded_diagnostics.py), [test_weather_expanded_pipeline.py](tests/test_weather_expanded_pipeline.py), [test_weather_reconciliation.py](tests/test_weather_reconciliation.py), [test_weather_scope_and_mapping.py](tests/test_weather_scope_and_mapping.py), [test_verify_priority_station_identity.py](tests/test_verify_priority_station_identity.py) |
 
 <a id="evidence-map"></a>
 ## 실행 근거 지도
@@ -148,6 +158,8 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | 실험 | 대표 근거 | 상태 |
 |---|---|---|
 | 날씨 사용/미사용 쌍비교 | `output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_{runs.csv, paired_deltas.csv, summary.json, manifest.json}` — 예: [runs.csv](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv) | 현행 |
+| 분류기 3종 동일조건 비교 | `output/baseline_recovery_v2_classifier_compare_20261008_{runs.csv, folds.csv, paired_deltas.csv, summary.json, manifest.json}`, [실행 로그](output/baseline_recovery_v2_classifier_compare_20261008.log) — 예: [summary](output/baseline_recovery_v2_classifier_compare_20261008_summary.json) | 현행 |
+| 피드백 문서용 결측·Traffic·취약 집단 재집계 | [output/feedback_missing_audit_20261008.json](output/feedback_missing_audit_20261008.json) | 현행 근거(읽기 전용 재집계, 학습 없음) |
 | 날씨 전체 행 결합 | [join manifest](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json), [join summary](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_summary.json) | 현행 |
 | 날씨 전체 수집(bulk) | [plan manifest](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_plan_manifest.json), [fetch manifest](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_manifest.json), [fetch audit](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_audit.json) | 현행 |
 | 날씨 사전 표본·확장 표본·범위·매핑 | `output/baseline_recovery_v2_weather_{sample, expanded, expanded_stratafix, expanded_diagnostic*, scope, scope_fix, scope_refined, recombination*}_*`, 관측소 확인 `output/baseline_recovery_v2_station_identity_*` | 보존(전체 수집 이전의 검증 단계) |
@@ -166,22 +178,36 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 <a id="backlog"></a>
 ## 작업 현황·백로그
 
-README는 포트폴리오 README로 운영되며 강의 발표는 끝났다. 아래는 [튜터 피드백 인계 문서](docs/TUTOR_FEEDBACK_HANDOFF_KO.md)에서 가져온 열린 후속 작업이다. **모두 제안이며 미실행**이다. 상세·완료 기준·판정은 인계 문서가 기준이므로 여기에 복제하지 않는다. 실행은 그때의 사용자 요청과 범위를 확인한 뒤에만 한다. 인계 문서의 상태 대조 기준은 작성 시점 커밋이므로 착수 전에 현재 README·코드와 다시 대조한다.
+README는 포트폴리오 README로 운영되며 강의 발표는 끝났다.
 
-| 항목 | 성격 | 상태 | 상세 |
-|---|---|---|---|
-| Logistic Regression / Random Forest / LightGBM 공정 비교 | 새 실험 필요(비교 집단·분할·시드·내부 선택 예산을 먼저 정함) | 제안/미실행 | [피드백 1)](docs/TUTOR_FEEDBACK_HANDOFF_KO.md#1-서로-다른-분류기-3종-비교) |
-| 클래스별 precision/recall/F1·혼동행렬(날씨 비교) | 기존 CSV로 계산 가능, 재학습 불필요 | 제안/미실행 | 피드백 8), 3절 |
-| 날씨 조건별 선택 임계값·트리 수 요약 | 기존 CSV로 정리 가능, 재학습 불필요 | 제안/미실행 | 피드백 9), 3절 |
-| 결측 대치 전/후 표(같은 집단 기준 "원래 결측 = 복원 + 잔여") | 기존 근거 연결·로컬 원자료 확인 필요 가능 | 제안/미실행 | 피드백 2) |
-| 시각 복원 규칙·Traffic 집계 경계 설명 | 코드와 일치하는 설명 보완(전처리 동작은 바꾸지 않음) | 제안/미실행 | 피드백 3), 4) |
-| 날씨 피처 의미·단위·결측 계약 | 원천 계약 대조(미확인은 미확인으로 표시) | 제안/미실행 | 피드백 5) |
-| 고정 설정 vs 탐색 설정 표(버전·러너·manifest·`uv.lock` 연결) | 설정표 보완 | 제안/미실행 | 피드백 6) |
-| Macro F1과 F1(Delayed) 표기 정리 | 표기 점검(기존 실행 파일은 덮어쓰지 않음) | 제안/미실행 | 피드백 7) |
-| 양쪽 시각 결측 집단(3,031행)과 날씨 평가 집단의 구분 | 설명 보완 | 제안/미실행 | 피드백 10) |
-| 가정 가용성과 실제 수신 이력의 구분 | 해설에 반영됨, 유지 | 확인됨(유지) | 피드백 11) |
+### 튜터 피드백 11개: 반영 완료
 
-착수 순서 권고는 인계 문서의 [4절](docs/TUTOR_FEEDBACK_HANDOFF_KO.md)을 따른다.
+항목별 반영 위치·근거·커밋은 [인계 문서 0절](docs/TUTOR_FEEDBACK_HANDOFF_KO.md#0-2026-10-08-반영-현황)이 기준이다. 수치는 여기에 복제하지 않는다.
+
+| 항목 | 상태 | 반영 위치 |
+|---|---|---|
+| 1) Logistic Regression / Random Forest / LightGBM 비교 | 완료(새 실험) | [README 2절](README.md#classifier-comparison), 근거는 [실행 근거 지도](#evidence-map)의 분류기 비교 |
+| 2) 결측 대치의 분모와 전후 | 완료 | [docs/FEEDBACK_PREPROCESSING_KO.md](docs/FEEDBACK_PREPROCESSING_KO.md) 1절 |
+| 3) 시각 복원 규칙 | 완료 | 같은 문서 2절 |
+| 4) Traffic의 의미와 집계 경계 | 완료 | 같은 문서 3절, `src/features.py`의 `build_traffic_features` 설명 |
+| 5) 날씨 피처의 의미·단위·결측 계약 | 완료(미확인 부분은 미확인으로 표시) | [docs/FEEDBACK_MODEL_WEATHER_KO.md](docs/FEEDBACK_MODEL_WEATHER_KO.md) 2절 |
+| 6) LightGBM 고정/탐색 설정 | 완료 | 같은 문서 3절 |
+| 7) Macro F1과 Delayed F1 표기 | 완료 | 같은 문서 1절·4절 |
+| 8) 날씨 비교 클래스별 지표·혼동행렬 | 완료(기존 CSV) | [README 2절](README.md#results), 인계 문서 3절 |
+| 9) 날씨 조건별 선택 임계값·트리 수 | 완료(기존 CSV) | [README 2절](README.md#results), 인계 문서 3절 |
+| 10) 양쪽 시각 결측 집단과 날씨 평가 집단의 구분 | 완료 | [docs/FEEDBACK_PREPROCESSING_KO.md](docs/FEEDBACK_PREPROCESSING_KO.md) 4절 |
+| 11) 가정 가용성과 실제 수신 이력의 구분 | 유지(이미 반영) | [docs/README_EXPLAINED_KO.md](docs/README_EXPLAINED_KO.md) 6절 |
+
+### 열린 후속 작업 (제안·미실행)
+
+아래는 모두 제안이며 미실행이다. 실행은 그때의 사용자 요청과 범위를 확인한 뒤에만 하고, 새 결과는 새 출력 이름으로 분리한다. 근거와 동기는 [README 4절](README.md#limits)을 따른다.
+
+| 항목 | 성격 | 상태 |
+|---|---|---|
+| LightGBM·Random Forest의 더 넓은 탐색 예산 | 새 실험(같은 행·폴드·시드·내부 선택 경계 유지, 예산을 먼저 선언) | 제안/미실행 |
+| Random Forest `max_features` 후보 확장 | 새 실험(현재 후보의 끝값이 선택됨) | 제안/미실행 |
+| Random Forest에서 날씨 사용/미사용 동일조건 비교 | 새 실험 | 제안/미실행 |
+| 분류기별 확률 보정 | 새 실험(보정기는 외부 학습 데이터 내부에서만 적합) | 제안/미실행 |
 
 <a id="rules"></a>
 ## 작업 규칙
