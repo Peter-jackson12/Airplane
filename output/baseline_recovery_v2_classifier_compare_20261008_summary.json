@@ -1,0 +1,589 @@
+{
+  "schema_version": 1,
+  "name": "baseline_recovery_v2_classifier_compare_20261008",
+  "smoke_only_not_evidence": false,
+  "question": "Do Logistic Regression and Random Forest, each with its own preprocessing and a small inner selection budget, match LightGBM on the same rows/folds/seeds of the weather_on population?",
+  "population": {
+    "description": "P6_clean + 14 weather features (weather_on), labeled date-attributed rows of the 10-minute full weather join",
+    "rows": 180332,
+    "positive_rows": 31805,
+    "positive_rate": 0.17636914136148882,
+    "input_columns": 39,
+    "sample": null
+  },
+  "seeds": [
+    42,
+    1,
+    7
+  ],
+  "fold_fingerprints": {
+    "1": "f2f07507f085b3ee18e7c56515b70bc7491c6a2d180eeeb0e2e9cb9f72a0c8f1",
+    "7": "633e0cba3bc151ceb9f2d2ba7ee20a9da6809dac4e66923debe171c478e06172",
+    "42": "6d5c2e00619f9e0dcef48814484896fa958bcaae0cc570dfe87e50024c4ea28b"
+  },
+  "protocol": {
+    "n_splits": 5,
+    "shuffle": true,
+    "seed": 42,
+    "inner_holdout_frac": 0.2,
+    "threshold_grid": [
+      0.1,
+      0.7,
+      0.01
+    ],
+    "n_thresholds": 61,
+    "metric_aggregation": "pooled_oof",
+    "early_stopping": false,
+    "inner_early_stopping": false,
+    "hyperparameter_selection": "nested_grid_min_inner_holdout_log_loss",
+    "tree_selection_lightgbm": "nested_grid_n_estimators",
+    "threshold_selection": "outer_train_holdout_inner_holdout_macro_f1_argmax",
+    "selected_model_refit_on_full_outer_train": false,
+    "outer_valid_labels_used_for_selection": false,
+    "target_encoding": {
+      "cols": [
+        "Tail_Number",
+        "Route",
+        "Origin_Airport",
+        "Destination_Airport",
+        "Airline"
+      ],
+      "m": 20.0,
+      "inner_splits": 5,
+      "boundary": "inner_train_only",
+      "drop_original": false
+    },
+    "probability_calibration": "none"
+  },
+  "grids": {
+    "lightgbm": {
+      "n_estimators_grid": [
+        10,
+        25,
+        50,
+        75,
+        100,
+        150,
+        300,
+        600
+      ],
+      "fixed_params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 42,
+        "verbose": -1
+      },
+      "random_state_policy": "fixed 42 for all split seeds, as in the 20260922 weather runner (rerun_all_phases.main() not called)",
+      "bagging_note": "subsample=0.8 is inactive because subsample_freq=0 (LightGBM default); colsample_bytree=0.8 is active",
+      "features": "P6_clean weather_on matrix + inner-boundary TE_* (raw categoricals kept as LightGBM category dtype)"
+    },
+    "logistic_regression": {
+      "C_grid": [
+        0.001,
+        0.01,
+        0.1,
+        1.0,
+        10.0
+      ],
+      "penalty": "l2",
+      "solver": "lbfgs",
+      "max_iter": 2000,
+      "class_weight": null,
+      "onehot_cols": [
+        "Airline",
+        "Month",
+        "Dep_Hour",
+        "Arr_Hour"
+      ],
+      "onehot_min_frequency": 20,
+      "high_cardinality_raw_codes_dropped_TE_only": [
+        "Tail_Number",
+        "Route",
+        "Origin_Airport",
+        "Destination_Airport"
+      ],
+      "numeric": "SimpleImputer(median, add_indicator=True) -> StandardScaler",
+      "fit_scope": "inner_train only (pipeline)",
+      "random_state": 42
+    },
+    "random_forest": {
+      "n_estimators": 300,
+      "min_samples_leaf_grid": [
+        5,
+        25,
+        100
+      ],
+      "max_features_grid": [
+        "sqrt",
+        0.5
+      ],
+      "n_jobs": 16,
+      "class_weight": null,
+      "bootstrap": true,
+      "missing_values": "native sklearn tree NaN support (no imputation)",
+      "categoricals": "integer category values (target-free global vocabulary) + inner-boundary TE_*",
+      "random_state": 42,
+      "random_state_policy": "fixed 42 for all split seeds (analogous to LightGBM)"
+    }
+  },
+  "models": {
+    "lightgbm": {
+      "macro_f1_nested": {
+        "mean": 0.5989451594849345,
+        "std": 0.00041675811178789246,
+        "values_by_seed": {
+          "1": 0.5990089451578524,
+          "7": 0.5993263475905303,
+          "42": 0.5985001857064208
+        }
+      },
+      "log_loss": {
+        "mean": 0.4366887714640056,
+        "std": 0.00013206468081174033,
+        "values_by_seed": {
+          "1": 0.4366243215358257,
+          "7": 0.4366013062656505,
+          "42": 0.43684068659054054
+        }
+      },
+      "roc_auc": {
+        "mean": 0.6729355261382809,
+        "std": 0.0004576571694845221,
+        "values_by_seed": {
+          "1": 0.6732188419684435,
+          "7": 0.6731801960503944,
+          "42": 0.6724075403960048
+        }
+      },
+      "f1_at_050": {
+        "mean": 0.4788580606965882,
+        "std": 0.0016816800776343968,
+        "values_by_seed": {
+          "1": 0.4806873085945627,
+          "7": 0.47850773895327564,
+          "42": 0.47737913454192626
+        }
+      },
+      "precision_delayed": {
+        "mean": 0.33320776178923234,
+        "std": 0.0016142665499387318,
+        "values_by_seed": {
+          "1": 0.33307886546479537,
+          "7": 0.33488261232272676,
+          "42": 0.33166180758017494
+        }
+      },
+      "recall_delayed": {
+        "mean": 0.3559188806791385,
+        "std": 0.0022356722319925876,
+        "values_by_seed": {
+          "1": 0.35667347901273383,
+          "7": 0.35340355290048736,
+          "42": 0.3576796101241943
+        }
+      },
+      "f1_delayed": {
+        "mean": 0.34418207538451906,
+        "std": 0.00028936859740839453,
+        "values_by_seed": {
+          "1": 0.34447261740279067,
+          "7": 0.34389389465954806,
+          "42": 0.3441797140912185
+        }
+      },
+      "f1_not_delayed": {
+        "mean": 0.8537082435853499,
+        "std": 0.0009792953312840736,
+        "values_by_seed": {
+          "1": 0.8535452729129142,
+          "7": 0.8547588005215124,
+          "42": 0.8528206573216233
+        }
+      },
+      "elapsed_sec_total": 174.05485599999975
+    },
+    "logistic_regression": {
+      "macro_f1_nested": {
+        "mean": 0.5968159806662697,
+        "std": 0.000442253181106205,
+        "values_by_seed": {
+          "1": 0.5968317578708949,
+          "7": 0.5972501341276334,
+          "42": 0.5963660500002808
+        }
+      },
+      "log_loss": {
+        "mean": 0.4371437982091925,
+        "std": 6.636880289491224e-05,
+        "values_by_seed": {
+          "1": 0.4370689051543277,
+          "7": 0.4371671702651439,
+          "42": 0.4371953192081059
+        }
+      },
+      "roc_auc": {
+        "mean": 0.6744047141719438,
+        "std": 0.00021350374119578927,
+        "values_by_seed": {
+          "1": 0.674643476854994,
+          "7": 0.6743385130277814,
+          "42": 0.6742321526330557
+        }
+      },
+      "f1_at_050": {
+        "mean": 0.47264142202637816,
+        "std": 0.001061381326753519,
+        "values_by_seed": {
+          "1": 0.4715234808514883,
+          "7": 0.4727654374806249,
+          "42": 0.4736353477470213
+        }
+      },
+      "precision_delayed": {
+        "mean": 0.3262466008758071,
+        "std": 0.005850602127844713,
+        "values_by_seed": {
+          "1": 0.33136661774836024,
+          "7": 0.32750347803867014,
+          "42": 0.3198697068403909
+        }
+      },
+      "recall_delayed": {
+        "mean": 0.365498087302835,
+        "std": 0.019193809678988018,
+        "values_by_seed": {
+          "1": 0.3478698317874548,
+          "7": 0.3626788240842635,
+          "42": 0.3859456060367867
+        }
+      },
+      "f1_delayed": {
+        "mean": 0.3444757633168543,
+        "std": 0.005204203837727269,
+        "values_by_seed": {
+          "1": 0.33941773782863455,
+          "7": 0.344194790081461,
+          "42": 0.3498147620404674
+        }
+      },
+      "f1_not_delayed": {
+        "mean": 0.849156198015685,
+        "std": 0.005751001791332983,
+        "values_by_seed": {
+          "1": 0.8542457779131553,
+          "7": 0.8503054781738058,
+          "42": 0.8429173379600942
+        }
+      },
+      "elapsed_sec_total": 140.9764100999996
+    },
+    "random_forest": {
+      "macro_f1_nested": {
+        "mean": 0.6085573217886987,
+        "std": 0.0010332216400622998,
+        "values_by_seed": {
+          "1": 0.6077761388082557,
+          "7": 0.6081669767765125,
+          "42": 0.6097288497813278
+        }
+      },
+      "log_loss": {
+        "mean": 0.4316642101128341,
+        "std": 0.00023162593658569786,
+        "values_by_seed": {
+          "1": 0.4319309474892351,
+          "7": 0.4315138427916815,
+          "42": 0.4315478400575858
+        }
+      },
+      "roc_auc": {
+        "mean": 0.6875139186731959,
+        "std": 0.0003490698860299665,
+        "values_by_seed": {
+          "1": 0.6871545777565351,
+          "7": 0.6878517199777993,
+          "42": 0.6875354582852535
+        }
+      },
+      "f1_at_050": {
+        "mean": 0.47864640869179637,
+        "std": 0.000580063423705556,
+        "values_by_seed": {
+          "1": 0.4785794644236146,
+          "7": 0.47810272190129266,
+          "42": 0.4792570397504819
+        }
+      },
+      "precision_delayed": {
+        "mean": 0.34970000916063787,
+        "std": 0.004734351634087147,
+        "values_by_seed": {
+          "1": 0.35516396831960306,
+          "7": 0.34711951597346036,
+          "42": 0.3468165431888501
+        }
+      },
+      "recall_delayed": {
+        "mean": 0.36954357281349887,
+        "std": 0.016872198957743764,
+        "values_by_seed": {
+          "1": 0.351076874705235,
+          "7": 0.373400408740764,
+          "42": 0.3841534349944977
+        }
+      },
+      "f1_delayed": {
+        "mean": 0.35914023099049713,
+        "std": 0.005738285129429335,
+        "values_by_seed": {
+          "1": 0.35310859528176586,
+          "7": 0.3597806658790027,
+          "42": 0.36453143181072284
+        }
+      },
+      "f1_not_delayed": {
+        "mean": 0.8579744125869002,
+        "std": 0.0039550698496958305,
+        "values_by_seed": {
+          "1": 0.8624436823347454,
+          "7": 0.8565532876740223,
+          "42": 0.8549262677519327
+        }
+      },
+      "elapsed_sec_total": 1008.5601175000002
+    }
+  },
+  "paired_deltas_model_minus_lightgbm": {
+    "logistic_regression": {
+      "macro_f1_nested": {
+        "mean": -0.002129178818664812,
+        "std": 5.0669086595646587e-05,
+        "values_by_seed": {
+          "1": -0.0021771872869574826,
+          "7": -0.002076213462896881,
+          "42": -0.0021341357061400723
+        },
+        "sign_consistent_across_seeds": true
+      },
+      "log_loss": {
+        "mean": 0.0004550267451869187,
+        "std": 0.00010600220917048445,
+        "values_by_seed": {
+          "1": 0.00044458361850202577,
+          "7": 0.0005658639994933767,
+          "42": 0.0003546326175653536
+        },
+        "sign_consistent_across_seeds": true
+      },
+      "roc_auc": {
+        "mean": 0.001469188033662805,
+        "std": 0.00033537453757082785,
+        "values_by_seed": {
+          "1": 0.0014246348865505354,
+          "7": 0.0011583169773869972,
+          "42": 0.0018246122370508822
+        },
+        "sign_consistent_across_seeds": true
+      },
+      "f1_at_050": {
+        "mean": -0.0062166386702100325,
+        "std": 0.0027409775268505358,
+        "values_by_seed": {
+          "1": -0.009163827743074393,
+          "7": -0.005742301472650757,
+          "42": -0.0037437867949049464
+        },
+        "sign_consistent_across_seeds": true
+      },
+      "precision_delayed": {
+        "mean": -0.006961160913425264,
+        "std": 0.005052908622466542,
+        "values_by_seed": {
+          "1": -0.0017122477164351335,
+          "7": -0.007379134284056621,
+          "42": -0.01179210073978404
+        },
+        "sign_consistent_across_seeds": true
+      },
+      "recall_delayed": {
+        "mean": 0.00957920662369649,
+        "std": 0.018536690458547722,
+        "values_by_seed": {
+          "1": -0.008803647225279043,
+          "7": 0.009275271183776135,
+          "42": 0.02826599591259238
+        },
+        "sign_consistent_across_seeds": false
+      },
+      "f1_delayed": {
+        "mean": 0.000293687932335233,
+        "std": 0.00534496740634053,
+        "values_by_seed": {
+          "1": -0.005054879574156124,
+          "7": 0.00030089542191291674,
+          "42": 0.005635047949248906
+        },
+        "sign_consistent_across_seeds": false
+      },
+      "f1_not_delayed": {
+        "mean": -0.004552045569664894,
+        "std": 0.005302601482266342,
+        "values_by_seed": {
+          "1": 0.0007005050002411028,
+          "7": -0.0044533223477066786,
+          "42": -0.009903319361529106
+        },
+        "sign_consistent_across_seeds": false
+      }
+    },
+    "random_forest": {
+      "macro_f1_nested": {
+        "mean": 0.00961216230376416,
+        "std": 0.0014004130378400235,
+        "values_by_seed": {
+          "1": 0.008767193650403238,
+          "7": 0.008840629185982274,
+          "42": 0.011228664074906969
+        },
+        "sign_consistent_across_seeds": true
+      },
+      "log_loss": {
+        "mean": -0.005024561351171464,
+        "std": 0.0003046462264106332,
+        "values_by_seed": {
+          "1": -0.004693374046590593,
+          "7": -0.005087463473969045,
+          "42": -0.005292846532954754
+        },
+        "sign_consistent_across_seeds": true
+      },
+      "roc_auc": {
+        "mean": 0.014578392534915071,
+        "std": 0.0006015227616476156,
+        "values_by_seed": {
+          "1": 0.013935735788091597,
+          "7": 0.014671523927404895,
+          "42": 0.015127917889248721
+        },
+        "sign_consistent_across_seeds": true
+      },
+      "f1_at_050": {
+        "mean": -0.0002116520047918217,
+        "std": 0.001999898012439647,
+        "values_by_seed": {
+          "1": -0.0021078441709481144,
+          "7": -0.000405017051982981,
+          "42": 0.0018779052085556303
+        },
+        "sign_consistent_across_seeds": false
+      },
+      "precision_delayed": {
+        "mean": 0.016492247371405477,
+        "std": 0.005058503748873071,
+        "values_by_seed": {
+          "1": 0.022085102854807692,
+          "7": 0.0122369036507336,
+          "42": 0.01515473560867514
+        },
+        "sign_consistent_across_seeds": true
+      },
+      "recall_delayed": {
+        "mean": 0.013624692134360425,
+        "std": 0.01695822690122273,
+        "values_by_seed": {
+          "1": -0.005596604307498809,
+          "7": 0.01999685584027666,
+          "42": 0.02647382487030342
+        },
+        "sign_consistent_across_seeds": false
+      },
+      "f1_delayed": {
+        "mean": 0.014958155605978055,
+        "std": 0.005912815337970134,
+        "values_by_seed": {
+          "1": 0.008635977878975187,
+          "7": 0.015886771219454643,
+          "42": 0.020351717719504336
+        },
+        "sign_consistent_across_seeds": true
+      },
+      "f1_not_delayed": {
+        "mean": 0.004266169001550191,
+        "std": 0.004014652899935646,
+        "values_by_seed": {
+          "1": 0.008898409421831288,
+          "7": 0.0017944871525098494,
+          "42": 0.0021056104303094347
+        },
+        "sign_consistent_across_seeds": true
+      }
+    }
+  },
+  "lightgbm_reproduction_vs_20260922_weather_on": {
+    "reference_file": "output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv",
+    "reference_sha256": "80c729226cd123da1d8d6ce6dcb7c4ac30f7e12265a0b35d88111d10ab0be629",
+    "reference_condition": "weather_on",
+    "by_seed": {
+      "42": {
+        "fold_fingerprint_equal": true,
+        "selected_n_estimators_equal": true,
+        "per_fold_thresholds_equal": true,
+        "confusion_matrix_equal": true,
+        "abs_diff": {
+          "macro_f1_nested": 0.0,
+          "log_loss": 5.551115123125783e-17,
+          "roc_auc": 0.0,
+          "f1_at_050": 5.551115123125783e-17
+        },
+        "n_features_rerun": 44,
+        "n_features_reference": 44,
+        "exact": true
+      },
+      "1": {
+        "fold_fingerprint_equal": true,
+        "selected_n_estimators_equal": true,
+        "per_fold_thresholds_equal": true,
+        "confusion_matrix_equal": true,
+        "abs_diff": {
+          "macro_f1_nested": 0.0,
+          "log_loss": 0.0,
+          "roc_auc": 0.0,
+          "f1_at_050": 0.0
+        },
+        "n_features_rerun": 44,
+        "n_features_reference": 44,
+        "exact": true
+      },
+      "7": {
+        "fold_fingerprint_equal": true,
+        "selected_n_estimators_equal": true,
+        "per_fold_thresholds_equal": true,
+        "confusion_matrix_equal": true,
+        "abs_diff": {
+          "macro_f1_nested": 0.0,
+          "log_loss": 0.0,
+          "roc_auc": 0.0,
+          "f1_at_050": 5.551115123125783e-17
+        },
+        "n_features_rerun": 44,
+        "n_features_reference": 44,
+        "exact": true
+      }
+    },
+    "all_exact": true
+  },
+  "interpretation_guardrails": [
+    "Same 180,332 labeled rows, target, outer folds (fingerprint-checked) and seeds for all models.",
+    "Hyperparameters and thresholds are selected on the inner holdout of each outer-train only; outer-valid labels select nothing.",
+    "Grids are small, predeclared budgets (LR 5 C values, RF 6 configs at 300 trees, LightGBM 8 tree counts); this is not a global hyperparameter optimisation of any model.",
+    "Probabilities are reported without calibration; LogLoss partly reflects calibration quality (notably for Random Forest).",
+    "Static stratified CV on one sample period; not a time-ordered or future-deployment estimate.",
+    "Three seeds are split repetitions of the same rows, not independent datasets or confidence intervals."
+  ]
+}

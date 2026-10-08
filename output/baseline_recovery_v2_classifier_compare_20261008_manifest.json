@@ -1,0 +1,303 @@
+{
+  "schema_version": 1,
+  "name": "baseline_recovery_v2_classifier_compare_20261008",
+  "successful": true,
+  "smoke_only_not_evidence": false,
+  "git_sha": "998d980ebbe44dfcb6b52e9035293fb2db5afbd2",
+  "git_status_porcelain_at_start": [
+    "?? notebooks/run_classifier_comparison.py",
+    "?? output/baseline_recovery_v2_classifier_compare_20261008.log",
+    "?? src/classifier_compare.py",
+    "?? tests/test_classifier_comparison.py"
+  ],
+  "python_version": "3.14.6",
+  "package_versions": {
+    "pandas": "3.0.5",
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.0",
+    "lightgbm": "4.7.0"
+  },
+  "cpu_count": 24,
+  "uv_lock_sha256": "d73d34856c696d77df451d9a998fb75b1e42108d3f8d4fdb51cb70cee737dc22",
+  "inputs": {
+    "join_manifest": {
+      "path": "output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json",
+      "sha256": "d12bb70948893532806b5c727bba5c8d4604e6b09c544279d8f3299b7d1875e5",
+      "bytes": 6944
+    },
+    "join_summary": {
+      "path": "output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_summary.json",
+      "sha256": "706906089765d177f0da2ee39ca9c2912e9defeb765d064f1f8b85f31a7a907a",
+      "bytes": 16296
+    },
+    "joined_weather": {
+      "path": "data/weather_probe/baseline_recovery_v2_weather_full_join_20260922_full_join/joined_latency10min.csv.gz",
+      "sha256": "28f015b579f17e4b3ffa67c7ee9ec07aba7225fdbd1502b5d8cb839e797b80e5",
+      "bytes": 100412934
+    },
+    "raw_train": {
+      "path": "data/train.csv",
+      "sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+      "bytes": 116707688
+    }
+  },
+  "reference_runs": {
+    "path": "output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv",
+    "sha256": "80c729226cd123da1d8d6ce6dcb7c4ac30f7e12265a0b35d88111d10ab0be629"
+  },
+  "join_name": "baseline_recovery_v2_weather_full_join_20260922",
+  "code_sha256_lf": {
+    "src/classifier_compare.py": "73c5c17a420668e22e81f778baaddbc3c54af32ad93250bd7695af89760eba70",
+    "notebooks/run_classifier_comparison.py": "0c454e153976c0c224b8a1daa0f4527b062f3465a97e274c844cecc0345b7eb1",
+    "notebooks/run_weather_model_comparison.py": "b16a1a01c5cad6ce645f097db3ed0d9ace0ac4c139c1934eee0fced839f77fdf",
+    "src/weather_model.py": "6128da2a9ca87ea7493cd9b7af9498bfccccccf6240dd0e7963c15fc78c35f62",
+    "src/weather_full.py": "90662a1730d16a76c446080bcb66604325d918ad39bf202cbf160295540a62be",
+    "src/features.py": "ad1e7078b0344b7bc90dd9b97e8cacfaf1e19352d640f0f393bf6ad7eb932a53",
+    "src/cv.py": "cfa5712e73b911a6b68ce73f3307e49d02d68e66cc356eac91313060c6c88786",
+    "rerun_all_phases.py": "fe59813e13f8f127e7aa97ef25b496d8e871a6a5abbdd3b0ce8b35e71d559791"
+  },
+  "experiment_identity": {
+    "name": "baseline_recovery_v2_classifier_compare_20261008",
+    "git_sha": "998d980ebbe44dfcb6b52e9035293fb2db5afbd2",
+    "smoke": false,
+    "sample": null,
+    "rows": 180332,
+    "positives": 31805,
+    "columns_sha256": "0145b7bb866bb715095ef00f32e46dcb91ad4f11d1bceec2fd4a91820d1e6606",
+    "grids": {
+      "lightgbm": {
+        "n_estimators_grid": [
+          10,
+          25,
+          50,
+          75,
+          100,
+          150,
+          300,
+          600
+        ],
+        "fixed_params": {
+          "objective": "binary",
+          "metric": "binary_logloss",
+          "boosting_type": "gbdt",
+          "learning_rate": 0.05,
+          "num_leaves": 63,
+          "max_depth": 8,
+          "subsample": 0.8,
+          "colsample_bytree": 0.8,
+          "random_state": 42,
+          "verbose": -1
+        },
+        "random_state_policy": "fixed 42 for all split seeds, as in the 20260922 weather runner (rerun_all_phases.main() not called)",
+        "bagging_note": "subsample=0.8 is inactive because subsample_freq=0 (LightGBM default); colsample_bytree=0.8 is active",
+        "features": "P6_clean weather_on matrix + inner-boundary TE_* (raw categoricals kept as LightGBM category dtype)"
+      },
+      "logistic_regression": {
+        "C_grid": [
+          0.001,
+          0.01,
+          0.1,
+          1.0,
+          10.0
+        ],
+        "penalty": "l2",
+        "solver": "lbfgs",
+        "max_iter": 2000,
+        "class_weight": null,
+        "onehot_cols": [
+          "Airline",
+          "Month",
+          "Dep_Hour",
+          "Arr_Hour"
+        ],
+        "onehot_min_frequency": 20,
+        "high_cardinality_raw_codes_dropped_TE_only": [
+          "Tail_Number",
+          "Route",
+          "Origin_Airport",
+          "Destination_Airport"
+        ],
+        "numeric": "SimpleImputer(median, add_indicator=True) -> StandardScaler",
+        "fit_scope": "inner_train only (pipeline)",
+        "random_state": 42
+      },
+      "random_forest": {
+        "n_estimators": 300,
+        "min_samples_leaf_grid": [
+          5,
+          25,
+          100
+        ],
+        "max_features_grid": [
+          "sqrt",
+          0.5
+        ],
+        "n_jobs": 16,
+        "class_weight": null,
+        "bootstrap": true,
+        "missing_values": "native sklearn tree NaN support (no imputation)",
+        "categoricals": "integer category values (target-free global vocabulary) + inner-boundary TE_*",
+        "random_state": 42,
+        "random_state_policy": "fixed 42 for all split seeds (analogous to LightGBM)"
+      }
+    },
+    "seeds": [
+      42,
+      1,
+      7
+    ],
+    "models": [
+      "lightgbm",
+      "logistic_regression",
+      "random_forest"
+    ]
+  },
+  "experiment_identity_sha256": "e5acc00421a89f5a25ed64bda925886a2eed3ac6005e8a39b3625e3822fe098d",
+  "fold_fingerprints": {
+    "1": "f2f07507f085b3ee18e7c56515b70bc7491c6a2d180eeeb0e2e9cb9f72a0c8f1",
+    "7": "633e0cba3bc151ceb9f2d2ba7ee20a9da6809dac4e66923debe171c478e06172",
+    "42": "6d5c2e00619f9e0dcef48814484896fa958bcaae0cc570dfe87e50024c4ea28b"
+  },
+  "reference_fold_fingerprints": {
+    "42": "6d5c2e00619f9e0dcef48814484896fa958bcaae0cc570dfe87e50024c4ea28b",
+    "1": "f2f07507f085b3ee18e7c56515b70bc7491c6a2d180eeeb0e2e9cb9f72a0c8f1",
+    "7": "633e0cba3bc151ceb9f2d2ba7ee20a9da6809dac4e66923debe171c478e06172"
+  },
+  "grids": {
+    "lightgbm": {
+      "n_estimators_grid": [
+        10,
+        25,
+        50,
+        75,
+        100,
+        150,
+        300,
+        600
+      ],
+      "fixed_params": {
+        "objective": "binary",
+        "metric": "binary_logloss",
+        "boosting_type": "gbdt",
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "max_depth": 8,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "random_state": 42,
+        "verbose": -1
+      },
+      "random_state_policy": "fixed 42 for all split seeds, as in the 20260922 weather runner (rerun_all_phases.main() not called)",
+      "bagging_note": "subsample=0.8 is inactive because subsample_freq=0 (LightGBM default); colsample_bytree=0.8 is active",
+      "features": "P6_clean weather_on matrix + inner-boundary TE_* (raw categoricals kept as LightGBM category dtype)"
+    },
+    "logistic_regression": {
+      "C_grid": [
+        0.001,
+        0.01,
+        0.1,
+        1.0,
+        10.0
+      ],
+      "penalty": "l2",
+      "solver": "lbfgs",
+      "max_iter": 2000,
+      "class_weight": null,
+      "onehot_cols": [
+        "Airline",
+        "Month",
+        "Dep_Hour",
+        "Arr_Hour"
+      ],
+      "onehot_min_frequency": 20,
+      "high_cardinality_raw_codes_dropped_TE_only": [
+        "Tail_Number",
+        "Route",
+        "Origin_Airport",
+        "Destination_Airport"
+      ],
+      "numeric": "SimpleImputer(median, add_indicator=True) -> StandardScaler",
+      "fit_scope": "inner_train only (pipeline)",
+      "random_state": 42
+    },
+    "random_forest": {
+      "n_estimators": 300,
+      "min_samples_leaf_grid": [
+        5,
+        25,
+        100
+      ],
+      "max_features_grid": [
+        "sqrt",
+        0.5
+      ],
+      "n_jobs": 16,
+      "class_weight": null,
+      "bootstrap": true,
+      "missing_values": "native sklearn tree NaN support (no imputation)",
+      "categoricals": "integer category values (target-free global vocabulary) + inner-boundary TE_*",
+      "random_state": 42,
+      "random_state_policy": "fixed 42 for all split seeds (analogous to LightGBM)"
+    }
+  },
+  "protocol": {
+    "n_splits": 5,
+    "shuffle": true,
+    "seed": 42,
+    "inner_holdout_frac": 0.2,
+    "threshold_grid": [
+      0.1,
+      0.7,
+      0.01
+    ],
+    "n_thresholds": 61,
+    "metric_aggregation": "pooled_oof",
+    "early_stopping": false,
+    "inner_early_stopping": false,
+    "hyperparameter_selection": "nested_grid_min_inner_holdout_log_loss",
+    "tree_selection_lightgbm": "nested_grid_n_estimators",
+    "threshold_selection": "outer_train_holdout_inner_holdout_macro_f1_argmax",
+    "selected_model_refit_on_full_outer_train": false,
+    "outer_valid_labels_used_for_selection": false,
+    "target_encoding": {
+      "cols": [
+        "Tail_Number",
+        "Route",
+        "Origin_Airport",
+        "Destination_Airport",
+        "Airline"
+      ],
+      "m": 20.0,
+      "inner_splits": 5,
+      "boundary": "inner_train_only",
+      "drop_original": false
+    },
+    "probability_calibration": "none"
+  },
+  "outputs": {
+    "runs": {
+      "path": "baseline_recovery_v2_classifier_compare_20261008_runs.csv",
+      "sha256": "23ba79a697af3de4ff2de537876a4ced6f07547278497f377b217ea5d8106707",
+      "bytes": 12500
+    },
+    "folds": {
+      "path": "baseline_recovery_v2_classifier_compare_20261008_folds.csv",
+      "sha256": "a993fb042cae7d996b3801fc9ad03fe17da7ff6b86bf87d8cc668c9d648655b9",
+      "bytes": 36978
+    },
+    "paired": {
+      "path": "baseline_recovery_v2_classifier_compare_20261008_paired_deltas.csv",
+      "sha256": "156886f29a540883ad9d7a784951618dac0cbdff33f485a66a43d4b358601f77",
+      "bytes": 1954
+    },
+    "summary": {
+      "path": "baseline_recovery_v2_classifier_compare_20261008_summary.json",
+      "sha256": "57da22a32557351da59495d2a7d856c2dfca7ad9f6a4cad4cd35068f21110173",
+      "bytes": 17702
+    }
+  },
+  "checkpoint": "data\\classifier_compare\\baseline_recovery_v2_classifier_compare_20261008_ckpt\\checkpoint.json",
+  "fits_models": true,
+  "network_requests": 0,
+  "created_at_utc": "2026-10-08T01:03:50+00:00"
+}
