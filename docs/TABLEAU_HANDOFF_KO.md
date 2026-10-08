@@ -4,7 +4,15 @@
 > 데이터 설명·대조 결과는 [output/tableau/README_DATA_KO.md](../output/tableau/README_DATA_KO.md), 생성기는 [scripts/build_tableau_extracts.py](../scripts/build_tableau_extracts.py)입니다.
 > 이 문서는 새 실험 결과가 아닙니다. 수치의 기준은 [README](../README.md)와 추적된 `output/` 근거입니다.
 
-## 0. 시작 전 확인
+## 0. 현재 제작본과 시작 전 확인
+
+**2026-10-08 현재 제작 상태:** 대시보드 3종 제작과 Tableau Desktop의 주요 매개변수·전환 버튼·표시 수치 검증을 완료했습니다. 로컬 최종 통합 문서는 `data/tableau/airplane_portfolio.twb`이며, Desktop에서 다시 저장한 파일입니다. `.twb`/`.twbx`는 로컬 보관용이고 커밋하지 않습니다. **Tableau Public 게시와 PNG 3장 내보내기를 완료했습니다.** 집계 CSV 15개의 데이터 원본은 Desktop에서 각각 추출로 변환했으며 로컬 `.hyper` 15개를 생성한 뒤 최종 통합 문서를 다시 저장했습니다.
+
+[공개 통합 문서](https://public.tableau.com/app/profile/.82847805/viz/airplane_portfolio/1)의 제목은 **Airplane 항공편 지연 탐색 (포트폴리오)**입니다. 조율 에이전트가 브라우저에서 대시보드 탭 표시 켜짐, 데이터 접근·다운로드 비허용, 설명과 [GitHub README 대시보드](https://github.com/Peter-jackson12/Airplane#dashboards)로 돌아오는 링크 저장을 확인했습니다. 공개 페이지의 세 대시보드 탭을 각각 클릭해 렌더링을 확인했습니다. 탭을 전환해도 URL은 `/1`을 유지하므로 공통 통합 문서 링크를 사용합니다. 게시 확인 화면은 로컬 `data/tableau/public_publication_verified.jpg`에 보관합니다(커밋 제외). 대시보드 화면은 [README 대시보드](../README.md#dashboards)에 반영했습니다.
+
+현재 제작본은 아래 지침 중 표시 방식을 다음과 같이 구현했습니다. D2 지표는 단일 축의 3시드 평균이며 오경보·놓침 시트와 버튼으로 전환합니다. D3 예산 비교는 지표 선택 후 3시드 평균과 개별 시드점을 버튼으로 전환하고, 분류기 혼동행렬은 하단 전체 폭의 떠 있는 패널로 표시합니다. Wilson 참고 구간은 표시하지 않습니다. 매개변수 선택 목록은 원문 코드(`p01i`, `raw_time_pattern`, `macro_f1_nested` 등)를 유지하며, 예산 행은 짧은 별칭을 쓰고 툴팁에 `search_budget` 원문을 남겼습니다. 이 비교는 **사전 선언한 후보 범위 안의 비교**입니다.
+
+고정 크기 화면의 일부 목록·차트에는 스크롤이 남아 있고 긴 레이블 일부는 잘립니다. 원문 매개변수 코드, 짧은 예산 별칭, Wilson 구간 미표시는 현재 표시 방식의 한계로 남깁니다. 제작·게시 완료가 모든 디자인 규칙의 완전한 준수를 뜻하지 않습니다. 다음 체크리스트는 CSV·통합 문서 정적 검사, 조율 에이전트의 Desktop·브라우저 화면 검증을 구분해 기록합니다.
 
 1. `output/tableau/`에 CSV 15개와 `tableau_extracts_manifest.json`이 있는지, manifest의 `reconciliation.all_checks_passed`가 `true`인지 확인합니다. 없거나 `false`이면 제작을 멈추고 생성기를 다시 실행합니다.
 2. **게시용 통합 문서에는 `output/tableau/*.csv`만 연결합니다.** `data/tableau/flights_rowlevel.csv`(행 단위)는 데이터셋 재배포 조건이 확인되지 않았으므로 Tableau Public 통합 문서에 넣지 않습니다(추출에 포함되면 원자료 재배포가 됨).
@@ -40,8 +48,8 @@
 // 매개변수
 [최소 행 수]      정수, 기본값 100, 범위 1~5000         (D1·D3 작은 칸 숨김용, D2 표본 주의 표시용)
 [노선 Top N]      정수, 기본값 20, 범위 5~100
-[구간 피처]       문자열 목록: tmpf, sknt, vsby, p01i, age_minutes, matched_status (표시 별칭: 기온, 풍속, 시정, 1시간 강수, 관측 나이, 결합 상태)
-[공항 역할]       문자열 목록: origin, destination (별칭: 출발 공항, 도착 공항)
+[구간 피처]       문자열 목록: tmpf, sknt, vsby, p01i, age_minutes, matched_status (코드 의미: 기온, 풍속, 시정, 1시간 강수, 관측 나이, 결합 상태)
+[공항 역할]       문자열 목록: origin, destination (코드 의미: 출발 공항, 도착 공항)
 
 // 지연율 (항상 합계로 다시 계산 — AVG([delay_rate]) 금지)
 [지연율] = SUM([n_delayed]) / SUM([n_rows])
@@ -55,7 +63,7 @@
 // 작은 칸 필터 (필터 선반에 놓고 '참'만)
 [표본 충분] = SUM([n_rows]) >= [최소 행 수]
 
-// 참고용 95% Wilson 구간 (행 독립 가정의 근사, 오차막대·툴팁 전용)
+// 참고용 95% Wilson 구간 (현재 제작본에서는 미표시; 후속 추가 시 행 독립 가정의 참고 구간으로 설명)
 [Wilson 하한] =
   ( [지연율] + 1.96^2/(2*SUM([n_rows]))
     - 1.96*SQRT( [지연율]*(1-[지연율])/SUM([n_rows]) + 1.96^2/(4*SUM([n_rows])^2) ) )
@@ -139,7 +147,7 @@
 
 ```text
 <airport> (<airport_state>) · <airport_role_ko>
-지연 비율: <[지연율]> (참고 95% 구간 <[Wilson 하한]>–<[Wilson 상한]>)
+지연 비율: <[지연율]>
 라벨 행: <SUM(n_rows)> · 실제 지연: <SUM(n_delayed)>
 라벨 전체 지연율: <[집단 지연율]>
 ```
@@ -163,7 +171,7 @@
 | D2-연월 | `d2_delay_by_year_month` | 열: `year_month`(불연속), 행: `[지연율]` | 선 | ACCENT | 없음 |
 | D2-혼동행렬 | `model_confusion_long` | 행: `actual`, 열: `predicted`, 열 분할: `variant` | 사각형 + 텍스트 | 색 `[칸 유형]`, 레이블 `cell` + `SUM(n)` + `[실제 클래스 대비 비율]` | `experiment = weather_on_off_lightgbm`, `seed`(단일 값 목록: 42/1/7, 기본 42) |
 | D2-FP·FN 시드별 | `model_confusion_long` | 열: `seed`, 행: `SUM(n)`; 열 분할 `cell`(FP, FN만) | 막대(나란히) | 색 `variant`: weather_off=MUTED, weather_on=ACCENT | `experiment = weather_on_off_lightgbm`, `cell` ∈ {FP, FN} |
-| D2-지표 | `model_metrics_long` | 행: `metric`(macro_f1_nested, log_loss, roc_auc, precision_delayed, recall_delayed), 열: `AVG(value)` + `MIN([3시드 평균])`(동기화 이중 축) | 시드점 마크에만 `seed` 세부(투명도 40%), 평균 막대는 별도 마크(`seed` 없음) | 색 `variant` 동일 | `experiment = weather_on_off_lightgbm` |
+| D2-지표 | `model_metrics_long` | 행: `metric`(macro_f1_nested, log_loss, roc_auc, precision_delayed, recall_delayed) × `variant`, 열: `AVG(value)`(단일 축) | 3시드 평균 막대(`seed` 세부 없음), D2-FP·FN 시드별과 버튼으로 전환 | 색 `variant` 동일, 레이블 `AVG(value)` | `experiment = weather_on_off_lightgbm`, 시드 42/1/7 모두 유지 |
 
 `variant` 별칭: weather_off → "날씨 미사용", weather_on → "날씨 사용". `role_ko`는 이미 한글입니다.
 
@@ -181,13 +189,13 @@
 [3시드 평균] = {FIXED [experiment], [variant], [metric] : AVG([value])}
 ```
 
-D2 구간·행 수 시트에는 `[표본 충분]` 필터를 걸지 않습니다. 작은 구간과 미결합·필드 결측 구간도 모두 남겨 역할별 합계 180,332행을 유지하고, `[표본 주의]`를 레이블·툴팁에 표시합니다. 강수 축과 툴팁에는 `[구간 표시명]`을 사용합니다. D2-지표의 평균 마크에는 `seed`를 넣지 않으며, 시드 선택 필터는 혼동행렬에만 적용합니다(지표 시트는 42/1/7을 모두 유지).
+D2 구간·행 수 시트에는 `[표본 충분]` 필터를 걸지 않습니다. 작은 구간과 미결합·필드 결측 구간도 모두 남겨 역할별 합계 180,332행을 유지하고, `[표본 주의]`를 레이블·툴팁에 표시합니다. 강수 축과 툴팁에는 `[구간 표시명]`을 사용합니다. D2-지표는 `metric` × `variant`별 `AVG(value)`로 세 시드의 평균만 표시합니다. 시드 선택 필터는 혼동행렬에만 적용하며 지표 시트와 FP·FN 시드별 시트는 42/1/7을 모두 유지합니다. 구간 지연율/행 수와 FP·FN/평균 지표는 각각 버튼으로 전환합니다.
 
 ### 제목·캡션
 
 - 제목: **날씨 구간과 지연 · 날씨 피처 유무 비교**
 - 부제: `날씨 평가 집단 180,332행(날짜 귀속 + 라벨) · 실제 지연 31,805행 · 날씨 공개 지연 10분 가정`
-- 시트 제목: "날씨 구간별 실제 지연 비율", "구간별 행 수", "귀속 연-월별 지연 비율", "혼동행렬: 날씨 미사용 vs 사용 (시드 <seed>)", "시드별 오경보(FP)·놓침(FN) 수", "3시드 지표(점 = 시드, 막대 = 평균)"
+- 시트 제목: "날씨 구간별 실제 지연 비율", "구간별 행 수", "귀속 연-월별 지연 비율", "혼동행렬: 날씨 미사용 vs 사용 (시드 <seed>)", "시드별 오경보(FP)·놓침(FN) 수", "3시드 지표 평균(막대 = 평균)"
 - 캡션:
   > 구간별 지연 비율은 같은 시각대·공항·계절 등과 겹쳐 있는 연관이며 날씨가 지연을 일으켰다는 근거가 아닙니다. 날씨는 예정 출발 60분 전까지 이용 가능했다고 가정한 관측(공개 지연 10분 가정, 실측 아님, 관측 나이 90분 이하)입니다. 미결합·필드 결측 행도 분모에 남겼고, 최소 행 수 미만 구간은 숨기지 않고 표본 주의를 표시했습니다. 강수 0.0001은 미량 강수 표기입니다. 모델 비교는 같은 180,332행·같은 외부 5폴드·같은 시드(같은 행의 재분할 3회)의 정적 교차검증이며, 혼동행렬은 폴드별 내부 선택 임계값 기준입니다. 미래 운항 성능을 뜻하지 않습니다. 출처: output/tableau/d2_*.csv, model_*.csv (원본 runs CSV와 칸별 일치 확인)
 
@@ -199,10 +207,10 @@ README와 같은 결론 문장만 씁니다: "날씨 사용 조건에서 Macro F
 +--------------------------------------------------------------+--------------+
 | 제목 / 부제                                                  | 구간 피처    |
 +--------------------------------+-----------------------------+ seed         |
-| D2-구간 (출발|도착, 520x330)   | D2-혼동행렬 (400x330)       | 최소 행 수   |
-| D2-구간 행 수 (520x120)        | D2-FP·FN 시드별 (400x170)   |              |
+| D2-구간 지연율 ⇄ 행 수        | D2-혼동행렬                 | 최소 행 수   |
+| (출발|도착, 버튼 전환)        |                             |              |
 +--------------------------------+-----------------------------+              |
-| D2-연월 (520x150)              | D2-지표 (400x150)           |              |
+| D2-연월                       | D2-FP·FN ⇄ 3시드 평균 지표  |              |
 +--------------------------------------------------------------+--------------+
 | 캡션                                                                        |
 +-----------------------------------------------------------------------------+
@@ -212,7 +220,7 @@ README와 같은 결론 문장만 씁니다: "날씨 사용 조건에서 Macro F
 
 ```text
 D2-구간: <role_ko> · <feature_label_ko> · <[구간 표시명]>
-         지연 비율 <[지연율]> (참고 95% 구간 <[Wilson 하한]>–<[Wilson 상한]>)
+         지연 비율 <[지연율]>
          행 <SUM(n_rows)> (집단의 <SUM(share_of_population)>) · 실제 지연 <SUM(n_delayed)>
          구간 종류: <bin_kind> · <[표본 주의]>
 D2-혼동행렬: <variant> · 시드 <seed> · <[칸 유형]>
@@ -236,7 +244,7 @@ D2-혼동행렬: <variant> · 시드 <seed> · <[칸 유형]>
 | D3-3,031행 강조 | `d3_oof_errors_by_group` | 열: `seed`, 행: `[시드합산 recall]` | 막대 | GOLD | `dimension = raw_time_pattern`, `group = both_missing`(이 시트는 세 시드 모두 유지) |
 | D3-오류 안정성 | `d3_oof_error_stability` | 행: `group`, 열: `SUM(n_wrong_0_of_3)` … `SUM(n_wrong_3_of_3)`를 측정값 이름/값으로 누적 | 누적 막대(100% 비율: 표 계산 '구간 합계 비율') | 0회 SKY, 1회 `#B9C3C7`, 2회 MUTED, 3회 INK | `dimension` 같은 매개변수, `SUM(n_rows) >= [최소 행 수]` |
 | D3-분류기 혼동행렬 | `model_confusion_long` | 행: `actual`, 열: `predicted`, 열 분할: `variant` | 사각형 + 텍스트 | D2와 같은 `[칸 유형]` 색 | `experiment = classifier_compare_weather_on`, `seed` |
-| D3-예산별 분류기 비교 | `model_comparison_all` | 행: `[예산 표시]`(정렬: `[예산 순서]`), 열: `AVG(value)` + `MIN([3시드 평균])`(동기화 이중 축); 열 분할 `metric`(macro_f1_nested, log_loss, roc_auc만, 지표별 축 독립) | 평균 원은 별도 마크(`seed` 없음), 시드점 마크에만 `seed` 세부(투명도 40%) | 색 `model_family`: lightgbm=ACCENT, logistic_regression=MUTED, random_forest=GOLD; 평균 레이블 `MIN([3시드 평균])` 소수 4자리 | `experiment` ≠ `classifier_calibration_20261008`, `condition = weather_on`, `metric` ∈ {macro_f1_nested, log_loss, roc_auc} |
+| D3-예산별 분류기 비교 | `model_comparison_all` | 행: `[예산 표시]`(짧은 별칭), 열: `AVG(value)`(단일 축); `[예산 비교 지표]`로 macro_f1_nested / log_loss / roc_auc 중 하나 선택 | 평균 시트(`seed` 없음)와 개별점 시트(`seed` 세부)를 버튼으로 전환 | 색 `model_family`: lightgbm=ACCENT, logistic_regression=MUTED, random_forest=GOLD; 평균 레이블 `AVG(value)` 소수 4자리, `search_budget` 원문은 세부·자동 툴팁 | `experiment` ≠ `classifier_calibration_20261008`, `condition = weather_on`, `metric = [예산 비교 지표]`, 세 시드 모두 유지 |
 | D3-보정 신뢰도 곡선 | `model_calibration_reliability` | 열: `[구간 평균 예측 확률]`, 행: `[구간 실제 지연율]`; `bin`을 세부(Detail)·경로(Path)에 배치하고 오름차순 정렬; 대각선 참조(아래 계산 필드 `[완전 보정선]`을 이중 축 선으로) | 선 + 원(원 크기 `SUM(n)`) | 색 `model_label`(D3-예산별과 같은 색), 모양 없음 | `binning = equal_frequency_15`, `seed`(단일 값, 기본 42), `[보정 조건]`(단일 값 목록: none / platt_crossfit / isotonic_crossfit, 기본 none) |
 
 `variant` 별칭: lightgbm → "LightGBM", logistic_regression → "Logistic Regression", random_forest → "Random Forest". `model_comparison_all`과 `model_calibration_reliability`의 `model_label`·`calibration_arm_ko`·`binning_ko`는 이미 한글·표시명입니다. `metric` 별칭: macro_f1_nested → "Macro F1 ↑", log_loss → "LogLoss ↓", roc_auc → "ROC-AUC ↑". `dimension` 별칭: airline → 항공사, dep_hour → 예정 출발 시(원본), month → 월, origin_airport → 출발 공항, route → 노선(라벨 100행 이상, 나머지 기타), raw_time_pattern → 원본 시각 결측 유형. `raw_time_pattern` 별칭: both_observed → 출발·도착 시각 모두 있음, departure_missing → 출발 시각 결측, arrival_missing → 도착 시각 결측, both_missing → 양쪽 결측(3,031행).
@@ -266,7 +274,9 @@ D2-혼동행렬: <variant> · 시드 <seed> · <[칸 유형]>
                 WHEN "classifier_grid_ext_20261008_rf" THEN 3 END
 // 보정 실험(classifier_calibration_20261008)은 이 시트의 experiment 필터에서 제외
 // (그 실험의 none 행은 위 실험들의 재적합 결과라 같은 점이 두 번 찍힘)
-// 평균 마크의 레이블은 MIN([3시드 평균]), 시드점의 툴팁은 AVG([value])
+// 현재 제작본은 같은 조건의 평균/개별점 시트를 따로 사용하며 레이블·축은 AVG([value])
+[예산 비교 지표]   매개변수, 문자열 목록: macro_f1_nested, log_loss, roc_auc(기본 macro_f1_nested)
+[예산 지표 필터] = [metric] = [Parameters].[예산 비교 지표]
 
 // model_calibration_reliability (D3-보정 신뢰도 곡선) — 개수로 다시 계산, AVG 금지
 [구간 실제 지연율]     = SUM([n_delayed]) / SUM([n])
@@ -277,7 +287,7 @@ D2-혼동행렬: <variant> · 시드 <seed> · <[칸 유형]>
 [보정 조건 필터]      = [calibration_arm] = [보정 조건]   // 필터 선반에 놓고 '참'
 ```
 
-D3-예산별 시트는 `experiment`·`condition`·`model`·`calibration_arm`·`metric`별로 평균을 고정합니다. 평균 마크에는 `seed`를 넣지 않고, `seed`는 시드점 마크에만 놓습니다. 시드 선택 필터는 분류기 혼동행렬·신뢰도 곡선에만 적용하고 예산 비교와 3,031행 강조에는 적용하지 않습니다. 신뢰도 곡선은 모델별 15개 구간이 별도 마크가 되도록 `bin`을 Detail/Path에 넣습니다.
+D3-예산별 시트는 원문 예산이 다른 행을 합치지 않도록 `search_budget`을 Detail에 두고, 모델·예산별 평균은 `AVG(value)`로 계산합니다. 보정 실험은 제외합니다. `[예산 표시]`는 분류기명·설정 수 등의 짧은 별칭이며 원문 예산은 자동 툴팁에 표시됩니다. 선택한 지표의 3시드 평균과 개별 시드점은 별도 시트로 전환하고, 시드 선택 필터는 분류기 혼동행렬·신뢰도 곡선에만 적용합니다. 예산 비교와 3,031행 강조는 항상 세 시드를 유지합니다. 신뢰도 곡선은 모델별 15개 구간이 별도 마크가 되도록 `bin`을 Detail/Path에 넣습니다.
 
 - 신뢰도 곡선은 `seed`를 하나만 고르는 것이 기본입니다. 동일 빈도 구간의 경계는 시드마다 달라 여러 시드를 합치면 근사가 됩니다(툴팁에 "시드 <seed>"를 항상 표시).
 - 동일 빈도 구간의 평균 예측 확률이 약 0.04~0.46 범위라 축을 0~0.6으로 고정하고, 축 제목은 "구간 평균 예측 확률", "구간 실제 지연율"로 씁니다.
@@ -289,9 +299,9 @@ D3-예산별 시트는 `experiment`·`condition`·`model`·`calibration_arm`·`m
 - 제목: **모델이 틀리는 곳 · 오류 분포와 분류기 비교**
 - 부제(왼쪽 OOF 영역): `P6_clean LightGBM(날씨 미사용) · 라벨 255,001행 × 분할 시드 3개 OOF · 시드별 지연 45,000행`
 - 부제(오른쪽 분류기 영역): `날씨 사용 피처 · 날씨 평가 집단 180,332행 · 분류기 3종 동일 행·폴드·시드 · 탐색 예산은 모델·실험마다 다름`
-- 시트 제목: "<dimension>별 지연 recall과 오경보율(FPR)", "원본 출발·도착 시각이 모두 없는 3,031행의 시드별 지연 recall", "세 시드 중 틀린 횟수 분포", "분류기별 혼동행렬 (시드 <seed>)", "탐색 예산별 분류기 3시드 평균(점 = 시드)", "신뢰도 곡선: 구간 평균 예측 확률 대 실제 지연율 (시드 <seed>, <보정 조건>)"
+- 시트 제목: "<dimension>별 지연 recall과 오경보율(FPR)", "원본 출발·도착 시각이 모두 없는 3,031행의 시드별 지연 recall", "세 시드 중 틀린 횟수 분포", "분류기별 혼동행렬 (시드 <seed>)", "탐색 예산별 분류기 비교(3시드 평균 / 개별 시드점 전환)", "신뢰도 곡선: 구간 평균 예측 확률 대 실제 지연율 (시드 <seed>, <보정 조건>)"
 - 캡션:
-  > 왼쪽은 날씨 미사용 P6_clean 모델의 라벨 255,001행 교차검증 예측(OOF)이며, 비율은 세 시드(같은 행의 재분할 3회)의 칸 수를 합쳐 계산했습니다. 원본 시각이 모두 없는 3,031행(실제 지연 519행)은 지연 recall이 3시드 평균 약 10%로 낮았고, 날짜 귀속 키가 불완전해 날씨 평가 집단(180,332행)에는 포함되지 않습니다. 오른쪽 분류기 비교는 사전 선언한 유한 후보 안의 비교입니다. 시험한 모든 예산에서 Random Forest가 앞섰지만 예산이 모델·실험마다 다르고 고정한 축도 있어 어느 알고리즘이 일반적으로 낫다는 근거가 아닙니다. 신뢰도 곡선의 보정기는 외부 학습 데이터 안에서만 적합했으며, 보정은 ECE를 줄였지만 LogLoss·Macro F1과 분류기 순서는 거의 바꾸지 않았습니다. 두 영역은 집단·모델이 달라 직접 비교하지 않습니다. 정적 교차검증 결과이며 미래 운항 성능을 뜻하지 않습니다. 출처: output/tableau/d3_*.csv, model_*.csv
+  > 왼쪽은 날씨 미사용 P6_clean 모델의 라벨 255,001행 교차검증 예측(OOF)이며, 비율은 세 시드(같은 행의 재분할 3회)의 칸 수를 합쳐 계산했습니다. 원본 시각이 모두 없는 3,031행(실제 지연 519행)은 지연 recall이 3시드 평균 약 10%로 낮았고, 날짜 귀속 키가 불완전해 날씨 평가 집단(180,332행)에는 포함되지 않습니다. 오른쪽 분류기 비교는 사전 선언한 후보 범위 안의 비교입니다. 시험한 모든 예산에서 Random Forest가 앞섰지만 예산이 모델·실험마다 다르고 고정한 축도 있어 어느 알고리즘이 일반적으로 낫다는 근거가 아닙니다. 신뢰도 곡선의 보정기는 외부 학습 데이터 안에서만 적합했으며, 보정은 ECE를 줄였지만 LogLoss·Macro F1과 분류기 순서는 거의 바꾸지 않았습니다. 두 영역은 집단·모델이 달라 직접 비교하지 않습니다. 정적 교차검증 결과이며 미래 운항 성능을 뜻하지 않습니다. 출처: output/tableau/d3_*.csv, model_*.csv
 
 ### 배치 스케치
 
@@ -300,14 +310,15 @@ D3-예산별 시트는 `experiment`·`condition`·`model`·`calibration_arm`·`m
 | 제목                                                         | dimension    |
 +---------------------------------+----------------------------+ seed         |
 | 부제(OOF)                       | 부제(분류기)               | 최소 행 수   |
-| D3-그룹 recall·FPR (560x300)    | D3-예산별 분류기 비교 (380x300)| 보정 조건 |
-| D3-3,031행 강조 (270x200) | D3-오류 안정성 (290x200) | [D3-보정 신뢰도 곡선 ⇄ D3-분류기 혼동행렬] (380x200) |
+| D3-그룹 recall·FPR             | D3-예산 비교 평균 ⇄ 개별점  | 보정 조건    |
+| D3-3,031행 강조 | D3-오류 안정성 | D3-보정 신뢰도 곡선        | 예산 지표    |
+| [버튼: 하단 전체 폭의 분류기 혼동행렬 덮어보기 / 원래 하단 복원]              |
 +---------------------------------+----------------------------+--------------+
 | 캡션                                                                        |
 +-----------------------------------------------------------------------------+
 ```
 
-두 영역 사이에 RULE 색 세로 구분선(2px)을 둡니다. 오른쪽 아래 칸은 **표시/숨기기 단추가 있는 세로 컨테이너 두 개**(기본 표시: D3-보정 신뢰도 곡선, 단추 문구 "혼동행렬 보기"/"신뢰도 곡선 보기")로 두 시트를 번갈아 보입니다. 이전 안의 D3-분류기 지표 시트는 D3-예산별 분류기 비교가 대신합니다(`model_metrics_long`은 대시보드 2에서만 사용).
+현재 제작본은 상단에 OOF 차원·최소 행 수·선택 시드·보정 조건·예산 비교 지표를 배치합니다. 오른쪽 위 예산 비교는 "개별 시드점 보기"/"3시드 평균 보기" 버튼으로 전환합니다. 분류기 혼동행렬은 하단 **전체 폭의 떠 있는 패널**이며, "분류기 혼동행렬 보기" 버튼을 누르면 하단 OOF·신뢰도 시트를 덮어 표시합니다. "OOF 분포·신뢰도 곡선 보기"로 원래 하단을 복원합니다. 혼동행렬은 날씨 평가 180,332행이며 위쪽 OOF 영역과 집단을 구별합니다. 위 스케치는 기본 화면의 개략 배치입니다(`model_metrics_long`은 대시보드 2에서만 사용).
 
 ### 툴팁
 
@@ -318,8 +329,9 @@ D3-그룹: <dimension 별칭> · <group>
          세 시드 합산 칸: TN <SUM(tn)> / FP <SUM(fp)> / FN <SUM(fn)> / TP <SUM(tp)>
 D3-분류기: <variant> · 시드 <seed> · <[칸 유형]> <SUM(n)>행 (평가 180,332행)
 D3-예산별: <model_label> · <search_budget> (<n_configurations>개 설정) · <metric 별칭>
-         3시드 평균 <MIN([3시드 평균])> · 실험 <experiment> · 날씨 사용 조건 · 보정 없음
-         (시드점 툴팁에는 시드 <seed> · 해당 시드 값 <AVG(value)>를 추가)
+         평균 시트: 3시드 평균 <AVG(value)> · 날씨 사용 조건 · 보정 없음
+         개별점 시트: 시드 <seed> · 해당 시드 값 <AVG(value)>
+         현재 제작본은 자동 툴팁을 사용하며 search_budget 원문은 툴팁, 선택 지표는 매개변수에서 확인
 D3-신뢰도: <model_label> · <calibration_arm_ko> · 시드 <seed> · 구간 <bin>
          평균 예측 확률 <[구간 평균 예측 확률]> · 실제 지연율 <[구간 실제 지연율]>
          구간 행 <SUM(n)> · 실제 지연 <SUM(n_delayed)> · <binning_ko>
@@ -331,6 +343,8 @@ D3-신뢰도: <model_label> · <calibration_arm_ko> · 시드 <seed> · 구간 <
 
 ## 5. Tableau Public 게시
 
+2026-10-08 [공개 통합 문서](https://public.tableau.com/app/profile/.82847805/viz/airplane_portfolio/1) 게시 완료. 아래 절차는 다시 게시하거나 설정을 점검할 때 사용합니다. 현재 탭 표시 켜짐, 데이터 접근·다운로드 비허용, 설명·GitHub 역링크 저장을 브라우저에서 확인했습니다.
+
 1. 세 대시보드를 하나의 통합 문서에 두거나(권장: 대시보드 3개 + 스토리 없음), 대시보드별 통합 문서로 나눕니다. 통합 문서 이름 예: `Airplane 항공편 지연 탐색 (포트폴리오)`.
 2. 모든 데이터 원본을 **추출(Extract)** 로 바꿉니다(Tableau Public은 추출만 게시). 원본 목록에 `flights_rowlevel.csv`가 없는지 다시 확인합니다.
 3. 사용하지 않는 시트·필드는 숨기고(필드 숨기기), 각 대시보드의 탭 이름을 `1 지연 패턴`, `2 날씨와 지연`, `3 모델 오류`로 정합니다.
@@ -340,6 +354,8 @@ D3-신뢰도: <model_label> · <calibration_arm_ko> · 시드 <seed> · 구간 <
 6. 게시 URL(예: `https://public.tableau.com/app/profile/<사용자>/viz/<통합문서>/<대시보드>`)을 조율 에이전트에 보고합니다.
 
 ## 6. 스크린샷 내보내기
+
+2026-10-08 아래 세 PNG를 Desktop에서 기본 크기 **1200 × 800 px**로 내보내고 조율 에이전트가 화면을 확인했습니다. [지연 패턴](../assets/readme/tableau_delay_patterns.png) · [날씨와 지연](../assets/readme/tableau_weather_delay.png) · [모델 오류](../assets/readme/tableau_model_errors.png).
 
 - Tableau Desktop에서 각 대시보드를 열고 **대시보드 > 이미지 내보내기** (또는 Tableau Public 페이지의 다운로드 > 이미지).
 - 크기: 대시보드 고정 크기 그대로 **1200 × 800 px**, PNG. 가능하면 2배(2400 × 1600)로 내보낸 뒤 1600 × 1067로 축소해 README의 다른 그림(가로 1600)과 폭을 맞춥니다. 파일당 600 KB 이하 권장.
@@ -351,6 +367,8 @@ D3-신뢰도: <model_label> · <calibration_arm_ko> · 시드 <seed> · 구간 <
 - PNG는 바이너리이므로 줄바꿈 규칙 대상이 아닙니다. `assets/readme/sources.json`(SVG 그림 영수증)에는 추가하지 않습니다 — 그 영수증과 테스트는 생성기가 만든 SVG만 다룹니다.
 
 ## 7. README 반영 (조율 에이전트가 편집)
+
+현재 [README 대시보드 절](../README.md#dashboards)에 공개 통합 문서 링크·집단·분모·시드 설명과 PNG 3장을 반영했습니다(대표 1장, 나머지 2장은 접는 영역). 아래는 유지관리 시의 삽입 지침입니다.
 
 README의 **2절 끝, `<a id="engineering"></a>` 바로 위**에 짧은 하위 절을 추가합니다. 새 앵커는 기존 앵커와 겹치지 않게 `<a id="dashboards"></a>`를 씁니다. 상단 내비게이션 줄에 `· [대시보드](#dashboards)`를 추가할지는 선택입니다.
 
@@ -379,27 +397,33 @@ README의 **2절 끝, `<a id="engineering"></a>` 바로 위**에 짧은 하위 �
 
 ## 8. 체크리스트
 
-- [ ] manifest `all_checks_passed = true` 확인
-- [ ] 데이터 원본 15개 중 사용한 것만 연결, `flights_rowlevel.csv` 미연결
-- [ ] 모든 지연율·recall·FPR이 `SUM(...)/SUM(...)` 계산 필드로 표시됨(행 열의 비율을 AVG하지 않음)
-- [ ] 각 대시보드 부제에 집단·분모(255,001 / 180,332 / 255,001 × 3 / 3,031)가 있음
-- [ ] 대시보드 1 KPI가 255,001 / 45,000 / 17.6%로 표시됨
-- [ ] 대시보드 2 구간 막대의 행 수 합(역할별)이 180,332, 혼동행렬 칸 합이 180,332
-- [ ] 대시보드 2 혼동행렬 시드 42 값이 `output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv`와 같음
-- [ ] 대시보드 3 `raw_time_pattern = both_missing`의 시드합산 recall ≈ 10.0%
-- [ ] 대시보드 3 예산별 비교의 3시드 평균이 README 2절 표와 같음(예: LightGBM 24개 설정 Macro F1 0.6005, Random Forest 9개 설정 0.6085), 보정 실험 행은 이 시트에 없음
-- [ ] 대시보드 3 신뢰도 곡선이 시드 하나·`equal_frequency_15`로 표시되고 구간 `n` 합이 180,332, 대각선(완전 보정선) 표시
-- [ ] 미량 강수 구간 라벨에 "0.0001 표기, 측정량 아님" 표시
-- [ ] 캡션에 인과·미래 성능을 부정하는 문장, 10분 가정, 시드 = 재분할 문구가 있음
-- [ ] 색상이 1.1 토큰만 사용(빨강/초록 없음)
-- [ ] 고정 크기 1200 × 800, 한글 깨짐 없음
-- [ ] Tableau Public 게시(사용자 로그인), 데이터 다운로드 비허용, 설명 문구 입력
-- [ ] PNG 3장 `assets/readme/tableau_*.png` 저장
-- [ ] 게시 URL과 스크린샷 경로를 조율 에이전트에 보고
+완료 표시는 CSV·저장된 통합 문서의 정적 검사 또는 조율 에이전트의 최종 Desktop·브라우저 화면 검증에 근거합니다. 게시·설정·PNG는 각 항목의 별도 확인 결과를 기록합니다.
+
+- [x] manifest `all_checks_passed = true`, CSV 15개의 행수·파일 해시 대조
+- [x] 원본은 집계 CSV 15개이며 파일별 별도 연결, `flights_rowlevel.csv` 미연결(통합 문서 검사)
+- [x] 15개 데이터 원본 모두 Desktop에서 추출로 변환, 로컬 `.hyper` 생성과 최종 통합 문서 저장 확인(Desktop 검증)
+- [x] 구간·그룹 지연율·recall·FPR은 칸 수의 `SUM(...)/SUM(...)` 계산, 모델의 3시드 지표는 원본 `value`의 평균(통합 문서 검사)
+- [x] 부제·캡션에 집단·분모 255,001 / 180,332 / 255,001 × 3 / 3,031 구별
+- [x] D1 KPI 255,001 / 45,000 / 17.6% 표시(Desktop 화면 검증)
+- [x] D2 구간은 작은 칸·미결합·필드 결측을 숨기지 않음; 추출 데이터의 역할별 합 180,332 / 지연 31,805 확인
+- [x] D2 혼동행렬 시드 42의 8칸과 시드 1/7 전환을 원본 runs CSV에 대조(Desktop 화면 검증)
+- [x] D3 `both_missing`의 시드별 recall 약 9.4% / 10.0% / 10.6%, 합산 약 10.0%(Desktop 화면·추출 데이터 검증)
+- [x] D3 예산 비교는 보정 실험을 제외하고 같은 예산의 세 시드 평균/개별점으로 구분; 지표 선택·시트 전환 동작 확인(통합 문서·Desktop 검사)
+- [x] D3 신뢰도 곡선은 시드 하나·`equal_frequency_15`, 구간 `n` 합 180,332와 완전 보정선 확인; 선택 시드·보정 조건·구간 행 수가 툴팁에 포함됨
+- [x] D1 공항 툴팁의 공항·주·역할·행 수·지연 수·비율 확인(DEN 예시, Desktop 화면 검증)
+- [x] 짧은 예산 별칭과 `search_budget` 원문 툴팁을 구분, Wilson 참고 구간은 현재 미표시(통합 문서 검사)
+- [x] 미량 강수 표시명에 "0.0001 표기, 측정량 아님" 포함(통합 문서 검사)
+- [x] 캡션에 인과·미래 성능 한계, 10분 가정, 같은 행 재분할 시드 설명 포함
+- [x] 고정 크기 1200 × 800, 주요 매개변수·전환 버튼 동작 확인
+- [ ] 색상·범례·축·전체 텍스트가 1절 디자인 규칙을 완전히 따르는지 추가 점검
+- [x] Tableau Public 게시 성공, 대시보드 탭 표시 켜짐·데이터 접근/다운로드 비허용·설명/GitHub 역링크 저장 확인(브라우저 검증)
+- [x] 공개 페이지에서 세 대시보드 탭 각각의 렌더링 확인(브라우저 검증, 공통 URL 유지)
+- [x] PNG 3장 `assets/readme/tableau_*.png` 저장, 각각 1200 × 800 확인(파일·Desktop 화면 검증)
+- [x] 게시 URL과 스크린샷 경로 보고, README 링크·이미지 반영
 
 ## 9. 하지 말 것
 
-- `data/tableau/flights_rowlevel.csv` 또는 `data/` 아래 파일을 Tableau Public에 게시하거나 커밋하지 않습니다.
+- `data/tableau/flights_rowlevel.csv` 등 `data/` 아래 행 단위 원자료를 Tableau Public에 게시하거나 커밋하지 않습니다. 게시용 추출은 승인된 `output/tableau/*.csv` 15개에서만 만듭니다. 로컬 `.hyper` 파일도 커밋하지 않습니다.
 - `.twb`/`.twbx` 파일을 저장소에 커밋하지 않습니다(필요하면 로컬 보관만).
 - 서로 다른 집단(255,001 / 180,332 / 3,031)의 지연율·점수를 한 축·한 표에서 비교하지 않습니다. 특히 D3 OOF(날씨 미사용, 255,001행)와 분류기 비교(날씨 사용, 180,332행)를 섞지 않습니다.
 - `delay_rate`, `recall_delayed` 같은 행별 비율 열을 `AVG`하거나 `SUM`하지 않습니다.

@@ -32,7 +32,7 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | 분류기 탐색 예산 확장·Random Forest 날씨 사용/미사용 | [notebooks/run_classifier_tuning.py](notebooks/run_classifier_tuning.py), 결과는 [README 2절 후속 확인](README.md#classifier-tuning) |
 | 분류기 후보 끝값 너머 확대·Random Forest 동일 후보 날씨 비교 | [src/classifier_grid_extension.py](src/classifier_grid_extension.py), [notebooks/run_classifier_grid_extension.py](notebooks/run_classifier_grid_extension.py), 결과는 [README 탐색 확대 후속](README.md#classifier-grid-extension) |
 | 분류기별 확률 보정(Platt/Isotonic, 교차적합/내부 검증 행) | [src/classifier_calibration.py](src/classifier_calibration.py), [notebooks/run_classifier_calibration.py](notebooks/run_classifier_calibration.py), 결과는 [README 확률 보정](README.md#classifier-calibration) |
-| Tableau Public 대시보드 제작 | [docs/TABLEAU_HANDOFF_KO.md](docs/TABLEAU_HANDOFF_KO.md), 집계 데이터 [output/tableau/README_DATA_KO.md](output/tableau/README_DATA_KO.md), 생성기 [scripts/build_tableau_extracts.py](scripts/build_tableau_extracts.py) |
+| Tableau Public 대시보드 열기·유지관리 | [README 대시보드](README.md#dashboards), [제작·게시 기록](docs/TABLEAU_HANDOFF_KO.md), 집계 데이터 [output/tableau/README_DATA_KO.md](output/tableau/README_DATA_KO.md), 생성기 [scripts/build_tableau_extracts.py](scripts/build_tableau_extracts.py) |
 | 평가 경로(nested grid, inner 경계 TE) | [src/cv.py](src/cv.py) |
 | 전처리·피처 엔지니어링 | [src/features.py](src/features.py) |
 | 날씨 피처 계약(예측 시점·가정 지연) | [src/weather_model.py](src/weather_model.py), [src/weather.py](src/weather.py) |
@@ -66,7 +66,7 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | [docs/TUTOR_FEEDBACK_HANDOFF_KO.md](docs/TUTOR_FEEDBACK_HANDOFF_KO.md) | 튜터 피드백 11개의 보존본. 0절은 현재 반영 현황, 1~4절은 기준 커밋 시점의 상태 대조 기록 | 현행(0절) / 과거 기록(1~4절) |
 | [docs/FEEDBACK_PREPROCESSING_KO.md](docs/FEEDBACK_PREPROCESSING_KO.md) | 피드백 2·3·4·10: 결측 복원의 집단·분모, 시각 복원 규칙, Traffic 집계 경계, 양쪽 시각 결측 집단 | 현행 참조 |
 | [docs/FEEDBACK_MODEL_WEATHER_KO.md](docs/FEEDBACK_MODEL_WEATHER_KO.md) | 피드백 5·6·7: 날씨 피처 명세, LightGBM 고정/탐색 설정과 protocol 라벨 정오표, 지표 정의, 분류기 비교 기록의 코드 해시 정오표(3.6절) | 현행 참조 |
-| [docs/TABLEAU_HANDOFF_KO.md](docs/TABLEAU_HANDOFF_KO.md) | Tableau Public 대시보드 3종 제작 인계서(연결할 CSV, 화면 구성, 게시 전 점검) | 현행 |
+| [docs/TABLEAU_HANDOFF_KO.md](docs/TABLEAU_HANDOFF_KO.md) | Tableau Public 대시보드 3종의 제작·게시 기록과 유지관리 지침(공개 링크, CSV, 화면 구성, 검증·표시 한계) | 현행 |
 | [output/tableau/README_DATA_KO.md](output/tableau/README_DATA_KO.md) | Tableau용 집계 CSV의 열·집단·분모 설명과 근거 대조 결과 | 현행 참조 |
 | [output/pipeline_data_contract.md](output/pipeline_data_contract.md) | 현재 파이프라인의 데이터 사용 계약 | 현행 참조 |
 | [output/preprocessing_decisions.md](output/preprocessing_decisions.md) | 전처리 결정표 | 현행 참조 |
@@ -173,6 +173,7 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | 분류기 후보 끝값 너머 확대·Random Forest 동일 후보 날씨 비교 | `output/baseline_recovery_v2_classifier_grid_ext_20261008_{lgbm,rf}_{runs.csv, folds.csv, paired_deltas.csv, summary.json, manifest.json}`, 두 부분 쌍비교 `..._combined_{summary.json, paired_deltas.csv}`, 실행 로그 `..._{lgbm,rf}.log` — 예: [combined summary](output/baseline_recovery_v2_classifier_grid_ext_20261008_combined_summary.json) | 현행 |
 | 분류기별 확률 보정 | `output/baseline_recovery_v2_classifier_calibration_20261008_{runs.csv, folds.csv, reliability_bins.csv, paired_deltas.csv, summary.json, manifest.json}`, [실행 로그](output/baseline_recovery_v2_classifier_calibration_20261008.log) — 예: [summary](output/baseline_recovery_v2_classifier_calibration_20261008_summary.json) | 현행 |
 | Tableau Public용 집계 | `output/tableau/*.csv`, [manifest](output/tableau/tableau_extracts_manifest.json), [데이터 설명](output/tableau/README_DATA_KO.md) | 현행(기존 근거의 재집계, 학습 없음) |
+| Tableau Public 대시보드·PNG | [공개 통합 문서](https://public.tableau.com/app/profile/.82847805/viz/airplane_portfolio/1), [README 대시보드](README.md#dashboards), `assets/readme/tableau_{delay_patterns,weather_delay,model_errors}.png`, [제작·검증 기록](docs/TABLEAU_HANDOFF_KO.md) | 제작·게시·PNG 반영 완료(새 실험 아님) |
 | 피드백 문서용 결측·Traffic·취약 집단 재집계 | [output/feedback_missing_audit_20261008.json](output/feedback_missing_audit_20261008.json) | 현행 근거(읽기 전용 재집계, 학습 없음) |
 | 날씨 전체 행 결합 | [join manifest](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json), [join summary](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_summary.json) | 현행 |
 | 날씨 전체 수집(bulk) | [plan manifest](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_plan_manifest.json), [fetch manifest](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_manifest.json), [fetch audit](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_audit.json) | 현행 |
@@ -214,7 +215,7 @@ README는 포트폴리오 README로 운영되며 강의 발표는 끝났다.
 
 ### 열린 후속 작업
 
-새 결과는 새 출력 이름으로 분리한다. 제안 항목의 실행은 그때의 사용자 요청과 범위를 확인한 뒤에만 한다. 근거와 동기는 [README 4절](README.md#limits)을 따른다.
+새 결과는 새 출력 이름으로 분리한다. 추가 모델 실험 네 항목은 2026-10-08 사용자 요청으로 보류했으며, 재개 요청이 있을 때 범위를 확인한 뒤 실행한다. 근거와 동기는 [README 4절](README.md#limits)을 따른다.
 
 **실험**
 
@@ -223,11 +224,11 @@ README는 포트폴리오 README로 운영되며 강의 발표는 끝났다.
 | `classifier_tuning_20261008` — LightGBM·Random Forest 탐색 예산 확장, `max_features` 후보 확장, Random Forest 날씨 사용/미사용 동일조건 비교 | 새 실험(같은 행·폴드·시드·내부 선택 경계 유지, 예산 사전 선언). 러너 [notebooks/run_classifier_tuning.py](notebooks/run_classifier_tuning.py) | 완료(`03fe25c`) | [README 2절 후속 확인](README.md#classifier-tuning), 근거는 [실행 근거 지도](#evidence-map)의 분류기 탐색 예산 확장 |
 | `classifier_grid_ext_20261008` — LightGBM 후보를 끝값 너머로 확장(학습률 0.03 미만, 잎 수 127 초과, 트리 수 상한 확대), Random Forest `min_samples_leaf` 50 초과 후보를 날씨 사용/미사용에 같은 후보로 적용 | 새 실험(같은 행·폴드·시드·내부 선택 경계). 러너 [notebooks/run_classifier_grid_extension.py](notebooks/run_classifier_grid_extension.py) | 완료([`de4b5cf`](https://github.com/Peter-jackson12/Airplane/commit/de4b5cf958f587f93976c9793ab9e8643737c22a)) | [README 탐색 확대 후속](README.md#classifier-grid-extension), 근거는 [실행 근거 지도](#evidence-map)의 분류기 후보 확대 |
 | `classifier_calibration_20261008` — 분류기별 확률 보정(Platt/Isotonic × 교차적합/내부 검증 행) | 새 실험(보정기는 외부 학습 데이터 내부에서만 적합, 임계값 재선택). 러너 [notebooks/run_classifier_calibration.py](notebooks/run_classifier_calibration.py) | 완료([`610a8d8`](https://github.com/Peter-jackson12/Airplane/commit/610a8d8e1031ae77da19bc782d93a95eaf145a25)) | [README 확률 보정](README.md#classifier-calibration), 근거는 [실행 근거 지도](#evidence-map)의 분류기별 확률 보정, Tableau 표 `model_comparison_all.csv`·`model_calibration_reliability.csv` |
-| LightGBM 고정 축 탐색(`max_depth` 상향, `colsample_bytree` 등) | 새 실험(확대 탐색에서 `max_depth=8`이 잎 수 축을 막음) | 제안/미실행 | – |
-| 날씨 사용 Random Forest의 `min_samples_leaf` 10~25 사이 후보 | 새 실험(확대 후보에서 선택값이 아래 끝값에 몰림) | 제안/미실행 | – |
-| 탐색한 설정으로 LightGBM 날씨 사용/미사용 비교 | 새 실험(현재 LightGBM 날씨 쌍비교는 고정 설정) | 제안/미실행 | – |
-| 시간 순서 검증(앞 기간 학습 → 뒤 기간 평가) | 새 실험(정적 교차검증 결론의 시간 이동 확인) | 제안/미실행 | – |
-| Tableau Public 대시보드 3개 제작·게시 (Codex 담당, [docs/TABLEAU_HANDOFF_KO.md](docs/TABLEAU_HANDOFF_KO.md)) | 시각화 제작(새 실험 아님, `output/tableau/` 집계만 사용) | 대기 | – |
+| LightGBM 고정 축 탐색(`max_depth` 상향, `colsample_bytree` 등) | 새 실험(확대 탐색에서 `max_depth=8`이 잎 수 축을 막음) | 보류/미실행(사용자 요청, 2026-10-08) | – |
+| 날씨 사용 Random Forest의 `min_samples_leaf` 10~25 사이 후보 | 새 실험(확대 후보에서 선택값이 아래 끝값에 몰림) | 보류/미실행(사용자 요청, 2026-10-08) | – |
+| 탐색한 설정으로 LightGBM 날씨 사용/미사용 비교 | 새 실험(현재 LightGBM 날씨 쌍비교는 고정 설정) | 보류/미실행(사용자 요청, 2026-10-08) | – |
+| 시간 순서 검증(앞 기간 학습 → 뒤 기간 평가) | 새 실험(정적 교차검증 결론의 시간 이동 확인) | 보류/미실행(사용자 요청, 2026-10-08) | – |
+| Tableau Public 대시보드 3개 제작·게시 (Codex 담당, [docs/TABLEAU_HANDOFF_KO.md](docs/TABLEAU_HANDOFF_KO.md)) | 시각화 제작(새 실험 아님, `output/tableau/` 집계만 사용) | 제작·Desktop 검증·Public 게시·PNG 반영 완료 | [README 대시보드](README.md#dashboards), 공개 링크·설정·표시 한계는 인계서 0절 |
 
 **검토 후속(코드·테스트)** — 2026-10-08 독립 검토 지적. 탐색 확장 실험 커밋 뒤 처리했다. 기존 실행 근거 파일은 수정하지 않았다.
 

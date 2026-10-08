@@ -6,7 +6,7 @@
 
 **항공편 한 건의 지연 여부(`Delay`)를 LightGBM으로 예측하고, 라벨 누수 없는 교차검증 위에서 “전처리 수정”과 “출발·도착 공항 날씨 추가”가 성능을 바꾸는지 따로 검증한 머신러닝 프로젝트입니다.**
 
-[한눈에 보기](#overview) · [핵심 결과](#results) · [문제 해결 과정](#engineering) · [한계와 다음 단계](#limits) · [재현 방법](#reproduce) · [문서·근거](#docs)
+[한눈에 보기](#overview) · [핵심 결과](#results) · [대시보드](#dashboards) · [문제 해결 과정](#engineering) · [한계와 다음 단계](#limits) · [재현 방법](#reproduce) · [문서·근거](#docs)
 
 <a id="overview"></a>
 ## 1. 프로젝트 한눈에
@@ -160,6 +160,32 @@ Random Forest−LightGBM 차이는 Macro F1 +0.009612, LogLoss −0.005025, ROC-
 ![P6_clean 공유형 보정의 ECE와 LogLoss 비교: Isotonic의 ECE 감소가 LogLoss 개선으로 이어지지는 않음](assets/readme/calibration_tradeoff.svg)
 
 [보정 보고서](output/baseline_recovery_v2_calibration_20260917_report.md) · [수준값 CSV](output/baseline_recovery_v2_calibration_20260917_level_summary.csv)
+
+</details>
+
+<a id="dashboards"></a>
+### 인터랙티브 대시보드 (Tableau Public)
+
+[공개 통합 문서에서 보기](https://public.tableau.com/app/profile/.82847805/viz/airplane_portfolio/1) · [데이터 사전](output/tableau/README_DATA_KO.md) · [집계 CSV 생성 스크립트](scripts/build_tableau_extracts.py)
+
+기존 실행 근거를 집계 CSV 15개로 정리해 세 대시보드를 제작·게시했습니다. 새로운 모델 학습 없이 관측 지연 패턴과 모델의 오류·확률을 탐색할 수 있습니다.
+
+| 대시보드 | 집단·분모 | 내용 |
+|---|---|---|
+| 1 지연 패턴 | 라벨 255,001행 | 항공사·공항·예정 시각·월·노선별 실제 지연 비율 |
+| 2 날씨와 지연 | 날씨 평가 180,332행 | 날씨 구간별 실제 지연 비율, 날씨 유무 지표·혼동행렬 |
+| 3 모델 오류 | 날씨 미사용 OOF 255,001행 / 날씨 사용 분류기 평가 180,332행 | 그룹별 놓침·오경보, 양쪽 원본 시각 결측 3,031행, 분류기 혼동행렬·탐색 예산·확률 보정 |
+
+지연율은 해당 집단·구간의 전체 행 수, 지연 recall은 실제 지연 행 수, 오경보율은 정상 행 수를 분모로 삼습니다. 모델의 시드 42·1·7은 같은 평가 행을 다시 분할한 결과이며, 시드별 혼동행렬과 세 시드 평균·개별점을 구분해 표시합니다. 서로 다른 평가 집단을 합치지 않으며, 탐색 예산 비교는 사전 선언한 후보 범위 안의 결과입니다. 구간·그룹별 관측 비율은 연관을 보여 주고, 정적 교차검증 점수는 원인이나 미래 운항 성능을 뜻하지 않습니다.
+
+![라벨이 있는 항공편의 항공사 공항 예정 시각 월 노선별 지연 비율을 탐색하는 Tableau 대시보드](assets/readme/tableau_delay_patterns.png)
+
+<details>
+<summary>날씨와 지연 · 모델 오류 대시보드 화면</summary>
+
+![날씨 평가 집단의 기상 구간별 실제 지연 비율과 날씨 사용 여부에 따른 모델 지표 혼동행렬을 보여 주는 대시보드](assets/readme/tableau_weather_delay.png)
+
+![평가 집단을 구분해 그룹별 오류 시각 결측 탐색 예산과 확률 보정 신뢰도 곡선을 보여 주는 대시보드](assets/readme/tableau_model_errors.png)
 
 </details>
 
