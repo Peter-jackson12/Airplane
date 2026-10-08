@@ -1,0 +1,277 @@
+{
+  "schema_version": 1,
+  "name": "baseline_recovery_v2_classifier_calibration_20261008",
+  "successful": true,
+  "smoke_only_not_evidence": false,
+  "git_sha": "f84c5c3fdf301edbf0f500a0521a0e3379dba579",
+  "git_status_porcelain_at_start": [
+    "?? notebooks/run_classifier_calibration.py",
+    "?? notebooks/run_classifier_grid_extension.py",
+    "?? output/baseline_recovery_v2_classifier_calibration_20261008.log",
+    "?? output/baseline_recovery_v2_classifier_grid_ext_20261008_lgbm.log",
+    "?? output/baseline_recovery_v2_classifier_grid_ext_20261008_rf.log",
+    "?? src/classifier_calibration.py",
+    "?? src/classifier_grid_extension.py",
+    "?? tests/test_classifier_calibration.py",
+    "?? tests/test_classifier_grid_extension.py"
+  ],
+  "python_version": "3.14.6",
+  "package_versions": {
+    "pandas": "3.0.5",
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.0",
+    "lightgbm": "4.7.0"
+  },
+  "cpu_count": 24,
+  "process_priority": "below_normal",
+  "threads": {
+    "rf_n_jobs": 6,
+    "lgbm_n_jobs": 4,
+    "OMP_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "MKL_NUM_THREADS": "4"
+  },
+  "uv_lock_sha256": "d73d34856c696d77df451d9a998fb75b1e42108d3f8d4fdb51cb70cee737dc22",
+  "inputs": {
+    "join_manifest": {
+      "path": "output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json",
+      "sha256": "d12bb70948893532806b5c727bba5c8d4604e6b09c544279d8f3299b7d1875e5",
+      "bytes": 6944
+    },
+    "join_summary": {
+      "path": "output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_summary.json",
+      "sha256": "706906089765d177f0da2ee39ca9c2912e9defeb765d064f1f8b85f31a7a907a",
+      "bytes": 16296
+    },
+    "joined_weather": {
+      "path": "data/weather_probe/baseline_recovery_v2_weather_full_join_20260922_full_join/joined_latency10min.csv.gz",
+      "sha256": "28f015b579f17e4b3ffa67c7ee9ec07aba7225fdbd1502b5d8cb839e797b80e5",
+      "bytes": 100412934
+    },
+    "raw_train": {
+      "path": "data/train.csv",
+      "sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84",
+      "bytes": 116707688
+    }
+  },
+  "reference_runs": {
+    "compare_runs": {
+      "path": "output/baseline_recovery_v2_classifier_compare_20261008_runs.csv",
+      "sha256": "23ba79a697af3de4ff2de537876a4ced6f07547278497f377b217ea5d8106707"
+    },
+    "compare_folds": {
+      "path": "output/baseline_recovery_v2_classifier_compare_20261008_folds.csv",
+      "sha256": "a993fb042cae7d996b3801fc9ad03fe17da7ff6b86bf87d8cc668c9d648655b9"
+    },
+    "compare_manifest": {
+      "path": "output/baseline_recovery_v2_classifier_compare_20261008_manifest.json",
+      "sha256": "fd21335fdf691fe0aef347ebf5cd03f3615ba5585a8b0b232c7b782c40b2429b"
+    },
+    "tuning_runs": {
+      "path": "output/baseline_recovery_v2_classifier_tuning_20261008_runs.csv",
+      "sha256": "fad8bf80c838bfec01a8f9283f9f401b59d9ecfb18280117de03b1d598732d73"
+    },
+    "tuning_folds": {
+      "path": "output/baseline_recovery_v2_classifier_tuning_20261008_folds.csv",
+      "sha256": "31b8d1455b691837cb14d315a0919364668727703b11a66307603c2a820f4431"
+    },
+    "tuning_manifest": {
+      "path": "output/baseline_recovery_v2_classifier_tuning_20261008_manifest.json",
+      "sha256": "21ab9749549b9d5039f258fd17869c25970041408f34a46f24aff536e8225d0d"
+    }
+  },
+  "join_name": "baseline_recovery_v2_weather_full_join_20260922",
+  "code_sha256_lf": {
+    "src/classifier_calibration.py": "56e10807097f3fcb929ef473b5687d4dfc2a3be6c354ee5ce7074ebe81028ba7",
+    "notebooks/run_classifier_calibration.py": "501da24646ff3f600c599cf82758145476eba24607aba4d99d61ca9adafd0fde",
+    "src/classifier_compare.py": "62796b5f8961b91e6812ea993e74058a9fde67d32e1a5505292a0a572f461318",
+    "notebooks/run_classifier_tuning.py": "15020d3c8fdc88938f849b11d80ab633adf188f82a3ba644a94cff9bf1560660",
+    "notebooks/run_classifier_comparison.py": "f3e1b73e9cdfdd561c49d776360b90063d59cb558d5dcb580c5616e1a3184bce",
+    "notebooks/run_weather_model_comparison.py": "b16a1a01c5cad6ce645f097db3ed0d9ace0ac4c139c1934eee0fced839f77fdf",
+    "src/weather_model.py": "6128da2a9ca87ea7493cd9b7af9498bfccccccf6240dd0e7963c15fc78c35f62",
+    "src/weather_full.py": "90662a1730d16a76c446080bcb66604325d918ad39bf202cbf160295540a62be",
+    "src/features.py": "643454c91f13dc359170b34c9ba10688ce46072d4b8a874fc0c05f8e5b348b7d",
+    "src/cv.py": "cfa5712e73b911a6b68ce73f3307e49d02d68e66cc356eac91313060c6c88786",
+    "rerun_all_phases.py": "fe59813e13f8f127e7aa97ef25b496d8e871a6a5abbdd3b0ce8b35e71d559791"
+  },
+  "experiment_identity": {
+    "name": "baseline_recovery_v2_classifier_calibration_20261008",
+    "smoke": false,
+    "sample": null,
+    "seeds": [
+      42,
+      1,
+      7
+    ],
+    "models": [
+      "logistic_regression",
+      "random_forest_tuned",
+      "lightgbm_tuned"
+    ],
+    "rows": 180332,
+    "positives": 31805,
+    "columns_sha256": "0145b7bb866bb715095ef00f32e46dcb91ad4f11d1bceec2fd4a91820d1e6606",
+    "target_sha256": "a367fcc1596e90f744b70b9c1b47ac213971bc994bc3e66999138c420fb9d7c6",
+    "row_key_sha256": "7b9eb6acc6ecd40bfe9a7fc4cd0494b8aeae0e57de32b11477f8b073c57e2da4",
+    "selection_files_sha256": {
+      "compare_folds": "a993fb042cae7d996b3801fc9ad03fe17da7ff6b86bf87d8cc668c9d648655b9",
+      "tuning_folds": "31b8d1455b691837cb14d315a0919364668727703b11a66307603c2a820f4431"
+    },
+    "arms": [
+      [
+        "none",
+        "none",
+        "none"
+      ],
+      [
+        "platt_inner_holdout",
+        "platt",
+        "inner_holdout"
+      ],
+      [
+        "isotonic_inner_holdout",
+        "isotonic",
+        "inner_holdout"
+      ],
+      [
+        "platt_crossfit",
+        "platt",
+        "inner_train_crossfit"
+      ],
+      [
+        "isotonic_crossfit",
+        "isotonic",
+        "inner_train_crossfit"
+      ]
+    ],
+    "crossfit_k": 5,
+    "rf_n_estimators": 300,
+    "lgbm_n_jobs": 4,
+    "code_sha256_lf": {
+      "src/classifier_calibration.py": "56e10807097f3fcb929ef473b5687d4dfc2a3be6c354ee5ce7074ebe81028ba7",
+      "src/classifier_compare.py": "62796b5f8961b91e6812ea993e74058a9fde67d32e1a5505292a0a572f461318",
+      "notebooks/run_weather_model_comparison.py": "b16a1a01c5cad6ce645f097db3ed0d9ace0ac4c139c1934eee0fced839f77fdf",
+      "src/weather_model.py": "6128da2a9ca87ea7493cd9b7af9498bfccccccf6240dd0e7963c15fc78c35f62",
+      "src/weather_full.py": "90662a1730d16a76c446080bcb66604325d918ad39bf202cbf160295540a62be",
+      "src/features.py": "643454c91f13dc359170b34c9ba10688ce46072d4b8a874fc0c05f8e5b348b7d",
+      "src/cv.py": "cfa5712e73b911a6b68ce73f3307e49d02d68e66cc356eac91313060c6c88786",
+      "rerun_all_phases.py": "fe59813e13f8f127e7aa97ef25b496d8e871a6a5abbdd3b0ce8b35e71d559791"
+    }
+  },
+  "experiment_identity_sha256": "d39f178eb2d019abf2c63eb61bd4275bf6e1654806db8b0d561e36e11706b254",
+  "fold_fingerprints": {
+    "1": "f2f07507f085b3ee18e7c56515b70bc7491c6a2d180eeeb0e2e9cb9f72a0c8f1",
+    "7": "633e0cba3bc151ceb9f2d2ba7ee20a9da6809dac4e66923debe171c478e06172",
+    "42": "6d5c2e00619f9e0dcef48814484896fa958bcaae0cc570dfe87e50024c4ea28b"
+  },
+  "reference_fold_fingerprints_20261008": {
+    "42": "6d5c2e00619f9e0dcef48814484896fa958bcaae0cc570dfe87e50024c4ea28b",
+    "1": "f2f07507f085b3ee18e7c56515b70bc7491c6a2d180eeeb0e2e9cb9f72a0c8f1",
+    "7": "633e0cba3bc151ceb9f2d2ba7ee20a9da6809dac4e66923debe171c478e06172"
+  },
+  "fold_fingerprints_equal_reference": true,
+  "protocol": {
+    "n_splits": 5,
+    "shuffle": true,
+    "seed": 42,
+    "inner_holdout_frac": 0.2,
+    "threshold_grid": [
+      0.1,
+      0.7,
+      0.01
+    ],
+    "n_thresholds": 61,
+    "metric_aggregation": "pooled outer-valid OOF per seed; per-fold thresholds",
+    "early_stopping": false,
+    "inner_early_stopping": false,
+    "hyperparameter_selection": "reused per fold from the 20261008 runs (selected there by inner-holdout LogLoss inside the same outer-train); not re-searched",
+    "tree_selection_lightgbm": "nested_grid_n_estimators",
+    "threshold_selection": "outer_train_holdout_inner_holdout_macro_f1_argmax",
+    "selected_model_refit_on_full_outer_train": false,
+    "outer_valid_labels_used_for_selection": false,
+    "target_encoding": {
+      "cols": [
+        "Tail_Number",
+        "Route",
+        "Origin_Airport",
+        "Destination_Airport",
+        "Airline"
+      ],
+      "m": 20.0,
+      "inner_splits": 5,
+      "boundary": "inner_train_only",
+      "drop_original": false
+    },
+    "probability_calibration": {
+      "arms": [
+        [
+          "none",
+          "none",
+          "none"
+        ],
+        [
+          "platt_inner_holdout",
+          "platt",
+          "inner_holdout"
+        ],
+        [
+          "isotonic_inner_holdout",
+          "isotonic",
+          "inner_holdout"
+        ],
+        [
+          "platt_crossfit",
+          "platt",
+          "inner_train_crossfit"
+        ],
+        [
+          "isotonic_crossfit",
+          "isotonic",
+          "inner_train_crossfit"
+        ]
+      ],
+      "platt": "LogisticRegression(lbfgs, C=1.0) on logit(clip(p, 1e-6))",
+      "isotonic": "IsotonicRegression(out_of_bounds='clip'), outputs clipped to [1e-06, 1-1e-06]",
+      "inner_holdout": "calibrator fitted on the selected model's inner-holdout scores; the same rows also selected the config and the re-selected threshold (double use)",
+      "inner_train_crossfit": "5-fold stratified cross-fitting within inner-train (split seed = seed + fold + 20000); TE recomputed inside each sub-boundary; sub-models use the same selected config; calibrator never sees inner-holdout or outer-valid rows",
+      "threshold_reselection": "argmax inner-holdout Macro F1 over cfg.thresholds() on calibrated inner-holdout probs",
+      "outer_valid_labels_used_for_calibration_or_threshold": false
+    },
+    "model_fit_scope": "inner-train only (as recorded; no refit on full outer-train)",
+    "ece": {
+      "primary": "15 equal-frequency bins (quantile edges of the evaluated pooled outer-valid probabilities; ties share a bin)",
+      "secondary": "10 equal-width bins (as ece_10 in 20260917)"
+    }
+  },
+  "outputs": {
+    "runs": {
+      "path": "baseline_recovery_v2_classifier_calibration_20261008_runs.csv",
+      "sha256": "6904475e8ade348e3ef1a5b481520baceeab4f0009862df33907ea6f98e3d782",
+      "bytes": 26725
+    },
+    "folds": {
+      "path": "baseline_recovery_v2_classifier_calibration_20261008_folds.csv",
+      "sha256": "d3236f4a0cdeabf1efffdece343ae765ec39e3ca97c18cfe0ac4dd13cb44a5c7",
+      "bytes": 179535
+    },
+    "reliability_bins": {
+      "path": "baseline_recovery_v2_classifier_calibration_20261008_reliability_bins.csv",
+      "sha256": "34c6e51285ae47bfebfccbb2aeecf75b1e35251fae0b6cecb53864e2b91451d8",
+      "bytes": 157737
+    },
+    "paired": {
+      "path": "baseline_recovery_v2_classifier_calibration_20261008_paired_deltas.csv",
+      "sha256": "ddd5d673bf79970ff5a1a6996e0f631c3839a991daadbde7e91f2a2bb8e0daa9",
+      "bytes": 80981
+    },
+    "summary": {
+      "path": "baseline_recovery_v2_classifier_calibration_20261008_summary.json",
+      "sha256": "79446e63002a97dd93ef6184ac04ac0c6216d786c2a3120cada8b81e07eed022",
+      "bytes": 161449
+    }
+  },
+  "checkpoint": "data/classifier_compare/baseline_recovery_v2_classifier_calibration_20261008_ckpt/checkpoint.json",
+  "fits_models": true,
+  "network_requests": 0,
+  "created_at_utc": "2026-10-08T05:49:36+00:00"
+}
