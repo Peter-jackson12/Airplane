@@ -1,0 +1,97 @@
+comparison,metric,seed,delta
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",macro_f1_nested,42,-0.0002708532954240894
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",macro_f1_nested,1,0.0006921940877763211
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",macro_f1_nested,7,-5.333254621342487e-05
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",log_loss,42,0.00014839737710020673
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",log_loss,1,0.00017200141033624217
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",log_loss,7,-4.802224408473332e-05
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",roc_auc,42,-0.0008456755976186114
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",roc_auc,1,-0.000511629346120368
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",roc_auc,7,0.00014887133854313284
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",f1_at_050,42,0.004279697385722092
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",f1_at_050,1,-0.0003182772636685649
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",f1_at_050,7,0.00022386366169607763
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",precision_delayed,42,-0.0006008647449817217
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",precision_delayed,1,0.0017753291349073552
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",precision_delayed,7,-0.0019022109762891204
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",recall_delayed,42,0.0
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",recall_delayed,1,-0.000911806319761066
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",recall_delayed,7,0.005659487501965099
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",f1_delayed,42,-0.00031343269885997227
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",f1_delayed,1,0.0005341605504042279
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",f1_delayed,7,0.0015447507612290634
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",f1_not_delayed,42,-0.00022827389198842862
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",f1_not_delayed,1,0.0008502276251484142
+"weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)",f1_not_delayed,7,-0.0016514158536560242
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),macro_f1_nested,42,0.002055624806363676
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),macro_f1_nested,1,0.0014888913581977414
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),macro_f1_nested,7,0.0013905372921911852
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),log_loss,42,-0.0006690752708661818
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),log_loss,1,-0.0005245264222893398
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),log_loss,7,-0.0006705498140088806
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),roc_auc,42,0.001416918912361731
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),roc_auc,1,0.0016183971932680619
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),roc_auc,7,0.0014849234035689829
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),f1_at_050,42,0.004512948203346079
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),f1_at_050,1,-0.0022874870731863783
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),f1_at_050,7,0.002471743464224796
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),precision_delayed,42,0.006115836433549293
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),precision_delayed,1,0.0020491520918981543
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),precision_delayed,7,-0.0018337901991350436
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),recall_delayed,42,-0.004810564376670323
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),recall_delayed,1,0.0034271340984122767
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),recall_delayed,7,0.014651784310643012
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),f1_delayed,42,0.0009787487957123031
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),f1_delayed,1,0.0026931904177611155
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),f1_delayed,7,0.005784237761702671
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),f1_not_delayed,42,0.0031325008170147717
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),f1_not_delayed,1,0.0002845922986344229
+weather_on: lightgbm_ext - lightgbm(20261008 fixed config),f1_not_delayed,7,-0.0030031631773203005
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",macro_f1_nested,42,-0.009326077900934648
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",macro_f1_nested,1,-0.006778997553877342
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",macro_f1_nested,7,-0.007559344321437678
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",log_loss,42,0.0046002929962142836
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",log_loss,1,0.004088679867186584
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",log_loss,7,0.004354351652941846
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",roc_auc,42,-0.013604210546116602
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",roc_auc,1,-0.011883897272039534
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",roc_auc,7,-0.013029484516731249
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",f1_at_050,42,0.002085298868027774
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",f1_at_050,1,-0.00186643755117194
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",f1_at_050,7,0.0023054347627868843
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",precision_delayed,42,-0.009197596350438098
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",precision_delayed,1,-0.011653326653272844
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",precision_delayed,7,-0.01619965694118225
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",recall_delayed,42,-0.031787454802703896
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",recall_delayed,1,-0.008803647225279043
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",recall_delayed,7,-0.0001572079861656972
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",f1_delayed,42,-0.01968705780971719
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",f1_delayed,1,-0.010335068183043694
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",f1_delayed,7,-0.008801748809904697
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",f1_not_delayed,42,0.0010349020078479487
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",f1_not_delayed,1,-0.0032229269247109338
+"weather_on: lightgbm_ext - random_forest_tuned(20261008, 9 configs)",f1_not_delayed,7,-0.00631693983297088
+weather_on: lightgbm_ext - logistic_regression(20261008),macro_f1_nested,42,0.0041897605125037485
+weather_on: lightgbm_ext - logistic_regression(20261008),macro_f1_nested,1,0.003666078645155224
+weather_on: lightgbm_ext - logistic_regression(20261008),macro_f1_nested,7,0.003466750755088066
+weather_on: lightgbm_ext - logistic_regression(20261008),log_loss,42,-0.0010237078884315909
+weather_on: lightgbm_ext - logistic_regression(20261008),log_loss,1,-0.0009691100407913655
+weather_on: lightgbm_ext - logistic_regression(20261008),log_loss,7,-0.0012364138135022573
+weather_on: lightgbm_ext - logistic_regression(20261008),roc_auc,42,-0.0004076933246891512
+weather_on: lightgbm_ext - logistic_regression(20261008),roc_auc,1,0.00019376230671752648
+weather_on: lightgbm_ext - logistic_regression(20261008),roc_auc,7,0.00032660642618198565
+weather_on: lightgbm_ext - logistic_regression(20261008),f1_at_050,42,0.00825673499825097
+weather_on: lightgbm_ext - logistic_regression(20261008),f1_at_050,1,0.006876340669888015
+weather_on: lightgbm_ext - logistic_regression(20261008),f1_at_050,7,0.008214044936875498
+weather_on: lightgbm_ext - logistic_regression(20261008),precision_delayed,42,0.017907937173333277
+weather_on: lightgbm_ext - logistic_regression(20261008),precision_delayed,1,0.003761399808333288
+weather_on: lightgbm_ext - logistic_regression(20261008),precision_delayed,7,0.005545344084921577
+weather_on: lightgbm_ext - logistic_regression(20261008),recall_delayed,42,-0.0330765602892627
+weather_on: lightgbm_ext - logistic_regression(20261008),recall_delayed,1,0.012230781323691264
+weather_on: lightgbm_ext - logistic_regression(20261008),recall_delayed,7,0.005376513126866822
+weather_on: lightgbm_ext - logistic_regression(20261008),f1_delayed,42,-0.004656299153536603
+weather_on: lightgbm_ext - logistic_regression(20261008),f1_delayed,1,0.007748069991917239
+weather_on: lightgbm_ext - logistic_regression(20261008),f1_delayed,7,0.0054833423397896985
+weather_on: lightgbm_ext - logistic_regression(20261008),f1_not_delayed,42,0.013035820178543878
+weather_on: lightgbm_ext - logistic_regression(20261008),f1_not_delayed,1,-0.0004159127016066799
+weather_on: lightgbm_ext - logistic_regression(20261008),f1_not_delayed,7,0.001450159170386378

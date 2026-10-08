@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "name": "baseline_recovery_v2_classifier_grid_ext_20261008_combined",
+  "smoke_only_not_evidence": false,
+  "inputs": {
+    "lgbm": {
+      "path": "baseline_recovery_v2_classifier_grid_ext_20261008_lgbm_runs.csv",
+      "sha256": "2aa3c9a2b94f33fc8899d525227e9aa9212f4e213865d0c286f25d74c8182464",
+      "manifest_sha256": "db34ee8ba19f685099881884ccf11946bfe88aa360b375f8a945be2df8e4140c"
+    },
+    "rf": {
+      "path": "baseline_recovery_v2_classifier_grid_ext_20261008_rf_runs.csv",
+      "sha256": "430cc5467656013f01f0af0b8965f420184fde0d416ef636819325f0e951faa3",
+      "manifest_sha256": "7e624bdc4ca63cdcdd4211e6d8fba9ebc95eb35b66673f2b89f5c863a57cf80a"
+    }
+  },
+  "paired_comparisons": [
+    {
+      "comparison": "weather_on: random_forest_ext - lightgbm_ext",
+      "metrics": {
+        "macro_f1_nested": {
+          "mean": 0.007888139925416556,
+          "std": 0.0013049844771062487,
+          "values_by_seed": {
+            "42": 0.009326077900934648,
+            "1": 0.006778997553877342,
+            "7": 0.007559344321437678
+          },
+          "sign_consistent_across_seeds": true
+        },
+        "log_loss": {
+          "mean": -0.004347774838780867,
+          "std": 0.0002558699656305386,
+          "values_by_seed": {
+            "42": -0.0046002929962142836,
+            "1": -0.004088679867186529,
+            "7": -0.00435435165294179
+          },
+          "sign_consistent_across_seeds": true
+        },
+        "roc_auc": {
+          "mean": 0.012839197444962461,
+          "std": 0.0008758003867909598,
+          "values_by_seed": {
+            "42": 0.013604210546116602,
+            "1": 0.011883897272039534,
+            "7": 0.013029484516731249
+          },
+          "sign_consistent_across_seeds": true
+        },
+        "f1_at_050": {
+          "mean": -0.0008414320265475542,
+          "std": 0.002347665476701193,
+          "values_by_seed": {
+            "42": -0.002085298868027774,
+            "1": 0.0018664375511719955,
+            "7": -0.0023054347627868843
+          },
+          "sign_consistent_across_seeds": false
+        },
+        "precision_delayed": {
+          "mean": 0.012350193314964434,
+          "std": 0.003552665265296762,
+          "values_by_seed": {
+            "42": 0.009197596350438098,
+            "1": 0.0116533266532729,
+            "7": 0.016199656941182305
+          },
+          "sign_consistent_across_seeds": true
+        },
+        "recall_delayed": {
+          "mean": 0.01358277000471623,
+          "std": 0.01634772581506316,
+          "values_by_seed": {
+            "42": 0.031787454802703896,
+            "1": 0.008803647225279099,
+            "7": 0.0001572079861656972
+          },
+          "sign_consistent_across_seeds": true
+        },
+        "f1_delayed": {
+          "mean": 0.012941291600888546,
+          "std": 0.005892095415312083,
+          "values_by_seed": {
+            "42": 0.01968705780971719,
+            "1": 0.01033506818304375,
+            "7": 0.008801748809904697
+          },
+          "sign_consistent_across_seeds": true
+        },
+        "f1_not_delayed": {
+          "mean": 0.002834988249944622,
+          "std": 0.0036912419217166163,
+          "values_by_seed": {
+            "42": -0.0010349020078479487,
+            "1": 0.0032229269247109338,
+            "7": 0.00631693983297088
+          },
+          "sign_consistent_across_seeds": false
+        }
+      }
+    }
+  ],
+  "note": "Cross-part comparison; both parts share rows/folds/seeds (fingerprint-checked)."
+}
