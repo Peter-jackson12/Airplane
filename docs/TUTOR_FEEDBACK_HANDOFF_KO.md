@@ -1,6 +1,6 @@
 # 튜터 피드백 보존 및 로컬 검토 인계
 
-> 저장일: 2026-10-07. 이 문서는 전달받은 11개 피드백을 프로젝트에 보존하고, 나중에 로컬 에이전트가 최신 상태를 확인할 때 사용할 작업 지도입니다. **이번 작업은 문서 저장만 수행하며, 코드 수정·새 모델 실험·재학습·외부 수집을 수행하지 않았습니다.**
+> 저장일: 2026-10-07. 이 문서는 전달받은 11개 피드백을 프로젝트에 보존하고, 나중에 로컬 에이전트가 최신 상태를 확인할 때 사용할 작업 지도입니다. **2026-10-07 최초 저장 시에는 문서 저장만 수행했으며, 코드 수정·새 모델 실험·재학습·외부 수집을 수행하지 않았습니다.** 이후 반영 작업(새 실험 포함)은 0절에 커밋과 함께 기록합니다.
 >
 > 현재 설명과 결론의 기준은 [README](../README.md)입니다. 이 인계 문서는 별도의 최신 사양이나 실행 승인서가 아닙니다. 후속 실행은 그때의 사용자 요청과 범위를 먼저 확인합니다.
 
@@ -13,14 +13,14 @@
 | 1) 서로 다른 분류기 3종 비교 | 완료(새 실험) | [README 2절 분류기 3종 비교](../README.md#classifier-comparison), [README 4절](../README.md#limits) | [요약](../output/baseline_recovery_v2_classifier_compare_20261008_summary.json), [시드별 실행](../output/baseline_recovery_v2_classifier_compare_20261008_runs.csv), [실행 기록](../output/baseline_recovery_v2_classifier_compare_20261008_manifest.json), [비교 코드](../src/classifier_compare.py), [드라이버](../notebooks/run_classifier_comparison.py), [테스트](../tests/test_classifier_comparison.py) · [`e949d68`](https://github.com/Peter-jackson12/Airplane/commit/e949d689bf6cf5f0be0f5e716784a01ccdaf3063) |
 | 2) 결측 대치의 분모와 전후 | 완료 | [전처리 피드백 문서 1절](FEEDBACK_PREPROCESSING_KO.md#1-피드백-2-결측-대치의-분모와-전후), [README 3절 ③](../README.md#engineering) | [재집계 JSON](../output/feedback_missing_audit_20261008.json), [집계 스크립트](../scripts/feedback_missing_audit.py) · [`e3ce73e`](https://github.com/Peter-jackson12/Airplane/commit/e3ce73ebdc18edf13916be74ebb78334f2907621), [`998d980`](https://github.com/Peter-jackson12/Airplane/commit/998d980ebbe44dfcb6b52e9035293fb2db5afbd2) |
 | 3) 시각 복원 규칙 | 완료 | [전처리 피드백 문서 2절](FEEDBACK_PREPROCESSING_KO.md#2-피드백-3-시각-복원-규칙) | [`e3ce73e`](https://github.com/Peter-jackson12/Airplane/commit/e3ce73ebdc18edf13916be74ebb78334f2907621) |
-| 4) Traffic의 의미와 집계 경계 | 완료 | [전처리 피드백 문서 3절](FEEDBACK_PREPROCESSING_KO.md#3-피드백-4-traffic의-의미와-집계-경계), [README 4절](../README.md#limits), [`build_traffic_features` 설명](../src/features.py) | [재집계 JSON](../output/feedback_missing_audit_20261008.json) · [`e3ce73e`](https://github.com/Peter-jackson12/Airplane/commit/e3ce73ebdc18edf13916be74ebb78334f2907621), [`998d980`](https://github.com/Peter-jackson12/Airplane/commit/998d980ebbe44dfcb6b52e9035293fb2db5afbd2) |
+| 4) Traffic의 의미와 집계 경계 | 완료 | [전처리 피드백 문서 3절](FEEDBACK_PREPROCESSING_KO.md#3-피드백-4-traffic의-의미와-집계-경계), [README 4절](../README.md#limits), [`build_traffic_features` 설명](../src/features.py) | [재집계 JSON](../output/feedback_missing_audit_20261008.json) · [`e3ce73e`](https://github.com/Peter-jackson12/Airplane/commit/e3ce73ebdc18edf13916be74ebb78334f2907621), [`998d980`](https://github.com/Peter-jackson12/Airplane/commit/998d980ebbe44dfcb6b52e9035293fb2db5afbd2), [`db117ed`](https://github.com/Peter-jackson12/Airplane/commit/db117edcfaf71109ea748066786422be27a9f302)(`build_traffic_features` 문서 문자열 수정, 동작 변경 없음) |
 | 5) 날씨 피처의 의미·단위·결측 계약 | 완료(원천에서 확인하지 못한 부분은 미확인으로 표시) | [모델·날씨 피드백 문서 2절](FEEDBACK_MODEL_WEATHER_KO.md#weather) | [`20c5946`](https://github.com/Peter-jackson12/Airplane/commit/20c5946cc3ac995e4e314b440019b1be7030fe64) |
 | 6) LightGBM 선택 이유와 고정/탐색 설정 | 완료(protocol 라벨 정오표 포함) | [모델·날씨 피드백 문서 3절](FEEDBACK_MODEL_WEATHER_KO.md#lightgbm), [README 3절 ①](../README.md#engineering) | [`20c5946`](https://github.com/Peter-jackson12/Airplane/commit/20c5946cc3ac995e4e314b440019b1be7030fe64), [`15a0b3c`](https://github.com/Peter-jackson12/Airplane/commit/15a0b3cfe22d48faf7e59537bf3ed32123e6b8fc) |
 | 7) Macro F1과 지연 클래스 F1 구분 | 완료 | [모델·날씨 피드백 문서 1절·4절](FEEDBACK_MODEL_WEATHER_KO.md#metrics) | [`20c5946`](https://github.com/Peter-jackson12/Airplane/commit/20c5946cc3ac995e4e314b440019b1be7030fe64) |
 | 8) 날씨 비교의 클래스별 지표·혼동행렬 | 완료(기존 CSV, 재학습 없음) | [README 2절](../README.md#results), 아래 3절 | [`54f011f`](https://github.com/Peter-jackson12/Airplane/commit/54f011f80774af490210c4d5ae4ed4776463661a) |
 | 9) 날씨 조건별 선택 트리 수·임계값 | 완료(기존 CSV, 재학습 없음) | [README 2절](../README.md#results), 아래 3절 | [`54f011f`](https://github.com/Peter-jackson12/Airplane/commit/54f011f80774af490210c4d5ae4ed4776463661a) |
 | 10) 양쪽 원시 시각 결측 3,031행 | 완료 | [전처리 피드백 문서 4절](FEEDBACK_PREPROCESSING_KO.md#4-피드백-10-양쪽-시각-결측-3031행), [README 4절](../README.md#limits) | [`e3ce73e`](https://github.com/Peter-jackson12/Airplane/commit/e3ce73ebdc18edf13916be74ebb78334f2907621) |
-| 11) 가정한 가용성과 실제 가용성 구분 | 유지(기준 커밋에 이미 반영) | [해설 6절](README_EXPLAINED_KO.md), [README 3절 ⑤](../README.md#full-weather-row-join) | [`ffc6e44`](https://github.com/Peter-jackson12/Airplane/commit/ffc6e441c3f5bebee15a2af250f5cd014dd451a9) |
+| 11) 가정한 가용성과 실제 가용성 구분 | 유지(기준 커밋에 이미 반영) | [해설 6절](README_EXPLAINED_KO.md#availability), [README 3절 ⑤](../README.md#full-weather-row-join) | [`ffc6e44`](https://github.com/Peter-jackson12/Airplane/commit/ffc6e441c3f5bebee15a2af250f5cd014dd451a9) |
 
 남은 후속 후보(제안·미실행)는 [README 4절의 다음 단계 후보](../README.md#limits)에 있습니다: LightGBM·Random Forest의 더 넓은 탐색 예산, Random Forest `max_features` 후보 확장, Random Forest의 날씨 사용/미사용 비교, 분류기별 확률 보정.
 
@@ -47,70 +47,70 @@
 ### 1) 서로 다른 분류기 3종 비교
 
 - **원 요청:** 같은 평가 집단·외부 폴드에서 서로 다른 분류 알고리즘을 비교하고 모델 선택의 근거를 제시합니다. 예시는 Logistic Regression, Random Forest, LightGBM입니다.
-- **현재 판정: 미완료 / 새 실험 필요.** 기존 P4/P6/clean은 LightGBM의 입력·전처리 조건이며, Platt/Isotonic은 확률 보정입니다. [해설의 모델 선택 설명](README_EXPLAINED_KO.md)은 다른 알고리즘보다 우수하다고 입증하지 않았음을 이미 구분합니다.
+- **기준 커밋(ffc6e44) 판정: 미완료 / 새 실험 필요.** 기존 P4/P6/clean은 LightGBM의 입력·전처리 조건이며, Platt/Isotonic은 확률 보정입니다. [해설의 모델 선택 설명](README_EXPLAINED_KO.md#why-lightgbm)은 다른 알고리즘보다 우수하다고 입증하지 않았음을 이미 구분합니다.
 - **후속 작업:** 먼저 비교 집단과 질문을 정합니다. 기존 전처리 평가 255,001행과 날씨 평가 180,332행을 혼합하지 않습니다. 같은 행·타깃·외부 폴드·시드에서 비교하고 모델별 전처리와 내부 선택 예산을 명시합니다. 표준화·대치·인코딩·하이퍼파라미터·임계값 선택은 해당 학습/내부 경계에서만 수행합니다. 현재 LightGBM 결과와 출력은 보존합니다.
 - **완료 기준:** 알고리즘별 설정·평가 집단·분할 지문·OOF 지표·실행 근거가 연결된 비교표. 실행 전에는 “비교 미실시” 상태를 유지합니다.
 
 ### 2) 결측 대치 수치의 분모와 전후 관계
 
 - **원 요청:** 각 수치의 집단·N·컬럼·전/후 상태를 밝히고, 같은 집단에서 “원래 결측 = 복원 + 잔여 결측”이 맞도록 정리합니다.
-- **현재 판정: 일부 반영 / 근거 정리 필요.** [해설](README_EXPLAINED_KO.md)은 전체 1,000,000행, 라벨 255,001행, 날짜 채택 706,759행, 날씨 평가 180,332행을 구분합니다. [전처리 구현 보고서](../output/preprocessing_clean_implementation.md)에 Airline 원래 결측 108,920 = 복원 30,608 + 잔여 78,312가 있습니다.
+- **기준 커밋(ffc6e44) 판정: 일부 반영 / 근거 정리 필요.** [해설 2.1절](README_EXPLAINED_KO.md#21-네-숫자의-관계)은 전체 1,000,000행, 라벨 255,001행, 날짜 채택 706,759행, 날씨 평가 180,332행을 구분합니다. [전처리 구현 보고서](../output/preprocessing_clean_implementation.md)에 Airline 원래 결측 108,920 = 복원 30,608 + 잔여 78,312가 있습니다.
 - **후속 작업:** Airline 및 요청된 출발·도착 시각 필드의 전/복원/잔여를 같은 집단 기준의 한 표로 연결합니다. 원래 결측 표시값과 복원 후 결측을 구분합니다. 로컬 전용 스키마·원자료가 필요한 수치는 실제 파일을 확인하기 전 확정하지 않습니다.
 - **완료 기준:** 분모 혼용 없이 합계가 맞고, 각 표에 원자료/실행 근거가 연결됩니다.
 
 ### 3) 시각 복원 규칙의 명시
 
 - **원 요청:** 방향성 노선 키, 유효 시각차 기준, 0 처리, 복원식·modulo 1440, 양쪽 시각 결측 처리와 현지 시각차의 한계를 설명합니다.
-- **현재 판정: 일부 반영 / 설명 보완.** 현지 시각차는 실제 비행시간이 아니라는 경고, 노선 중앙값→전역 중앙값, 양쪽 결측의 한계는 이미 있습니다.
+- **기준 커밋(ffc6e44) 판정: 일부 반영 / 설명 보완.** 현지 시각차는 실제 비행시간이 아니라는 경고, 노선 중앙값→전역 중앙값, 양쪽 결측의 한계는 이미 있습니다.
 - **코드에서 확인할 세부사항:** [`src/features.py`](../src/features.py)의 방향성 출발→도착 노선, 양쪽 유효 시각으로 계산하는 시각차, 중앙값 계산에서 0 시각차가 남는 동작, **노선 대치 후** 계산하는 전역 중앙값, 한쪽 시각 복원의 `% 1440`, 양쪽 시각 결측 시 시각 자체가 남는 동작을 정확히 설명합니다. 시각차 0의 중앙값 취급과 비율 피처에서 유한 양수만 허용하는 규칙을 혼동하지 않습니다.
 - **완료 기준:** 현재 코드와 일치하는 식·예외 설명. 설명을 단순화하려고 전처리 동작을 임의로 바꾸지 않습니다.
 
 ### 4) Traffic의 의미와 집계 경계
 
 - **원 요청:** 실제 공항 혼잡도가 아닌 표본 운항 빈도/레코드 수로 표현하고, 연도 혼합·자기 행·중복 포함·미상 시간대 제외를 밝힙니다.
-- **현재 판정: 일부 반영 / 설명 보완.** [해설](README_EXPLAINED_KO.md)은 입력 표본의 행 수, 연도 누락 한계, 미상 시간대 제외를 설명합니다.
+- **기준 커밋(ffc6e44) 판정: 일부 반영 / 설명 보완.** [해설 3.4절](README_EXPLAINED_KO.md#34-원형-시각과-traffic)은 입력 표본의 행 수, 연도 누락 한계, 미상 시간대 제외를 설명합니다.
 - **후속 작업:** [집계 코드](../src/features.py)의 Month/Day/공항/시간 키에 연도가 없고, 유효한 자기 행도 포함하며 집계 함수 내부에서 레코드 중복 제거를 하지 않는다는 점을 명시합니다. “원본 완전 중복 0”과 “집계가 중복을 제거한다”는 서로 다른 주장입니다. 원본 전체 묶음과 날짜 채택 묶음 중 무엇을 집계했는지도 구분합니다.
 - **완료 기준:** `Traffic`을 실제 공항 전체 혼잡도나 미래 시점에 확보된 운항량으로 단정하지 않습니다.
 
 ### 5) 날씨 피처의 의미·단위·결측 계약
 
 - **원 요청:** 피처 의미, 원천 단위·변환·범위, 관측/미량 강수/결측 표기, 결합 실패 처리 규칙을 실제 자료 계약에 근거해 설명합니다.
-- **현재 판정: 일부 반영 / 원천 계약 보완.** [해설 5절](README_EXPLAINED_KO.md)에는 `tmpf/dwpf`의 °F, `sknt`의 knot, `vsby`의 mile, `p01i`의 inch, 단위 변환 없음, LightGBM 결측 처리, `matched=1`이 모든 필드 완비가 아니라는 설명이 있습니다.
+- **기준 커밋(ffc6e44) 판정: 일부 반영 / 원천 계약 보완.** [해설 5절](README_EXPLAINED_KO.md#weather-features)에는 `tmpf/dwpf`의 °F, `sknt`의 knot, `vsby`의 mile, `p01i`의 inch, 단위 변환 없음, LightGBM 결측 처리, `matched=1`이 모든 필드 완비가 아니라는 설명이 있습니다.
 - **후속 작업:** [날씨 피처 계약](../src/weather_model.py), [결합 구현](../src/weather_full.py), 실제 원천 설명과 캐시를 대조해 유효 범위·보고 규칙·미량 강수와 원시/결합 결측 표기를 정리합니다. 원시 `M`과 결합 `<NA>`의 의미를 구분하고, trace 강수가 어떻게 인코딩됐는지 추측하지 않습니다.
 - **완료 기준:** 미결합, 관측은 있으나 개별 필드 결측, 실제 0을 구별하는 피처 명세. 외부 계약이 필요한 부분은 확인 전 미확인으로 표시합니다.
 
 ### 6) LightGBM 선택 이유와 고정/탐색 설정
 
 - **원 요청:** 모델 선택 이유, 고정 설정과 탐색 설정, 목적함수·규제·범주형·시드·버전 근거를 설명합니다. 트리 수 탐색을 전체 하이퍼파라미터 최적화로 부르지 않습니다.
-- **현재 판정: 일부 반영 / 설정표 보완.** 해설에 모델 사용 이유와 내부 트리 수 선택이 있고, README에 학습률 0.05·leaves 63·depth 8이 있습니다. [러너](../rerun_all_phases.py)에 공통 고정 설정이 명시되어 있습니다.
+- **기준 커밋(ffc6e44) 판정: 일부 반영 / 설정표 보완.** 해설에 모델 사용 이유와 내부 트리 수 선택이 있고, README에 학습률 0.05·leaves 63·depth 8이 있습니다. [러너](../rerun_all_phases.py)에 공통 고정 설정이 명시되어 있습니다.
 - **후속 작업:** 현재 러너·[교차검증 코드](../src/cv.py)·[실행 manifest](../output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_manifest.json)·[잠금파일](../uv.lock)에서 고정/탐색 설정과 실행 버전을 한 표로 연결합니다. 설치 잠금파일과 과거 실행 당시 실제 버전을 구분합니다.
 - **완료 기준:** 무엇을 선택했고 무엇을 고정했는지 재현 가능하며 “전역 하이퍼파라미터 최적화 미실시”가 분명합니다.
 
 ### 7) Macro F1과 지연 클래스 F1 구분
 
 - **원 요청:** Macro F1과 F1(Delayed)을 일관되게 표기하고 `average`와 `pos_label` 설정을 확인합니다.
-- **현재 판정: 대부분 반영 / 표기 점검.** 현재 주 표는 Macro F1이고 해설은 두 클래스 F1의 평균을 정의합니다. [지표 코드](../src/cv.py)의 일반적인 이름 `f1_at_050`도 실제 계산은 Macro F1입니다.
+- **기준 커밋(ffc6e44) 판정: 대부분 반영 / 표기 점검.** 현재 주 표는 Macro F1이고 해설은 두 클래스 F1의 평균을 정의합니다. [지표 코드](../src/cv.py)의 일반적인 이름 `f1_at_050`도 실제 계산은 Macro F1입니다.
 - **후속 작업:** 문서의 단독 “F1” 표현을 해당 계산 의미에 맞게 정리합니다. 클래스별 지표에는 Delayed=1, Not_Delayed=0과 집계 방법을 표시합니다.
 - **완료 기준:** 표 제목·본문·필드 해석이 계산과 일치합니다. 이름 정리를 위해 기존 실행 파일이나 지표를 덮어쓰지 않습니다.
 
 ### 8) 날씨 비교의 클래스별 지표·혼동행렬
 
 - **원 요청:** 같은 날씨 OOF 집단의 클래스별 precision/recall/F1, 정상 클래스 F1과 혼동행렬을 제시합니다. 전체 255,001행 P6_clean 지표를 날씨 180,332행 지표 대신 쓰지 않습니다.
-- **현재 판정: 기존 결과 있음 / 보고 보완, 재학습 불필요.** [날씨 실행 CSV](../output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv)에 2조건 × 3시드의 TN/FP/FN/TP가 모두 있습니다.
+- **기준 커밋(ffc6e44) 판정: 기존 결과 있음 / 보고 보완, 재학습 불필요.** [날씨 실행 CSV](../output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv)에 2조건 × 3시드의 TN/FP/FN/TP가 모두 있습니다.
 - **후속 작업:** 각 시드의 기존 OOF 혼동행렬로 지표를 계산하고 시드별 값과 평균을 정리합니다. 동일 180,332행을 3번 평가한 것이므로 시드를 합쳐 540,996개의 고유 항공편이라고 쓰지 않습니다.
 - **완료 기준:** 클래스별 분모·행렬 순서·시드 집계를 명시한 표. 아래 3절은 기존 집계로 도출 가능한 값을 보존한 것이며 새 실험 결과가 아닙니다.
 
 ### 9) 날씨 조건별 선택 트리 수·임계값
 
 - **원 요청:** 날씨 조건별 선택값의 범위·중앙값을 공개합니다. 전처리 150폴드의 임계값 범위를 날씨 30폴드에 대입하지 않습니다.
-- **현재 판정: 기존 결과 있음 / 보고 보완, 재학습 불필요.** 해설은 독립 선택과 트리 수 차이를 설명하며 [날씨 실행 CSV](../output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv)에 폴드별 배열이 있습니다.
+- **기준 커밋(ffc6e44) 판정: 기존 결과 있음 / 보고 보완, 재학습 불필요.** 해설은 독립 선택과 트리 수 차이를 설명하며 [날씨 실행 CSV](../output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv)에 폴드별 배열이 있습니다.
 - **후속 작업:** 조건당 3시드 × 5폴드 = 15개 선택값을 요약합니다. 같은 선택 절차와 같은 선택값은 다릅니다. 전체 OOF로 후선택한 값을 공정한 평가 임계값으로 바꾸어 쓰지 않습니다.
 - **완료 기준:** 아래 3절의 범위·중앙값을 현재 CSV와 다시 대조하고 선택 절차와 함께 표시합니다.
 
 ### 10) 양쪽 원시 시각 결측 취약 집단의 해석
 
 - **원 요청:** 원시 출발·도착 시각이 모두 없는 3,031행과 날씨 평가 집단을 분리하고, 지연 재현율 10.02%의 실제 분모·TP를 제시합니다.
-- **현재 판정: 일부 반영 / 설명 보완.** 해설은 3,031이 전체 라벨 행 수이고 재현율의 분모는 그 안의 실제 지연임을 설명합니다.
+- **기준 커밋(ffc6e44) 판정: 일부 반영 / 설명 보완.** 해설은 3,031이 전체 라벨 행 수이고 재현율의 분모는 그 안의 실제 지연임을 설명합니다.
 - **기존 근거:** [OOF 그룹 CSV](../output/baseline_recovery_v2_oof_20260916_v2_groups.csv)의 P6_clean 해당 집단은 실제 지연 519행, TP는 시드 42/1/7에서 각각 55/49/52입니다. 10.02%는 이 시드별 재현율 평균을 반올림한 값입니다.
 - **후속 작업:** [날짜 귀속 코드](../notebooks/assign_row_dates.py)의 완전 키 채택 경계 때문에 이 원시 양쪽 시각 결측 집단은 날씨 날짜 채택 집단에서 제외된다는 점을 명시합니다. 날씨 비교 성능 향상을 이 집단의 복구·개선 증거로 쓰지 않습니다.
 - **완료 기준:** 기존 전처리 취약 집단과 날씨 선택 집단의 포함 관계·분모·한계가 명확합니다.
@@ -118,7 +118,7 @@
 ### 11) 가정한 가용성 점검과 실제 역사적 가용성 구분
 
 - **원 요청:** `prediction_at`, `observed_at`, `available_at`, 관측 나이의 정의·식을 적고, 10분 가정에서 위반 0인 결과를 실제 과거 수신 확인으로 해석하지 않습니다. 0/30/60분 분석은 결합률 확인이지 성능 강건성 검증이 아닙니다.
-- **현재 판정: 최신 해설에 반영.** [해설 6절](README_EXPLAINED_KO.md)에 시각 정의·90분 제한·실제 수신 이력의 부재·결합률/성능 구분이 있습니다.
+- **기준 커밋(ffc6e44) 판정: 최신 해설에 반영.** [해설 6절](README_EXPLAINED_KO.md#availability)에 시각 정의·90분 제한·실제 수신 이력의 부재·결합률/성능 구분이 있습니다.
 - **보존할 핵심:** 예측 시점은 출발 예정 시각 UTC 변환 후 60분 전, 가정 가용 시점은 관측 시각 + 가정 지연, 관측 나이는 예측 시점 − 관측 시각입니다. 출발·도착 공항 모두 같은 예측 시점을 쓰고 관측 시각과 가용 시각이 예측 시점 이하여야 하며 관측 나이는 90분 이하여야 합니다.
 - **추가 주의:** 정확히 10분을 5분·15분보다 타당하다고 입증한 근거는 확인되지 않았습니다. 모델 점수로 고른 값이 아닌 사전 대표 가정이라는 범위를 유지합니다. 실제 결합률 시나리오는 0/10/30/60분이고, 모델 성능 비교는 10분만 사용했습니다.
 - **완료 기준:** 이미 반영된 설명을 유지하고, 실제 수신 이력을 검증했다거나 가정 변화에도 모델 성능이 강건하다고 확대하지 않습니다.

@@ -199,3 +199,6 @@ def test_readme_classifier_table_matches_tracked_summary():
                key=lambda v: -1 if v == 'sqrt' else v) == 0.5
     assert all(p['max_features'] == 0.5 for p in rf_params)
     assert '15개 폴드 모두 후보의 끝값(`max_features=0.5`)' in text
+    # min_samples_leaf was also identical in every fold (a mid-grid value).
+    assert all(p['min_samples_leaf'] == 25 for p in rf_params)
+    assert '`min_samples_leaf=25`' in text

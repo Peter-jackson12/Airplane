@@ -16,7 +16,7 @@
 | 문제 | CSV 한 행(항공편 한 건)의 `Delay` 이진 분류. `Not_Delayed=0`, `Delayed=1`. 타깃 결측은 **미라벨**이며 정상 정답으로 쓰지 않음 |
 | 데이터 규모 | 원본 **1,000,000행 × 19열**, 라벨 **255,001행**(정상 210,001 / 지연 45,000, 지연율 17.6470%) |
 | 추가 데이터 | 미국 BTS 운항 자료로 누락된 연도를 대조해 **706,759행**의 날짜 귀속 → IEM ASOS 공항 관측으로 출발·도착 날씨 결합 |
-| 핵심 결과 | 동일 **180,332행**·동일 시드·동일 외부 폴드에서 날씨 14개 피처 추가 시 Macro F1 **0.573910 → 0.598945**, 세 시드 모두 세 지표가 같은 방향으로 개선 |
+| 핵심 결과 | 동일 **180,332행**·동일 시드·동일 외부 폴드에서 날씨 14개 피처 추가 시 Macro F1 **0.573910 → 0.598945**, 세 시드(동일 행 재분할 3회) 모두 세 지표가 같은 방향으로 개선 |
 | 주요 판단 | 결측을 더 많이 채우기보다 **아는 값과 추정한 값을 구분**. 전처리의 의미 개선과 성능 향상을 별도로 판정 |
 | 평가 지표 | 주 지표 Macro F1·LogLoss, 보조 지표 ROC-AUC |
 | 기술 스택 | Python 3.14 · LightGBM · scikit-learn · pandas · matplotlib · uv(잠금 파일 기반 환경) · pytest · GitHub Actions |
@@ -51,12 +51,12 @@
 | Delayed F1 | 0.313735 | 0.344182 |
 | Not_Delayed F1 | 0.834084 | 0.853708 |
 
-지연 precision은 약 28.69%→33.32%로 올랐지만 recall은 약 34.64%→35.59%(+0.95%p)에 그쳤습니다. 날씨 정보로 **오경보(FP)가 줄어든 것**이 Macro F1 개선의 주된 구성입니다. 내부 선택된 임계값은 미사용 0.22~0.23, 사용 0.22~0.24, 트리 수는 미사용 50, 사용 75~150이었습니다(조건당 3시드 × 5폴드 = 15개 선택값). [시드별 실행 CSV](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv) · [동일조건 차이](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_paired_deltas.csv) · [실행 기록](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_manifest.json) · [도출 과정](docs/TUTOR_FEEDBACK_HANDOFF_KO.md)
+지연 precision은 약 28.69%→33.32%로 올랐지만 recall은 약 34.64%→35.59%(+0.95%p)에 그쳤고, 그 증가도 시드별로 고르지 않았습니다(시드 42/1/7에서 +0.30/+2.38/+0.18%p, 시드별 TP/FN 기준). Macro F1 개선의 주된 구성은 **날씨 사용 조건(내부 선택 임계값 변화 포함)에서 오경보(FP)가 감소한 것**입니다. 내부 선택된 임계값은 미사용 0.22~0.23, 사용 0.22~0.24, 트리 수는 미사용 50, 사용 75~150이었습니다(조건당 3시드 × 5폴드 = 15개 선택값). [시드별 실행 CSV](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv) · [동일조건 차이](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_paired_deltas.csv) · [실행 기록](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_manifest.json) · [도출 과정](docs/TUTOR_FEEDBACK_HANDOFF_KO.md)
 
 **해석 범위.** 날짜를 확인할 수 있었던 선택 집단의 **정적 교차검증** 결과입니다. 날씨의 인과 효과나 미래 운항 성능으로 일반화하지 않습니다. 모델에는 **날씨 공개 지연 10분 가정**을 사용했으며, **10분은 실측 공개 지연 시간이 아닙니다.** 세 시드는 독립 데이터셋이 아니고 3시드 표준편차(SD)는 신뢰구간이 아닙니다.
 
 <a id="classifier-comparison"></a>
-### 분류기 3종 비교: 현재 LightGBM 고정 설정은 최적이 아닐 가능성이 큼
+### 분류기 3종 비교: 작은 사전 선언 후보 범위에서 Random Forest가 세 지표 모두 앞섬
 
 위 날씨 사용 조건과 **같은 180,332행·같은 외부 5폴드(분할 지문 대조)·같은 시드(42/1/7)** 에서 Logistic Regression과 Random Forest를 LightGBM과 비교했습니다. 모델마다 자기 전처리(Logistic Regression은 대치·표준화·원-핫, 트리 모델은 결측 그대로)를 내부 학습 행에만 적합하고, 작은 사전 선언 후보 중 하나를 내부 검증 LogLoss로, 임계값을 내부 검증 Macro F1로 골랐습니다. 후보는 LightGBM 트리 수 8개, Logistic Regression 규제 강도 `C` 5개, Random Forest(300그루) `min_samples_leaf` 3개 × `max_features` 2개입니다.
 
@@ -68,7 +68,7 @@
 
 Random Forest−LightGBM 차이는 Macro F1 +0.009612, LogLoss −0.005025, ROC-AUC +0.014578이며 **세 시드 모두 세 지표에서 Random Forest가 앞섰습니다.** Logistic Regression은 LightGBM 대비 Macro F1 −0.002129, LogLoss +0.000455(낮을수록 좋음)로 조금 뒤졌고 ROC-AUC는 +0.001469로 조금 앞섰습니다(세 시드 같은 방향). 이번 LightGBM 재실행은 위 날씨 사용 결과를 시드별로 정확히 재현했습니다.
 
-**해석.** 이 후보 범위에서 Random Forest 점수가 더 높았으므로, 트리 수만 탐색하고 `learning_rate=0.05`·`num_leaves=63`·`max_depth=8`을 손으로 고정한 **현재 LightGBM 설정은 이 데이터에 최적이 아닐 가능성이 큽니다.** 그러나 모델별 작은 후보 안의 비교이지 전역 하이퍼파라미터 탐색이 아니므로 **Random Forest가 일반적으로 더 나은 알고리즘이라는 증거는 아닙니다.** Random Forest는 15개 폴드 모두 후보의 끝값(`max_features=0.5`)을 골라 범위를 넓히면 결과가 달라질 수 있습니다. 확률 보정은 하지 않았고(LogLoss에는 보정 품질도 섞임), 시드는 같은 행의 재분할이며 Random Forest·LightGBM의 모델 시드는 42로 고정했습니다. **날씨 사용/미사용 결론은 바뀌지 않습니다.** 그 결론은 LightGBM 안에서 날씨 유무만 바꾼 동일조건 쌍비교이기 때문입니다.
+**해석.** 트리 수만 탐색하고 `learning_rate=0.05`·`num_leaves=63`·`max_depth=8`을 손으로 고정한 **현재 LightGBM 고정 설정은 이 후보 범위에서 최선이 아니었습니다.** LightGBM도 다른 설정을 탐색했을 때 이 차이가 줄어드는지는 **미검증**입니다. 탐색 예산이 같지 않았기 때문입니다(LightGBM은 트리 수 1축 8개 후보, Random Forest는 2축 6개 후보). 모델별 작은 후보 안의 비교이지 전역 하이퍼파라미터 탐색이 아니므로 **Random Forest가 일반적으로 더 나은 알고리즘이라는 증거는 아닙니다.** Random Forest는 15개 폴드 모두 같은 조합을 골랐습니다. `min_samples_leaf=25`(후보 5/25/100의 가운데)와 15개 폴드 모두 후보의 끝값(`max_features=0.5`)이므로, `max_features` 범위를 넓히면 결과가 달라질 수 있습니다. 확률 보정은 하지 않았고(LogLoss에는 보정 품질도 섞임), 시드는 같은 행의 재분할이며 Random Forest·LightGBM의 모델 시드는 42로 고정했습니다. **날씨 사용/미사용 결론은 바뀌지 않습니다.** 그 결론은 LightGBM 안에서 날씨 유무만 바꾼 동일조건 쌍비교이기 때문입니다.
 
 [비교 요약](output/baseline_recovery_v2_classifier_compare_20261008_summary.json) · [시드별 실행 CSV](output/baseline_recovery_v2_classifier_compare_20261008_runs.csv) · [폴드별 선택값](output/baseline_recovery_v2_classifier_compare_20261008_folds.csv) · [동일조건 차이](output/baseline_recovery_v2_classifier_compare_20261008_paired_deltas.csv) · [실행 기록](output/baseline_recovery_v2_classifier_compare_20261008_manifest.json) · [비교 코드](src/classifier_compare.py) · [실행 드라이버](notebooks/run_classifier_comparison.py)
 
@@ -83,7 +83,7 @@ Random Forest−LightGBM 차이는 Macro F1 +0.009612, LogLoss −0.005025, ROC-
 | P6_fixed | 0.576062 ± 0.001491 | 0.447597 | 0.642757 |
 | P6_clean | 0.575685 ± 0.001075 | 0.447577 | 0.642804 |
 
-`clean` 조건(아래 3절의 전처리 수정)은 평균 Macro F1이 P4에서 −0.000375, P6에서 −0.000377 달랐습니다. 이 작은 차이로 동등성이나 확정적 악화를 선언하지 않습니다. 결론은 **“전처리를 더 타당하게 고치는 것만으로는 Macro F1 향상을 확인하지 못했다”** 이며, 그래서 성능을 위해서는 새 정보(날씨)가 필요하다는 다음 단계로 이어졌습니다.
+`clean` 조건(아래 3절의 전처리 수정)은 평균 Macro F1이 P4에서 −0.000375, P6에서 −0.000377 달랐습니다. 이 작은 차이로 동등성이나 확정적 악화를 선언하지 않습니다. 결론은 **“전처리를 더 타당하게 고치는 것만으로는 Macro F1 향상을 확인하지 못했다”** 이며, 그래서 다음 실험으로 새 정보(날씨) 추가를 택했습니다.
 
 ![동일 내부 선택 교차검증 절차의 P4, P4_clean, P6_fixed, P6_clean Macro F1 평균과 3시드 표준편차 비교](assets/readme/model_comparison.svg)
 
@@ -141,9 +141,9 @@ Random Forest−LightGBM 차이는 Macro F1 +0.009612, LogLoss −0.005025, ROC-
 <a id="full-weather-row-join"></a>
 ### ⑤ 시점 기준 날씨 결합: 예측 시점 이후의 관측은 쓰지 않음
 
-**실제 706,759행 전체 행 날씨 결합과 독립 gzip 감사까지 완료했습니다.** 예측 시점은 **예정 출발 60분 전**(현지 예정 시각을 공항 시간대로 UTC 변환)이며, 출발·도착 공항 모두 이 시점까지 **이용 가능했다고 가정한** 관측만, 관측 나이 90분 이하에서 사용합니다. 관측 시각과 이용 가능 시각을 분리하고, `2400`·DST 중복/미존재 시각도 명시적으로 처리합니다.
+**실제 706,759행 전체 행 날씨 결합과 독립 gzip 감사까지 완료했습니다.** 저장소에 추적된 근거는 [결합 실행 기록](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json)의 네 지연 가정별 출력 gzip 행수·SHA-256·불변식 집계와, 날씨 비교 [실행 기록](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_manifest.json)이 학습 전에 다시 대조한 10분 가정 gzip 해시이며, 당시 감사 서술은 [이전 README 부록](https://github.com/Peter-jackson12/Airplane/blob/349f688eb1867391e6e504f6f50a92645d104f96/README.md#full-weather-row-join)에 보존되어 있습니다. 예측 시점은 **예정 출발 60분 전**(현지 예정 시각을 공항 시간대로 UTC 변환)이며, 출발·도착 공항 모두 이 시점까지 **이용 가능했다고 가정한** 관측만, 관측 나이 90분 이하에서 사용합니다. 관측 시각과 이용 가능 시각을 분리하고, `2400`·DST 중복/미존재 시각도 명시적으로 처리합니다.
 
-- 10분 공개 지연 가정에서 양쪽 공항 결합 **689,457행**, 미결합 15,474행은 분모에 그대로 남겼습니다.
+- 10분 공개 지연 가정에서 양쪽 공항 결합 **689,457행**, 한쪽만 결합 1,828행, 미결합 15,474행(합계 706,759행)이며, 한쪽만 결합·미결합 행도 분모에 그대로 남겼습니다.
 - 미래 관측·미래 가용 시각·관측소 불일치·수집 시간창 위반·출력 ID 중복은 모두 **0건**입니다.
 - **10분은 실측 날씨 공개 지연 시간이 아닙니다.** 실제 수신 이력이 없어, 위반 0건은 가정한 규칙을 지켰다는 뜻이지 과거에 실제로 받을 수 있었다는 검증이 아닙니다.
 - 근거: [결합 요약](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_summary.json) · [결합 실행 기록](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json) · [src/weather.py](src/weather.py) · [src/weather_full.py](src/weather_full.py) · [재현 명령](#join-reproduction)
@@ -196,7 +196,7 @@ IEM에서 관측소 355개·관측소-월 7,816개 조합을 **1,317개 요청 �
 | 7) Macro F1과 Delayed F1 표기 | 완료 — [같은 문서 1절](docs/FEEDBACK_MODEL_WEATHER_KO.md#metrics) |
 | 8)·9) 날씨 비교의 클래스별 지표·혼동행렬·선택값 | 완료. 기존 CSV에서 도출 가능(재학습 불필요)했으며 위 2절에 반영, 시드별 전체 표는 [피드백 보존 문서 3절](docs/TUTOR_FEEDBACK_HANDOFF_KO.md#3-기존-결과에서-확인-가능한-값-새-실험-아님) |
 | 10) 양쪽 시각 결측 3,031행 | 완료. 날씨 평가 집단 포함 0행 확인 — [전처리 피드백 문서 4절](docs/FEEDBACK_PREPROCESSING_KO.md#4-피드백-10-양쪽-시각-결측-3031행) |
-| 11) 가정한 가용성과 실제 수신 이력 | 이미 반영(유지). 실측 날씨 공개 지연 시간은 수신 이력이 없어 확인할 수 없으며 10분은 사전에 고정한 가정입니다 — [해설 6절](docs/README_EXPLAINED_KO.md) |
+| 11) 가정한 가용성과 실제 수신 이력 | 이미 반영(유지). 실측 날씨 공개 지연 시간은 수신 이력이 없어 확인할 수 없으며 10분은 사전에 고정한 가정입니다 — [해설 6절](docs/README_EXPLAINED_KO.md#availability) |
 
 ### 다음 단계 후보
 

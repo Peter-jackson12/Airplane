@@ -218,6 +218,7 @@ Macro F1은 비선형이므로 “fold별 Macro F1의 단순 평균”과 “전
 
 **해석:** 수정의 가치는 모호한 대치와 잘못된 의미를 줄인 데 있고, Macro F1 향상은 별도로 확인되지 않았습니다. P6_clean을 “검증된 최고 성능 모델”이라고 부르지 않습니다.
 
+<a id="weather-features"></a>
 ### 5.2 날씨 14개 피처가 무엇인가
 
 출발·도착 각각 다음 7개, 총 14개 수치 피처를 추가했습니다.
@@ -278,6 +279,7 @@ Isotonic은 ECE를 줄였지만 LogLoss는 커졌고 Macro F1 향상도 없었�
 
 근거: [전처리 10조건 집계](../output/preprocessing_full_summary.csv), [날씨 시드별 실행](../output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv), [날씨 피처 계약](../src/weather_model.py), [보정 수준값](../output/baseline_recovery_v2_calibration_20260917_level_summary.csv), [보정 코드](../src/calibration.py), [Brier·ECE 계산](../src/oof.py).
 
+<a id="availability"></a>
 ## 6. README 06 / 도착 이후: 미래 정보를 쓰지 않으려면 시각을 두 번 확인한다
 
 ### 6.1 예측 시점, 관측 시점, 가용 시점
@@ -291,6 +293,9 @@ Isotonic은 ECE를 줄였지만 LogLoss는 커졌고 Macro F1 향상도 없었�
 출발·도착 공항 모두 **동일한 출발 전 prediction_at**을 기준으로 연결합니다. 도착 공항이라고 도착 시점의 미래 날씨를 가져오는 것이 아닙니다. 현재 관측 자료를 쓰며, 예보의 발행 시각·예보 대상 시각을 다루는 계약은 별개입니다.
 
 조건은 `observed_at <= prediction_at`, `available_at <= prediction_at`, 그리고 `prediction_at−observed_at <= 90분`입니다. 관측은 오래전에 일어났더라도 아직 공개되지 않았다는 가정이면 사용할 수 없습니다.
+
+- **관측 나이 = 예측 시점(`prediction_at`) − 관측 시각(`observed_at`)**, 90분 이하인 관측만 사용합니다.
+- **10분은 입증된 값이 아니라 사전 가정입니다.** 실제 수신 이력이 없어 측정할 수 없었고, 모델 점수를 보고 고른 값도 아닙니다.
 
 **이해를 위한 가상 예:** 예측 시점이 UTC 12:00이고 11:55 관측에 10분 지연을 가정하면 가용 시점은 12:05이므로 사용할 수 없습니다. 11:45 관측은 11:55에 가용해지고 관측 나이가 15분이라 사용할 수 있습니다. 이는 설명용 예시이며 실제 실행 사례가 아닙니다.
 
@@ -473,6 +478,7 @@ stratafix 수집 당시 “전체 수집을 하지 않았다”는 문장은 그
 
 ## 예상 질문과 답변의 핵심
 
+<a id="why-lightgbm"></a>
 **Q1. 왜 LightGBM인가요?**  
 현재 프로젝트는 범주형·수치형·결측을 포함한 표 형식 입력을 LightGBM 이진 분류 경로로 비교했습니다. 핵심은 같은 모델 계열·선택 절차를 유지해 전처리와 정보 추가를 비교하는 것입니다. 다른 모델보다 최고라고 입증한 모델 선택 연구라고 말하지 않습니다.
 

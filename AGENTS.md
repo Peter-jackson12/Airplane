@@ -196,7 +196,7 @@ README는 포트폴리오 README로 운영되며 강의 발표는 끝났다.
 | 8) 날씨 비교 클래스별 지표·혼동행렬 | 완료(기존 CSV) | [README 2절](README.md#results), 인계 문서 3절 |
 | 9) 날씨 조건별 선택 임계값·트리 수 | 완료(기존 CSV) | [README 2절](README.md#results), 인계 문서 3절 |
 | 10) 양쪽 시각 결측 집단과 날씨 평가 집단의 구분 | 완료 | [docs/FEEDBACK_PREPROCESSING_KO.md](docs/FEEDBACK_PREPROCESSING_KO.md) 4절 |
-| 11) 가정 가용성과 실제 수신 이력의 구분 | 유지(이미 반영) | [docs/README_EXPLAINED_KO.md](docs/README_EXPLAINED_KO.md) 6절 |
+| 11) 가정 가용성과 실제 수신 이력의 구분 | 유지(이미 반영) | [docs/README_EXPLAINED_KO.md 6절](docs/README_EXPLAINED_KO.md#availability) |
 
 ### 열린 후속 작업 (제안·미실행)
 

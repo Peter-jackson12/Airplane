@@ -56,15 +56,23 @@ def test_classifier_comparison_is_interpreted_within_its_budget():
     readme = _readme()
     results = readme.split('<a id="results"></a>', 1)[1].split('<a id="engineering"></a>', 1)[0]
     section = results.split('<a id="classifier-comparison"></a>', 1)[1].split("\n### ", 2)[1]
-    # Honest reading: settings likely not optimal, not a general algorithm
-    # ranking, and the paired weather conclusion is untouched.
-    assert "현재 LightGBM 설정은 이 데이터에 최적이 아닐 가능성이 큽니다" in section
+    # Honest reading: the heading and interpretation are scoped to the small
+    # predeclared candidate range, the unequal search budget is stated, whether
+    # a LightGBM search would close the gap is left unverified, it is not a
+    # general algorithm ranking, and the paired weather conclusion is untouched.
+    heading = section.splitlines()[0]
+    assert "작은 사전 선언 후보 범위에서" in heading
+    assert "현재 LightGBM 고정 설정은 이 후보 범위에서 최선이 아니었습니다" in section
+    assert "차이가 줄어드는지는 **미검증**" in section
+    assert "LightGBM은 트리 수 1축" in section and "Random Forest는 2축 6개 후보" in section
+    assert "`min_samples_leaf=25`" in section
     assert "Random Forest가 일반적으로 더 나은 알고리즘이라는 증거는 아닙니다" in section
     assert "날씨 사용/미사용 결론은 바뀌지 않습니다" in section
     assert "전역 하이퍼파라미터 탐색이 아니므로" in section
     assert "`max_features=0.5`" in section and "확률 보정은 하지 않았고" in section
     for overclaim in ("Random Forest보다", "Logistic Regression보다", "최적 알고리즘",
-                      "Random Forest가 더 우수", "알고리즘 비교 결과"):
+                      "Random Forest가 더 우수", "알고리즘 비교 결과",
+                      "최적이 아닐 가능성이 큽니다"):
         assert overclaim not in readme, overclaim
 
 

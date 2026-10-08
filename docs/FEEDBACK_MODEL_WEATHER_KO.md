@@ -63,7 +63,7 @@
 | 미량 강수 표기 요청 | **`trace=0.0001`** | 같은 코드, manifest `trace_representation: "0.0001"` |
 | 캐시 규모 | 1,317개 파일, 7,299,100행 | manifest `cache_file_count`, `total_cache_rows` |
 
-단위는 [해설 5.2절](README_EXPLAINED_KO.md)이 [IEM 변수 설명](https://mesonet.agron.iastate.edu/request/download.phtml)을 기준으로 정리한 것을 따랐습니다. 이번 작업에서는 외부 문서를 다시 조회하지 않았습니다(2.6절).
+단위는 [해설 5.2절](README_EXPLAINED_KO.md#weather-features)이 [IEM 변수 설명](https://mesonet.agron.iastate.edu/request/download.phtml)을 기준으로 정리한 것을 따랐습니다. 이번 작업에서는 외부 문서를 다시 조회하지 않았습니다(2.6절).
 
 ### 2.2 14개 모델 피처
 
@@ -162,7 +162,7 @@
 
 - **5개 기상값이 모두 있다는 보장은 없습니다.** 결합은 보고 단위로 이루어지며, 최근 보고의 특정 필드가 `M`이면 더 이른 보고의 값으로 채우지 않습니다. 그 필드만 NaN이 됩니다(2.4절 둘째 상태).
 - 실제 과거 시점의 수신 이력은 보장하지 않습니다. 10분은 실측이 아닌 가정입니다(`measured_publication_latency: false`).
-- 관측소의 2018~2019년 물리적 연속성은 보장하지 않습니다(`confirmed_period`의 의미는 [해설 6.3절](README_EXPLAINED_KO.md) 참고).
+- 관측소의 2018~2019년 물리적 연속성은 보장하지 않습니다(`confirmed_period`의 의미는 [해설 6.3절](README_EXPLAINED_KO.md#63-전체-706759행-결합-결과) 참고).
 - 값의 물리적 타당성은 보장하지 않습니다(2.3절의 이상값 후보).
 
 `matched=0`은 "날씨가 맑았다"나 "강수 0"이 아니라 **정보 없음**입니다. 기상값은 NaN이고 0으로 채우지 않습니다.
@@ -231,7 +231,7 @@
 | scikit-learn | 1.9.0 | **기록 없음** | 1.9.0 |
 | NumPy | 2.5.3 | **기록 없음** | 2.5.3 |
 
-- 날씨 비교 manifest는 `uv_lock_sha256 = d73d3485…dc22`를 기록했습니다. 현재 `uv.lock`의 SHA-256도 같은 값이므로 **잠금파일은 실행 이후 바뀌지 않았습니다.**
+- 날씨 비교 manifest는 `uv_lock_sha256 = d73d3485…dc22`를 기록했습니다. 이 값은 러너가 실행 시점 **작업 트리의 `uv.lock` 파일 바이트를 줄바꿈 정규화 없이** 해시한 것입니다(`src/weather_model.py`의 `digest`). 같은 manifest의 `code_sha256_lf`처럼 LF로 정규화한 해시가 아닙니다. 확인 시점(2026-10-08) Windows 작업 트리의 CRLF `uv.lock`은 같은 `d73d3485…dc22`이고, Git에 저장된 LF 내용(blob)의 SHA-256은 `543e187f…3509`로 다릅니다. 두 값의 차이는 줄바꿈뿐이며, Git 기록상 `uv.lock`은 실행 커밋 `e539ad7` 이후 바뀌지 않았습니다(`git diff e539ad7 HEAD -- uv.lock` 변경 없음). 따라서 **잠금파일 내용은 실행 이후 바뀌지 않았습니다.** 다만 작업 트리의 줄바꿈이 바뀌면 원시 바이트 해시 `d73d…`는 더 이상 재현되지 않으므로, 대조할 때는 해시 종류를 구분합니다.
 - 그러나 실행 당시 실제로 import된 LightGBM, scikit-learn, NumPy 버전은 이 실행의 manifest에 기록되지 않았습니다. 잠금파일과 일치했을 가능성이 높지만 기록으로는 **미확인**입니다.
 - 대조로, Phase 러너 [`rerun_all_phases.py`](../rerun_all_phases.py)의 `RUN_METADATA`는 `versions`(lightgbm, pandas, numpy, scikit-learn)를 기록합니다. 날씨 비교 러너에는 이 필드가 없습니다.
 
@@ -267,9 +267,9 @@
 | 부록 D-1 | 시각 결측 그룹의 F1·재현율 | 그룹의 Macro F1·지연 재현율(`src/oof.py`의 그룹 진단은 `average="macro"`) |
 | Q2, Q8, Q9 | F1 향상 여부 / F1 0.599 / F1·LogLoss·순위, F1 향상도 | Macro F1 |
 
-### 4.2 README.md 점검 결과 (수정하지 않음)
+### 4.2 README.md 점검 결과
 
-[README](../README.md)의 "F1"은 모두 `Macro F1`, `Delayed F1`, `Not_Delayed F1`처럼 한정어가 붙어 있습니다(19, 21, 37, 43, 51, 52, 54, 58, 62, 69, 71, 76, 78, 94행). **같은 이유로 고칠 단독 "F1"은 없습니다.** 다만 README 3절 ① "설정" 줄(95행)은 `learning_rate`·`num_leaves`·`max_depth`만 나열합니다. 3.2절의 `subsample` 무효, LightGBM `random_state` 고정, protocol 라벨 오기를 README에 반영할지는 README 담당자가 판단할 사항으로 남깁니다.
+[README](../README.md)의 "F1"은 모두 `Macro F1`, `Delayed F1`, `Not_Delayed F1`처럼 한정어가 붙어 있어 **고칠 단독 "F1"은 없었습니다.** 3.2절의 `subsample` 무효와 3.5절의 LightGBM `random_state` 고정은 README 3절 ①의 "설정" 항목([README 3절](../README.md#engineering))에 반영됐습니다(커밋 `998d980`). protocol 라벨 오기(3.4절)는 같은 항목의 "설정표와 정오표" 링크로 이 문서에 연결됩니다.
 
 <a id="limits"></a>
 ## 5. 남은 한계
