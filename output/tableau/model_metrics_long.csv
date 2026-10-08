@@ -1,0 +1,211 @@
+population,experiment,seed,variant,metric,value,n_rows,positive_rows,source
+weather_eval,weather_on_off_lightgbm,1,weather_off,macro_f1_nested,0.5745881367,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,1,weather_off,log_loss,0.4480866424,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,1,weather_off,roc_auc,0.6409282606,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,1,weather_off,f1_at_050,0.4534790456,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,1,weather_off,deployment_threshold,0.23,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,1,weather_off,precision_delayed,0.2904163695,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_off,recall_delayed,0.3329036315,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_off,f1_delayed,0.3102119743,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_off,precision_not_delayed,0.8525306866,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_off,recall_not_delayed,0.8258229144,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_off,f1_not_delayed,0.838964299,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_off,macro_f1_from_counts,0.5745881367,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_off,false_positive_rate,0.1741770856,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_off,error_rate,0.2611128363,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_on,macro_f1_nested,0.5990089452,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,1,weather_on,log_loss,0.4366243215,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,1,weather_on,roc_auc,0.673218842,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,1,weather_on,f1_at_050,0.4806873086,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,1,weather_on,deployment_threshold,0.23,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,1,weather_on,precision_delayed,0.3330788655,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_on,recall_delayed,0.356673479,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_on,f1_delayed,0.3444726174,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_on,precision_not_delayed,0.8601186814,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_on,recall_not_delayed,0.8470715762,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_on,f1_not_delayed,0.8535452729,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_on,macro_f1_from_counts,0.5990089452,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_on,false_positive_rate,0.1529284238,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,1,weather_on,error_rate,0.2394195151,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_off,macro_f1_nested,0.5739647761,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,7,weather_off,log_loss,0.4480944262,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,7,weather_off,roc_auc,0.6405298096,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,7,weather_off,f1_at_050,0.4538206214,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,7,weather_off,deployment_threshold,0.22,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,7,weather_off,precision_delayed,0.2860175452,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_off,recall_delayed,0.3516113819,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_off,f1_delayed,0.3154405957,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_off,precision_not_delayed,0.8539859665,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_off,recall_not_delayed,0.8120476412,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_off,f1_not_delayed,0.8324889564,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_off,macro_f1_from_counts,0.5739647761,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_off,false_positive_rate,0.1879523588,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_off,error_rate,0.2691591065,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_on,macro_f1_nested,0.5993263476,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,7,weather_on,log_loss,0.4366013063,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,7,weather_on,roc_auc,0.6731801961,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,7,weather_on,f1_at_050,0.478507739,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,7,weather_on,deployment_threshold,0.24,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,7,weather_on,precision_delayed,0.3348826123,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_on,recall_delayed,0.3534035529,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_on,f1_delayed,0.3438938947,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_on,precision_not_delayed,0.8598809005,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_on,recall_not_delayed,0.8496973614,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_on,f1_not_delayed,0.8547588005,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_on,macro_f1_from_counts,0.5993263476,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_on,false_positive_rate,0.1503026386,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,7,weather_on,error_rate,0.2378335514,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_off,macro_f1_nested,0.5731765034,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,42,weather_off,log_loss,0.4481678984,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,42,weather_off,roc_auc,0.6403967379,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,42,weather_off,f1_at_050,0.4538945016,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,42,weather_off,deployment_threshold,0.22,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,42,weather_off,precision_delayed,0.2842346656,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_off,recall_delayed,0.3546297752,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_off,f1_delayed,0.3155538769,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_off,precision_not_delayed,0.8540632776,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_off,recall_not_delayed,0.808768776,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_off,f1_not_delayed,0.8307991299,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_off,macro_f1_from_counts,0.5731765034,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_off,false_positive_rate,0.191231224,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_off,error_rate,0.2713273296,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_on,macro_f1_nested,0.5985001857,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,42,weather_on,log_loss,0.4368406866,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,42,weather_on,roc_auc,0.6724075404,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,42,weather_on,f1_at_050,0.4773791345,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,42,weather_on,deployment_threshold,0.23,180332,31805,tracked runs CSV
+weather_eval,weather_on_off_lightgbm,42,weather_on,precision_delayed,0.3316618076,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_on,recall_delayed,0.3576796101,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_on,f1_delayed,0.3441797141,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_on,precision_not_delayed,0.8601060042,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_on,recall_not_delayed,0.8456576919,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_on,f1_not_delayed,0.8528206573,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_on,macro_f1_from_counts,0.5985001857,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_on,false_positive_rate,0.1543423081,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,weather_on_off_lightgbm,42,weather_on,error_rate,0.2404065834,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,lightgbm,macro_f1_nested,0.5990089452,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,1,lightgbm,log_loss,0.4366243215,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,1,lightgbm,roc_auc,0.673218842,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,1,lightgbm,f1_at_050,0.4806873086,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,1,lightgbm,deployment_threshold,0.23,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,1,lightgbm,precision_delayed,0.3330788655,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,lightgbm,recall_delayed,0.356673479,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,lightgbm,f1_delayed,0.3444726174,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,lightgbm,precision_not_delayed,0.8601186814,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,lightgbm,recall_not_delayed,0.8470715762,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,lightgbm,f1_not_delayed,0.8535452729,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,lightgbm,macro_f1_from_counts,0.5990089452,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,lightgbm,false_positive_rate,0.1529284238,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,lightgbm,error_rate,0.2394195151,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,logistic_regression,macro_f1_nested,0.5968317579,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,1,logistic_regression,log_loss,0.4370689052,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,1,logistic_regression,roc_auc,0.6746434769,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,1,logistic_regression,f1_at_050,0.4715234809,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,1,logistic_regression,deployment_threshold,0.25,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,1,logistic_regression,precision_delayed,0.3313666177,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,logistic_regression,recall_delayed,0.3478698318,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,logistic_regression,f1_delayed,0.3394177378,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,logistic_regression,precision_not_delayed,0.8588500303,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,logistic_regression,recall_not_delayed,0.8496906286,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,logistic_regression,f1_not_delayed,0.8542457779,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,logistic_regression,macro_f1_from_counts,0.5968317579,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,logistic_regression,false_positive_rate,0.1503093714,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,logistic_regression,error_rate,0.2388150744,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,random_forest,macro_f1_nested,0.6077761388,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,1,random_forest,log_loss,0.4319309475,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,1,random_forest,roc_auc,0.6871545778,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,1,random_forest,f1_at_050,0.4785794644,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,1,random_forest,deployment_threshold,0.26,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,1,random_forest,precision_delayed,0.3551639683,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,random_forest,recall_delayed,0.3510768747,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,random_forest,f1_delayed,0.3531085953,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,random_forest,precision_not_delayed,0.8613836782,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,random_forest,recall_not_delayed,0.8635062985,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,random_forest,f1_not_delayed,0.8624436823,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,random_forest,macro_f1_from_counts,0.6077761388,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,random_forest,false_positive_rate,0.1364937015,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,1,random_forest,error_rate,0.226870439,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,lightgbm,macro_f1_nested,0.5993263476,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,7,lightgbm,log_loss,0.4366013063,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,7,lightgbm,roc_auc,0.6731801961,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,7,lightgbm,f1_at_050,0.478507739,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,7,lightgbm,deployment_threshold,0.24,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,7,lightgbm,precision_delayed,0.3348826123,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,lightgbm,recall_delayed,0.3534035529,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,lightgbm,f1_delayed,0.3438938947,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,lightgbm,precision_not_delayed,0.8598809005,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,lightgbm,recall_not_delayed,0.8496973614,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,lightgbm,f1_not_delayed,0.8547588005,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,lightgbm,macro_f1_from_counts,0.5993263476,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,lightgbm,false_positive_rate,0.1503026386,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,lightgbm,error_rate,0.2378335514,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,logistic_regression,macro_f1_nested,0.5972501341,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,7,logistic_regression,log_loss,0.4371671703,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,7,logistic_regression,roc_auc,0.674338513,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,7,logistic_regression,f1_at_050,0.4727654375,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,7,logistic_regression,deployment_threshold,0.25,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,7,logistic_regression,precision_delayed,0.327503478,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,logistic_regression,recall_delayed,0.3626788241,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,logistic_regression,f1_delayed,0.3441947901,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,logistic_regression,precision_not_delayed,0.8603138287,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,logistic_regression,recall_not_delayed,0.8405273115,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,logistic_regression,f1_not_delayed,0.8503054782,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,logistic_regression,macro_f1_from_counts,0.5972501341,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,logistic_regression,false_positive_rate,0.1594726885,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,logistic_regression,error_rate,0.2437504159,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,random_forest,macro_f1_nested,0.6081669768,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,7,random_forest,log_loss,0.4315138428,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,7,random_forest,roc_auc,0.68785172,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,7,random_forest,f1_at_050,0.4781027219,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,7,random_forest,deployment_threshold,0.25,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,7,random_forest,precision_delayed,0.347119516,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,random_forest,recall_delayed,0.3734004087,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,random_forest,f1_delayed,0.3597806659,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,random_forest,precision_not_delayed,0.8636111662,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,random_forest,recall_not_delayed,0.8496098352,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,random_forest,f1_not_delayed,0.8565532877,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,random_forest,macro_f1_from_counts,0.6081669768,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,random_forest,false_positive_rate,0.1503901648,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,7,random_forest,error_rate,0.2343788124,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,lightgbm,macro_f1_nested,0.5985001857,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,42,lightgbm,log_loss,0.4368406866,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,42,lightgbm,roc_auc,0.6724075404,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,42,lightgbm,f1_at_050,0.4773791345,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,42,lightgbm,deployment_threshold,0.23,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,42,lightgbm,precision_delayed,0.3316618076,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,lightgbm,recall_delayed,0.3576796101,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,lightgbm,f1_delayed,0.3441797141,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,lightgbm,precision_not_delayed,0.8601060042,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,lightgbm,recall_not_delayed,0.8456576919,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,lightgbm,f1_not_delayed,0.8528206573,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,lightgbm,macro_f1_from_counts,0.5985001857,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,lightgbm,false_positive_rate,0.1543423081,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,lightgbm,error_rate,0.2404065834,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,logistic_regression,macro_f1_nested,0.59636605,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,42,logistic_regression,log_loss,0.4371953192,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,42,logistic_regression,roc_auc,0.6742321526,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,42,logistic_regression,f1_at_050,0.4736353477,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,42,logistic_regression,deployment_threshold,0.24,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,42,logistic_regression,precision_delayed,0.3198697068,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,logistic_regression,recall_delayed,0.385945606,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,logistic_regression,f1_delayed,0.349814762,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,logistic_regression,precision_not_delayed,0.8624231281,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,logistic_regression,recall_not_delayed,0.8242743744,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,logistic_regression,f1_not_delayed,0.842917338,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,logistic_regression,macro_f1_from_counts,0.59636605,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,logistic_regression,false_positive_rate,0.1757256256,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,logistic_regression,error_rate,0.2530332941,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,random_forest,macro_f1_nested,0.6097288498,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,42,random_forest,log_loss,0.4315478401,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,42,random_forest,roc_auc,0.6875354583,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,42,random_forest,f1_at_050,0.4792570398,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,42,random_forest,deployment_threshold,0.25,180332,31805,tracked runs CSV
+weather_eval,classifier_compare_weather_on,42,random_forest,precision_delayed,0.3468165432,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,random_forest,recall_delayed,0.384153435,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,random_forest,f1_delayed,0.3645314318,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,random_forest,precision_not_delayed,0.8650131286,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,random_forest,recall_not_delayed,0.8450719398,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,random_forest,f1_not_delayed,0.8549262678,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,random_forest,macro_f1_from_counts,0.6097288498,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,random_forest,false_positive_rate,0.1549280602,180332,31805,derived from tracked tn/fp/fn/tp
+weather_eval,classifier_compare_weather_on,42,random_forest,error_rate,0.2362198611,180332,31805,derived from tracked tn/fp/fn/tp

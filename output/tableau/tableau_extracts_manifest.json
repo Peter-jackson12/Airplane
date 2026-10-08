@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "generator": "scripts/build_tableau_extracts.py",
+  "training_performed": false,
+  "populations": {
+    "labeled_all": "라벨 전체 255,001행 (data/train.csv의 Delay 비결측 행)",
+    "weather_eval": "날씨 평가 집단 180,332행 (날짜 귀속 + 라벨, 10분 가정 결합)",
+    "both_time_missing": "원본 출발·도착 예정 시각 모두 결측인 라벨 3,031행",
+    "oof_p6_clean": "P6_clean OOF: 라벨 255,001행 × 분할 시드 3개(42/1/7)"
+  },
+  "inputs": {
+    "raw_train": {
+      "path": "data/train.csv",
+      "sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84"
+    },
+    "airport_coordinates": {
+      "path": "output/baseline_recovery_v2_weather_scope_fix_20260918_mapping_table.csv",
+      "sha256": "d39ef026304335f31a4b9acd1e19d55d25de2344a1a31c64335459e2b15c9408",
+      "note": "lat/lon from the mwgg airports list cached during station mapping"
+    },
+    "weather": {
+      "join_manifest": {
+        "path": "output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json"
+      },
+      "join_summary": {
+        "path": "output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_summary.json"
+      },
+      "joined_weather": {
+        "path": "data/weather_probe/baseline_recovery_v2_weather_full_join_20260922_full_join/joined_latency10min.csv.gz",
+        "sha256": "28f015b579f17e4b3ffa67c7ee9ec07aba7225fdbd1502b5d8cb839e797b80e5"
+      },
+      "raw_train": {
+        "path": "data/train.csv"
+      }
+    },
+    "weather_runs": {
+      "path": "output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv",
+      "sha256": "80c729226cd123da1d8d6ce6dcb7c4ac30f7e12265a0b35d88111d10ab0be629"
+    },
+    "classifier_runs": {
+      "path": "output/baseline_recovery_v2_classifier_compare_20261008_runs.csv",
+      "sha256": "23ba79a697af3de4ff2de537876a4ced6f07547278497f377b217ea5d8106707"
+    },
+    "oof_groups": {
+      "path": "output/baseline_recovery_v2_oof_20260916_v2_groups.csv",
+      "sha256": "563297ecc47506e74eebd2db73ab6e31932a4d8c32987098e26b675eefadac21"
+    },
+    "oof_rowlevel": {
+      "42": {
+        "path": "output/baseline_recovery_v2_oof_20260916_v2_seed42_oof/P6_clean-744179c6c77e366e9ac802999e0819fafc7e1cb961cc21ca4364f0edd9383f5c.csv.gz",
+        "sha256": "744179c6c77e366e9ac802999e0819fafc7e1cb961cc21ca4364f0edd9383f5c",
+        "rows": 255001
+      },
+      "1": {
+        "path": "output/baseline_recovery_v2_oof_20260916_v2_seed1_oof/P6_clean-0428dd06d8e431d899f22e8353d09968c96880d541a607647dea43bd5f3c0a72.csv.gz",
+        "sha256": "0428dd06d8e431d899f22e8353d09968c96880d541a607647dea43bd5f3c0a72",
+        "rows": 255001
+      },
+      "7": {
+        "path": "output/baseline_recovery_v2_oof_20260916_v2_seed7_oof/P6_clean-e3c0d0e2093a4a4caeffc1627c2b0d143abb21d19cfec68993c8d4aed9a48e8d.csv.gz",
+        "sha256": "e3c0d0e2093a4a4caeffc1627c2b0d143abb21d19cfec68993c8d4aed9a48e8d",
+        "rows": 255001
+      }
+    }
+  },
+  "outputs": {
+    "d1_delay_by_airline": {
+      "path": "output/tableau/d1_delay_by_airline.csv",
+      "rows": 29,
+      "bytes": 2639,
+      "sha256": "6083a4bdd9e7adeda341f341ede8a2a9df764aa5f4a4711e206941ec5a276013"
+    },
+    "d1_delay_by_month": {
+      "path": "output/tableau/d1_delay_by_month.csv",
+      "rows": 12,
+      "bytes": 963,
+      "sha256": "d0d4995f747dabb7157aab231e07f3bb2ff99752f04ebe8706db3cce1ce4f0d0"
+    },
+    "d1_delay_by_hour": {
+      "path": "output/tableau/d1_delay_by_hour.csv",
+      "rows": 51,
+      "bytes": 5449,
+      "sha256": "0b1e96f3a50cd623c0f4c866ec39f599009d62c48f57aed7b6926f6c5ca9cb40"
+    },
+    "d1_delay_by_airport": {
+      "path": "output/tableau/d1_delay_by_airport.csv",
+      "rows": 747,
+      "bytes": 108241,
+      "sha256": "03927f09ae0d0c6f8288c733b03622f198cf1cd57e3d1a50ac81011ee4d205fc"
+    },
+    "d1_delay_by_route": {
+      "path": "output/tableau/d1_delay_by_route.csv",
+      "rows": 6374,
+      "bytes": 820202,
+      "sha256": "1fb4b3461496498255d360ad7be72fc2e2b6c6b1f58b5a71cd37bd7929be6ff8"
+    },
+    "d1_delay_by_airline_month": {
+      "path": "output/tableau/d1_delay_by_airline_month.csv",
+      "rows": 331,
+      "bytes": 28958,
+      "sha256": "8c6c28eacdbed2bcb879b288b628f3183e20f0b189e3098d05220f9968721d28"
+    },
+    "d2_weather_bins_long": {
+      "path": "output/tableau/d2_weather_bins_long.csv",
+      "rows": 72,
+      "bytes": 10726,
+      "sha256": "6cc09e3f68569e8fd800b0c5583638d81554dc7780d22550eca3a455f207b417"
+    },
+    "d2_delay_by_year_month": {
+      "path": "output/tableau/d2_delay_by_year_month.csv",
+      "rows": 24,
+      "bytes": 1935,
+      "sha256": "3de8c7b570e3de39ec8fed9d11e74ded5f2a1579bb1d9f94925e039803bff9d5"
+    },
+    "model_confusion_long": {
+      "path": "output/tableau/model_confusion_long.csv",
+      "rows": 60,
+      "bytes": 6821,
+      "sha256": "5bd605dcfbef92a739973f2a7a962fff2bfc324ff219ebdb28cc73a9831955c6"
+    },
+    "model_metrics_long": {
+      "path": "output/tableau/model_metrics_long.csv",
+      "rows": 210,
+      "bytes": 26151,
+      "sha256": "6d0b1080c60d8d1a1519b75a9165083a661cfaafe7c47d2d095ca35a7c436741"
+    },
+    "d3_oof_errors_by_group": {
+      "path": "output/tableau/d3_oof_errors_by_group.csv",
+      "rows": 3081,
+      "bytes": 351033,
+      "sha256": "c5fac2bba195477da28cc537f21178659da6e32836d3dd58f49589d0d6c11c64"
+    },
+    "d3_oof_error_stability": {
+      "path": "output/tableau/d3_oof_error_stability.csv",
+      "rows": 1027,
+      "bytes": 71630,
+      "sha256": "e61fa31c81b3a2dd699919ae4175ed7b43a5e86d2215b2cd61e51b8b06e64218"
+    },
+    "overview_populations": {
+      "path": "output/tableau/overview_populations.csv",
+      "rows": 3,
+      "bytes": 459,
+      "sha256": "520e48d4faa0ff37c3f36ddb424cdcee2824372f4bd22b402c71cb6529810dab"
+    }
+  },
+  "rowlevel_local_only": {
+    "path": "data/tableau/flights_rowlevel.csv",
+    "rows": 255001,
+    "bytes": 59315016,
+    "sha256": "e696aaeb250f3c4b10b61afab697155e2947b71285be77eedda64e80498ddffb",
+    "tracked": false
+  },
+  "reconciliation": {
+    "airports_without_coordinates": [],
+    "route_table_rows_before_min_filter": 255001,
+    "d3_routes_kept": 582,
+    "d3_rows_in_kept_routes": 93975,
+    "both_time_missing_recall_by_seed": {
+      "1": 0.09441233140655106,
+      "7": 0.1001926782273603,
+      "42": 0.10597302504816955
+    },
+    "both_time_missing_recall_3seed_mean": 0.10019267822736029,
+    "both_time_missing_in_weather_eval": 0,
+    "weather_origin_unmatched_rows": 4185,
+    "weather_origin_p01i_trace_rows": 10952,
+    "weather_destination_unmatched_rows": 4154,
+    "weather_destination_p01i_trace_rows": 11099,
+    "checks": {
+      "d1_airline": true,
+      "d1_month": true,
+      "d1_hour_departure": true,
+      "d1_hour_arrival": true,
+      "d1_airport_origin": true,
+      "d1_airport_destination": true,
+      "d1_route_before_filter": true,
+      "d1_airline_month": true,
+      "d3_errors_airline_seed1": true,
+      "d3_errors_airline_seed7": true,
+      "d3_errors_airline_seed42": true,
+      "d3_errors_dep_hour_seed1": true,
+      "d3_errors_dep_hour_seed7": true,
+      "d3_errors_dep_hour_seed42": true,
+      "d3_errors_month_seed1": true,
+      "d3_errors_month_seed7": true,
+      "d3_errors_month_seed42": true,
+      "d3_errors_origin_airport_seed1": true,
+      "d3_errors_origin_airport_seed7": true,
+      "d3_errors_origin_airport_seed42": true,
+      "d3_errors_raw_time_pattern_seed1": true,
+      "d3_errors_raw_time_pattern_seed7": true,
+      "d3_errors_raw_time_pattern_seed42": true,
+      "d3_errors_route_seed1": true,
+      "d3_errors_route_seed7": true,
+      "d3_errors_route_seed42": true,
+      "d3_stability_airline": true,
+      "d3_stability_dep_hour": true,
+      "d3_stability_month": true,
+      "d3_stability_origin_airport": true,
+      "d3_stability_raw_time_pattern": true,
+      "d3_stability_route": true,
+      "d2_bins_both_matched_status": true,
+      "d2_bins_destination_age_minutes": true,
+      "d2_bins_destination_p01i": true,
+      "d2_bins_destination_sknt": true,
+      "d2_bins_destination_tmpf": true,
+      "d2_bins_destination_vsby": true,
+      "d2_bins_origin_age_minutes": true,
+      "d2_bins_origin_p01i": true,
+      "d2_bins_origin_sknt": true,
+      "d2_bins_origin_tmpf": true,
+      "d2_bins_origin_vsby": true,
+      "d2_year_month": true,
+      "weather_confusion_seed1_weather_off": true,
+      "weather_confusion_seed1_weather_on": true,
+      "weather_confusion_seed7_weather_off": true,
+      "weather_confusion_seed7_weather_on": true,
+      "weather_confusion_seed42_weather_off": true,
+      "weather_confusion_seed42_weather_on": true,
+      "classifier_confusion_seed1_lightgbm": true,
+      "classifier_confusion_seed1_logistic_regression": true,
+      "classifier_confusion_seed1_random_forest": true,
+      "classifier_confusion_seed7_lightgbm": true,
+      "classifier_confusion_seed7_logistic_regression": true,
+      "classifier_confusion_seed7_random_forest": true,
+      "classifier_confusion_seed42_lightgbm": true,
+      "classifier_confusion_seed42_logistic_regression": true,
+      "classifier_confusion_seed42_random_forest": true,
+      "oof_overall_seed42_vs_groups_csv": true,
+      "oof_time_pattern_both_observed_seed42_vs_groups_csv": true,
+      "oof_time_pattern_departure_missing_seed42_vs_groups_csv": true,
+      "oof_time_pattern_arrival_missing_seed42_vs_groups_csv": true,
+      "oof_time_pattern_both_missing_seed42_vs_groups_csv": true,
+      "oof_overall_seed1_vs_groups_csv": true,
+      "oof_time_pattern_both_observed_seed1_vs_groups_csv": true,
+      "oof_time_pattern_departure_missing_seed1_vs_groups_csv": true,
+      "oof_time_pattern_arrival_missing_seed1_vs_groups_csv": true,
+      "oof_time_pattern_both_missing_seed1_vs_groups_csv": true,
+      "oof_overall_seed7_vs_groups_csv": true,
+      "oof_time_pattern_both_observed_seed7_vs_groups_csv": true,
+      "oof_time_pattern_departure_missing_seed7_vs_groups_csv": true,
+      "oof_time_pattern_arrival_missing_seed7_vs_groups_csv": true,
+      "oof_time_pattern_both_missing_seed7_vs_groups_csv": true,
+      "both_time_missing_rows": true,
+      "both_time_missing_in_weather_eval_is_0": true
+    },
+    "all_checks_passed": true
+  }
+}

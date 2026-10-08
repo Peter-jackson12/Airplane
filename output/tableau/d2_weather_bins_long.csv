@@ -1,0 +1,73 @@
+population,population_rows,population_delayed,role,role_ko,feature,feature_label_ko,unit,bin_order,bin_label,bin_kind,bin_lower,bin_upper,n_rows,n_delayed,n_not_delayed,delay_rate,share_of_population
+weather_eval,180332,31805,both,출발+도착,matched_status,결합 상태,,0,양쪽 공항 결합,value,,,175939,31031,144908,0.1763736295,0.9756393763
+weather_eval,180332,31805,both,출발+도착,matched_status,결합 상태,,1,출발 공항만 결합,partial,,,208,29,179,0.1394230769,0.001153428121
+weather_eval,180332,31805,both,출발+도착,matched_status,결합 상태,,2,도착 공항만 결합,partial,,,239,30,209,0.1255230126,0.001325333274
+weather_eval,180332,31805,both,출발+도착,matched_status,결합 상태,,3,양쪽 미결합,unmatched,,,3946,715,3231,0.181196148,0.02188186234
+weather_eval,180332,31805,destination,도착 공항,age_minutes,관측 나이,분,0,"[0, 30) 분",value,0,30,60508,11143,49365,0.1841574668,0.3355366768
+weather_eval,180332,31805,destination,도착 공항,age_minutes,관측 나이,분,1,"[30, 60) 분",value,30,60,81479,14316,67163,0.1757017146,0.4518277399
+weather_eval,180332,31805,destination,도착 공항,age_minutes,관측 나이,분,2,"[60, 90] 분",value,60,91,34191,5602,28589,0.1638442865,0.1896002928
+weather_eval,180332,31805,destination,도착 공항,age_minutes,관측 나이,분,900,미결합(관측 보고 없음),unmatched,,,4154,744,3410,0.1791044776,0.02303529046
+weather_eval,180332,31805,destination,도착 공항,p01i,1시간 강수,inch,0,0 inch(강수 없음 보고),special,0,0,155519,25739,129780,0.1655038934,0.8624037886
+weather_eval,180332,31805,destination,도착 공항,p01i,1시간 강수,inch,1,"미량(trace, 0.0001 표기)",special,0.0001,0.0001,11099,2648,8451,0.2385800523,0.06154759
+weather_eval,180332,31805,destination,도착 공항,p01i,1시간 강수,inch,2,"(0.0001, 0.05) inch",value,0.0001,0.05,5973,1589,4384,0.2660304705,0.0331222412
+weather_eval,180332,31805,destination,도착 공항,p01i,1시간 강수,inch,3,"[0.05, 0.1) inch",value,0.05,0.1,1617,481,1136,0.2974644403,0.008966794579
+weather_eval,180332,31805,destination,도착 공항,p01i,1시간 강수,inch,4,≥ 0.1 inch,value,0.1,,1749,572,1177,0.3270440252,0.00969877781
+weather_eval,180332,31805,destination,도착 공항,p01i,1시간 강수,inch,800,결합됨·필드 결측(M),field_missing,,,221,32,189,0.1447963801,0.001225517379
+weather_eval,180332,31805,destination,도착 공항,p01i,1시간 강수,inch,900,미결합(관측 보고 없음),unmatched,,,4154,744,3410,0.1791044776,0.02303529046
+weather_eval,180332,31805,destination,도착 공항,sknt,풍속,knot,0,0 knot(무풍 보고),special,0,0,17097,2277,14820,0.1331812599,0.09480846439
+weather_eval,180332,31805,destination,도착 공항,sknt,풍속,knot,1,"(0, 6) knot",value,0,6,47370,7320,40050,0.1545281824,0.262682164
+weather_eval,180332,31805,destination,도착 공항,sknt,풍속,knot,2,"[6, 11) knot",value,6,11,69833,12431,57402,0.1780103962,0.3872468558
+weather_eval,180332,31805,destination,도착 공항,sknt,풍속,knot,3,"[11, 16) knot",value,11,16,31254,6482,24772,0.2073974531,0.1733136659
+weather_eval,180332,31805,destination,도착 공항,sknt,풍속,knot,4,"[16, 21) knot",value,16,21,8400,1959,6441,0.2332142857,0.04658075106
+weather_eval,180332,31805,destination,도착 공항,sknt,풍속,knot,5,"[21, 31) knot",value,21,31,1830,513,1317,0.2803278689,0.01014794934
+weather_eval,180332,31805,destination,도착 공항,sknt,풍속,knot,6,≥ 31 knot,value,31,,36,14,22,0.3888888889,0.0001996317903
+weather_eval,180332,31805,destination,도착 공항,sknt,풍속,knot,800,결합됨·필드 결측(M),field_missing,,,358,65,293,0.1815642458,0.001985227248
+weather_eval,180332,31805,destination,도착 공항,sknt,풍속,knot,900,미결합(관측 보고 없음),unmatched,,,4154,744,3410,0.1791044776,0.02303529046
+weather_eval,180332,31805,destination,도착 공항,tmpf,기온,°F,0,< 32 °F,value,,32,12416,2308,10108,0.1858891753,0.06885078633
+weather_eval,180332,31805,destination,도착 공항,tmpf,기온,°F,1,"[32, 50) °F",value,32,50,36190,5795,30395,0.1601271069,0.2006854025
+weather_eval,180332,31805,destination,도착 공항,tmpf,기온,°F,2,"[50, 68) °F",value,50,68,53809,8880,44929,0.1650281551,0.2983885278
+weather_eval,180332,31805,destination,도착 공항,tmpf,기온,°F,3,"[68, 86) °F",value,68,86,58489,10622,47867,0.1816067979,0.3243406606
+weather_eval,180332,31805,destination,도착 공항,tmpf,기온,°F,4,≥ 86 °F,value,86,,15224,3443,11781,0.2261560694,0.08442206597
+weather_eval,180332,31805,destination,도착 공항,tmpf,기온,°F,800,결합됨·필드 결측(M),field_missing,,,50,13,37,0.26,0.0002772663754
+weather_eval,180332,31805,destination,도착 공항,tmpf,기온,°F,900,미결합(관측 보고 없음),unmatched,,,4154,744,3410,0.1791044776,0.02303529046
+weather_eval,180332,31805,destination,도착 공항,vsby,시정,mile,0,"[0, 1) mile",value,0,1,1873,537,1336,0.2867058195,0.01038639842
+weather_eval,180332,31805,destination,도착 공항,vsby,시정,mile,1,"[1, 3) mile",value,1,3,4060,1057,3003,0.2603448276,0.02251402968
+weather_eval,180332,31805,destination,도착 공항,vsby,시정,mile,2,"[3, 5) mile",value,3,5,3850,869,2981,0.2257142857,0.0213495109
+weather_eval,180332,31805,destination,도착 공항,vsby,시정,mile,3,"[5, 10) mile",value,5,10,17653,3353,14300,0.1899393871,0.09789166648
+weather_eval,180332,31805,destination,도착 공항,vsby,시정,mile,4,≥ 10 mile,value,10,,148694,25237,123457,0.1697244004,0.8245569283
+weather_eval,180332,31805,destination,도착 공항,vsby,시정,mile,800,결합됨·필드 결측(M),field_missing,,,48,8,40,0.1666666667,0.0002661757203
+weather_eval,180332,31805,destination,도착 공항,vsby,시정,mile,900,미결합(관측 보고 없음),unmatched,,,4154,744,3410,0.1791044776,0.02303529046
+weather_eval,180332,31805,origin,출발 공항,age_minutes,관측 나이,분,0,"[0, 30) 분",value,0,30,60433,11420,49013,0.1889696027,0.3351207772
+weather_eval,180332,31805,origin,출발 공항,age_minutes,관측 나이,분,1,"[30, 60) 분",value,30,60,81446,14160,67286,0.1738575252,0.4516447441
+weather_eval,180332,31805,origin,출발 공항,age_minutes,관측 나이,분,2,"[60, 90] 분",value,60,91,34268,5480,28788,0.1599159566,0.190027283
+weather_eval,180332,31805,origin,출발 공항,age_minutes,관측 나이,분,900,미결합(관측 보고 없음),unmatched,,,4185,745,3440,0.1780167264,0.02320719562
+weather_eval,180332,31805,origin,출발 공항,p01i,1시간 강수,inch,0,0 inch(강수 없음 보고),special,0,0,155847,25365,130482,0.1627557797,0.864222656
+weather_eval,180332,31805,origin,출발 공항,p01i,1시간 강수,inch,1,"미량(trace, 0.0001 표기)",special,0.0001,0.0001,10952,2803,8149,0.255934989,0.06073242686
+weather_eval,180332,31805,origin,출발 공항,p01i,1시간 강수,inch,2,"(0.0001, 0.05) inch",value,0.0001,0.05,5902,1728,4174,0.2927821078,0.03272852295
+weather_eval,180332,31805,origin,출발 공항,p01i,1시간 강수,inch,3,"[0.05, 0.1) inch",value,0.05,0.1,1616,473,1143,0.2926980198,0.008961249251
+weather_eval,180332,31805,origin,출발 공항,p01i,1시간 강수,inch,4,≥ 0.1 inch,value,0.1,,1613,638,975,0.3955362678,0.008944613269
+weather_eval,180332,31805,origin,출발 공항,p01i,1시간 강수,inch,800,결합됨·필드 결측(M),field_missing,,,217,53,164,0.2442396313,0.001203336069
+weather_eval,180332,31805,origin,출발 공항,p01i,1시간 강수,inch,900,미결합(관측 보고 없음),unmatched,,,4185,745,3440,0.1780167264,0.02320719562
+weather_eval,180332,31805,origin,출발 공항,sknt,풍속,knot,0,0 knot(무풍 보고),special,0,0,17293,2202,15091,0.1273347597,0.09589534858
+weather_eval,180332,31805,origin,출발 공항,sknt,풍속,knot,1,"(0, 6) knot",value,0,6,47178,7270,39908,0.1540972487,0.2616174611
+weather_eval,180332,31805,origin,출발 공항,sknt,풍속,knot,2,"[6, 11) knot",value,6,11,70254,12567,57687,0.1788794944,0.3895814387
+weather_eval,180332,31805,origin,출발 공항,sknt,풍속,knot,3,"[11, 16) knot",value,11,16,30855,6378,24477,0.2067087992,0.1711010802
+weather_eval,180332,31805,origin,출발 공항,sknt,풍속,knot,4,"[16, 21) knot",value,16,21,8289,2015,6274,0.2430932561,0.04596521971
+weather_eval,180332,31805,origin,출발 공항,sknt,풍속,knot,5,"[21, 31) knot",value,21,31,1909,535,1374,0.2802514405,0.01058603021
+weather_eval,180332,31805,origin,출발 공항,sknt,풍속,knot,6,≥ 31 knot,value,31,,41,23,18,0.5609756098,0.0002273584278
+weather_eval,180332,31805,origin,출발 공항,sknt,풍속,knot,800,결합됨·필드 결측(M),field_missing,,,328,70,258,0.2134146341,0.001818867422
+weather_eval,180332,31805,origin,출발 공항,sknt,풍속,knot,900,미결합(관측 보고 없음),unmatched,,,4185,745,3440,0.1780167264,0.02320719562
+weather_eval,180332,31805,origin,출발 공항,tmpf,기온,°F,0,< 32 °F,value,,32,12364,2591,9773,0.2095600129,0.0685624293
+weather_eval,180332,31805,origin,출발 공항,tmpf,기온,°F,1,"[32, 50) °F",value,32,50,36236,5685,30551,0.1568881775,0.2009404875
+weather_eval,180332,31805,origin,출발 공항,tmpf,기온,°F,2,"[50, 68) °F",value,50,68,54365,8787,45578,0.161629725,0.3014717299
+weather_eval,180332,31805,origin,출발 공항,tmpf,기온,°F,3,"[68, 86) °F",value,68,86,57375,10360,47015,0.1805664488,0.3181631657
+weather_eval,180332,31805,origin,출발 공항,tmpf,기온,°F,4,≥ 86 °F,value,86,,15756,3626,12130,0.2301345519,0.0873721802
+weather_eval,180332,31805,origin,출발 공항,tmpf,기온,°F,800,결합됨·필드 결측(M),field_missing,,,51,11,40,0.2156862745,0.0002828117029
+weather_eval,180332,31805,origin,출발 공항,tmpf,기온,°F,900,미결합(관측 보고 없음),unmatched,,,4185,745,3440,0.1780167264,0.02320719562
+weather_eval,180332,31805,origin,출발 공항,vsby,시정,mile,0,"[0, 1) mile",value,0,1,1860,575,1285,0.3091397849,0.01031430916
+weather_eval,180332,31805,origin,출발 공항,vsby,시정,mile,1,"[1, 3) mile",value,1,3,4089,1220,2869,0.2983614576,0.02267484418
+weather_eval,180332,31805,origin,출발 공항,vsby,시정,mile,2,"[3, 5) mile",value,3,5,3708,889,2819,0.2397518878,0.0205620744
+weather_eval,180332,31805,origin,출발 공항,vsby,시정,mile,3,"[5, 10) mile",value,5,10,18021,3426,14595,0.1901115365,0.099932347
+weather_eval,180332,31805,origin,출발 공항,vsby,시정,mile,4,≥ 10 mile,value,10,,148410,24942,123468,0.1680614514,0.8229820553
+weather_eval,180332,31805,origin,출발 공항,vsby,시정,mile,800,결합됨·필드 결측(M),field_missing,,,59,8,51,0.1355932203,0.0003271743229
+weather_eval,180332,31805,origin,출발 공항,vsby,시정,mile,900,미결합(관측 보고 없음),unmatched,,,4185,745,3440,0.1780167264,0.02320719562

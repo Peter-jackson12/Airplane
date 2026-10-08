@@ -10,6 +10,8 @@ data/
 # 실험 결과 표는 크기가 작고 문서의 근거 자료이므로 예외로 추적한다.
 # (output/baseline_recovery.csv 는 재측정 수치의 단일 진원지다)
 !output/*.csv
+# Tableau 대시보드용 집계 표(행 단위 원본은 data/tableau/ 에 두고 추적하지 않는다)
+!output/tableau/*.csv
 
 # =====================================
 # Python / uv 가상환경

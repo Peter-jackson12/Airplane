@@ -1,0 +1,4 @@
+population,population_ko,n_rows,n_delayed,n_not_delayed,delay_rate,raw_total_rows
+labeled_all,"라벨 전체 255,001행 (data/train.csv의 Delay 비결측 행)",255001,45000,210001,0.1764698962,1000000
+weather_eval,"날씨 평가 집단 180,332행 (날짜 귀속 + 라벨, 10분 가정 결합)",180332,31805,148527,0.1763691414,1000000
+both_time_missing,"원본 출발·도착 예정 시각 모두 결측인 라벨 3,031행",3031,519,2512,0.171230617,1000000
