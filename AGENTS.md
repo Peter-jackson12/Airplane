@@ -15,7 +15,7 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | [문서 지도](#doc-map) | 현행 참조 문서와 과거 기록 문서 |
 | [코드 지도](#code-map) | `src/`, `scripts/`, `notebooks/`, 루트 스크립트, `tests/` |
 | [실행 근거 지도](#evidence-map) | `output/` 근거 파일을 실험별로 분류 |
-| [작업 현황·백로그](#backlog) | 튜터 피드백 반영 현황과 열린 후속 작업(제안·미실행) |
+| [작업 현황·백로그](#backlog) | 튜터 피드백 반영 현황, 진행 중 실험, 검토 후속, 마무리 점검 |
 | [작업 규칙](#rules) | 시작 절차, 역할, Git, 문서 관리, 데이터·평가 경계, 실행·보존, 보고 |
 
 <a id="quick-nav"></a>
@@ -198,16 +198,35 @@ README는 포트폴리오 README로 운영되며 강의 발표는 끝났다.
 | 10) 양쪽 시각 결측 집단과 날씨 평가 집단의 구분 | 완료 | [docs/FEEDBACK_PREPROCESSING_KO.md](docs/FEEDBACK_PREPROCESSING_KO.md) 4절 |
 | 11) 가정 가용성과 실제 수신 이력의 구분 | 유지(이미 반영) | [docs/README_EXPLAINED_KO.md 6절](docs/README_EXPLAINED_KO.md#availability) |
 
-### 열린 후속 작업 (제안·미실행)
+### 열린 후속 작업
 
-아래는 모두 제안이며 미실행이다. 실행은 그때의 사용자 요청과 범위를 확인한 뒤에만 하고, 새 결과는 새 출력 이름으로 분리한다. 근거와 동기는 [README 4절](README.md#limits)을 따른다.
+새 결과는 새 출력 이름으로 분리한다. 제안 항목의 실행은 그때의 사용자 요청과 범위를 확인한 뒤에만 한다. 근거와 동기는 [README 4절](README.md#limits)을 따른다.
 
-| 항목 | 성격 | 상태 |
+**실험**
+
+| 항목 | 성격 | 상태 | 완료 시 함께 할 일 |
+|---|---|---|---|
+| `classifier_tuning_20261008` — LightGBM·Random Forest 탐색 예산 확장, `max_features` 후보 확장, Random Forest 날씨 사용/미사용 동일조건 비교 | 새 실험(같은 행·폴드·시드·내부 선택 경계 유지, 예산 사전 선언). 러너 `notebooks/run_classifier_tuning.py` | 진행 중(미커밋) | 결과 커밋, README 2절 분류기 비교 해석 갱신, 이 표의 상태 갱신 |
+| 분류기별 확률 보정 | 새 실험(보정기는 외부 학습 데이터 내부에서만 적합) | 제안/미실행 | – |
+
+**검토 후속(코드·테스트)** — 2026-10-08 독립 검토 지적. 튜닝 실험이 끝난 뒤 `src/classifier_compare.py` 정리와 함께 처리한다.
+
+| 항목 | 위치 | 상태 |
 |---|---|---|
-| LightGBM·Random Forest의 더 넓은 탐색 예산 | 새 실험(같은 행·폴드·시드·내부 선택 경계 유지, 예산을 먼저 선언) | 제안/미실행 |
-| Random Forest `max_features` 후보 확장 | 새 실험(현재 후보의 끝값이 선택됨) | 제안/미실행 |
-| Random Forest에서 날씨 사용/미사용 동일조건 비교 | 새 실험 | 제안/미실행 |
-| 분류기별 확률 보정 | 새 실험(보정기는 외부 학습 데이터 내부에서만 적합) | 제안/미실행 |
+| (a) 분류기 비교 실행 이후 `src/features.py`는 문서 문자열만 바뀌었음(db117ed)을 manifest·summary 또는 README에 기록(`code_sha256_lf` 불일치 설명) | 분류기 비교 근거 파일 / README 2절 | 미반영 |
+| (b) 체크포인트 identity에 `code_sha256_lf` 포함 | [notebooks/run_classifier_comparison.py](notebooks/run_classifier_comparison.py) | 미반영 |
+| (c) Logistic Regression 후보별 `n_iter`·`converged`를 `grid_scores`에 기록 | [src/classifier_compare.py](src/classifier_compare.py) | 미반영 |
+| (d) 누수 테스트 보강: Random Forest·LightGBM 경로의 outer-valid 라벨 반전 불변, inner-holdout 라벨 변경 시 inner-train TE·전처리기 불변, OneHot 범주·infrequent 처리가 inner-train에서만 학습, fingerprint 불일치 실패 경로, Random Forest `n_jobs>1` 결정성 | [tests/test_classifier_comparison.py](tests/test_classifier_comparison.py) | 미반영 |
+| (e) fold fingerprint에 타깃 해시·행 키 해시 추가(선택) | [src/classifier_compare.py](src/classifier_compare.py) | 미반영 |
+
+**마무리 점검**
+
+| 항목 | 상태 |
+|---|---|
+| 작업 트리 정리: 줄바꿈 표시만 다른 output CSV 4개와 `scripts/build_readme_story.py`의 미커밋 표시를 정리하고 실험 커밋에 섞지 않기 | 미완료 |
+| 마지막 커밋 기준 Linux CI 통과 확인 | 미완료 |
+| Windows 로컬 전체 pytest 통과 확인 | 미완료 |
+| GitHub에서 README 그림 렌더링 확인 | 미완료 |
 
 <a id="rules"></a>
 ## 작업 규칙
