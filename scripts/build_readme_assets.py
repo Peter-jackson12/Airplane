@@ -218,7 +218,7 @@ class SVG:
         self.dot(on, y, BLUE, radius=10)
 
     def save(self, path):
-        path.write_text('\n'.join(self.parts + ['</svg>']) + '\n', encoding='utf-8')
+        path.write_text('\n'.join(self.parts + ['</svg>']) + '\n', encoding='utf-8', newline=chr(10))
 
 
 def check_receipt() -> dict:
@@ -507,7 +507,7 @@ def build() -> None:
                                'Three-seed SD is not a confidence interval; each weather metric uses a labelled independent zoomed axis.',
                                'Latency scenarios are discrete marks on proportional minute axes; no interpolation is plotted.',
                                'The attribution stack uses the complete population without inflating small segments.']}
-    (ASSETS / 'sources.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (ASSETS / 'sources.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline=chr(10))
     print('Built five README figures and their source receipt; no network or raw data used.')
 
 

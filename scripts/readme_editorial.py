@@ -25,5 +25,5 @@ class SVG:
         self.text(1516,60,right,19,color=MUTED,anchor='end',spacing=1.8)
         self.line(84,86,1516,86,GOLD,2)
     def save(self,path):
-        path.write_text('\n'.join(self.parts+['</svg>'])+'\n',encoding='utf-8')
+        path.write_text('\n'.join(self.parts+['</svg>'])+'\n',encoding='utf-8', newline=chr(10))
 

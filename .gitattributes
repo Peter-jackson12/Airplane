@@ -2,6 +2,8 @@
 # pinned to LF so their recorded SHA-256 values survive Windows checkouts.
 # Do not impose line-ending changes on runtime collection code or local data.
 scripts/build_readme_assets.py text eol=lf
+scripts/build_readme_story.py text eol=lf
+scripts/readme_editorial.py text eol=lf
 assets/readme/*.svg text eol=lf
 assets/readme/sources.json text eol=lf
 output/preprocessing_full_summary.csv text eol=lf
