@@ -223,7 +223,7 @@ README는 포트폴리오 README로 운영되며 강의 발표는 끝났다.
 
 | 항목 | 상태 |
 |---|---|
-| 작업 트리 정리: 줄바꿈 표시만 다른 output CSV 4개와 `scripts/build_readme_story.py`의 미커밋 표시를 정리하고 실험 커밋에 섞지 않기 | 미완료 |
+| 작업 트리 정리: 줄바꿈 표시만 다른 output CSV 4개와 `scripts/build_readme_story.py`의 미커밋 표시를 정리하고 실험 커밋에 섞지 않기 | 완료 |
 | 마지막 커밋 기준 Linux CI 통과 확인 | 미완료 |
 | Windows 로컬 전체 pytest 통과 확인 | 미완료 |
 | GitHub에서 README 그림 렌더링 확인 | 미완료 |
