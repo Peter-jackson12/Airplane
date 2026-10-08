@@ -68,9 +68,28 @@
 
 Random Forest−LightGBM 차이는 Macro F1 +0.009612, LogLoss −0.005025, ROC-AUC +0.014578이며 **세 시드 모두 세 지표에서 Random Forest가 앞섰습니다.** Logistic Regression은 LightGBM 대비 Macro F1 −0.002129, LogLoss +0.000455(낮을수록 좋음)로 조금 뒤졌고 ROC-AUC는 +0.001469로 조금 앞섰습니다(세 시드 같은 방향). 이번 LightGBM 재실행은 위 날씨 사용 결과를 시드별로 정확히 재현했습니다.
 
-**해석.** 트리 수만 탐색하고 `learning_rate=0.05`·`num_leaves=63`·`max_depth=8`을 손으로 고정한 **현재 LightGBM 고정 설정은 이 후보 범위에서 최선이 아니었습니다.** LightGBM도 다른 설정을 탐색했을 때 이 차이가 줄어드는지는 **미검증**입니다. 탐색 예산이 같지 않았기 때문입니다(LightGBM은 트리 수 1축 8개 후보, Random Forest는 2축 6개 후보). 모델별 작은 후보 안의 비교이지 전역 하이퍼파라미터 탐색이 아니므로 **Random Forest가 일반적으로 더 나은 알고리즘이라는 증거는 아닙니다.** Random Forest는 15개 폴드 모두 같은 조합을 골랐습니다. `min_samples_leaf=25`(후보 5/25/100의 가운데)와 15개 폴드 모두 후보의 끝값(`max_features=0.5`)이므로, `max_features` 범위를 넓히면 결과가 달라질 수 있습니다. 확률 보정은 하지 않았고(LogLoss에는 보정 품질도 섞임), 시드는 같은 행의 재분할이며 Random Forest·LightGBM의 모델 시드는 42로 고정했습니다. **날씨 사용/미사용 결론은 바뀌지 않습니다.** 그 결론은 LightGBM 안에서 날씨 유무만 바꾼 동일조건 쌍비교이기 때문입니다.
+**해석.** 트리 수만 탐색하고 `learning_rate=0.05`·`num_leaves=63`·`max_depth=8`을 손으로 고정한 **현재 LightGBM 고정 설정은 이 후보 범위에서 최선이 아니었습니다.** 이 비교만으로는 LightGBM도 다른 설정을 탐색했을 때 이 차이가 줄어드는지는 **미검증**이었습니다(아래 후속 확인에서 넓힌 예산으로 다시 비교). 탐색 예산이 같지 않았기 때문입니다(LightGBM은 트리 수 1축 8개 후보, Random Forest는 2축 6개 후보). 모델별 작은 후보 안의 비교이지 전역 하이퍼파라미터 탐색이 아니므로 **Random Forest가 일반적으로 더 나은 알고리즘이라는 증거는 아닙니다.** Random Forest는 15개 폴드 모두 같은 조합을 골랐습니다. `min_samples_leaf=25`(후보 5/25/100의 가운데)와 15개 폴드 모두 후보의 끝값(`max_features=0.5`)이므로, `max_features` 범위를 넓히면 결과가 달라질 수 있습니다(후속 확인에서 0.7·1.0까지 넓혔고 결과는 거의 같았습니다). 확률 보정은 하지 않았고(LogLoss에는 보정 품질도 섞임), 시드는 같은 행의 재분할이며 Random Forest·LightGBM의 모델 시드는 42로 고정했습니다. **날씨 사용/미사용 결론은 바뀌지 않습니다.** 그 결론은 LightGBM 안에서 날씨 유무만 바꾼 동일조건 쌍비교이기 때문입니다.
 
 [비교 요약](output/baseline_recovery_v2_classifier_compare_20261008_summary.json) · [시드별 실행 CSV](output/baseline_recovery_v2_classifier_compare_20261008_runs.csv) · [폴드별 선택값](output/baseline_recovery_v2_classifier_compare_20261008_folds.csv) · [동일조건 차이](output/baseline_recovery_v2_classifier_compare_20261008_paired_deltas.csv) · [실행 기록](output/baseline_recovery_v2_classifier_compare_20261008_manifest.json) · [비교 코드](src/classifier_compare.py) · [실행 드라이버](notebooks/run_classifier_comparison.py)
+
+<a id="classifier-tuning"></a>
+#### 후속 확인: 탐색 예산을 넓혀도 순서는 유지, 다만 여전히 정해진 예산 안의 결과
+
+같은 180,332행·외부 폴드(분할 지문 일치)·시드에서 후보를 넓혀 같은 내부 선택 경계로 다시 골랐습니다. LightGBM은 학습률 {0.03, 0.05, 0.1} × 잎 수 {31, 63, 127} × `min_child_samples` {20, 100}에 행 배깅 변형 6개를 더한 24개 설정 × 트리 수 8개, Random Forest(300그루)는 `min_samples_leaf` {10, 25, 50} × `max_features` {0.5, 0.7, 1.0}의 9개 설정입니다. Logistic Regression은 다시 실행하지 않았습니다.
+
+| 날씨 사용 조건, 넓힌 후보 (3시드 평균) | Macro F1 ↑ | LogLoss ↓ | ROC-AUC ↑ |
+|---|---:|---:|---:|
+| LightGBM (24개 설정 탐색) | 0.600468 | 0.435977 | 0.674845 |
+| Random Forest (9개 설정 탐색) | 0.608478 | 0.431720 | 0.687281 |
+| 차이 (Random Forest − LightGBM) | +0.008011 | −0.004257 | +0.012436 |
+
+- **세 시드 모두 세 지표에서 Random Forest가 앞섰습니다**(시드별 Macro F1 차이 +0.0075~+0.0091). 넓힌 LightGBM은 위 고정 설정 대비 Macro F1 +0.001522, LogLoss −0.000712, ROC-AUC +0.001910으로 세 시드 같은 방향이지만 소폭 개선에 그쳤습니다. 넓힌 Random Forest는 기존 6개 후보 결과와 사실상 같았습니다(Macro F1 −0.000079, 시드별 방향 혼재).
+- **선택값이 아직 후보 끝에 몰려 있습니다.** LightGBM은 15개 폴드 중 14개에서 학습률 최솟값 0.03, 9개에서 잎 수 최댓값 127을 골랐습니다. 날씨 사용 Random Forest는 11개 폴드에서 `max_features` 최솟값 0.5(나머지 4개는 0.7)를, 날씨 미사용 Random Forest는 15개 폴드 모두 `min_samples_leaf` 최댓값 50을 골랐습니다. 따라서 이 결과도 **사전 선언한 유한 예산 안의 비교**이며, LightGBM 범위를 더 넓혔을 때 차이가 줄어드는지는 여전히 열려 있습니다. Random Forest가 일반적으로 더 나은 알고리즘이라는 뜻으로 확장하지 않습니다.
+- **날씨 효과의 방향은 Random Forest에서도 같았습니다.** 같은 행·폴드에서 Random Forest의 날씨 사용−미사용 차이는 Macro F1 +0.026173, LogLoss −0.011790, ROC-AUC +0.032814(세 시드 같은 방향)로, 위 LightGBM 고정 설정의 날씨 차이(+0.025035 / −0.011428 / +0.032317)와 방향과 크기가 비슷합니다. Random Forest는 두 조건 모두 9개 설정을 탐색했고 LightGBM 쪽은 고정 설정이므로 두 차이를 같은 조건의 비교로 읽지 않으며, 이것도 정적 교차검증의 예측력 차이이지 인과 효과가 아닙니다.
+
+[후속 요약](output/baseline_recovery_v2_classifier_tuning_20261008_summary.json) · [시드별 실행 CSV](output/baseline_recovery_v2_classifier_tuning_20261008_runs.csv) · [폴드별 선택값](output/baseline_recovery_v2_classifier_tuning_20261008_folds.csv) · [동일조건 차이](output/baseline_recovery_v2_classifier_tuning_20261008_paired_deltas.csv) · [실행 기록](output/baseline_recovery_v2_classifier_tuning_20261008_manifest.json) · [실행 드라이버](notebooks/run_classifier_tuning.py)
+
+**기록 참고.** 분류기 비교 실행 이후 `src/features.py`는 문서 문자열만 바뀌어([`db117ed`](https://github.com/Peter-jackson12/Airplane/commit/db117edcfaf71109ea748066786422be27a9f302), 코드 동작 동일) 실행 기록의 `code_sha256_lf`와 현재 파일 해시가 다릅니다. 이후 비교 코드에 추가된 기록 필드도 선택·지표를 바꾸지 않습니다. 기존 실행 근거 파일은 수정하지 않았습니다. 파일별 내역은 [코드 해시 정오표](docs/FEEDBACK_MODEL_WEATHER_KO.md#code-hash-errata)에 있습니다.
 
 ### 전처리 수정: 의미는 타당해졌지만 Macro F1 향상은 확인하지 못함
 
@@ -187,7 +206,7 @@ IEM에서 관측소 355개·관측소-월 7,816개 조합을 **1,317개 요청 �
 
 | 피드백 항목 | 현재 상태 |
 |---|---|
-| 1) Logistic Regression / Random Forest / LightGBM 비교 | **완료.** 같은 180,332행·폴드·시드와 모델별 내부 선택 후보로 비교했습니다(위 [2절 분류기 3종 비교](#classifier-comparison), [비교 요약](output/baseline_recovery_v2_classifier_compare_20261008_summary.json)). |
+| 1) Logistic Regression / Random Forest / LightGBM 비교 | **완료.** 같은 180,332행·폴드·시드와 모델별 내부 선택 후보로 비교했습니다(위 [2절 분류기 3종 비교](#classifier-comparison), [비교 요약](output/baseline_recovery_v2_classifier_compare_20261008_summary.json)). 탐색 예산을 넓힌 후속 확인과 Random Forest 날씨 사용/미사용 비교도 했습니다([후속 요약](output/baseline_recovery_v2_classifier_tuning_20261008_summary.json)). |
 | 2) 결측 대치 수치의 분모·전후 관계 | 완료. 같은 집단 기준 "원래 결측 = 복원 + 잔여" 표 — [전처리 피드백 문서 1절](docs/FEEDBACK_PREPROCESSING_KO.md#1-피드백-2-결측-대치의-분모와-전후) |
 | 3) 시각 복원 규칙 | 완료. 노선 키·0 처리·중앙값 순서·`% 1440`·양쪽 결측 — [같은 문서 2절](docs/FEEDBACK_PREPROCESSING_KO.md#2-피드백-3-시각-복원-규칙) |
 | 4) `Traffic`의 의미와 집계 경계 | 완료. 표본 레코드 수이며 연도 혼합·자기 행 포함 — [같은 문서 3절](docs/FEEDBACK_PREPROCESSING_KO.md#3-피드백-4-traffic의-의미와-집계-경계) |
@@ -200,10 +219,11 @@ IEM에서 관측소 355개·관측소-월 7,816개 조합을 **1,317개 요청 �
 
 ### 다음 단계 후보
 
-- **LightGBM·Random Forest의 더 넓은 탐색 예산.** 같은 내부 선택 경계에서 LightGBM의 학습률·잎 수·깊이와 Random Forest 설정을 함께 탐색해, 위 분류기 차이가 설정 예산 때문인지 확인합니다.
-- **Random Forest `max_features` 후보 확장.** 15개 폴드 모두 후보의 끝값 0.5를 선택했으므로 더 큰 값까지 넓힙니다.
-- **Random Forest에서 날씨 사용/미사용 비교.** 날씨 효과가 LightGBM에만 해당하는지 같은 동일조건 쌍비교로 확인합니다.
-- **분류기별 확률 보정.** 현재 분류기 비교의 LogLoss는 보정 전 값입니다.
+더 넓은 탐색 예산, Random Forest `max_features` 후보 확장, Random Forest의 날씨 사용/미사용 비교는 수행했습니다(위 [2절 후속 확인](#classifier-tuning)). 그 결과에서 남은 후보는 다음과 같습니다.
+
+- **LightGBM 후보를 끝값 너머로 확장.** 학습률 0.03보다 작은 값과 잎 수 127보다 큰 값까지 넓힙니다. 15개 폴드 중 14개가 학습률 최솟값, 9개가 잎 수 최댓값을 골랐습니다.
+- **날씨 미사용 Random Forest의 `min_samples_leaf` 50 초과 후보.** 15개 폴드 모두 최댓값 50을 골랐습니다.
+- **분류기별 확률 보정.** 분류기 비교와 후속 확인의 LogLoss는 모두 보정 전 값입니다. 보정기는 외부 학습 데이터 내부에서만 적합합니다.
 
 <a id="reproduce"></a>
 ## 5. 재현 방법
@@ -226,7 +246,7 @@ uv run --locked --offline python scripts/build_readme_assets.py --check
 
 <a id="join-reproduction"></a>
 <details>
-<summary>실데이터 재현 명령 · 전체 행 날씨 결합, 날씨 유무 모델 비교, 분류기 3종 비교</summary>
+<summary>실데이터 재현 명령 · 전체 행 날씨 결합, 날씨 유무 모델 비교, 분류기 3종 비교와 탐색 확장</summary>
 
 아래 명령은 로컬 원본·날짜 귀속·검증된 날씨 캐시가 있어야 하며 새 수집은 하지 않습니다. 기존 이름의 최종 실행 근거가 있으면 덮어쓰지 않습니다.
 
@@ -234,6 +254,7 @@ uv run --locked --offline python scripts/build_readme_assets.py --check
 uv run --locked --offline python -u -m notebooks.join_weather_full --name baseline_recovery_v2_weather_full_join_20260922 --transport-name baseline_recovery_v2_weather_full_bulk_20260921 --mapping-name baseline_recovery_v2_weather_scope_fix_20260918
 uv run --locked --offline python -u -m notebooks.run_weather_model_comparison --name baseline_recovery_v2_weather_model_compare_20260922
 uv run --locked --offline python -u notebooks/run_classifier_comparison.py --name baseline_recovery_v2_classifier_compare_20261008
+uv run --locked --offline python -u notebooks/run_classifier_tuning.py --name baseline_recovery_v2_classifier_tuning_20261008
 ```
 
 두 드라이버의 `--validate-inputs-only`는 학습·결합 출력을 만들지 않고 입력 출처·행 식별·해시만 검사합니다. 전처리 10조건 실험은 [실험 드라이버](notebooks/run_preprocessing_experiments.py)와 [rerun_all_phases.py](rerun_all_phases.py)에서 실행합니다.
@@ -266,6 +287,7 @@ uv run --locked --offline python -u notebooks/run_classifier_comparison.py --nam
 | [AGENTS.md](AGENTS.md) | 작업용 위키/문서 지도 — 저장소 작업 규칙과 문서 위치 |
 | [날씨 비교 요약](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json) | 최종 날씨 유무 비교의 평균·SD·시드별 차이 |
 | [분류기 비교 요약](output/baseline_recovery_v2_classifier_compare_20261008_summary.json) | 분류기 3종 비교의 후보·평균·SD·LightGBM 대비 차이·재현 대조 |
+| [분류기 탐색 확장 요약](output/baseline_recovery_v2_classifier_tuning_20261008_summary.json) | LightGBM 24개·Random Forest 9개 설정 후속 비교, 폴드별 선택값의 후보 끝값 집계, Random Forest 날씨 사용/미사용 쌍비교 |
 | [결측 재집계 결과](output/feedback_missing_audit_20261008.json) | 피드백 2·4·10 수치의 원자료 읽기 전용 재집계 |
 | [전처리 10조건 보고서](output/preprocessing_full_evaluation.md) | 전처리 조건별 전체 결과 |
 | [라벨 분포 보고서](output/label_coverage_review.md) | 라벨·미라벨 집단의 분포 비교 |

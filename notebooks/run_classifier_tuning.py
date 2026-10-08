@@ -329,6 +329,9 @@ def evaluate_unit(condition, model_key, X, y, *, seed, spec, expected_fp, state,
         "fold_fingerprint": fingerprint,
         "fold_fingerprint_matches_reference": (None if expected_fp is None
                                                else bool(fingerprint == expected_fp)),
+        # Additional fields (the fold fingerprint keeps its recorded meaning).
+        "target_sha256": cc.target_sha256(y),
+        "row_key_sha256": cc.row_key_sha256(y.index),
         "elapsed_sec": float(sum(r["fold_elapsed_sec"] for r in fold_rows)),
         "protocol": cc.compact_json(protocol_description(cfg, spec)),
     }
@@ -557,6 +560,8 @@ def main() -> None:
         "name": args.name, "smoke": smoke, "sample": args.sample, "seeds": list(seeds),
         "rows": int(len(y)), "positives": int(y.sum()),
         "columns_sha256": {k: stable_json_hash(list(v.columns)) for k, v in matrices.items()},
+        "target_sha256": cc.target_sha256(y),
+        "row_key_sha256": cc.row_key_sha256(y.index),
         "grids": grids_description(args.rf_n_estimators, args.rf_n_jobs),
         "units": [list(u) for u in UNITS],
         # Fold-result-relevant code only; the runner's reporting code is hashed in

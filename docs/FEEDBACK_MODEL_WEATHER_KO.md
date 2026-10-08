@@ -13,7 +13,7 @@
 |---|---|---|
 | [1. 지표 정의](#metrics) | Delayed=1 / Not_Delayed=0, Macro F1과 Delayed F1, 필드 이름의 실제 계산 | 7) |
 | [2. 날씨 피처 명세](#weather) | 14개 피처의 의미·원천 필드·단위·변환·관측 범위, `M`·trace·결합 실패 표기 | 5) |
-| [3. LightGBM 고정/탐색 설정](#lightgbm) | 선택 이유, 설정표, 버전, protocol 라벨 오기 | 6) |
+| [3. LightGBM 고정/탐색 설정](#lightgbm) | 선택 이유, 설정표, 버전, protocol 라벨 오기, 분류기 비교 기록의 코드 해시 정오표 | 6) |
 | [4. 표기 정리 내역](#wording) | 해설 문서 수정 목록과 README 점검 결과 | 7) |
 | [5. 남은 한계](#limits) | 미확인 항목 | 5)·6)·7) |
 
@@ -247,6 +247,21 @@
 1. **LightGBM `random_state`는 세 시드 모두 42였습니다.** Phase 러너는 `--seed`로 실행할 때 `LGBM_PARAMS["random_state"]`를 시드로 바꿉니다(`main()`). 날씨 비교 러너는 `rerun_all_phases`를 모듈로 import하므로 `main()`이 실행되지 않습니다. 이 러너는 `CVConfig`의 시드만 바꿉니다. manifest의 `lgbm_params.random_state: 42`도 이와 일치합니다. 따라서 날씨 비교의 "시드 반복"은 **분할(외부·내부·TE 내부)의 반복**이며, LightGBM 내부 난수(`colsample_bytree` 피처 샘플링)는 세 시드에서 같은 시드를 썼습니다. 날씨 미사용/사용은 같은 시드에서 같은 설정이므로 쌍비교의 공정성에는 영향이 없습니다. 다만 "시드 3개"를 모델 난수까지 바꾼 반복으로 설명하면 안 됩니다.
 2. `subsample=0.8`은 위 표대로 실제로 적용되지 않았습니다. 설정표에서 행 샘플링이 있었다고 쓰지 않습니다.
 3. `n_jobs`는 지정하지 않았습니다(LightGBM 기본 스레드 사용). 다중 스레드에서 동일 입력을 재실행했을 때 비트 단위로 같은지는 이 문서에서 확인하지 않았습니다(미확인).
+
+<a id="code-hash-errata"></a>
+### 3.6 분류기 비교·탐색 확장 실행 기록의 코드 해시 (정오표, 숫자에는 영향 없음)
+
+분류기 비교(`baseline_recovery_v2_classifier_compare_20261008`)와 탐색 확장(`baseline_recovery_v2_classifier_tuning_20261008`)의 manifest는 실행 당시 코드 파일의 LF 정규화 SHA-256(`code_sha256_lf`)을 기록합니다. 이후 아래 파일이 바뀌어 현재 파일 해시와 기록값이 다릅니다. **기존 `output/` 근거 파일은 수정하지 않았습니다.**
+
+| 파일 | 해시가 다른 실행 기록 | 바뀐 내용 | 기록된 수치에 대한 영향 |
+|---|---|---|---|
+| `src/features.py` | 분류기 비교 | [`db117ed`](https://github.com/Peter-jackson12/Airplane/commit/db117edcfaf71109ea748066786422be27a9f302)에서 `build_traffic_features`의 **문서 문자열만** 수정(피드백 4의 `Traffic` 의미 설명). 실행 커밋 `e949d68`의 파일과 문서 문자열을 비운 AST가 같음을 확인했고, 이후 `src/features.py`는 바뀌지 않았습니다 | 없음(코드 동작 동일). 탐색 확장 실행은 바뀐 뒤의 파일을 기록했습니다 |
+| `src/classifier_compare.py` | 분류기 비교 | `03fe25c`에서 탐색 확장용 상수·함수를 파일 끝에 **추가만** 했습니다(기존 줄 삭제·변경 없음) | 없음 |
+| `src/classifier_compare.py` | 두 실행 모두 | 2026-10-08 검토 후속: Logistic Regression 후보별 `n_iter`·`converged`를 `grid_scores`에 기록, 타깃·행 키 해시 함수(`target_sha256`, `row_key_sha256`) 추가 | 없음(기록 필드만 추가, 선택·지표 계산은 그대로) |
+| `notebooks/run_classifier_comparison.py`, `notebooks/run_classifier_tuning.py` | 두 실행 모두 | 같은 검토 후속: 체크포인트 identity에 코드 해시(비교 러너)와 타깃·행 키 해시를 넣고, 실행 행에 `target_sha256`·`row_key_sha256` 열을 추가 | 없음(재개 검사와 기록 필드만 바뀜). 두 러너는 기존 출력 이름을 덮어쓰지 않습니다 |
+
+- **폴드 지문은 정의를 바꾸지 않았습니다.** `fold_fingerprint`는 계속 외부 검증 폴드 배정만 해시하므로 기록된 20260922·20261008 지문과 그대로 비교됩니다. 타깃·행 키 해시는 별도 필드입니다.
+- **Random Forest `n_jobs>1`의 재현성.** 같은 `random_state`에서 적합된 나무는 `n_jobs`와 무관하게 같지만, 나무별 확률을 병렬로 더하는 순서가 달라 `predict_proba`가 수 ulp(약 1e-16) 다를 수 있습니다. 탐색 확장의 재현 대조에서 기존 Random Forest 설정의 inner LogLoss 차이가 최대 5.6e-17로 기록된 것과 일치합니다. 이 크기는 Random Forest 폴드별 1위·2위 후보의 inner LogLoss 간격(두 실행에서 최소 약 1.1e-5)보다 훨씬 작아 후보 선택을 바꿀 수준이 아닙니다([탐색 확장 요약](../output/baseline_recovery_v2_classifier_tuning_20261008_summary.json)의 `reproduction_of_20261008_inside_tuning_grids`).
 
 <a id="wording"></a>
 ## 4. 표기 정리 내역 (피드백 7)

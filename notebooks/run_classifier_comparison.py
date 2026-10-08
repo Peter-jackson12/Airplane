@@ -60,6 +60,30 @@ CODE_FILES = (
 )
 
 
+def code_sha256_lf(files=CODE_FILES) -> dict[str, str]:
+    """SHA-256 of each code file with CRLF normalised to LF (platform-independent)."""
+    return {p: hashlib.sha256((ROOT / p).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+            for p in files}
+
+
+def experiment_identity(*, name, git_sha, smoke, sample, X, y, grids, models,
+                        code_sha) -> dict:
+    """Checkpoint identity. ``code_sha256_lf`` makes a resume refuse to mix fold
+    results computed by different code versions (git_sha alone misses
+    uncommitted edits). ``target_sha256``/``row_key_sha256`` pin the labels and
+    row keys in addition to the column/row counts."""
+    return {
+        "name": name, "git_sha": git_sha, "smoke": smoke, "sample": sample,
+        "rows": int(len(y)), "positives": int(y.sum()),
+        "columns_sha256": stable_json_hash(list(X.columns)),
+        "target_sha256": cc.target_sha256(y),
+        "row_key_sha256": cc.row_key_sha256(y.index),
+        "grids": grids,
+        "seeds": list(SEEDS), "models": list(models),
+        "code_sha256_lf": dict(code_sha),
+    }
+
+
 def log(msg: str) -> None:
     stamp = datetime.now().strftime("%H:%M:%S")
     print(f"[{stamp}] {msg}", flush=True)
@@ -271,6 +295,9 @@ def evaluate_model(model_key, X, y, *, seed, spec, expected_fp, rf_n_estimators,
         "fold_fingerprint": fingerprint,
         "fold_fingerprint_matches_reference": (None if expected_fp is None
                                                else bool(fingerprint == expected_fp)),
+        # Additional fields (the fold fingerprint keeps its recorded meaning).
+        "target_sha256": cc.target_sha256(y),
+        "row_key_sha256": cc.row_key_sha256(y.index),
         "elapsed_sec": float(time.perf_counter() - started),
         "protocol": cc.compact_json(protocol_description(cfg, runner_spec_cache["spec"])),
     }
@@ -386,13 +413,11 @@ def main() -> None:
         ref = reference_rows()
         expected_fps = {s: str(ref.loc[s, "fold_fingerprint"]) for s in SEEDS}
 
-    identity = {
-        "name": args.name, "git_sha": git_sha, "smoke": smoke, "sample": args.sample,
-        "rows": int(len(y)), "positives": int(y.sum()),
-        "columns_sha256": stable_json_hash(list(X.columns)),
-        "grids": grids_description(args.rf_n_estimators, args.rf_n_jobs),
-        "seeds": list(SEEDS), "models": list(models),
-    }
+    code_sha = code_sha256_lf()
+    identity = experiment_identity(
+        name=args.name, git_sha=git_sha, smoke=smoke, sample=args.sample, X=X, y=y,
+        grids=grids_description(args.rf_n_estimators, args.rf_n_jobs), models=models,
+        code_sha=code_sha)
     ckpt_dir = (out_dir if smoke else ROOT / "data" / "classifier_compare") / f"{args.name}_ckpt"
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     ckpt = ckpt_dir / "checkpoint.json"
@@ -483,8 +508,7 @@ def main() -> None:
         "reference_runs": {"path": REFERENCE_RUNS.relative_to(ROOT).as_posix(),
                            "sha256": digest(REFERENCE_RUNS)},
         "join_name": weather_cmp.JOIN_RUN,
-        "code_sha256_lf": {p: hashlib.sha256((ROOT / p).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
-                           for p in CODE_FILES},
+        "code_sha256_lf": code_sha,
         "experiment_identity": identity,
         "experiment_identity_sha256": stable_json_hash(identity),
         "fold_fingerprints": summary["fold_fingerprints"],

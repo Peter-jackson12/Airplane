@@ -47,9 +47,16 @@ def test_limits_distinguish_paired_result_from_causality_and_open_followups():
     assert "기존 CSV에서 도출 가능(재학습 불필요)" in limits
     # Open next steps stay framed as candidates, not as completed work.
     nxt = limits.split("### 다음 단계 후보", 1)[1]
-    for candidate in ("더 넓은 탐색 예산", "`max_features` 후보 확장",
-                      "Random Forest에서 날씨 사용/미사용 비교", "확률 보정"):
-        assert candidate in nxt, candidate
+    # The executed tuning follow-up is recorded as done (with a link), not
+    # listed again as an open candidate.
+    done, open_items = nxt.split("\n- ", 1)
+    for executed in ("더 넓은 탐색 예산", "`max_features` 후보 확장",
+                     "Random Forest의 날씨 사용/미사용 비교"):
+        assert executed in done and executed not in open_items, executed
+    assert "수행했습니다" in done and "(#classifier-tuning)" in done
+    for candidate in ("학습률 0.03보다 작은 값", "잎 수 127보다 큰 값",
+                      "`min_samples_leaf` 50 초과", "분류기별 확률 보정"):
+        assert candidate in open_items, candidate
 
 
 def test_classifier_comparison_is_interpreted_within_its_budget():
@@ -70,6 +77,13 @@ def test_classifier_comparison_is_interpreted_within_its_budget():
     assert "날씨 사용/미사용 결론은 바뀌지 않습니다" in section
     assert "전역 하이퍼파라미터 탐색이 아니므로" in section
     assert "`max_features=0.5`" in section and "확률 보정은 하지 않았고" in section
+    # The wider-budget follow-up keeps the same scoping: grid-edge choices are
+    # reported and the result stays a bounded-budget comparison.
+    follow = section.split('<a id="classifier-tuning"></a>', 1)[1]
+    assert "사전 선언한 유한 예산 안의 비교" in follow
+    assert "선택값이 아직 후보 끝에 몰려 있습니다" in follow
+    assert "일반적으로 더 나은 알고리즘이라는 뜻으로 확장하지 않습니다" in follow
+    assert "인과 효과가 아닙니다" in follow
     for overclaim in ("Random Forest보다", "Logistic Regression보다", "최적 알고리즘",
                       "Random Forest가 더 우수", "알고리즘 비교 결과",
                       "최적이 아닐 가능성이 큽니다"):

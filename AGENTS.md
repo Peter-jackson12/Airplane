@@ -29,6 +29,8 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | 결측 복원의 집단·분모, 시각 복원 규칙, Traffic 집계 경계, 양쪽 시각 결측 집단 | [docs/FEEDBACK_PREPROCESSING_KO.md](docs/FEEDBACK_PREPROCESSING_KO.md), 재집계 [scripts/feedback_missing_audit.py](scripts/feedback_missing_audit.py) |
 | 날씨 피처 명세, LightGBM 고정/탐색 설정·정오표, Macro F1 정의 | [docs/FEEDBACK_MODEL_WEATHER_KO.md](docs/FEEDBACK_MODEL_WEATHER_KO.md) |
 | 분류기 3종(Logistic Regression / Random Forest / LightGBM) 동일조건 비교 | [src/classifier_compare.py](src/classifier_compare.py), [notebooks/run_classifier_comparison.py](notebooks/run_classifier_comparison.py), 결과는 README 2절 |
+| 분류기 탐색 예산 확장·Random Forest 날씨 사용/미사용 | [notebooks/run_classifier_tuning.py](notebooks/run_classifier_tuning.py), 결과는 [README 2절 후속 확인](README.md#classifier-tuning) |
+| Tableau Public 대시보드 제작 | [docs/TABLEAU_HANDOFF_KO.md](docs/TABLEAU_HANDOFF_KO.md), 집계 데이터 [output/tableau/README_DATA_KO.md](output/tableau/README_DATA_KO.md), 생성기 [scripts/build_tableau_extracts.py](scripts/build_tableau_extracts.py) |
 | 평가 경로(nested grid, inner 경계 TE) | [src/cv.py](src/cv.py) |
 | 전처리·피처 엔지니어링 | [src/features.py](src/features.py) |
 | 날씨 피처 계약(예측 시점·가정 지연) | [src/weather_model.py](src/weather_model.py), [src/weather.py](src/weather.py) |
@@ -61,7 +63,9 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | [docs/README_EXPLAINED_KO.md](docs/README_EXPLAINED_KO.md) | README의 한국어 심화 해설(분모 구분, 날씨 피처, 가용 시점 등) | 현행 |
 | [docs/TUTOR_FEEDBACK_HANDOFF_KO.md](docs/TUTOR_FEEDBACK_HANDOFF_KO.md) | 튜터 피드백 11개의 보존본. 0절은 현재 반영 현황, 1~4절은 기준 커밋 시점의 상태 대조 기록 | 현행(0절) / 과거 기록(1~4절) |
 | [docs/FEEDBACK_PREPROCESSING_KO.md](docs/FEEDBACK_PREPROCESSING_KO.md) | 피드백 2·3·4·10: 결측 복원의 집단·분모, 시각 복원 규칙, Traffic 집계 경계, 양쪽 시각 결측 집단 | 현행 참조 |
-| [docs/FEEDBACK_MODEL_WEATHER_KO.md](docs/FEEDBACK_MODEL_WEATHER_KO.md) | 피드백 5·6·7: 날씨 피처 명세, LightGBM 고정/탐색 설정과 protocol 라벨 정오표, 지표 정의 | 현행 참조 |
+| [docs/FEEDBACK_MODEL_WEATHER_KO.md](docs/FEEDBACK_MODEL_WEATHER_KO.md) | 피드백 5·6·7: 날씨 피처 명세, LightGBM 고정/탐색 설정과 protocol 라벨 정오표, 지표 정의, 분류기 비교 기록의 코드 해시 정오표(3.6절) | 현행 참조 |
+| [docs/TABLEAU_HANDOFF_KO.md](docs/TABLEAU_HANDOFF_KO.md) | Tableau Public 대시보드 3종 제작 인계서(연결할 CSV, 화면 구성, 게시 전 점검) | 현행 |
+| [output/tableau/README_DATA_KO.md](output/tableau/README_DATA_KO.md) | Tableau용 집계 CSV의 열·집단·분모 설명과 근거 대조 결과 | 현행 참조 |
 | [output/pipeline_data_contract.md](output/pipeline_data_contract.md) | 현재 파이프라인의 데이터 사용 계약 | 현행 참조 |
 | [output/preprocessing_decisions.md](output/preprocessing_decisions.md) | 전처리 결정표 | 현행 참조 |
 | [output/preprocessing_clean_implementation.md](output/preprocessing_clean_implementation.md) | 전처리 개선 구현 및 전수 검증 | 현행 참조 |
@@ -103,7 +107,7 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | [src/weather_model.py](src/weather_model.py) | 사전 선언된 날씨 모델 계약(10분 공개 지연 가정이 대표 시나리오). 모델 적합 없음 |
 | [src/classifier_compare.py](src/classifier_compare.py) | 분류기 3종 동일조건 비교 하네스. 모델별 전처리·후보를 내부 경계 안에서만 적합. 데이터 로드·파일 쓰기 없음 |
 
-### `scripts/` — README 그림 생성·문서 근거 재집계
+### `scripts/` — README 그림 생성·문서 근거 재집계·Tableau 집계
 
 | 파일 | 역할 |
 |---|---|
@@ -111,6 +115,7 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | [scripts/build_readme_story.py](scripts/build_readme_story.py) | 검증된 집계 근거 기반의 표지·흐름·경계 그림 |
 | [scripts/readme_editorial.py](scripts/readme_editorial.py) | 위 두 생성기가 공유하는 표준 라이브러리 전용 SVG 구성 요소 |
 | [scripts/feedback_missing_audit.py](scripts/feedback_missing_audit.py) | 피드백 2·4·10 수치를 원자료에서 읽기 전용으로 재집계(로컬 원자료 필요, 학습 없음) |
+| [scripts/build_tableau_extracts.py](scripts/build_tableau_extracts.py) | Tableau Public용 집계 CSV(`output/tableau/`)와 대조 manifest 생성(학습 없음) |
 
 ### `notebooks/` — 실행·분석 스크립트(대부분 `.py`)
 
@@ -124,7 +129,7 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | 라벨 커버리지 | [build_label_coverage_review.py](notebooks/build_label_coverage_review.py), [label_coverage_review.ipynb](notebooks/label_coverage_review.ipynb) |
 | 날씨 조사·표본 | [weather_feasibility.py](notebooks/weather_feasibility.py), [build_weather_review.py](notebooks/build_weather_review.py), [weather_recovery_review.ipynb](notebooks/weather_recovery_review.ipynb), [map_weather_stations.py](notebooks/map_weather_stations.py), [verify_priority_station_identity.py](notebooks/verify_priority_station_identity.py), [scope_weather_collection.py](notebooks/scope_weather_collection.py), [scope_weather_collection_refined.py](notebooks/scope_weather_collection_refined.py), [select_weather_sample.py](notebooks/select_weather_sample.py), [select_weather_sample_expanded.py](notebooks/select_weather_sample_expanded.py), [fetch_weather_sample.py](notebooks/fetch_weather_sample.py), [fetch_weather_sample_expanded.py](notebooks/fetch_weather_sample_expanded.py), [join_weather_sample.py](notebooks/join_weather_sample.py), [join_weather_sample_expanded.py](notebooks/join_weather_sample_expanded.py), [diagnose_weather_expanded_cache.py](notebooks/diagnose_weather_expanded_cache.py), [reconcile_weather_cache_recombination.py](notebooks/reconcile_weather_cache_recombination.py) |
 | 날씨 전체 수집·결합·비교 | [fetch_weather_full_sharded.py](notebooks/fetch_weather_full_sharded.py), [run_weather_full_collection.py](notebooks/run_weather_full_collection.py)(실패 시 중단하는 순차 오케스트레이션), [join_weather_full.py](notebooks/join_weather_full.py), [run_weather_model_comparison.py](notebooks/run_weather_model_comparison.py) |
-| 분류기 비교 | [run_classifier_comparison.py](notebooks/run_classifier_comparison.py)(날씨 사용 집단에서 Logistic Regression / Random Forest / LightGBM, 기존 출력 덮어쓰기 거부) |
+| 분류기 비교 | [run_classifier_comparison.py](notebooks/run_classifier_comparison.py)(날씨 사용 집단에서 Logistic Regression / Random Forest / LightGBM, 기존 출력 덮어쓰기 거부), [run_classifier_tuning.py](notebooks/run_classifier_tuning.py)(LightGBM 24개·Random Forest 9개 설정 탐색 확장과 Random Forest 날씨 사용/미사용, 폴드 단위 체크포인트) |
 
 ### 루트 스크립트
 
@@ -144,7 +149,8 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | 범위 | 파일 |
 |---|---|
 | 핵심 파이프라인 | [test_features.py](tests/test_features.py), [test_oof.py](tests/test_oof.py), [test_calibration.py](tests/test_calibration.py), [test_pipeline_regressions.py](tests/test_pipeline_regressions.py), [test_preprocessing_clean.py](tests/test_preprocessing_clean.py) |
-| 분류기 비교 | [test_classifier_comparison.py](tests/test_classifier_comparison.py) |
+| 분류기 비교 | [test_classifier_comparison.py](tests/test_classifier_comparison.py), [test_classifier_tuning.py](tests/test_classifier_tuning.py) |
+| Tableau 집계 | [test_tableau_extracts.py](tests/test_tableau_extracts.py) |
 | 문서 근거 재집계 | [test_feedback_missing_audit.py](tests/test_feedback_missing_audit.py)(순수 로직, 원자료 불필요) |
 | README·문서 계약 | [test_readme_contract.py](tests/test_readme_contract.py), [test_readme_presentation.py](tests/test_readme_presentation.py), [test_final_submission_status.py](tests/test_final_submission_status.py) |
 | 날짜·BTS 대조 | [test_assign_row_dates.py](tests/test_assign_row_dates.py), [test_bts_november.py](tests/test_bts_november.py), [test_bts_november_diagnosis.py](tests/test_bts_november_diagnosis.py), [test_bts_marketing.py](tests/test_bts_marketing.py), [test_bts_marketing_months.py](tests/test_bts_marketing_months.py) |
@@ -159,6 +165,8 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 |---|---|---|
 | 날씨 사용/미사용 쌍비교 | `output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_{runs.csv, paired_deltas.csv, summary.json, manifest.json}` — 예: [runs.csv](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv) | 현행 |
 | 분류기 3종 동일조건 비교 | `output/baseline_recovery_v2_classifier_compare_20261008_{runs.csv, folds.csv, paired_deltas.csv, summary.json, manifest.json}`, [실행 로그](output/baseline_recovery_v2_classifier_compare_20261008.log) — 예: [summary](output/baseline_recovery_v2_classifier_compare_20261008_summary.json) | 현행 |
+| 분류기 탐색 예산 확장·Random Forest 날씨 사용/미사용 | `output/baseline_recovery_v2_classifier_tuning_20261008_{runs.csv, folds.csv, paired_deltas.csv, summary.json, manifest.json}`, [실행 로그](output/baseline_recovery_v2_classifier_tuning_20261008.log) — 예: [summary](output/baseline_recovery_v2_classifier_tuning_20261008_summary.json) | 현행 |
+| Tableau Public용 집계 | `output/tableau/*.csv`, [manifest](output/tableau/tableau_extracts_manifest.json), [데이터 설명](output/tableau/README_DATA_KO.md) | 현행(기존 근거의 재집계, 학습 없음) |
 | 피드백 문서용 결측·Traffic·취약 집단 재집계 | [output/feedback_missing_audit_20261008.json](output/feedback_missing_audit_20261008.json) | 현행 근거(읽기 전용 재집계, 학습 없음) |
 | 날씨 전체 행 결합 | [join manifest](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json), [join summary](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_summary.json) | 현행 |
 | 날씨 전체 수집(bulk) | [plan manifest](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_plan_manifest.json), [fetch manifest](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_manifest.json), [fetch audit](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_audit.json) | 현행 |
@@ -206,18 +214,21 @@ README는 포트폴리오 README로 운영되며 강의 발표는 끝났다.
 
 | 항목 | 성격 | 상태 | 완료 시 함께 할 일 |
 |---|---|---|---|
-| `classifier_tuning_20261008` — LightGBM·Random Forest 탐색 예산 확장, `max_features` 후보 확장, Random Forest 날씨 사용/미사용 동일조건 비교 | 새 실험(같은 행·폴드·시드·내부 선택 경계 유지, 예산 사전 선언). 러너 `notebooks/run_classifier_tuning.py` | 진행 중(미커밋) | 결과 커밋, README 2절 분류기 비교 해석 갱신, 이 표의 상태 갱신 |
+| `classifier_tuning_20261008` — LightGBM·Random Forest 탐색 예산 확장, `max_features` 후보 확장, Random Forest 날씨 사용/미사용 동일조건 비교 | 새 실험(같은 행·폴드·시드·내부 선택 경계 유지, 예산 사전 선언). 러너 [notebooks/run_classifier_tuning.py](notebooks/run_classifier_tuning.py) | 완료(`03fe25c`) | [README 2절 후속 확인](README.md#classifier-tuning), 근거는 [실행 근거 지도](#evidence-map)의 분류기 탐색 예산 확장 |
+| LightGBM 후보를 끝값 너머로 확장(학습률 0.03 미만, 잎 수 127 초과) | 새 실험(탐색 확장에서 선택값이 후보 끝에 몰림) | 제안/미실행 | – |
+| 날씨 미사용 Random Forest의 `min_samples_leaf` 50 초과 후보 | 새 실험(같은 이유) | 제안/미실행 | – |
 | 분류기별 확률 보정 | 새 실험(보정기는 외부 학습 데이터 내부에서만 적합) | 제안/미실행 | – |
+| Tableau Public 대시보드 3개 제작·게시 (Codex 담당, [docs/TABLEAU_HANDOFF_KO.md](docs/TABLEAU_HANDOFF_KO.md)) | 시각화 제작(새 실험 아님, `output/tableau/` 집계만 사용) | 대기 | – |
 
-**검토 후속(코드·테스트)** — 2026-10-08 독립 검토 지적. 튜닝 실험이 끝난 뒤 `src/classifier_compare.py` 정리와 함께 처리한다.
+**검토 후속(코드·테스트)** — 2026-10-08 독립 검토 지적. 탐색 확장 실험 커밋 뒤 처리했다. 기존 실행 근거 파일은 수정하지 않았다.
 
 | 항목 | 위치 | 상태 |
 |---|---|---|
-| (a) 분류기 비교 실행 이후 `src/features.py`는 문서 문자열만 바뀌었음(db117ed)을 manifest·summary 또는 README에 기록(`code_sha256_lf` 불일치 설명) | 분류기 비교 근거 파일 / README 2절 | 미반영 |
-| (b) 체크포인트 identity에 `code_sha256_lf` 포함 | [notebooks/run_classifier_comparison.py](notebooks/run_classifier_comparison.py) | 미반영 |
-| (c) Logistic Regression 후보별 `n_iter`·`converged`를 `grid_scores`에 기록 | [src/classifier_compare.py](src/classifier_compare.py) | 미반영 |
-| (d) 누수 테스트 보강: Random Forest·LightGBM 경로의 outer-valid 라벨 반전 불변, inner-holdout 라벨 변경 시 inner-train TE·전처리기 불변, OneHot 범주·infrequent 처리가 inner-train에서만 학습, fingerprint 불일치 실패 경로, Random Forest `n_jobs>1` 결정성 | [tests/test_classifier_comparison.py](tests/test_classifier_comparison.py) | 미반영 |
-| (e) fold fingerprint에 타깃 해시·행 키 해시 추가(선택) | [src/classifier_compare.py](src/classifier_compare.py) | 미반영 |
+| (a) 분류기 비교 실행 이후 `src/features.py`는 문서 문자열만 바뀌었음(db117ed)을 기록(`code_sha256_lf` 불일치 설명) | [README 2절 기록 참고](README.md#classifier-tuning), [코드 해시 정오표](docs/FEEDBACK_MODEL_WEATHER_KO.md#code-hash-errata) | 완료(근거 파일 대신 문서에 기록) |
+| (b) 체크포인트 identity에 `code_sha256_lf` 포함 | [notebooks/run_classifier_comparison.py](notebooks/run_classifier_comparison.py)(탐색 확장 러너는 이미 포함) | 완료 |
+| (c) Logistic Regression 후보별 `n_iter`·`converged`를 `grid_scores`에 기록 | [src/classifier_compare.py](src/classifier_compare.py) | 완료(이후 실행부터 기록, 선택·지표 불변) |
+| (d) 누수 테스트 보강: Random Forest·LightGBM 경로의 outer-valid 라벨 반전 불변, inner-holdout 라벨 변경 시 inner-train TE·전처리기 불변, OneHot 범주·infrequent 처리가 inner-train에서만 학습, fingerprint 불일치 실패 경로, Random Forest `n_jobs>1` 결정성 | [tests/test_classifier_comparison.py](tests/test_classifier_comparison.py) | 완료(`n_jobs>1`은 나무 동일, 확률 합은 수 ulp 차이 허용 — 정오표 3.6절) |
+| (e) fold fingerprint에 타깃 해시·행 키 해시 추가(선택) | [src/classifier_compare.py](src/classifier_compare.py), 두 러너 | 완료(기존 지문 정의는 유지하고 `target_sha256`·`row_key_sha256` 별도 필드로 추가) |
 
 **마무리 점검**
 

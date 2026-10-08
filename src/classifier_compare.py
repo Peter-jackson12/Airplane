@@ -177,6 +177,21 @@ class ParamFit(NamedTuple):
     inner_holdout_positions: np.ndarray
 
 
+def candidate_diagnostics(model: Any) -> dict[str, Any]:
+    """Per-candidate fit diagnostics recorded next to the inner-holdout score.
+
+    Logistic Regression: ``n_iter`` (max over classes) and ``converged``
+    (``n_iter < max_iter``). Other models: no extra fields, so their recorded
+    ``grid_scores`` keep the 20261008 shape. Recording only; selection and
+    metrics do not read these fields.
+    """
+    est = model.named_steps.get("model") if hasattr(model, "named_steps") else model
+    if not isinstance(est, LogisticRegression):
+        return {}
+    n_iter = int(np.max(est.n_iter_))
+    return {"n_iter": n_iter, "converged": bool(n_iter < int(est.max_iter))}
+
+
 def select_threshold(y_holdout: np.ndarray, p_holdout: np.ndarray, cfg: CVConfig) -> float:
     """argmax of inner-holdout Macro F1 (first max wins) — mirrors run_fold_nested_grid."""
     grid = cfg.thresholds()
@@ -247,7 +262,7 @@ def run_fold_nested_params(
         score = float(log_loss(y_ho, probs, labels=[0, 1]))
         elapsed = time.perf_counter() - t0
         scores.append({"params": dict(params), "inner_holdout_log_loss": score,
-                       "fit_sec": float(elapsed)})
+                       "fit_sec": float(elapsed), **candidate_diagnostics(model)})
         if on_candidate is not None:
             on_candidate(dict(params), score, elapsed)
         if score < best_score:
@@ -278,6 +293,30 @@ def fold_fingerprint(folds: Sequence[tuple[np.ndarray, np.ndarray]], n_rows: int
     require(bool(np.all(counts == 1) and np.all(assignment >= 0)),
             "each row must belong to exactly one outer validation fold")
     return hashlib.sha256(assignment.tobytes()).hexdigest()
+
+
+def target_sha256(y: Sequence[int] | pd.Series) -> str:
+    """SHA-256 of the binary target in row order (int8 bytes).
+
+    Additional identity field next to ``fold_fingerprint``; the fold fingerprint
+    itself is unchanged so recorded 20260922/20261008 fingerprints stay comparable.
+    """
+    values = np.asarray(y)
+    require(bool(np.isin(values, (0, 1)).all()), "target must be binary 0/1")
+    return hashlib.sha256(values.astype(np.int8).tobytes()).hexdigest()
+
+
+def row_key_sha256(keys: Sequence[Any] | pd.Index) -> str:
+    """SHA-256 of the row keys in row order (e.g. the labeled matrix index).
+
+    Integer keys are hashed as int64 bytes; other keys as compact JSON strings.
+    Additional identity field; see ``target_sha256``.
+    """
+    values = np.asarray(keys)
+    require(len(pd.unique(values)) == len(values), "row keys must be unique")
+    if np.issubdtype(values.dtype, np.integer):
+        return hashlib.sha256(values.astype(np.int64).tobytes()).hexdigest()
+    return hashlib.sha256(compact_json([str(v) for v in values]).encode("utf-8")).hexdigest()
 
 
 def check_fold_fingerprint(folds, n_rows: int, expected: str | None) -> str:

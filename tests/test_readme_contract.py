@@ -202,3 +202,71 @@ def test_readme_classifier_table_matches_tracked_summary():
     # min_samples_leaf was also identical in every fold (a mid-grid value).
     assert all(p['min_samples_leaf'] == 25 for p in rf_params)
     assert '`min_samples_leaf=25`' in text
+
+
+def _signed(value: float) -> str:
+    return f'{value:+.6f}'.replace('-', '−')
+
+
+def test_readme_classifier_tuning_numbers_match_tracked_summary():
+    text = README.read_text(encoding='utf-8')
+    section = text.split('<a id="classifier-tuning"></a>', 1)[1].split('\n### ', 1)[0]
+    summary = json.loads((ROOT / (
+        'output/baseline_recovery_v2_classifier_tuning_20261008_summary.json'
+    )).read_text(encoding='utf-8'))
+    assert summary['smoke_only_not_evidence'] is False
+    assert summary['population']['rows'] == 180332
+    assert sorted(summary['seeds']) == [1, 7, 42]
+    assert summary['fold_fingerprints'] == summary['reference_fold_fingerprints_20261008']
+    assert len(summary['grids']['lightgbm_tuned']['configurations']) == 24
+    assert len(summary['grids']['random_forest_tuned']['configurations']) == 9
+    assert '24개 설정' in section and '9개 설정' in section
+    models = summary['models']
+    for key, label in (('weather_on/lightgbm_tuned', 'LightGBM (24개 설정 탐색)'),
+                       ('weather_on/random_forest_tuned', 'Random Forest (9개 설정 탐색)')):
+        m = models[key]
+        row = (f"| {label} | {m['macro_f1_nested']['mean']:.6f} | "
+               f"{m['log_loss']['mean']:.6f} | {m['roc_auc']['mean']:.6f} |")
+        assert row in section, key
+    comps = {c['comparison']: c['metrics'] for c in summary['paired_comparisons']}
+    metrics = ('macro_f1_nested', 'log_loss', 'roc_auc')
+    rf_lgbm = comps['weather_on: random_forest_tuned - lightgbm_tuned']
+    row = '| 차이 (Random Forest − LightGBM) | ' + ' | '.join(
+        _signed(rf_lgbm[m]['mean']) for m in metrics) + ' |'
+    assert row in section
+    # "세 시드 모두 세 지표에서 Random Forest가 앞섰습니다" is backed per seed.
+    assert all(rf_lgbm[m]['sign_consistent_across_seeds'] for m in metrics)
+    assert all(v > 0 for v in rf_lgbm['macro_f1_nested']['values_by_seed'].values())
+    assert all(v < 0 for v in rf_lgbm['log_loss']['values_by_seed'].values())
+    assert all(v > 0 for v in rf_lgbm['roc_auc']['values_by_seed'].values())
+    seed_f1 = rf_lgbm['macro_f1_nested']['values_by_seed'].values()
+    assert f'+{min(seed_f1):.4f}~+{max(seed_f1):.4f}' in section
+    # Tuned LightGBM vs its fixed 20261008 config: small, same direction in every seed.
+    lgbm = comps['weather_on: lightgbm_tuned - lightgbm(20261008 fixed config)']
+    assert all(lgbm[m]['sign_consistent_across_seeds'] for m in metrics)
+    assert (f"Macro F1 {_signed(lgbm['macro_f1_nested']['mean'])}, "
+            f"LogLoss {_signed(lgbm['log_loss']['mean'])}, "
+            f"ROC-AUC {_signed(lgbm['roc_auc']['mean'])}") in section
+    rf_old = comps['weather_on: random_forest_tuned - random_forest(20261008 6-config grid)']
+    assert rf_old['macro_f1_nested']['sign_consistent_across_seeds'] is False
+    assert f"Macro F1 {_signed(rf_old['macro_f1_nested']['mean'])}, 시드별 방향 혼재" in section
+    # Random Forest weather on/off vs the existing LightGBM weather on/off delta.
+    rf_w = comps['random_forest_tuned: weather_on - weather_off']
+    lgbm_w = comps['lightgbm(20260922 fixed config): weather_on - weather_off']
+    assert all(rf_w[m]['sign_consistent_across_seeds'] for m in metrics)
+    assert (f"Macro F1 {_signed(rf_w['macro_f1_nested']['mean'])}, "
+            f"LogLoss {_signed(rf_w['log_loss']['mean'])}, "
+            f"ROC-AUC {_signed(rf_w['roc_auc']['mean'])}") in section
+    assert '(' + ' / '.join(_signed(lgbm_w[m]['mean']) for m in metrics) + ')' in section
+    # Grid-edge counts quoted in the README.
+    sel = summary['selection']
+    lg_edges = sel['weather_on/lightgbm_tuned']['edge_counts_by_axis']
+    assert sel['weather_on/lightgbm_tuned']['n_folds'] == 15
+    assert "14개에서 학습률 최솟값 0.03" in section and lg_edges['learning_rate']['low'] == 14
+    assert "9개에서 잎 수 최댓값 127" in section and lg_edges['num_leaves']['high'] == 9
+    rf_on = sel['weather_on/random_forest_tuned']['edge_counts_by_axis']
+    assert rf_on['max_features'] == {'low': 11, 'interior': 4}
+    assert '11개 폴드에서 `max_features` 최솟값 0.5(나머지 4개는 0.7)' in section
+    rf_off = sel['weather_off/random_forest_tuned']['edge_counts_by_axis']
+    assert rf_off['min_samples_leaf'] == {'high': 15}
+    assert '15개 폴드 모두 `min_samples_leaf` 최댓값 50' in section
