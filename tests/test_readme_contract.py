@@ -250,13 +250,14 @@ def test_readme_classifier_tuning_numbers_match_tracked_summary():
     rf_old = comps['weather_on: random_forest_tuned - random_forest(20261008 6-config grid)']
     assert rf_old['macro_f1_nested']['sign_consistent_across_seeds'] is False
     assert f"Macro F1 {_signed(rf_old['macro_f1_nested']['mean'])}, 시드별 방향 혼재" in section
-    # Random Forest weather on/off vs the existing LightGBM weather on/off delta.
+    # Random Forest weather on/off vs the existing LightGBM weather on/off delta. The
+    # headline RF delta now comes from the identical-grid extension (checked in
+    # test_readme_classifier_grid_extension_numbers_match_tracked_summary); the
+    # 9-config delta stays quoted as the earlier, edge-bound reference.
     rf_w = comps['random_forest_tuned: weather_on - weather_off']
     lgbm_w = comps['lightgbm(20260922 fixed config): weather_on - weather_off']
     assert all(rf_w[m]['sign_consistent_across_seeds'] for m in metrics)
-    assert (f"Macro F1 {_signed(rf_w['macro_f1_nested']['mean'])}, "
-            f"LogLoss {_signed(rf_w['log_loss']['mean'])}, "
-            f"ROC-AUC {_signed(rf_w['roc_auc']['mean'])}") in section
+    assert ' / '.join(_signed(rf_w[m]['mean']) for m in metrics) in section
     assert '(' + ' / '.join(_signed(lgbm_w[m]['mean']) for m in metrics) + ')' in section
     # Grid-edge counts quoted in the README.
     sel = summary['selection']
@@ -270,3 +271,189 @@ def test_readme_classifier_tuning_numbers_match_tracked_summary():
     rf_off = sel['weather_off/random_forest_tuned']['edge_counts_by_axis']
     assert rf_off['min_samples_leaf'] == {'high': 15}
     assert '15개 폴드 모두 `min_samples_leaf` 최댓값 50' in section
+
+
+def _load(name: str) -> dict:
+    return json.loads((ROOT / 'output' / name).read_text(encoding='utf-8'))
+
+
+def _config_counts(selection: dict) -> list[tuple[dict, int]]:
+    return [(json.loads(key), count) for key, count in selection['selected_config_counts'].items()]
+
+
+def test_readme_classifier_grid_extension_numbers_match_tracked_summary():
+    text = README.read_text(encoding='utf-8')
+    section = text.split('<a id="classifier-grid-extension"></a>', 1)[1].split(
+        '<a id="classifier-calibration"></a>', 1)[0]
+    lgbm = _load('baseline_recovery_v2_classifier_grid_ext_20261008_lgbm_summary.json')
+    rf = _load('baseline_recovery_v2_classifier_grid_ext_20261008_rf_summary.json')
+    combined = _load('baseline_recovery_v2_classifier_grid_ext_20261008_combined_summary.json')
+    tuning = _load('baseline_recovery_v2_classifier_tuning_20261008_summary.json')
+    for part in (lgbm, rf):
+        assert part['smoke_only_not_evidence'] is False
+        assert part['population']['rows'] == 180332
+        assert sorted(part['seeds']) == [1, 7, 42]
+        assert part['fold_fingerprints'] == part['reference_fold_fingerprints_20261008']
+    assert combined['smoke_only_not_evidence'] is False
+    lg_grid = lgbm['grids']['lightgbm_ext']
+    rf_grid = rf['grids']['random_forest_ext']
+    assert lg_grid['n_configurations'] == 18 and rf_grid['n_configurations'] == 15
+    assert '18개 설정' in section and '15개 설정' in section
+    assert lg_grid['axes'] == {'learning_rate': [0.01, 0.02, 0.03], 'num_leaves': [127, 255, 511],
+                               'min_child_samples': [20, 100]}
+    assert lg_grid['max_trees_by_learning_rate'] == {'0.01': 1500, '0.02': 1000, '0.03': 600}
+    assert rf_grid['axes'] == {'min_samples_leaf': [25, 50, 100, 200, 400],
+                               'max_features': [0.5, 0.7, 1.0]}
+    metrics = ('macro_f1_nested', 'log_loss', 'roc_auc')
+    for label, m in (('LightGBM (18개 설정 탐색)', lgbm['models']['weather_on/lightgbm_ext']),
+                     ('Random Forest (15개 설정 탐색)', rf['models']['weather_on/random_forest_ext'])):
+        assert f"| {label} | " + ' | '.join(f"{m[k]['mean']:.6f}" for k in metrics) + ' |' in section
+    # Random Forest still leads the extended LightGBM in every seed on all three metrics.
+    gap = combined['paired_comparisons'][0]
+    assert gap['comparison'] == 'weather_on: random_forest_ext - lightgbm_ext'
+    gap = gap['metrics']
+    assert '| 차이 (Random Forest − LightGBM) | ' + ' | '.join(
+        _signed(gap[k]['mean']) for k in metrics) + ' |' in section
+    assert all(gap[k]['sign_consistent_across_seeds'] for k in metrics)
+    assert all(v > 0 for v in gap['macro_f1_nested']['values_by_seed'].values())
+    assert all(v < 0 for v in gap['log_loss']['values_by_seed'].values())
+    assert all(v > 0 for v in gap['roc_auc']['values_by_seed'].values())
+    seed_f1 = gap['macro_f1_nested']['values_by_seed'].values()
+    assert f'+{min(seed_f1):.4f}~+{max(seed_f1):.4f}' in section
+    # Extended LightGBM vs the 24-config search: no consistent gain.
+    lcomps = {c['comparison']: c['metrics'] for c in lgbm['paired_comparisons']}
+    ext_vs_tuned = lcomps['weather_on: lightgbm_ext - lightgbm_tuned(20261008, 24 configs)']
+    assert not any(ext_vs_tuned[k]['sign_consistent_across_seeds'] for k in metrics)
+    assert (f"Macro F1 {_signed(ext_vs_tuned['macro_f1_nested']['mean'])}, "
+            f"LogLoss {_signed(ext_vs_tuned['log_loss']['mean'])}, "
+            f"ROC-AUC {_signed(ext_vs_tuned['roc_auc']['mean'])}") in section
+    assert '시드별 방향이 섞였습니다' in section
+    # Two learning-rate regimes, interior tree counts, and leaves 511 never chosen.
+    sel = lgbm['selection']['weather_on/lightgbm_ext']
+    counts = _config_counts(sel)
+    assert sum(c for _, c in counts) == sel['n_folds'] == 15
+    assert sum(c for p, c in counts if p['learning_rate'] == 0.03 and p['n_estimators'] == 150) == 8
+    assert sum(c for p, c in counts if p['learning_rate'] == 0.01
+               and 300 <= p['n_estimators'] <= 600) == 7
+    assert '학습률 0.03·트리 150개(8개 폴드)와 학습률 0.01·트리 300~600개(7개 폴드)' in section
+    assert sel['edge_counts_by_axis']['n_estimators'] == {'interior': 15}
+    leaves = {n: sum(c for p, c in counts if p['num_leaves'] == n) for n in (127, 255, 511)}
+    assert leaves == {127: 8, 255: 7, 511: 0}
+    assert '127(8개 폴드)과 255(7개 폴드)' in section
+    # max_depth=8 caps a tree at 256 leaves, so 255 and 511 score identically.
+    assert lg_grid['base_params']['max_depth'] == 8 and '`max_depth=8`' in section
+    with (ROOT / 'output/baseline_recovery_v2_classifier_grid_ext_20261008_lgbm_folds.csv').open(
+            encoding='utf-8', newline='') as handle:
+        for row in csv.DictReader(handle):
+            scores = {(g['config']['learning_rate'], g['config']['min_child_samples'],
+                       g['config']['num_leaves']): g['n_estimators_scores']
+                      for g in json.loads(row['grid_scores'])}
+            for (lr, mcs, leaves_n), s in scores.items():
+                if leaves_n == 255:
+                    assert s == scores[(lr, mcs, 511)]
+    # Random Forest selections under the identical 15-config grid.
+    rsel = rf['selection']
+    on = _config_counts(rsel['weather_on/random_forest_ext'])
+    assert all(p['min_samples_leaf'] == 25 for p, _ in on)
+    assert rsel['weather_on/random_forest_ext']['edge_counts_by_axis']['min_samples_leaf'] == {'low': 15}
+    tuned_on = _config_counts(tuning['selection']['weather_on/random_forest_tuned'])
+    assert all(p['min_samples_leaf'] == 25 for p, _ in tuned_on)  # 10 was in that grid, never chosen
+    assert '10을 함께 두었을 때도 15개 폴드 모두 25' in section
+    off = _config_counts(rsel['weather_off/random_forest_ext'])
+    assert sum(c for p, c in off if p['min_samples_leaf'] == 100) == 13
+    assert sum(c for p, c in off if p['min_samples_leaf'] == 50) == 2
+    assert rsel['weather_off/random_forest_ext']['edge_counts_by_axis']['min_samples_leaf'] == {'interior': 15}
+    assert '13개에서 `min_samples_leaf=100`, 2개에서 50' in section
+    rcomps = {c['comparison']: c['metrics'] for c in rf['paired_comparisons']}
+    off_gain = rcomps['weather_off: random_forest_ext - random_forest_tuned(20261008, leaf 10/25/50)']
+    assert off_gain['macro_f1_nested']['sign_consistent_across_seeds'] is True
+    assert f"Macro F1 {_signed(off_gain['macro_f1_nested']['mean'])}로 세 시드 같은 방향" in section
+    # RF weather on/off under the identical grid is the headline RF weather delta.
+    weather = rcomps['random_forest_ext (identical 15-config grid): weather_on - weather_off']
+    assert all(weather[k]['sign_consistent_across_seeds'] for k in metrics)
+    tuning_section = text.split('<a id="classifier-tuning"></a>', 1)[1].split(
+        '<a id="classifier-grid-extension"></a>', 1)[0]
+    assert '똑같은 15개 설정 후보' in tuning_section
+    assert (f"Macro F1 {_signed(weather['macro_f1_nested']['mean'])}, "
+            f"LogLoss {_signed(weather['log_loss']['mean'])}, "
+            f"ROC-AUC {_signed(weather['roc_auc']['mean'])}") in tuning_section
+    # Still a bounded-budget comparison.
+    assert '사전 선언한 유한 예산 안의 비교' in section
+    assert '일반적으로 더 나은 알고리즘이라는 뜻으로 확장하지 않습니다' in section
+
+
+CALIBRATION_ARMS_KO = {'none': '없음', 'platt_crossfit': 'Platt 교차적합',
+                       'isotonic_crossfit': 'Isotonic 교차적합'}
+CALIBRATION_MODELS = {'lightgbm_tuned': 'LightGBM', 'logistic_regression': 'Logistic Regression',
+                      'random_forest_tuned': 'Random Forest'}
+
+
+def test_readme_classifier_calibration_numbers_match_tracked_summary():
+    text = README.read_text(encoding='utf-8')
+    section = text.split('<a id="classifier-calibration"></a>', 1)[1].split('\n**기록 참고.**', 1)[0]
+    summary = _load('baseline_recovery_v2_classifier_calibration_20261008_summary.json')
+    assert summary['smoke_only_not_evidence'] is False
+    assert summary['population']['rows'] == 180332
+    assert sorted(summary['seeds']) == [1, 7, 42]
+    assert summary['fold_fingerprints_equal_reference'] is True
+    cal = summary['protocol']['probability_calibration']
+    assert cal['outer_valid_labels_used_for_calibration_or_threshold'] is False
+    assert summary['protocol']['outer_valid_labels_used_for_selection'] is False
+    assert summary['protocol']['ece']['primary'].startswith('15 equal-frequency bins')
+    levels, deltas = summary['levels'], summary['paired_deltas_arm_minus_none']
+    for model, label in CALIBRATION_MODELS.items():
+        for arm, arm_ko in CALIBRATION_ARMS_KO.items():
+            m = levels[model][arm]
+            row = (f"| {label} | {arm_ko} | {m['log_loss']['mean']:.6f} | "
+                   f"{m['ece_ef15']['mean']:.6f} | {m['macro_f1_nested']['mean']:.6f} |")
+            assert row in section, (model, arm)
+    # LightGBM under-predicts most; Platt cross-fit improves LogLoss and ECE in every seed.
+    biases = {m: levels[m]['none']['calibration_bias']['mean'] for m in CALIBRATION_MODELS}
+    assert biases['lightgbm_tuned'] < 0
+    assert max(abs(v) for v in biases.values()) == abs(biases['lightgbm_tuned'])
+    assert f"약 {-biases['lightgbm_tuned']:.4f} 낮았고" in section
+    assert biases['random_forest_tuned'] > 0
+    assert f"과대 예측({biases['random_forest_tuned']:+.4f})" in section
+    assert abs(biases['logistic_regression']) < 1e-4
+    platt = deltas['lightgbm_tuned']['platt_crossfit']
+    assert platt['log_loss']['sign_consistent_across_seeds'] and platt['log_loss']['mean'] < 0
+    assert platt['ece_ef15']['sign_consistent_across_seeds'] and platt['ece_ef15']['mean'] < 0
+    assert (f"LogLoss {_signed(platt['log_loss']['mean'])}, "
+            f"ECE15 {_signed(platt['ece_ef15']['mean'])}") in section
+    lr_platt = deltas['logistic_regression']['platt_crossfit']['ece_ef15']
+    assert lr_platt['mean'] > 0 and lr_platt['sign_consistent_across_seeds']
+    assert f"({_signed(lr_platt['mean'])})" in section
+    # LogLoss and Macro F1 barely move.
+    cross_ll = [deltas[m][a]['log_loss']['mean'] for m in CALIBRATION_MODELS
+                for a in ('platt_crossfit', 'isotonic_crossfit')]
+    assert f"{_signed(min(cross_ll))}~{_signed(max(cross_ll))}" in section
+    all_f1 = [abs(d['macro_f1_nested']['mean']) for m in CALIBRATION_MODELS
+              for d in deltas[m].values()]
+    assert len(all_f1) == 12 and f"절댓값 {max(all_f1):.6f} 이하" in section
+    # Ranking holds under every arm (sign-consistent across seeds).
+    by_arm = summary['model_minus_lightgbm_by_arm']
+    assert set(by_arm) == {'none', 'platt_inner_holdout', 'isotonic_inner_holdout',
+                           'platt_crossfit', 'isotonic_crossfit'}
+    for arm, models in by_arm.items():
+        rf_gap, lr_gap = models['random_forest_tuned'], models['logistic_regression']
+        for metric, sign in (('macro_f1_nested', 1), ('log_loss', -1), ('roc_auc', 1)):
+            assert rf_gap[metric]['sign_consistent_across_seeds'], (arm, metric)
+            assert all(v * sign > 0 for v in rf_gap[metric]['values_by_seed'].values()), (arm, metric)
+        for metric, sign in (('macro_f1_nested', -1), ('log_loss', 1)):
+            assert lr_gap[metric]['sign_consistent_across_seeds'], (arm, metric)
+            assert all(v * sign > 0 for v in lr_gap[metric]['values_by_seed'].values()), (arm, metric)
+    assert '분류기 순서는 어떤 보정에서도 같았습니다' in section
+    # Isotonic fitted on the selection rows (inner holdout) worsens LogLoss for all three.
+    iso = [deltas[m]['isotonic_inner_holdout']['log_loss'] for m in CALIBRATION_MODELS]
+    assert all(d['mean'] > 0 and d['sign_consistent_across_seeds'] for d in iso)
+    means = [d['mean'] for d in iso]
+    assert f"{_signed(min(means))}~{_signed(max(means))}" in section
+    # Reproduction of the recorded uncalibrated runs.
+    units = summary['reproduction_of_recorded_uncalibrated_runs']['run_level']['by_unit']
+    for unit, rec in units.items():
+        assert rec['per_fold_thresholds_equal'] is True
+        if not unit.startswith('logistic_regression/'):
+            assert max(rec['abs_diff'].values()) < 1e-15, unit
+    lr_max = max(rec['abs_diff']['macro_f1_nested'] for unit, rec in units.items()
+                 if unit.startswith('logistic_regression/'))
+    assert f"최대 {lr_max:.5f}" in section and '0.596816' in section

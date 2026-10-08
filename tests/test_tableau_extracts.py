@@ -9,6 +9,7 @@ import pytest
 from scripts.build_tableau_extracts import (
     bin_weather_values,
     class_metrics,
+    comparison_long,
     confusion_long,
     delayed_flag,
     error_stability_table,
@@ -18,6 +19,10 @@ from scripts.build_tableau_extracts import (
     metrics_long,
     oof_error_table,
     rate_table,
+    reconcile_comparison,
+    reconcile_reliability,
+    reliability_long,
+    summary_means,
     time_pattern,
     weather_bins_long,
     write_csv,
@@ -196,3 +201,96 @@ def test_age_last_bin_is_closed_and_infinite_edges_are_blank():
     w, y = _synthetic_weather(n=50, seed=3)
     t = weather_bins_long(w, y)
     assert np.isfinite(t.bin_lower.dropna()).all() and np.isfinite(t.bin_upper.dropna()).all()
+
+
+def _classifier_runs(arm_col=False):
+    rows = []
+    for seed, (tn, fp, fn, tp) in zip((42, 1), ((60, 20, 12, 8), (62, 18, 13, 7))):
+        r = {"seed": seed, "model": "random_forest_ext", "condition": "weather_on",
+             "n_rows": 100, "positive_rows": 20, "tn": tn, "fp": fp, "fn": fn, "tp": tp,
+             "macro_f1_nested": 0.5 + seed / 1000, "log_loss": 0.4, "roc_auc": 0.6,
+             "precision_delayed": tp / (tp + fp), "recall_delayed": tp / (tp + fn)}
+        if arm_col:
+            r.update(arm="platt_crossfit", calibrator="platt", calibration_data="inner_train_crossfit",
+                     ece_ef15=0.01)
+        rows.append(r)
+    return pd.DataFrame(rows)
+
+
+def test_comparison_long_labels_and_checks_counts():
+    runs = _classifier_runs()
+    t = comparison_long(runs, experiment="x", population="p")
+    assert set(t.metric) == {"macro_f1_nested", "log_loss", "roc_auc", "precision_delayed",
+                             "recall_delayed"}
+    assert len(t) == 2 * 5
+    assert (t.calibration_arm == "none").all() and (t.model_family == "random_forest").all()
+    assert (t.n_configurations == 15).all()
+    cal = comparison_long(_classifier_runs(arm_col=True).drop(columns="condition"),
+                          experiment="c", population="p")
+    assert (cal.calibration_arm == "platt_crossfit").all() and (cal.condition == "weather_on").all()
+    assert "ece_ef15" in set(cal.metric)
+    bad = runs.copy()
+    bad.loc[0, "precision_delayed"] = 0.9  # disagrees with tn/fp/fn/tp
+    with pytest.raises(ValueError):
+        comparison_long(bad, experiment="x", population="p")
+    with pytest.raises(ValueError):
+        comparison_long(runs.assign(model="unknown"), experiment="x", population="p")
+
+
+def test_reconcile_comparison_against_summary_means():
+    runs = _classifier_runs()
+    t = comparison_long(runs, experiment="x", population="p")
+    mean = runs.mean(numeric_only=True)
+    summary = {"models": {"weather_on/random_forest_ext": {
+        k: {"mean": float(mean[k])} for k in ("macro_f1_nested", "log_loss", "roc_auc")}}}
+    ok = reconcile_comparison(t, summary_means(summary, "x"), experiment="x", seeds=(42, 1),
+                              rows=100, positives=20)
+    assert ok and all(ok.values())
+    summary["models"]["weather_on/random_forest_ext"]["log_loss"]["mean"] += 1e-6
+    bad = reconcile_comparison(t, summary_means(summary, "x"), experiment="x", seeds=(42, 1),
+                               rows=100, positives=20)
+    assert not all(bad.values())
+    levels = {"levels": {"random_forest_ext": {"none": {"log_loss": {"mean": 0.1}}}}}
+    assert summary_means(levels, "c") == {("weather_on", "random_forest_ext", "none"): {"log_loss": 0.1}}
+
+
+def _bins():
+    rows = []
+    for arm in ("none", "platt_crossfit"):
+        for b, (n, p, o) in enumerate(((60, 0.1, 10 / 60), (40, 0.3, 10 / 40))):
+            rows.append({"seed": 42, "model": "lightgbm_tuned", "arm": arm, "calibrator": arm,
+                         "calibration_data": arm, "binning": "equal_frequency_15", "bin": b,
+                         "lower": 0.0, "upper": 1.0, "n": n, "mean_probability": p,
+                         "observed_rate": o, "abs_gap": abs(p - o)})
+        rows.append({"seed": 42, "model": "lightgbm_tuned", "arm": arm, "calibrator": arm,
+                     "calibration_data": arm, "binning": "equal_width_10", "bin": 9,
+                     "lower": 0.9, "upper": 1.0, "n": 0, "mean_probability": np.nan,
+                     "observed_rate": np.nan, "abs_gap": np.nan})
+        for b, (n, p, o) in enumerate(((100, 0.2, 0.2),)):
+            rows.append({"seed": 42, "model": "lightgbm_tuned", "arm": arm, "calibrator": arm,
+                         "calibration_data": arm, "binning": "equal_width_10", "bin": b,
+                         "lower": 0.0, "upper": 0.9, "n": n, "mean_probability": p,
+                         "observed_rate": o, "abs_gap": abs(p - o)})
+    return pd.DataFrame(rows)
+
+
+def test_reliability_long_counts_and_ece_reconciliation():
+    rel = reliability_long(_bins(), population="p")
+    assert {"n_delayed", "sum_probability", "gap_signed", "model_label", "binning_ko"} <= set(rel.columns)
+    g = rel[(rel.calibration_arm == "none") & (rel.binning == "equal_frequency_15")]
+    assert g.n.sum() == 100 and g.n_delayed.sum() == 20
+    assert g.sum_probability.sum() == pytest.approx(60 * 0.1 + 40 * 0.3)
+    empty = rel[rel.n == 0]
+    assert len(empty) == 2 and (empty.n_delayed == 0).all() and (empty.sum_probability == 0).all()
+    ece15 = (60 * abs(0.1 - 10 / 60) + 40 * abs(0.3 - 0.25)) / 100
+    runs = pd.DataFrame({"seed": [42, 42], "model": ["lightgbm_tuned"] * 2,
+                         "arm": ["none", "platt_crossfit"], "ece_ef15": [ece15, ece15],
+                         "ece_ew10": [0.0, 0.0]})
+    ok = reconcile_reliability(rel, runs, rows=100, positives=20)
+    assert ok and all(ok.values())
+    bad = reconcile_reliability(rel, runs.assign(ece_ef15=ece15 + 1e-6), rows=100, positives=20)
+    assert not all(bad.values())
+    broken = _bins()
+    broken.loc[0, "observed_rate"] = 0.1234567  # 60 x rate is not a whole count
+    with pytest.raises(ValueError):
+        reliability_long(broken, population="p")

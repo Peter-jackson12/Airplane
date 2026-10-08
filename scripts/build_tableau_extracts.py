@@ -6,6 +6,9 @@ Dashboards
    (180,332 rows), plus the tracked weather on/off confusion matrices.
 3. 모델이 틀리는 곳 — the existing P6_clean row-level OOF predictions
    (255,001 labeled rows x 3 split seeds) and the tracked classifier comparison.
+   Also every tracked classifier run on the weather_eval rows in one long table
+   (comparison, tuning, grid extension, calibration arms) and the calibration
+   reliability bins (``model_comparison_all.csv``, ``model_calibration_reliability.csv``).
 
 Nothing is fitted. Weather rows are loaded with the comparison runner's own
 validated loader (``notebooks.run_weather_model_comparison.load_inputs``), which
@@ -44,6 +47,54 @@ RAW_PATH = ROOT / "data/train.csv"
 MAPPING_PATH = ROOT / "output/baseline_recovery_v2_weather_scope_fix_20260918_mapping_table.csv"
 WEATHER_RUNS_PATH = ROOT / "output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv"
 CLASSIFIER_RUNS_PATH = ROOT / "output/baseline_recovery_v2_classifier_compare_20261008_runs.csv"
+CLASSIFIER_SOURCES = {
+    # experiment -> (runs CSV, summary JSON); all share the 180,332 weather_eval rows,
+    # outer folds (fingerprint-checked by each runner) and split seeds 42/1/7.
+    "classifier_compare_20261008": (
+        "output/baseline_recovery_v2_classifier_compare_20261008_runs.csv",
+        "output/baseline_recovery_v2_classifier_compare_20261008_summary.json"),
+    "classifier_tuning_20261008": (
+        "output/baseline_recovery_v2_classifier_tuning_20261008_runs.csv",
+        "output/baseline_recovery_v2_classifier_tuning_20261008_summary.json"),
+    "classifier_grid_ext_20261008_lgbm": (
+        "output/baseline_recovery_v2_classifier_grid_ext_20261008_lgbm_runs.csv",
+        "output/baseline_recovery_v2_classifier_grid_ext_20261008_lgbm_summary.json"),
+    "classifier_grid_ext_20261008_rf": (
+        "output/baseline_recovery_v2_classifier_grid_ext_20261008_rf_runs.csv",
+        "output/baseline_recovery_v2_classifier_grid_ext_20261008_rf_summary.json"),
+    "classifier_calibration_20261008": (
+        "output/baseline_recovery_v2_classifier_calibration_20261008_runs.csv",
+        "output/baseline_recovery_v2_classifier_calibration_20261008_summary.json"),
+}
+CALIBRATION_BINS_PATH = ROOT / "output/baseline_recovery_v2_classifier_calibration_20261008_reliability_bins.csv"
+# model key -> (family, display label, search budget label, number of configurations)
+CLASSIFIER_MODEL_SPECS = {
+    "lightgbm": ("lightgbm", "LightGBM",
+                 "고정 설정(learning_rate 0.05, num_leaves 63) × 트리 수 8개", 1),
+    "logistic_regression": ("logistic_regression", "Logistic Regression", "규제 강도 C 5개", 5),
+    "random_forest": ("random_forest", "Random Forest",
+                      "min_samples_leaf 3개 × max_features 2개 (300그루)", 6),
+    "lightgbm_tuned": ("lightgbm", "LightGBM",
+                       "24개 설정 × 트리 수 8개 (학습률 0.03~0.1, 잎 31~127)", 24),
+    "random_forest_tuned": ("random_forest", "Random Forest",
+                            "9개 설정 (min_samples_leaf 10/25/50 × max_features 0.5/0.7/1.0)", 9),
+    "lightgbm_ext": ("lightgbm", "LightGBM",
+                     "18개 설정 × 트리 수 최대 10개 (학습률 0.01~0.03, 잎 127/255/511, 상한 1500)", 18),
+    "random_forest_ext": ("random_forest", "Random Forest",
+                          "15개 설정 (min_samples_leaf 25~400 × max_features 0.5/0.7/1.0)", 15),
+}
+CALIBRATION_ARM_LABELS = {
+    "none": "보정 없음",
+    "platt_inner_holdout": "Platt · 내부 검증 행 적합(선택 행 재사용)",
+    "isotonic_inner_holdout": "Isotonic · 내부 검증 행 적합(선택 행 재사용)",
+    "platt_crossfit": "Platt · 내부 학습 교차적합",
+    "isotonic_crossfit": "Isotonic · 내부 학습 교차적합",
+}
+BINNING_LABELS = {"equal_frequency_15": "동일 빈도 15구간(주 지표)",
+                  "equal_width_10": "동일 폭 10구간(보조)"}
+COMPARISON_METRICS = ("macro_f1_nested", "log_loss", "roc_auc", "precision_delayed",
+                      "recall_delayed", "f1_delayed", "f1_not_delayed", "brier", "ece_ef15",
+                      "ece_ew10", "calibration_bias", "mean_probability")
 OOF_GROUPS_PATH = ROOT / "output/baseline_recovery_v2_oof_20260916_v2_groups.csv"
 OOF_RUN_PREFIX = "baseline_recovery_v2_oof_20260916_v2"
 OOF_PHASE = "P6_clean"
@@ -399,6 +450,129 @@ def error_stability_table(per_row: pd.DataFrame, by: str, *, population: str) ->
     return counts
 
 
+def comparison_long(runs: pd.DataFrame, *, experiment: str, population: str) -> pd.DataFrame:
+    """One classifier runs CSV -> one row per (seed, condition, model, arm, metric).
+
+    Runs without a ``condition`` column are weather_on (the 20261008 comparison); runs
+    without an ``arm`` column are uncalibrated. Only metrics present in the CSV are kept.
+    Delayed precision/recall/F1 present in the CSV must match its tn/fp/fn/tp.
+    """
+    require({"seed", "model", "n_rows", "positive_rows", "tn", "fp", "fn", "tp"} <= set(runs.columns),
+            f"{experiment}: runs CSV lacks required columns")
+    unknown = set(runs.model) - set(CLASSIFIER_MODEL_SPECS)
+    require(not unknown, f"{experiment}: unknown models {sorted(unknown)}")
+    require(((runs.tn + runs.fp + runs.fn + runs.tp) == runs.n_rows).all(),
+            f"{experiment}: confusion total != n_rows")
+    require(((runs.fn + runs.tp) == runs.positive_rows).all(), f"{experiment}: positives mismatch")
+    derived = class_metrics(runs.tn, runs.fp, runs.fn, runs.tp)
+    for col in ("precision_delayed", "recall_delayed", "f1_delayed", "f1_not_delayed"):
+        if col in runs.columns:
+            require(np.allclose(runs[col].to_numpy(float), np.asarray(derived[col], float),
+                                rtol=0, atol=1e-12), f"{experiment}: {col} differs from tn/fp/fn/tp")
+    metrics = [m for m in COMPARISON_METRICS if m in runs.columns]
+    out = []
+    for _, r in runs.iterrows():
+        family, label, budget, n_cfg = CLASSIFIER_MODEL_SPECS[r.model]
+        arm = r["arm"] if "arm" in runs.columns else "none"
+        require(arm in CALIBRATION_ARM_LABELS, f"{experiment}: unknown arm {arm}")
+        base = {"population": population, "experiment": experiment,
+                "condition": r["condition"] if "condition" in runs.columns else "weather_on",
+                "model": r.model, "model_family": family, "model_label": label,
+                "search_budget": budget, "n_configurations": n_cfg,
+                "calibration_arm": arm, "calibration_arm_ko": CALIBRATION_ARM_LABELS[arm],
+                "calibrator": r["calibrator"] if "calibrator" in runs.columns else "none",
+                "calibration_data": r["calibration_data"] if "calibration_data" in runs.columns
+                else "none",
+                "seed": int(r.seed), "n_rows": int(r.n_rows), "positive_rows": int(r.positive_rows)}
+        for metric in metrics:
+            out.append({**base, "metric": metric, "value": float(r[metric])})
+    return pd.DataFrame(out)
+
+
+def summary_means(summary: dict, experiment: str) -> dict[tuple[str, str, str], dict[str, float]]:
+    """(condition, model, arm) -> {metric: 3-seed mean} as recorded in a tracked summary JSON."""
+    out: dict[tuple[str, str, str], dict[str, float]] = {}
+    if "levels" in summary:  # calibration: levels[model][arm][metric]
+        for model, arms in summary["levels"].items():
+            for arm, mets in arms.items():
+                out[("weather_on", model, arm)] = {k: v["mean"] for k, v in mets.items()}
+        return out
+    for key, mets in summary["models"].items():
+        condition, model = key.split("/", 1) if "/" in key else ("weather_on", key)
+        out[(condition, model, "none")] = {k: v["mean"] for k, v in mets.items()
+                                           if isinstance(v, dict) and "mean" in v}
+    require(out, f"{experiment}: no model means in summary")
+    return out
+
+
+def reconcile_comparison(long: pd.DataFrame, means: dict, *, experiment: str,
+                         seeds: tuple[int, ...], rows: int, positives: int) -> dict[str, bool]:
+    """Every (condition, model, arm) has the expected seeds/denominators and its 3-seed
+    means of Macro F1 / LogLoss / ROC-AUC equal the tracked summary JSON."""
+    checks: dict[str, bool] = {}
+    part = long[long.experiment == experiment]
+    for (cond, model, arm), g in part.groupby(["condition", "model", "calibration_arm"]):
+        tag = f"comparison_{experiment}_{cond}_{model}_{arm}"
+        checks[f"{tag}_seeds"] = sorted(g.seed.unique().tolist()) == sorted(seeds)
+        checks[f"{tag}_denominators"] = bool((g.n_rows == rows).all() and (g.positive_rows == positives).all())
+        ref = means.get((cond, model, arm))
+        ok = ref is not None
+        for metric in ("macro_f1_nested", "log_loss", "roc_auc"):
+            vals = g.loc[g.metric == metric, "value"]
+            ok = ok and len(vals) == len(seeds) and abs(float(vals.mean()) - float(ref[metric])) < 1e-12
+        checks[f"{tag}_means_vs_summary"] = bool(ok)
+    checks[f"comparison_{experiment}_covers_summary"] = (
+        set(means) == set(map(tuple, part[["condition", "model", "calibration_arm"]]
+                              .drop_duplicates().to_numpy().tolist())))
+    return checks
+
+
+def reliability_long(bins: pd.DataFrame, *, population: str) -> pd.DataFrame:
+    """Calibration reliability bins (one row per seed x model x arm x binning x bin), with
+    counts that can be summed across seeds: ``n_delayed`` and ``sum_probability``.
+
+    Empty equal-width bins keep ``n = 0`` and blank probability/rate columns.
+    """
+    need = {"seed", "model", "arm", "calibrator", "calibration_data", "binning", "bin", "lower",
+            "upper", "n", "mean_probability", "observed_rate", "abs_gap"}
+    require(need <= set(bins.columns), "reliability bins lack required columns")
+    require(set(bins.binning) <= set(BINNING_LABELS), "unknown binning")
+    empty = bins.n == 0
+    require(bins.loc[~empty, ["mean_probability", "observed_rate", "abs_gap"]].notna().all().all(),
+            "non-empty bin without probability/rate")
+    pos = (bins.observed_rate * bins.n).fillna(0.0)
+    require(float((pos - pos.round()).abs().max()) < 1e-3, "observed_rate x n is not a count")
+    out = bins.copy()
+    out["n_delayed"] = pos.round().astype("int64")
+    out["sum_probability"] = (bins.mean_probability * bins.n).fillna(0.0)
+    out["gap_signed"] = bins.mean_probability - bins.observed_rate
+    out.insert(0, "population", population)
+    out.insert(1, "experiment", "classifier_calibration_20261008")
+    out.insert(4, "model_label", out.model.map(lambda m: CLASSIFIER_MODEL_SPECS[m][1]))
+    out.insert(6, "calibration_arm_ko", out.arm.map(CALIBRATION_ARM_LABELS))
+    out.insert(10, "binning_ko", out.binning.map(BINNING_LABELS))
+    require(out.model_label.notna().all() and out.calibration_arm_ko.notna().all(),
+            "unknown model or arm in reliability bins")
+    return out.rename(columns={"arm": "calibration_arm"})
+
+
+def reconcile_reliability(rel: pd.DataFrame, runs: pd.DataFrame, *, rows: int,
+                          positives: int) -> dict[str, bool]:
+    """Bins cover every evaluated row once per binning, and n-weighted |gap| reproduces
+    the run-level ECE recorded in the runs CSV."""
+    checks: dict[str, bool] = {}
+    ece_col = {"equal_frequency_15": "ece_ef15", "equal_width_10": "ece_ew10"}
+    ref = runs.set_index(["seed", "model", "arm"])
+    for (seed, model, arm, binning), g in rel.groupby(["seed", "model", "calibration_arm", "binning"]):
+        tag = f"reliability_{model}_{arm}_{binning}_seed{seed}"
+        checks[f"{tag}_rows"] = int(g.n.sum()) == rows and int(g.n_delayed.sum()) == positives
+        ece = float((g.n * g.abs_gap.fillna(0.0)).sum() / g.n.sum())
+        checks[f"{tag}_ece_vs_runs"] = abs(ece - float(ref.loc[(seed, model, arm), ece_col[binning]])) < 1e-9
+    checks["reliability_covers_all_runs"] = (
+        len(rel.groupby(["seed", "model", "calibration_arm"])) == len(runs))
+    return checks
+
+
 def write_csv(frame: pd.DataFrame, path: Path) -> dict:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
@@ -571,6 +745,28 @@ def main() -> None:
     ], ignore_index=True)
     written["model_metrics_long"] = write_csv(mets, out / "model_metrics_long.csv")
 
+    # All classifier runs (comparison, tuning, grid extension, calibration arms) in one long table
+    comparison_checks: dict[str, bool] = {}
+    comp_parts = []
+    for experiment, (runs_rel, summary_rel) in CLASSIFIER_SOURCES.items():
+        runs = pd.read_csv(ROOT / runs_rel)
+        summary = json.loads((ROOT / summary_rel).read_text(encoding="utf-8"))
+        require(summary.get("smoke_only_not_evidence") is False, f"{experiment}: smoke summary")
+        part = comparison_long(runs, experiment=experiment, population="weather_eval")
+        comp_parts.append(part)
+        comparison_checks.update(reconcile_comparison(
+            part, summary_means(summary, experiment), experiment=experiment, seeds=SEEDS,
+            rows=EXPECTED["weather_rows"], positives=EXPECTED["weather_delayed"]))
+    comp_all = pd.concat(comp_parts, ignore_index=True)
+    written["model_comparison_all"] = write_csv(comp_all, out / "model_comparison_all.csv")
+
+    cal_runs = pd.read_csv(ROOT / CLASSIFIER_SOURCES["classifier_calibration_20261008"][0])
+    rel_bins = reliability_long(pd.read_csv(CALIBRATION_BINS_PATH), population="weather_eval")
+    comparison_checks.update(reconcile_reliability(
+        rel_bins, cal_runs, rows=EXPECTED["weather_rows"], positives=EXPECTED["weather_delayed"]))
+    written["model_calibration_reliability"] = write_csv(
+        rel_bins, out / "model_calibration_reliability.csv")
+
     # ---------------- Dashboard 3: row-level OOF (P6_clean, 255,001 x 3) ----------------
     oof, oof_info = load_oof()
     keyed = lab.set_index(lab.ID.astype(str))
@@ -659,6 +855,7 @@ def main() -> None:
         checks[f"classifier_confusion_seed{r.seed}_{r.model}"] = (
             [int(cells[c]) for c in ("TN", "FP", "FN", "TP")] == [int(r.tn), int(r.fp), int(r.fn), int(r.tp)]
             and int(cells.sum()) == wt[0])
+    checks.update(comparison_checks)
     # OOF recomputation equals tracked groups CSV
     groups = pd.read_csv(OOF_GROUPS_PATH)
     g = groups[(groups.phase_key == OOF_PHASE)]
@@ -721,6 +918,12 @@ def main() -> None:
             "weather": weather_inputs,
             "weather_runs": {"path": rel(WEATHER_RUNS_PATH), "sha256": sha256(WEATHER_RUNS_PATH)},
             "classifier_runs": {"path": rel(CLASSIFIER_RUNS_PATH), "sha256": sha256(CLASSIFIER_RUNS_PATH)},
+            "classifier_comparison_all": {
+                experiment: {"runs": {"path": runs_rel, "sha256": sha256(ROOT / runs_rel)},
+                             "summary": {"path": summary_rel, "sha256": sha256(ROOT / summary_rel)}}
+                for experiment, (runs_rel, summary_rel) in CLASSIFIER_SOURCES.items()},
+            "calibration_reliability_bins": {"path": rel(CALIBRATION_BINS_PATH),
+                                             "sha256": sha256(CALIBRATION_BINS_PATH)},
             "oof_groups": {"path": rel(OOF_GROUPS_PATH), "sha256": sha256(OOF_GROUPS_PATH)},
             "oof_rowlevel": oof_info,
         },

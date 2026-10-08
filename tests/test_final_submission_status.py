@@ -54,8 +54,14 @@ def test_limits_distinguish_paired_result_from_causality_and_open_followups():
                      "Random Forest의 날씨 사용/미사용 비교"):
         assert executed in done and executed not in open_items, executed
     assert "수행했습니다" in done and "(#classifier-tuning)" in done
-    for candidate in ("학습률 0.03보다 작은 값", "잎 수 127보다 큰 값",
-                      "`min_samples_leaf` 50 초과", "분류기별 확률 보정"):
+    # The grid extension and per-classifier calibration were executed afterwards
+    # and are recorded as done (with links), not listed again as candidates.
+    for executed in ("LightGBM 후보를 끝값 너머로 확장", "`min_samples_leaf` 50 초과",
+                     "분류기별 확률 보정"):
+        assert executed in done and executed not in open_items, executed
+    assert "(#classifier-grid-extension)" in done and "(#classifier-calibration)" in done
+    for candidate in ("`max_depth=8`", "`min_samples_leaf` 10~25", "LightGBM 날씨 사용/미사용",
+                      "시간 순서 검증"):
         assert candidate in open_items, candidate
 
 

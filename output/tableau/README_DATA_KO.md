@@ -1,6 +1,6 @@
 # Tableau 추출 데이터 사전
 
-Tableau Public 대시보드 3종(지연 패턴 탐색 / 날씨와 지연 / 모델이 틀리는 곳)에 쓰는 집계 CSV의 설명서입니다. 대시보드 제작 절차는 [docs/TABLEAU_HANDOFF_KO.md](../../docs/TABLEAU_HANDOFF_KO.md)를 봅니다.
+Tableau Public 대시보드 3종(지연 패턴 탐색 / 날씨와 지연 / 모델이 틀리는 곳)에 쓰는 집계 CSV 15개의 설명서입니다. 대시보드 제작 절차는 [docs/TABLEAU_HANDOFF_KO.md](../../docs/TABLEAU_HANDOFF_KO.md)를 봅니다.
 
 - 생성기: [scripts/build_tableau_extracts.py](../../scripts/build_tableau_extracts.py) — **모델 학습 없음.** 로컬 원자료와 추적된 실행 근거를 읽기만 합니다.
 - 재생성: `PYTHONUTF8=1 uv run --locked --offline python -u scripts/build_tableau_extracts.py` (로컬 `data/train.csv`, 10분 가정 날씨 결합 gzip, P6_clean 행별 OOF가 필요)
@@ -34,6 +34,8 @@ Tableau Public 대시보드 3종(지연 패턴 탐색 / 날씨와 지연 / 모�
 | `d2_delay_by_year_month.csv` | 24 | 1,935 | 귀속 연-월(2018-01~2019-12) | `weather_eval` | 결합 파일의 `attributed_date` |
 | `model_confusion_long.csv` | 60 | 6,821 | 실험 × 시드 × 조건/모델 × 혼동행렬 칸(TN/FP/FN/TP) | `weather_eval` | 추적된 runs CSV 2개 |
 | `model_metrics_long.csv` | 210 | 26,151 | 실험 × 시드 × 조건/모델 × 지표 | `weather_eval` | 같음(+ 칸 수에서 계산한 클래스별 지표) |
+| `model_comparison_all.csv` | 729 | 194,114 | 실험 × 조건 × 모델 × 보정 조건 × 시드 × 지표 (분류기 실행 전체) | `weather_eval`(날씨 미사용 행은 같은 행에서 날씨 피처만 뺀 조건) | 추적된 분류기 runs CSV 5개(비교·탐색 확장·확대 2부분·보정) |
+| `model_calibration_reliability.csv` | 1,125 | 339,564 | 시드 × 모델 × 보정 조건 × 구간 방식 × 구간 | `weather_eval` | 추적된 보정 실험의 `reliability_bins.csv` |
 | `d3_oof_errors_by_group.csv` | 3,081 | 351,033 | `dimension` × `group` × 시드, TN/FP/FN/TP | `oof_p6_clean` | 로컬 행별 OOF(P6_clean, v2) |
 | `d3_oof_error_stability.csv` | 1,027 | 71,630 | `dimension` × `group`, 세 시드 중 틀린 횟수(0~3) 분포 | `oof_p6_clean`(행 단위 255,001) | 같음 |
 | `tableau_extracts_manifest.json` | – | – | 입력 해시·출력 해시·대조 결과 | – | 생성기 |
@@ -62,6 +64,17 @@ Tableau Public 대시보드 3종(지연 패턴 탐색 / 날씨와 지연 / 모�
   - 구간 경계는 결과를 보고 고른 것이 아니라 단위의 관례적 구간입니다. 구간별 지연율은 **연관(association)** 이며 날씨가 지연을 일으켰다는 근거가 아닙니다.
 - **`model_confusion_long.csv`**: `experiment = weather_on_off_lightgbm`(variant `weather_off`/`weather_on`, 3시드)과 `classifier_compare_weather_on`(variant `lightgbm`/`logistic_regression`/`random_forest`, 3시드). 칸 값은 추적된 runs CSV의 `tn/fp/fn/tp`를 그대로 옮긴 것이며, 각 폴드에서 내부 선택한 임계값 기준의 pooled OOF입니다. `actual_class_rows`는 그 칸의 실제 클래스 행 수(행 기준 비율의 분모)입니다.
 - **`model_metrics_long.csv`**: `source = tracked runs CSV`는 원본 값(`macro_f1_nested`, `log_loss`, `roc_auc`, `f1_at_050`, `deployment_threshold`), `derived from tracked tn/fp/fn/tp`는 칸 수에서 계산한 클래스별 지표입니다. `f1_at_050`은 임계값 0.5의 **Macro F1**입니다(Delayed F1 아님). 3시드 평균은 Tableau에서 `AVG`로 계산하며, 시드는 같은 행의 재분할이라 SD는 신뢰구간이 아닙니다.
+- **`model_comparison_all.csv`**: 같은 180,332행·외부 폴드·시드에서 실행한 분류기 결과를 한 표로 모았습니다(새 학습 없음, 추적된 runs CSV 값을 그대로 옮김). 행은 (`experiment`, `condition`, `model`, `calibration_arm`, `seed`, `metric`) 하나입니다.
+  - `experiment`: `classifier_compare_20261008`(작은 후보 비교), `classifier_tuning_20261008`(LightGBM 24개·Random Forest 9개 설정), `classifier_grid_ext_20261008_lgbm`·`_rf`(LightGBM 18개·Random Forest 15개 설정 확대), `classifier_calibration_20261008`(보정 조건 5개).
+  - `model`은 실행 기록의 원래 키(`lightgbm`, `lightgbm_tuned`, `lightgbm_ext`, `random_forest*`, `logistic_regression`), `model_family`는 알고리즘 묶음, `model_label`은 표시명입니다. `search_budget`·`n_configurations`는 각 실행의 사전 선언 탐색 예산이며 실험마다 다릅니다(비교 표에서 예산을 함께 표시).
+  - `condition`: `weather_on`/`weather_off`(날씨 미사용은 탐색 확장·확대의 Random Forest만). `calibration_arm`: `none`, `platt_crossfit`, `isotonic_crossfit`, `platt_inner_holdout`, `isotonic_inner_holdout`(보정 실험만, 나머지는 `none`). `inner_holdout` 조건은 설정·임계값을 고른 행을 보정에 다시 쓴 비교용 조건입니다.
+  - `metric`: 모든 실험에 `macro_f1_nested`, `log_loss`, `roc_auc`, `precision_delayed`, `recall_delayed`, `f1_delayed`, `f1_not_delayed`. 보정 실험에는 `brier`, `ece_ef15`(동일 빈도 15구간, 주 지표), `ece_ew10`(동일 폭 10구간), `calibration_bias`(평균 예측 확률 − 실제 지연율), `mean_probability`도 있습니다. 3시드 평균은 Tableau에서 `AVG(value)`로 계산합니다(시드별 값이라 평균이 정의대로 맞음).
+  - **같은 실행이 두 번 나오는 경우가 있습니다.** 확대 실험의 날씨 사용 Random Forest는 9개 설정 결과와 같은 설정을 골라 값이 같고, 보정 실험의 `none`은 기록된 설정을 다시 적합한 값입니다(LightGBM·Random Forest는 기존 실행과 같고, Logistic Regression은 Macro F1이 시드별 최대 0.00022 다름). 한 화면에서는 `experiment`를 하나 고르거나 예산별로 나눠 보이고, 서로 다른 실험의 행을 합산하지 않습니다.
+- **`model_calibration_reliability.csv`**: 보정 실험의 신뢰도 구간(reliability bin)을 옮긴 표입니다. 구간은 외부 검증 예측을 기준으로 시드·모델·보정 조건마다 따로 정했습니다.
+  - `binning`: `equal_frequency_15`(주 지표, 구간마다 행 수가 거의 같음), `equal_width_10`(보조, 빈 구간은 `n = 0`이고 확률·비율 열이 빈칸).
+  - `mean_probability`(구간 평균 예측 확률), `observed_rate`(구간 실제 지연율), `abs_gap = |mean_probability − observed_rate|`, `gap_signed = mean_probability − observed_rate`(양수 = 과대 예측).
+  - 시드를 합칠 때 쓰는 개수 열: `n_delayed = observed_rate × n`(정수로 확인), `sum_probability = mean_probability × n`. 합친 구간의 실제 지연율은 `SUM(n_delayed)/SUM(n)`, 평균 예측 확률은 `SUM(sum_probability)/SUM(n)`입니다. 다만 동일 빈도 구간의 경계는 시드마다 달라 같은 `bin` 번호를 합치면 근사입니다. 정확한 곡선은 시드 하나씩 봅니다.
+  - ECE(구간 가중 평균 `SUM(n × abs_gap)/SUM(n)`)는 runs CSV의 `ece_ef15`/`ece_ew10`과 일치함을 생성기가 확인합니다.
 - **`d3_oof_errors_by_group.csv`**: `dimension` ∈ `airline`, `dep_hour`(원본 예정 출발 시), `month`, `origin_airport`, `route`, `raw_time_pattern`. `route`는 라벨 100행 이상 582개 노선(93,975행)만 개별로 두고 나머지는 `(기타: 라벨 100행 미만 노선)`으로 묶어 시드별 합계가 255,001이 되게 했습니다. `group_sort`는 월·시 정렬용입니다. 지표: `recall_delayed = tp/(tp+fn)`, `precision_delayed = tp/(tp+fp)`, `false_positive_rate = fp/(fp+tn)`, `error_rate = (fp+fn)/n_rows`. 세 시드를 합칠 때는 칸 수를 먼저 `SUM`한 뒤 비율을 계산합니다.
 - **`d3_oof_error_stability.csv`**: 행마다 세 시드 중 틀린 횟수(0~3)를 세어 그룹별로 분포를 냅니다. 분모는 행 255,001(시드 곱하지 않음).
 
@@ -75,9 +88,9 @@ Tableau Public 대시보드 3종(지연 패턴 탐색 / 날씨와 지연 / 모�
 - `d3_*`는 **P6_clean(날씨 미사용) LightGBM의 라벨 255,001행 OOF**입니다. 날씨 사용 모델·분류기 비교의 행별 예측은 로컬에도 없으므로(체크포인트에는 집계값만 있음) 날씨 모델의 그룹별 오류는 만들지 않았습니다.
 - 3,031행 집단은 날짜 귀속 키가 불완전해 `weather_eval`에 들어 있지 않습니다(교집합 0행). 날씨 개선을 이 집단의 개선 근거로 쓰지 않습니다.
 
-## 4. 대조 결과 (2026-10-08 실행)
+## 4. 대조 결과 (2026-10-08 실행, 분류기 표 2개 추가 후 재실행)
 
-생성기가 실행 중 확인하고 manifest의 `reconciliation.checks`에 기록합니다. 하나라도 어긋나면 생성기가 실패합니다. 이번 실행은 **전 항목 통과**(`all_checks_passed: true`)입니다.
+생성기가 실행 중 확인하고 manifest의 `reconciliation.checks`에 기록합니다. 하나라도 어긋나면 생성기가 실패합니다. 이번 실행은 **전 항목 통과**(`all_checks_passed: true`, 334개)입니다. 분류기 표 2개를 추가하며 다시 실행했을 때 기존 CSV 13개는 바이트 단위로 같았습니다(manifest에는 입력·출력 항목만 추가).
 
 | 대조 항목 | 기대값 | 결과 |
 |---|---|---|
@@ -86,6 +99,8 @@ Tableau Public 대시보드 3종(지연 패턴 탐색 / 날씨와 지연 / 모�
 | D2 연-월 표 합 | 180,332 / 31,805 | 일치 |
 | 날씨 사용/미사용 혼동행렬(3시드 × 2조건) | runs CSV의 `tn/fp/fn/tp` | 6개 모두 칸별 일치, 칸 합 180,332, FN+TP 31,805 |
 | 분류기 비교 혼동행렬(3시드 × 3모델) | runs CSV의 `tn/fp/fn/tp` | 9개 모두 일치, 칸 합 180,332 |
+| `model_comparison_all`: 실험 5개의 (조건 × 모델 × 보정 조건) 24개 묶음 | 시드 42/1/7, 분모 180,332 / 31,805, Macro F1·LogLoss·ROC-AUC 3시드 평균이 각 summary JSON과 같음(1e-12 이내), 클래스별 precision·recall·F1이 `tn/fp/fn/tp`와 같음 | 모두 일치, summary JSON의 모델 목록과 빠짐없이 대응 |
+| `model_calibration_reliability`: 시드 × 모델 × 보정 조건 × 구간 방식 90개 묶음 | 구간 `n` 합 180,332, `n_delayed` 합 31,805, 구간 가중 ECE = runs CSV의 `ece_ef15`/`ece_ew10`(1e-9 이내) | 90개 모두 일치 |
 | D3 OOF 시드별 전체 TN/FP/FN/TP | 추적된 `baseline_recovery_v2_oof_20260916_v2_groups.csv`의 P6_clean `overall` | 3시드 모두 일치 |
 | D3 `raw_time_pattern` 4개 그룹 × 3시드 | 같은 groups CSV | 12개 모두 일치 |
 | D3 각 dimension × 시드 합 / 안정성 표 합 | 255,001 / 45,000 | 모두 일치 |
@@ -103,4 +118,4 @@ Tableau Public 대시보드 3종(지연 패턴 탐색 / 날씨와 지연 / 모�
 
 ## 6. Git 추적 메모
 
-현재 `.gitignore`의 `*.csv` 규칙 예외는 `!output/*.csv`(바로 아래 파일만)이라 **`output/tableau/*.csv`는 기본적으로 무시됩니다.** 커밋하려면 `.gitignore`에 `!output/tableau/*.csv`를 추가하거나 `git add -f output/tableau/*.csv`를 사용합니다(이 작업에서는 `.gitignore`를 수정하지 않았습니다).
+`.gitignore`에 `!output/tableau/*.csv` 예외가 있어 이 폴더의 집계 CSV는 추적됩니다. 행 단위 파일(`data/tableau/`)은 `data/` 규칙으로 계속 무시됩니다.
