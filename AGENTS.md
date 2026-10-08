@@ -1,19 +1,202 @@
-# 에이전트 공통 작업 지침
+<a id="home"></a>
+# Airplane 위키 · 에이전트 공통 작업 지침
 
-이 파일은 Codex·Claude Code 등 이 저장소에서 작업하는 에이전트의 공통 규칙이다.
+항공편 지연 예측(LightGBM)과 날씨 정보 확장 프로젝트의 **길찾기 허브이자 에이전트 공통 규칙 파일**이다.
+Codex·Claude Code 등 이 저장소에서 작업하는 에이전트는 이 파일에서 시작한다.
 CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 관리하지 않는다.
+이 파일은 "무엇이 어디에 있는지"와 "어떻게 작업하는지"만 기록하며, 실험 수치·완료 테스트 수·현재 브랜치·임시 세션 ID는 복제하지 않는다. 수치와 결론은 [README](README.md)와 실행 근거에서 확인한다.
+강의 발표는 끝났고 README는 포트폴리오 형태의 설명 문서로 운영된다.
 
-## 1. 시작할 때 읽을 것
+## 목차
+
+| 절 | 내용 |
+|---|---|
+| [빠른 길찾기](#quick-nav) | "하고 싶은 일 → 읽거나 실행할 곳" |
+| [문서 지도](#doc-map) | 현행 참조 문서와 과거 기록 문서 |
+| [코드 지도](#code-map) | `src/`, `scripts/`, `notebooks/`, 루트 스크립트, `tests/` |
+| [실행 근거 지도](#evidence-map) | `output/` 근거 파일을 실험별로 분류 |
+| [작업 현황·백로그](#backlog) | 열려 있는 후속 작업(제안·미실행) |
+| [작업 규칙](#rules) | 시작 절차, 역할, Git, 문서 관리, 데이터·평가 경계, 실행·보존, 보고 |
+
+<a id="quick-nav"></a>
+## 빠른 길찾기
+
+| 하고 싶은 일 | 읽거나 실행할 곳 |
+|---|---|
+| 현재 결론·파이프라인·한계 확인 | [README.md](README.md) |
+| README를 쉬운 말로 깊게 읽기 | [docs/README_EXPLAINED_KO.md](docs/README_EXPLAINED_KO.md) |
+| 튜터 피드백 11개와 후속 작업 확인 | [docs/TUTOR_FEEDBACK_HANDOFF_KO.md](docs/TUTOR_FEEDBACK_HANDOFF_KO.md) |
+| 평가 경로(nested grid, inner 경계 TE) | [src/cv.py](src/cv.py) |
+| 전처리·피처 엔지니어링 | [src/features.py](src/features.py) |
+| 날씨 피처 계약(예측 시점·가정 지연) | [src/weather_model.py](src/weather_model.py), [src/weather.py](src/weather.py) |
+| 날씨 전체 결합 코드 | [src/weather_full.py](src/weather_full.py) |
+| 확률 보정(Platt/Isotonic) | [src/calibration.py](src/calibration.py) |
+| 행별 OOF 계약·진단 | [src/oof.py](src/oof.py) |
+| 실행 체크포인트·지문 검사 | [src/run_store.py](src/run_store.py) |
+| Phase 1~6 통일 프로토콜 러너 | [rerun_all_phases.py](rerun_all_phases.py) |
+| 전처리 10조건 × 3시드 실험 | [notebooks/run_preprocessing_experiments.py](notebooks/run_preprocessing_experiments.py) |
+| 날씨 사용/미사용 쌍비교 | [notebooks/run_weather_model_comparison.py](notebooks/run_weather_model_comparison.py) |
+| README 그림 재생성·출처 검증 | [scripts/build_readme_assets.py](scripts/build_readme_assets.py) (`--check`로 읽기 전용 검사), [scripts/build_readme_story.py](scripts/build_readme_story.py) |
+| 테스트(Git만으로 가능한 기본 검사) | `uv run --locked --offline python -m pytest -q` (기본으로 `local_data` marker 제외) |
+| 테스트(로컬 원자료 필요 검사) | `uv run --locked --offline python -m pytest -q -m local_data` |
+| CI가 무엇을 도는지 | [.github/workflows/ci.yml](.github/workflows/ci.yml) |
+| 과거 감사·계획 확인 | [AUDIT.md](AUDIT.md), [PLAN.md](PLAN.md) (과거 기록, 아래 문서 지도 참고) |
+| 전처리 결정 이유 | [output/preprocessing_decisions.md](output/preprocessing_decisions.md) |
+| 데이터 사용 계약 | [output/pipeline_data_contract.md](output/pipeline_data_contract.md) |
+| 새 실험을 시작 | [작업 규칙](#rules)의 데이터·평가 경계와 실행·결과 보존을 먼저 읽는다 |
+
+<a id="doc-map"></a>
+## 문서 지도
+
+상태 표기: **현행** = 현재 설명·작업의 기준 또는 참조, **보존** = 근거로 유지하되 현재 사양이 아님, **과거 기록** = 당시 시점의 진단·계획(수치·미해결 상태를 현재 사양으로 되살리지 않음).
+
+### 현행 참조 문서
+
+| 문서 | 역할 | 상태 |
+|---|---|---|
+| [README.md](README.md) | 현재 결론·유효한 결과·남은 한계·재현 안내의 기준 문서(포트폴리오 README) | 현행 |
+| [docs/README_EXPLAINED_KO.md](docs/README_EXPLAINED_KO.md) | README의 한국어 심화 해설(분모 구분, 날씨 피처, 가용 시점 등) | 현행 |
+| [docs/TUTOR_FEEDBACK_HANDOFF_KO.md](docs/TUTOR_FEEDBACK_HANDOFF_KO.md) | 튜터 피드백 11개의 보존본, 기준 커밋 시점의 상태 대조, 후속 작업 제안 | 현행(후속 작업 지도, 실행 승인서 아님) |
+| [output/pipeline_data_contract.md](output/pipeline_data_contract.md) | 현재 파이프라인의 데이터 사용 계약 | 현행 참조 |
+| [output/preprocessing_decisions.md](output/preprocessing_decisions.md) | 전처리 결정표 | 현행 참조 |
+| [output/preprocessing_clean_implementation.md](output/preprocessing_clean_implementation.md) | 전처리 개선 구현 및 전수 검증 | 현행 참조 |
+| [output/preprocessing_full_evaluation.md](output/preprocessing_full_evaluation.md) | 전처리 변경의 전체 데이터 성능 검증 | 현행 참조 |
+| [output/preprocessing_current_report.md](output/preprocessing_current_report.md) | 전처리 중심 모델링 보고서 | 현행 참조 |
+| [output/nested_grid_implementation.md](output/nested_grid_implementation.md) | nested `n_estimators` 선택 구현 | 현행 참조 |
+| [output/pipeline_hardening_implementation.md](output/pipeline_hardening_implementation.md) | 파이프라인 감사 후 구현 결과 | 현행 참조 |
+| [output/label_coverage_review.md](output/label_coverage_review.md) | 라벨 유무 분포 진단(전체 실제 데이터) | 현행 참조 |
+| [output/weather_recovery_review.md](output/weather_recovery_review.md) | 날씨 활용 재검토 및 재개 준비 | 보존(날씨 조사 시점) |
+
+### 과거 기록·보존 문서 (별도 수정 요청 없이 보존)
+
+| 문서 | 역할 | 상태 |
+|---|---|---|
+| [PLAN.md](PLAN.md) | 프로젝트 마스터 플랜·로드맵 | 과거 기록 |
+| [AUDIT.md](AUDIT.md) | 파이프라인 감사 보고서 | 과거 기록 |
+| [output/audit_addendum_te_leak.md](output/audit_addendum_te_leak.md) | AUDIT 부록: ES-inner-holdout 경계의 TE 누수 | 과거 기록 |
+| [output/es_diagnosis.md](output/es_diagnosis.md) | Early Stopping `best_iteration` 붕괴 원인 진단 | 과거 기록 |
+| [output/es_protocol_final.md](output/es_protocol_final.md) | Early Stopping 선택 분산 문제의 최종 프로토콜 | 과거 기록 |
+| [output/pipeline_architecture_review.md](output/pipeline_architecture_review.md) | 파이프라인 구조 감사(P5 라벨 흐름·임계값·재개 로직) | 과거 기록 |
+| [output/baseline_recovery.md](output/baseline_recovery.md), [output/baseline_recovery.csv](output/baseline_recovery.csv) | Phase 1~6 통일 프로토콜 재측정(기준선 복구) | 과거 기록(보존 필수) |
+
+그 밖에 `output/*.html`(시각화 보고서)과 추적되는 한글 파일명의 `.docx`(보고서 템플릿)가 있다. 템플릿은 작성 시점의 초안 서식이므로 독립적인 최신 사양으로 취급하지 않는다.
+
+<a id="code-map"></a>
+## 코드 지도
+
+### `src/` — 재사용 모듈
+
+| 파일 | 역할 |
+|---|---|
+| [src/cv.py](src/cv.py) | 교차검증 프로토콜(`CVConfig`), nested grid, 지표·임계값 선택. 평가 프로토콜을 스크립트가 아닌 모듈이 소유 |
+| [src/features.py](src/features.py) | 공통 전처리·피처 엔지니어링. target-free(fold 밖)와 target-dependent(fold 안) 단계 분리 |
+| [src/calibration.py](src/calibration.py) | outer-train 내부 inner holdout에서만 적합하는 확률 보정기 |
+| [src/oof.py](src/oof.py) | 행별 OOF 계약과 기술 진단. 모델 적합 없음 |
+| [src/run_store.py](src/run_store.py) | 스키마·실험 지문 검사가 있는 원자적 Phase 체크포인트(단일 작성자) |
+| [src/weather.py](src/weather.py) | 날씨 정렬 원시 연산. 연도·도착일을 추측하지 않고 `available_at`을 명시적으로 받음 |
+| [src/weather_full.py](src/weather_full.py) | 캐시 전용·메모리 제한 전체 날씨 결합. 타깃·모델 코드 없음 |
+| [src/weather_model.py](src/weather_model.py) | 사전 선언된 날씨 모델 계약(10분 공개 지연 가정이 대표 시나리오). 모델 적합 없음 |
+
+### `scripts/` — README 그림 생성
+
+| 파일 | 역할 |
+|---|---|
+| [scripts/build_readme_assets.py](scripts/build_readme_assets.py) | 추적된 집계 근거만으로 README 그림 생성, 출처·해시 영수증 기록, `--check` 검증 |
+| [scripts/build_readme_story.py](scripts/build_readme_story.py) | 검증된 집계 근거 기반의 표지·흐름·경계 그림 |
+| [scripts/readme_editorial.py](scripts/readme_editorial.py) | 위 두 생성기가 공유하는 표준 라이브러리 전용 SVG 구성 요소 |
+
+### `notebooks/` — 실행·분석 스크립트(대부분 `.py`)
+
+| 분류 | 파일 |
+|---|---|
+| 전처리 실험 | [run_preprocessing_experiments.py](notebooks/run_preprocessing_experiments.py)(10조건 × 3시드, 재개 가능), [report_preprocessing_experiments.py](notebooks/report_preprocessing_experiments.py), [check_preprocessing_clean.py](notebooks/check_preprocessing_clean.py)(실제 데이터 전/후 검사), [build_preprocessing_evaluation.py](notebooks/build_preprocessing_evaluation.py), [build_preprocessing_walkthrough.py](notebooks/build_preprocessing_walkthrough.py), [preprocessing_full_evaluation.ipynb](notebooks/preprocessing_full_evaluation.ipynb), [preprocessing_walkthrough.ipynb](notebooks/preprocessing_walkthrough.ipynb), [export_current_pipeline_evidence.py](notebooks/export_current_pipeline_evidence.py) |
+| OOF·오류 진단 | [run_oof_diagnostics.py](notebooks/run_oof_diagnostics.py), [analyze_oof_error_profile.py](notebooks/analyze_oof_error_profile.py), [plot_oof_error_profile.py](notebooks/plot_oof_error_profile.py) |
+| 확률 보정 실험 | [run_calibration_experiment.py](notebooks/run_calibration_experiment.py), [report_calibration_experiment.py](notebooks/report_calibration_experiment.py), [plot_calibration_experiment.py](notebooks/plot_calibration_experiment.py), [compare_calibration_runs.py](notebooks/compare_calibration_runs.py) |
+| 날짜 복원·달력 진단 | [analyze_calendar_signature.py](notebooks/analyze_calendar_signature.py), [analyze_calendar_mixture.py](notebooks/analyze_calendar_mixture.py), [analyze_record_integrity.py](notebooks/analyze_record_integrity.py), [assign_row_dates.py](notebooks/assign_row_dates.py)(행별 날짜 귀속 규칙) |
+| BTS 원본 대조 | [verify_bts_november.py](notebooks/verify_bts_november.py), [diagnose_bts_november_mismatch.py](notebooks/diagnose_bts_november_mismatch.py), [assess_bts_november_recovery.py](notebooks/assess_bts_november_recovery.py), [verify_bts_marketing.py](notebooks/verify_bts_marketing.py), [summarize_bts_marketing_months.py](notebooks/summarize_bts_marketing_months.py) |
+| 라벨 커버리지 | [build_label_coverage_review.py](notebooks/build_label_coverage_review.py), [label_coverage_review.ipynb](notebooks/label_coverage_review.ipynb) |
+| 날씨 조사·표본 | [weather_feasibility.py](notebooks/weather_feasibility.py), [build_weather_review.py](notebooks/build_weather_review.py), [weather_recovery_review.ipynb](notebooks/weather_recovery_review.ipynb), [map_weather_stations.py](notebooks/map_weather_stations.py), [verify_priority_station_identity.py](notebooks/verify_priority_station_identity.py), [scope_weather_collection.py](notebooks/scope_weather_collection.py), [scope_weather_collection_refined.py](notebooks/scope_weather_collection_refined.py), [select_weather_sample.py](notebooks/select_weather_sample.py), [select_weather_sample_expanded.py](notebooks/select_weather_sample_expanded.py), [fetch_weather_sample.py](notebooks/fetch_weather_sample.py), [fetch_weather_sample_expanded.py](notebooks/fetch_weather_sample_expanded.py), [join_weather_sample.py](notebooks/join_weather_sample.py), [join_weather_sample_expanded.py](notebooks/join_weather_sample_expanded.py), [diagnose_weather_expanded_cache.py](notebooks/diagnose_weather_expanded_cache.py), [reconcile_weather_cache_recombination.py](notebooks/reconcile_weather_cache_recombination.py) |
+| 날씨 전체 수집·결합·비교 | [fetch_weather_full_sharded.py](notebooks/fetch_weather_full_sharded.py), [run_weather_full_collection.py](notebooks/run_weather_full_collection.py)(실패 시 중단하는 순차 오케스트레이션), [join_weather_full.py](notebooks/join_weather_full.py), [run_weather_model_comparison.py](notebooks/run_weather_model_comparison.py) |
+
+### 루트 스크립트
+
+| 파일 | 역할 | 상태 |
+|---|---|---|
+| [rerun_all_phases.py](rerun_all_phases.py) | Phase 1~6을 단일 `CVConfig`로 통일 재측정하는 현행 러너 | 현행 |
+| [run_baseline.py](run_baseline.py), [run_tuned.py](run_tuned.py), [run_target_encoded.py](run_target_encoded.py), [run_hybrid.py](run_hybrid.py), [run_pseudo_labeling.py](run_pseudo_labeling.py), [run_advanced_features.py](run_advanced_features.py) | Phase 1~6 단계별 초기 실행 스크립트(통일 프로토콜 이전) | 과거 기록 |
+| [run_grand_slam_v0_leaky.py](run_grand_slam_v0_leaky.py) | 누수가 있던 v0 시제품(파일명 그대로 누수 포함) | 과거 기록, 성능 근거로 인용 금지 |
+| [run_phase7_weather_model.py](run_phase7_weather_model.py) | Phase 7 외부 날씨 피처 LightGBM 초기 실험 | 과거 기록 |
+| [merge_weather_pipeline.py](merge_weather_pipeline.py), [find_flight_year.py](find_flight_year.py) | 초기 날씨 병합·연도 추정 스크립트 | 과거 기록 |
+| [main.py](main.py) | `uv init`이 만든 자리표시 파일 | 사용 안 함 |
+
+### `tests/`
+
+`pyproject.toml`의 기본 pytest 설정은 `local_data` marker를 제외한다. CI([.github/workflows/ci.yml](.github/workflows/ci.yml))도 같은 Git-only 검사만 실행한다. 대응 범위별로 분류한다.
+
+| 범위 | 파일 |
+|---|---|
+| 핵심 파이프라인 | [test_features.py](tests/test_features.py), [test_oof.py](tests/test_oof.py), [test_calibration.py](tests/test_calibration.py), [test_pipeline_regressions.py](tests/test_pipeline_regressions.py), [test_preprocessing_clean.py](tests/test_preprocessing_clean.py) |
+| README·문서 계약 | [test_readme_contract.py](tests/test_readme_contract.py), [test_readme_presentation.py](tests/test_readme_presentation.py), [test_final_submission_status.py](tests/test_final_submission_status.py) |
+| 날짜·BTS 대조 | [test_assign_row_dates.py](tests/test_assign_row_dates.py), [test_bts_november.py](tests/test_bts_november.py), [test_bts_november_diagnosis.py](tests/test_bts_november_diagnosis.py), [test_bts_marketing.py](tests/test_bts_marketing.py), [test_bts_marketing_months.py](tests/test_bts_marketing_months.py) |
+| 날씨 | [test_weather.py](tests/test_weather.py), [test_weather_model.py](tests/test_weather_model.py), [test_weather_full.py](tests/test_weather_full.py), [test_weather_full_artifact_boundaries.py](tests/test_weather_full_artifact_boundaries.py), [test_weather_full_collection_runner.py](tests/test_weather_full_collection_runner.py), [test_weather_full_finalize.py](tests/test_weather_full_finalize.py), [test_weather_full_serialization.py](tests/test_weather_full_serialization.py), [test_weather_full_sharded.py](tests/test_weather_full_sharded.py), [test_join_weather_full_driver.py](tests/test_join_weather_full_driver.py), [test_weather_sample.py](tests/test_weather_sample.py), [test_weather_expanded_diagnostics.py](tests/test_weather_expanded_diagnostics.py), [test_weather_expanded_pipeline.py](tests/test_weather_expanded_pipeline.py), [test_weather_reconciliation.py](tests/test_weather_reconciliation.py), [test_weather_scope_and_mapping.py](tests/test_weather_scope_and_mapping.py), [test_verify_priority_station_identity.py](tests/test_verify_priority_station_identity.py) |
+
+<a id="evidence-map"></a>
+## 실행 근거 지도
+
+`output/`은 실행 근거 보관소다. 파일명은 `baseline_recovery_v2_<실험>_<날짜>_<산출물>` 형식이 많다. 각 실행의 `*_manifest.json`이 입력 지문·설정을 기록한다. 파일명의 날짜·final/current만으로 최신성을 판단하지 않고 README의 근거 링크와 manifest로 확인한다. 아래는 접두사(glob)로 묶은 지도이며, 개별 파일은 `git ls-files output`으로 열거한다.
+
+| 실험 | 대표 근거 | 상태 |
+|---|---|---|
+| 날씨 사용/미사용 쌍비교 | `output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_{runs.csv, paired_deltas.csv, summary.json, manifest.json}` — 예: [runs.csv](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_runs.csv) | 현행 |
+| 날씨 전체 행 결합 | [join manifest](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_manifest.json), [join summary](output/baseline_recovery_v2_weather_full_join_20260922_full_weather_join_summary.json) | 현행 |
+| 날씨 전체 수집(bulk) | [plan manifest](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_plan_manifest.json), [fetch manifest](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_manifest.json), [fetch audit](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_audit.json) | 현행 |
+| 날씨 사전 표본·확장 표본·범위·매핑 | `output/baseline_recovery_v2_weather_{sample, expanded, expanded_stratafix, expanded_diagnostic*, scope, scope_fix, scope_refined, recombination*}_*`, 관측소 확인 `output/baseline_recovery_v2_station_identity_*` | 보존(전체 수집 이전의 검증 단계) |
+| 날씨 조사 초기 | [output/weather_recovery_review.md](output/weather_recovery_review.md), `output/weather_review/`, [output/phase7_weather_feature_importance.png](output/phase7_weather_feature_importance.png) | 과거 기록 |
+| 전처리 전체 비교(10조건 × 3시드) | [summary](output/preprocessing_full_summary.csv), [paired deltas](output/preprocessing_full_paired_deltas.csv), [runs](output/preprocessing_full_runs.csv), [selection checks](output/preprocessing_full_selection_checks.csv), [clean 비교](output/preprocessing_clean_comparison.csv), [전/후 검사](output/preprocessing_clean_checks.json), 시드별 `output/baseline_recovery_v2_preprocessing_full_seed{1,7,42}.{csv,md,log}` | 현행 |
+| 전처리 결정·예시·시각화 | [output/current_imputation_examples.csv](output/current_imputation_examples.csv), [output/current_pipeline_evidence.json](output/current_pipeline_evidence.json), `output/preprocessing_review/`, [walkthrough html](output/preprocessing_walkthrough.html), [report html](output/preprocessing_current_report.html), [evaluation html](output/preprocessing_full_evaluation.html) | 현행 참조 |
+| OOF 3시드 재측정과 오류 진단 | `output/baseline_recovery_v2_oof_20260916*` (그룹은 [groups](output/baseline_recovery_v2_oof_20260916_v2_groups.csv)), [오분류 분석 보고서](output/baseline_recovery_v2_error_profile_20260917_report.md) 및 같은 접두사 파일 | 현행 근거 |
+| 확률 보정 실험 | [보고서](output/baseline_recovery_v2_calibration_20260917_report.md), [summary](output/baseline_recovery_v2_calibration_20260917_summary.csv), [paired delta](output/baseline_recovery_v2_calibration_20260917_paired_delta_summary.csv) 및 `*_calibration_equivalence_*`·`*_calibration_local_*`·`*_local_verify_*` | 현행 근거(smoke 파일은 성능 근거 아님) |
+| 날짜 복원·달력 진단 | `output/baseline_recovery_v2_calendar_signature_*`, `*_calendar_mixture_*`, `*_record_integrity_*`, `*_row_date_attribution_20260918_*` | 보존 근거 |
+| BTS 원본 대조 | `output/baseline_recovery_v2_bts_november_*`, `*_bts_marketing_m01..m12_*`, `*_bts_marketing_summary_*` | 보존 근거 |
+| 기준선 재측정 | [output/baseline_recovery.md](output/baseline_recovery.md), [output/baseline_recovery_v2_verified_8000.md](output/baseline_recovery_v2_verified_8000.md), `*_cloud_parity_*` | 과거 기록(smoke는 성능 근거 아님) |
+| Early Stopping·임계값·트리 수 진단 그림 | `output/es_curve_*.png`, [output/n_estimators_curve.png](output/n_estimators_curve.png), [output/threshold_optimization.png](output/threshold_optimization.png), [output/protocol_fold_optimum_curves.png](output/protocol_fold_optimum_curves.png), [output/te_leak_check_fold2.png](output/te_leak_check_fold2.png), `output/_deprecated/` | 과거 기록 |
+| 라벨 커버리지 | [output/label_coverage_review.md](output/label_coverage_review.md), [output/label_coverage_review.html](output/label_coverage_review.html), `output/label_coverage/` | 현행 참조 |
+| README 그림 출처 | [assets/readme/sources.json](assets/readme/sources.json) (그림 SVG는 `assets/readme/`) | 현행 |
+
+<a id="backlog"></a>
+## 작업 현황·백로그
+
+README는 포트폴리오 README로 운영되며 강의 발표는 끝났다. 아래는 [튜터 피드백 인계 문서](docs/TUTOR_FEEDBACK_HANDOFF_KO.md)에서 가져온 열린 후속 작업이다. **모두 제안이며 미실행**이다. 상세·완료 기준·판정은 인계 문서가 기준이므로 여기에 복제하지 않는다. 실행은 그때의 사용자 요청과 범위를 확인한 뒤에만 한다. 인계 문서의 상태 대조 기준은 작성 시점 커밋이므로 착수 전에 현재 README·코드와 다시 대조한다.
+
+| 항목 | 성격 | 상태 | 상세 |
+|---|---|---|---|
+| Logistic Regression / Random Forest / LightGBM 공정 비교 | 새 실험 필요(비교 집단·분할·시드·내부 선택 예산을 먼저 정함) | 제안/미실행 | [피드백 1)](docs/TUTOR_FEEDBACK_HANDOFF_KO.md#1-서로-다른-분류기-3종-비교) |
+| 클래스별 precision/recall/F1·혼동행렬(날씨 비교) | 기존 CSV로 계산 가능, 재학습 불필요 | 제안/미실행 | 피드백 8), 3절 |
+| 날씨 조건별 선택 임계값·트리 수 요약 | 기존 CSV로 정리 가능, 재학습 불필요 | 제안/미실행 | 피드백 9), 3절 |
+| 결측 대치 전/후 표(같은 집단 기준 "원래 결측 = 복원 + 잔여") | 기존 근거 연결·로컬 원자료 확인 필요 가능 | 제안/미실행 | 피드백 2) |
+| 시각 복원 규칙·Traffic 집계 경계 설명 | 코드와 일치하는 설명 보완(전처리 동작은 바꾸지 않음) | 제안/미실행 | 피드백 3), 4) |
+| 날씨 피처 의미·단위·결측 계약 | 원천 계약 대조(미확인은 미확인으로 표시) | 제안/미실행 | 피드백 5) |
+| 고정 설정 vs 탐색 설정 표(버전·러너·manifest·`uv.lock` 연결) | 설정표 보완 | 제안/미실행 | 피드백 6) |
+| Macro F1과 F1(Delayed) 표기 정리 | 표기 점검(기존 실행 파일은 덮어쓰지 않음) | 제안/미실행 | 피드백 7) |
+| 양쪽 시각 결측 집단(3,031행)과 날씨 평가 집단의 구분 | 설명 보완 | 제안/미실행 | 피드백 10) |
+| 가정 가용성과 실제 수신 이력의 구분 | 해설에 반영됨, 유지 | 확인됨(유지) | 피드백 11) |
+
+착수 순서 권고는 인계 문서의 [4절](docs/TUTOR_FEEDBACK_HANDOFF_KO.md)을 따른다.
+
+<a id="rules"></a>
+## 작업 규칙
+
+### 1. 시작할 때 읽을 것
 
 1. 이 파일을 읽고 사용자 요청의 범위를 확인한다.
 2. README.md에서 현재 결론·파이프라인·남은 한계·문서 안내를 확인한다.
 3. git branch/status로 현재 브랜치와 기존 변경을 확인한다. 완료됐다는 이전 대화 요약만으로 코드 상태를 단정하지 않는다.
-4. 해당 작업의 코드와 README에 연결된 실행 근거만 추가로 읽는다. 과거 보고서 전체를 매번 읽지 않는다.
+4. 해당 작업의 코드와 README에 연결된 실행 근거만 추가로 읽는다. 과거 보고서 전체를 매번 읽지 않는다. 위의 [빠른 길찾기](#quick-nav)와 지도를 이용한다.
 
 README는 현재 상태의 요약이며, 구체적인 사실은 코드·원본 데이터·실행 로그로 확인한다.
 둘이 다르면 불일치를 보고하고 필요한 검증으로 해결한다. 파일명의 final/current만으로 최신성을 판단하지 않는다.
 
-## 2. 역할과 작업 범위
+### 2. 역할과 작업 범위
 
 - 현재 에이전트가 설계·검토·구현·파일 수정·터미널 실행·테스트를 직접 수행할 수 있다. Claude Code로 전달해야 한다는 제한은 해제됐다.
 - 사용자 변경을 보존하고 같은 파일을 다른 에이전트와 동시에 수정하지 않는다.
@@ -21,7 +204,7 @@ README는 현재 상태의 요약이며, 구체적인 사실은 코드·원본 �
 - 요청에 포함된 읽기·구현·단위 테스트·축소 스모크는 진행한다. 읽기 전용 감사 요청을 임의의 코드 수정으로 확대하지 않는다.
 - 사용자 목표에 필요한 설계·구현·검증·분석·전체 데이터 Phase 재학습은 에이전트가 범위를 판단해 별도 사전 승인 없이 진행한다. 실행할 조건·시드·출력 경로를 알리고, 축소 검증 후 필요한 전체 실행을 수행한다. 사용자가 명시한 읽기 전용·실행 금지·자원 제한은 우선한다.
 
-### Codex와 Sonnet 5의 기본 역할
+#### Codex와 Sonnet 5의 기본 역할
 
 - 사용자가 다른 AI의 작업 결과나 인계 내용을 Codex에 전달하면, Codex는 현재 저장소와 관련 실행 근거를 확인하고 다음 구현·분석을 Sonnet 5에게 지시할 복사 가능한 프롬프트를 기본으로 작성한다. 사용자가 매번 프롬프트 작성을 별도로 요청할 필요는 없다.
 - 이 역할 구분은 Codex의 기본 응답 방식이며, Sonnet 5 등 실행 에이전트가 받은 작업을 직접 수행하는 것을 제한하지 않는다. 사용자가 Codex에 구현·분석을 직접 요청하면 그 요청을 우선한다.
@@ -30,23 +213,23 @@ README는 현재 상태의 요약이며, 구체적인 사실은 코드·원본 �
 - 필요한 데이터가 없으면 정확한 확보 대상과 필요한 이유를 명시하고, 데이터 확보와 독립적으로 진행할 수 있는 작업도 지시한다.
 - 인계 프롬프트는 대화에 제공한다. 사용자가 파일 저장을 요청하지 않으면 별도 인계 파일이나 상태 요약 문서를 계속 만들지 않는다. 프롬프트 작성만으로 다른 에이전트나 새 작업을 자동 실행하지 않는다.
 
-### Git 정리의 상시 승인
+#### Git 정리의 상시 승인
 
 - 사용자는 검증된 변경의 커밋·푸시·fast-forward 병합을 별도 확인 없이 처리하도록 승인했다. Codex는 작업 종료 시 필요한 Git 정리를 수행하며, 인계 프롬프트에도 이 승인을 전달한다. 이후 사용자의 커밋·푸시 금지 등 명시적 제한이 있으면 그 제한을 우선한다.
 - 변경 범위와 검증 결과를 확인하고 원격 최신 상태를 가져온 뒤 `master`에 커밋·푸시한다. 임시 브랜치를 사용한 경우에만 fast-forward 가능 여부를 확인해 병합하며, 완료 후에는 `master`에 머문다. 로컬·원격 상태를 확인하고 강제 푸시·강제 초기화는 하지 않는다. 기존 브랜치는 불필요하게 동기화하거나 별도 요청 없이 삭제하지 않는다.
 - 다른 에이전트가 작업 중이거나 출처가 불명확한 변경·기존 스테이징이 있으면 임의로 포함·해제·폐기하지 않는다. 동시 작업에 영향을 줄 수 있는 커밋·브랜치 전환·병합은 보류하고 이유를 보고한다. `Claude outputs/`는 별도 요청 없이 커밋하지 않는다.
 - Git 잠금 파일은 관련 작업이 종료됐는지 확인하기 전에는 삭제하지 않는다. 분기 충돌이나 검증 실패가 있으면 상태를 보고하고 기존 작업을 보존한다.
 
-## 3. 문서 관리
+### 3. 문서 관리
 
 - README.md가 사람이 읽는 전체 설명·현재 결론·유효한 결과·남은 한계의 기준 문서다.
 - 사용자는 README 중심 통합을 승인했다. 승인된 작업으로 상태가 바뀌면 README의 관련 설명과 근거 링크를 먼저 갱신한다.
 - 보고서·노트북은 재현 가능한 실행 증거 또는 지정 제출 형식이 필요할 때만 추가한다. 매 작업마다 새로운 상태 요약 문서를 만들지 않는다.
-- 제출용 보고서는 작성 시점의 초안이다. 제출 전에 README와 맞추며 독립적인 최신 사양으로 관리하지 않는다.
+- 제출용 보고서는 작성 시점의 초안이다. 제출 전에 README와 맞추며 독립적인 최신 사양으로 관리하지 않는다. (발표는 끝났으므로 이후에는 보존된 작성 시점 기록으로 취급한다.)
 - PLAN.md, AUDIT.md, output/baseline_recovery.csv/.md 및 진단 시점 문서는 별도 수정 요청 없이 보존한다. 과거 기록의 수치·미해결 상태를 현재 사양으로 되살리지 않는다.
-- 이 파일에는 지속적인 작업 규칙만 둔다. 실험 수치·완료 테스트 수·현재 브랜치·임시 세션 ID는 복제하지 않는다.
+- 문서·코드·근거 파일을 추가하거나 옮기면 이 파일의 문서·코드·실행 근거 지도를 함께 갱신한다. 이 파일에는 지속적인 작업 규칙과 위치 안내만 둔다. 실험 수치·완료 테스트 수·현재 브랜치·임시 세션 ID는 복제하지 않는다.
 
-## 4. 데이터·평가 경계
+### 4. 데이터·평가 경계
 
 - 데이터가 필요한 작업은 실제 data/train.csv의 존재를 먼저 확인한다. 없으면 해당 작업을 중단하고 알린다. 합성 데이터를 실제 실행 결과로 대체하지 않는다.
 - 타깃 결측은 미라벨이며 음성 정답이 아니다.
@@ -56,7 +239,7 @@ README는 현재 상태의 요약이며, 구체적인 사실은 코드·원본 �
 - 스모크 결과는 성능 근거로 인용하지 않는다. 일부 Phase 재검증을 전체 Phase 검증으로 확대하지 않는다.
 - 전처리 의미 개선과 성능 향상, 시드 표준편차와 통계적 유의성은 구별한다.
 
-## 5. 실행·결과 보존
+### 5. 실행·결과 보존
 
 - 재현 명령·코드 구조는 README의 재현 절을 따른다. 장시간 Python 실행은 python -u로 로그를 남긴다.
 - 새 학습 결과는 baseline_recovery_v2 계열 신규 경로로 분리한다. 데이터·코드·설정이 바뀌면 새 출력 이름을 사용한다.
@@ -64,7 +247,7 @@ README는 현재 상태의 요약이며, 구체적인 사실은 코드·원본 �
 - 같은 출력 경로에 여러 프로세스를 동시에 쓰지 않는다.
 - 변경에 맞는 검증을 수행하고 실행 여부를 정확하게 보고한다. 문서만 고쳤을 때 과거 테스트를 이번 실행 결과로 표현하지 않는다.
 
-## 6. 보고와 새 대화 인계
+### 6. 보고와 새 대화 인계
 
 - 직접 확인한 사실, 실제 실행 결과, 추론·권고를 구별한다.
 - 수치에는 평가 대상·분할·시드·프로토콜과 근거 파일을 연결한다.
