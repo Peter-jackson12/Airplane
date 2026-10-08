@@ -1,0 +1,417 @@
+{
+  "name": "feedback_missing_audit_20261008",
+  "fits_any_model": false,
+  "target_used_for": "population split (labeled vs unlabeled) and group positives only",
+  "git_head": "d56e05b4cae7d9b3fecaa5a8a0f9d0ae8733d307",
+  "script_sha256": "512e23d3181aa2dca16b3e65a8921a7f346779c4c0cbb3816b4c38a6ee148133",
+  "inputs": {
+    "raw_train": {
+      "path": "data/train.csv",
+      "sha256": "e996797b3fffab9484c9005457370662ec2b08516eecaf3eed9d2b72061edd84"
+    },
+    "row_dates": {
+      "path": "data/bts/baseline_recovery_v2_row_date_attribution_20260918/row_dates.csv.gz",
+      "sha256": "9c679535e59666bfb2de8a4460fd0c0a8b433f29900b704d0de4ff21e712421a"
+    },
+    "oof_groups": {
+      "path": "output/baseline_recovery_v2_oof_20260916_v2_groups.csv",
+      "sha256": "563297ecc47506e74eebd2db73ab6e31932a4d8c32987098e26b675eefadac21"
+    }
+  },
+  "populations": {
+    "all_rows": 1000000,
+    "labeled": 255001,
+    "date_attributed": 706759,
+    "date_attributed_labeled": 180332,
+    "date_attributed_labeled_delayed": 31805
+  },
+  "full_bundle": {
+    "airline": {
+      "all_rows": {
+        "population_rows": 1000000,
+        "fit_bundle_rows": 1000000,
+        "legacy_first": {
+          "original_missing": 108920,
+          "restored": 97056,
+          "residual_missing": 11864,
+          "residual_breakdown": {
+            "key_missing": 11864,
+            "key_never_observed_with_value": 0
+          }
+        },
+        "clean_unique": {
+          "original_missing": 108920,
+          "restored": 30608,
+          "residual_missing": 78312,
+          "residual_breakdown": {
+            "key_missing": 11864,
+            "key_never_observed_with_value": 0,
+            "key_maps_to_multiple_values": 66448
+          }
+        },
+        "legacy_minus_clean_restored": 66448,
+        "observed_values_changed": 0
+      },
+      "labeled_rows": {
+        "population_rows": 255001,
+        "fit_bundle_rows": 1000000,
+        "legacy_first": {
+          "original_missing": 27540,
+          "restored": 24504,
+          "residual_missing": 3036,
+          "residual_breakdown": {
+            "key_missing": 3036,
+            "key_never_observed_with_value": 0
+          }
+        },
+        "clean_unique": {
+          "original_missing": 27540,
+          "restored": 7664,
+          "residual_missing": 19876,
+          "residual_breakdown": {
+            "key_missing": 3036,
+            "key_never_observed_with_value": 0,
+            "key_maps_to_multiple_values": 16840
+          }
+        },
+        "legacy_minus_clean_restored": 16840,
+        "observed_values_changed": 0
+      }
+    },
+    "time": {
+      "all_rows": {
+        "population_rows": 1000000,
+        "fit_bundle_rows": 1000000,
+        "raw_departure_null": 109019,
+        "raw_arrival_null": 109040,
+        "raw_both_null": 11688,
+        "raw_departure_only_null": 97331,
+        "raw_arrival_only_null": 97352,
+        "raw_values_outside_clock_dep": 0,
+        "raw_values_outside_clock_arr": 13,
+        "dep_hour": {
+          "original_missing": 109019,
+          "restored": 97331,
+          "residual_missing": 11688
+        },
+        "arr_hour": {
+          "original_missing": 109040,
+          "restored": 97352,
+          "residual_missing": 11688
+        },
+        "local_time_gap": {
+          "original_missing": 206371,
+          "restored": 206371,
+          "residual_missing": 0,
+          "restored_by_route_median": 206335,
+          "restored_by_global_median": 36,
+          "restored_value_zero": 0
+        },
+        "valid_gap_zero_before_restore": 370,
+        "global_median_after_route_fill": 112.0,
+        "global_median_before_route_fill": 113.0
+      },
+      "labeled_rows": {
+        "population_rows": 255001,
+        "fit_bundle_rows": 1000000,
+        "raw_departure_null": 27841,
+        "raw_arrival_null": 27684,
+        "raw_both_null": 3031,
+        "raw_departure_only_null": 24810,
+        "raw_arrival_only_null": 24653,
+        "raw_values_outside_clock_dep": 0,
+        "raw_values_outside_clock_arr": 5,
+        "dep_hour": {
+          "original_missing": 27841,
+          "restored": 24810,
+          "residual_missing": 3031
+        },
+        "arr_hour": {
+          "original_missing": 27684,
+          "restored": 24653,
+          "residual_missing": 3031
+        },
+        "local_time_gap": {
+          "original_missing": 52494,
+          "restored": 52494,
+          "residual_missing": 0,
+          "restored_by_route_median": 52483,
+          "restored_by_global_median": 11,
+          "restored_value_zero": 0
+        },
+        "valid_gap_zero_before_restore": 104,
+        "global_median_after_route_fill": 112.0,
+        "global_median_before_route_fill": 113.0
+      }
+    },
+    "traffic": {
+      "all_rows": {
+        "population_rows": 1000000,
+        "bundle_rows": 1000000,
+        "Origin_Traffic": {
+          "nan_rows": 11688,
+          "min_value": 1.0,
+          "rows_equal_1_only_self": 239490
+        },
+        "Dest_Traffic": {
+          "nan_rows": 11688,
+          "min_value": 1.0,
+          "rows_equal_1_only_self": 253917
+        }
+      },
+      "labeled_rows": {
+        "population_rows": 255001,
+        "bundle_rows": 1000000,
+        "Origin_Traffic": {
+          "nan_rows": 3031,
+          "min_value": 1.0,
+          "rows_equal_1_only_self": 61903
+        },
+        "Dest_Traffic": {
+          "nan_rows": 3031,
+          "min_value": 1.0,
+          "rows_equal_1_only_self": 64646
+        }
+      }
+    },
+    "duplicates": {
+      "exact_rows": 0,
+      "excluding_ID": 0,
+      "excluding_ID_and_Delay": 0
+    }
+  },
+  "date_attributed_bundle": {
+    "airline": {
+      "all_rows": {
+        "population_rows": 706759,
+        "fit_bundle_rows": 706759,
+        "legacy_first": {
+          "original_missing": 77034,
+          "restored": 68627,
+          "residual_missing": 8407,
+          "residual_breakdown": {
+            "key_missing": 8407,
+            "key_never_observed_with_value": 0
+          }
+        },
+        "clean_unique": {
+          "original_missing": 77034,
+          "restored": 21644,
+          "residual_missing": 55390,
+          "residual_breakdown": {
+            "key_missing": 8407,
+            "key_never_observed_with_value": 0,
+            "key_maps_to_multiple_values": 46983
+          }
+        },
+        "legacy_minus_clean_restored": 46983,
+        "observed_values_changed": 0
+      },
+      "labeled_rows": {
+        "population_rows": 180332,
+        "fit_bundle_rows": 706759,
+        "legacy_first": {
+          "original_missing": 19558,
+          "restored": 17401,
+          "residual_missing": 2157,
+          "residual_breakdown": {
+            "key_missing": 2157,
+            "key_never_observed_with_value": 0
+          }
+        },
+        "clean_unique": {
+          "original_missing": 19558,
+          "restored": 5443,
+          "residual_missing": 14115,
+          "residual_breakdown": {
+            "key_missing": 2157,
+            "key_never_observed_with_value": 0,
+            "key_maps_to_multiple_values": 11958
+          }
+        },
+        "legacy_minus_clean_restored": 11958,
+        "observed_values_changed": 0
+      }
+    },
+    "time": {
+      "all_rows": {
+        "population_rows": 706759,
+        "fit_bundle_rows": 706759,
+        "raw_departure_null": 0,
+        "raw_arrival_null": 0,
+        "raw_both_null": 0,
+        "raw_departure_only_null": 0,
+        "raw_arrival_only_null": 0,
+        "raw_values_outside_clock_dep": 0,
+        "raw_values_outside_clock_arr": 12,
+        "dep_hour": {
+          "original_missing": 0,
+          "restored": 0,
+          "residual_missing": 0
+        },
+        "arr_hour": {
+          "original_missing": 0,
+          "restored": 0,
+          "residual_missing": 0
+        },
+        "local_time_gap": {
+          "original_missing": 0,
+          "restored": 0,
+          "residual_missing": 0,
+          "restored_by_route_median": 0,
+          "restored_by_global_median": 0,
+          "restored_value_zero": 0
+        },
+        "valid_gap_zero_before_restore": 338,
+        "global_median_after_route_fill": 113.0,
+        "global_median_before_route_fill": 113.0
+      },
+      "labeled_rows": {
+        "population_rows": 180332,
+        "fit_bundle_rows": 706759,
+        "raw_departure_null": 0,
+        "raw_arrival_null": 0,
+        "raw_both_null": 0,
+        "raw_departure_only_null": 0,
+        "raw_arrival_only_null": 0,
+        "raw_values_outside_clock_dep": 0,
+        "raw_values_outside_clock_arr": 4,
+        "dep_hour": {
+          "original_missing": 0,
+          "restored": 0,
+          "residual_missing": 0
+        },
+        "arr_hour": {
+          "original_missing": 0,
+          "restored": 0,
+          "residual_missing": 0
+        },
+        "local_time_gap": {
+          "original_missing": 0,
+          "restored": 0,
+          "residual_missing": 0,
+          "restored_by_route_median": 0,
+          "restored_by_global_median": 0,
+          "restored_value_zero": 0
+        },
+        "valid_gap_zero_before_restore": 95,
+        "global_median_after_route_fill": 113.0,
+        "global_median_before_route_fill": 113.0
+      }
+    },
+    "traffic": {
+      "all_rows": {
+        "population_rows": 706759,
+        "bundle_rows": 706759,
+        "Origin_Traffic": {
+          "nan_rows": 0,
+          "min_value": 1.0,
+          "rows_equal_1_only_self": 214302,
+          "rows_in_key_with_both_years": 362752
+        },
+        "Dest_Traffic": {
+          "nan_rows": 0,
+          "min_value": 1.0,
+          "rows_equal_1_only_self": 225541,
+          "rows_in_key_with_both_years": 351410
+        }
+      },
+      "labeled_rows": {
+        "population_rows": 180332,
+        "bundle_rows": 706759,
+        "Origin_Traffic": {
+          "nan_rows": 0,
+          "min_value": 1.0,
+          "rows_equal_1_only_self": 55495,
+          "rows_in_key_with_both_years": 91893
+        },
+        "Dest_Traffic": {
+          "nan_rows": 0,
+          "min_value": 1.0,
+          "rows_equal_1_only_self": 57567,
+          "rows_in_key_with_both_years": 89703
+        }
+      }
+    }
+  },
+  "traffic_bundle_comparison_labeled_attributed": {
+    "rows": 180332,
+    "origin_equal": 93792,
+    "origin_full_greater": 86540,
+    "origin_full_less": 0,
+    "origin_median_full": 3.0,
+    "origin_median_attributed": 2.0
+  },
+  "vulnerable_group_item10": {
+    "raw_both_time_null_labeled_rows": 3031,
+    "raw_both_time_null_labeled_delayed": 519,
+    "in_date_attributed": 0,
+    "in_weather_eval_population": 0,
+    "status_counts": {
+      "missing_key_single_candidate_year": 2750,
+      "missing_key_multi_candidate_year": 280,
+      "missing_key_checked_no_candidate": 1
+    },
+    "any_raw_time_null_in_weather_population": 0,
+    "oof_groups_csv": {
+      "phase": "P6_clean",
+      "seeds": {
+        "1": {
+          "n": 3031,
+          "positives": 519,
+          "tp": 49,
+          "fn": 470,
+          "recall": 0.094412331406551,
+          "recall_recomputed": 0.09441233140655106
+        },
+        "7": {
+          "n": 3031,
+          "positives": 519,
+          "tp": 52,
+          "fn": 467,
+          "recall": 0.1001926782273603,
+          "recall_recomputed": 0.1001926782273603
+        },
+        "42": {
+          "n": 3031,
+          "positives": 519,
+          "tp": 55,
+          "fn": 464,
+          "recall": 0.1059730250481695,
+          "recall_recomputed": 0.10597302504816955
+        }
+      },
+      "recall_mean_of_seeds": 0.10019267822736029
+    }
+  },
+  "runner_cross_check_P6_clean_full_bundle": {
+    "labeled": {
+      "rows": 255001,
+      "Dep_Hour_Originally_Missing": 27841,
+      "Arr_Hour_Originally_Missing": 27684,
+      "Local_Time_Gap_Originally_Missing": 52494,
+      "Dep_Hour_after_restore_missing": 3031,
+      "Arr_Hour_after_restore_missing": 3031,
+      "Dep_Hour_Missing_flag": 3031,
+      "Sin_Dep_Hour_nan": 3031,
+      "Local_Time_Gap_Minutes_nan": 0,
+      "Airline_MISSING_category": 19876,
+      "Origin_Traffic_nan": 3031,
+      "Dest_Traffic_nan": 3031
+    },
+    "all": {
+      "rows": 1000000,
+      "Dep_Hour_Originally_Missing": 109019,
+      "Arr_Hour_Originally_Missing": 109040,
+      "Local_Time_Gap_Originally_Missing": 206371,
+      "Dep_Hour_after_restore_missing": 11688,
+      "Arr_Hour_after_restore_missing": 11688,
+      "Dep_Hour_Missing_flag": 11688,
+      "Sin_Dep_Hour_nan": 11688,
+      "Local_Time_Gap_Minutes_nan": 0,
+      "Airline_MISSING_category": 78312,
+      "Origin_Traffic_nan": 11688,
+      "Dest_Traffic_nan": 11688
+    }
+  }
+}
