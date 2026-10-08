@@ -1,0 +1,169 @@
+comparison,metric,seed,delta
+weather_on: random_forest_tuned - lightgbm_tuned,macro_f1_nested,42,0.009055224605510559
+weather_on: random_forest_tuned - lightgbm_tuned,macro_f1_nested,1,0.007471191641653663
+weather_on: random_forest_tuned - lightgbm_tuned,macro_f1_nested,7,0.007506011775224253
+weather_on: random_forest_tuned - lightgbm_tuned,log_loss,42,-0.004451895619114077
+weather_on: random_forest_tuned - lightgbm_tuned,log_loss,1,-0.003916678456850342
+weather_on: random_forest_tuned - lightgbm_tuned,log_loss,7,-0.004402373897026579
+weather_on: random_forest_tuned - lightgbm_tuned,roc_auc,42,0.01275853494849799
+weather_on: random_forest_tuned - lightgbm_tuned,roc_auc,1,0.011372267925919166
+weather_on: random_forest_tuned - lightgbm_tuned,roc_auc,7,0.013178355855274382
+weather_on: random_forest_tuned - lightgbm_tuned,f1_at_050,42,0.002194398517694318
+weather_on: random_forest_tuned - lightgbm_tuned,f1_at_050,1,0.0015481602875033196
+weather_on: random_forest_tuned - lightgbm_tuned,f1_at_050,7,-0.0020815711010908067
+weather_on: random_forest_tuned - lightgbm_tuned,precision_delayed,42,0.008596731605456376
+weather_on: random_forest_tuned - lightgbm_tuned,precision_delayed,1,0.0134286557881802
+weather_on: random_forest_tuned - lightgbm_tuned,precision_delayed,7,0.01429744596489313
+weather_on: random_forest_tuned - lightgbm_tuned,recall_delayed,42,0.03178745480270395
+weather_on: random_forest_tuned - lightgbm_tuned,recall_delayed,1,0.007891840905517977
+weather_on: random_forest_tuned - lightgbm_tuned,recall_delayed,7,0.005816695488130796
+weather_on: random_forest_tuned - lightgbm_tuned,f1_delayed,42,0.019373625110857218
+weather_on: random_forest_tuned - lightgbm_tuned,f1_delayed,1,0.010869228733447922
+weather_on: random_forest_tuned - lightgbm_tuned,f1_delayed,7,0.01034649957113376
+weather_on: random_forest_tuned - lightgbm_tuned,f1_not_delayed,42,-0.0012631758998363773
+weather_on: random_forest_tuned - lightgbm_tuned,f1_not_delayed,1,0.004073154549859348
+weather_on: random_forest_tuned - lightgbm_tuned,f1_not_delayed,7,0.004665523979314856
+weather_on: lightgbm_tuned - logistic_regression(20261008),macro_f1_nested,42,0.004460613807927838
+weather_on: lightgbm_tuned - logistic_regression(20261008),macro_f1_nested,1,0.002973884557378903
+weather_on: lightgbm_tuned - logistic_regression(20261008),macro_f1_nested,7,0.003520083301301491
+weather_on: lightgbm_tuned - logistic_regression(20261008),log_loss,42,-0.0011721052655317976
+weather_on: lightgbm_tuned - logistic_regression(20261008),log_loss,1,-0.0011411114511276077
+weather_on: lightgbm_tuned - logistic_regression(20261008),log_loss,7,-0.0011883915694174685
+weather_on: lightgbm_tuned - logistic_regression(20261008),roc_auc,42,0.00043798227292946024
+weather_on: lightgbm_tuned - logistic_regression(20261008),roc_auc,1,0.0007053916528378945
+weather_on: lightgbm_tuned - logistic_regression(20261008),roc_auc,7,0.00017773508763885282
+weather_on: lightgbm_tuned - logistic_regression(20261008),f1_at_050,42,0.0039770376125288776
+weather_on: lightgbm_tuned - logistic_regression(20261008),f1_at_050,1,0.007194617933556635
+weather_on: lightgbm_tuned - logistic_regression(20261008),f1_at_050,7,0.007990181275179475
+weather_on: lightgbm_tuned - logistic_regression(20261008),precision_delayed,42,0.018508801918315054
+weather_on: lightgbm_tuned - logistic_regression(20261008),precision_delayed,1,0.0019860706734259326
+weather_on: lightgbm_tuned - logistic_regression(20261008),precision_delayed,7,0.007447555061210753
+weather_on: lightgbm_tuned - logistic_regression(20261008),recall_delayed,42,-0.0330765602892627
+weather_on: lightgbm_tuned - logistic_regression(20261008),recall_delayed,1,0.01314258764345233
+weather_on: lightgbm_tuned - logistic_regression(20261008),recall_delayed,7,-0.00028297437509827716
+weather_on: lightgbm_tuned - logistic_regression(20261008),f1_delayed,42,-0.0043428664546766305
+weather_on: lightgbm_tuned - logistic_regression(20261008),f1_delayed,1,0.007213909441513011
+weather_on: lightgbm_tuned - logistic_regression(20261008),f1_delayed,7,0.003938591578560691
+weather_on: lightgbm_tuned - logistic_regression(20261008),f1_not_delayed,42,0.013264094070532306
+weather_on: lightgbm_tuned - logistic_regression(20261008),f1_not_delayed,1,-0.0012661403267550941
+weather_on: lightgbm_tuned - logistic_regression(20261008),f1_not_delayed,7,0.0031015750240424023
+weather_on: random_forest_tuned - logistic_regression(20261008),macro_f1_nested,42,0.013515838413438397
+weather_on: random_forest_tuned - logistic_regression(20261008),macro_f1_nested,1,0.010445076199032566
+weather_on: random_forest_tuned - logistic_regression(20261008),macro_f1_nested,7,0.011026095076525744
+weather_on: random_forest_tuned - logistic_regression(20261008),log_loss,42,-0.0056240008846458744
+weather_on: random_forest_tuned - logistic_regression(20261008),log_loss,1,-0.00505778990797795
+weather_on: random_forest_tuned - logistic_regression(20261008),log_loss,7,-0.005590765466444048
+weather_on: random_forest_tuned - logistic_regression(20261008),roc_auc,42,0.01319651722142745
+weather_on: random_forest_tuned - logistic_regression(20261008),roc_auc,1,0.01207765957875706
+weather_on: random_forest_tuned - logistic_regression(20261008),roc_auc,7,0.013356090942913235
+weather_on: random_forest_tuned - logistic_regression(20261008),f1_at_050,42,0.006171436130223196
+weather_on: random_forest_tuned - logistic_regression(20261008),f1_at_050,1,0.008742778221059955
+weather_on: random_forest_tuned - logistic_regression(20261008),f1_at_050,7,0.005908610174088669
+weather_on: random_forest_tuned - logistic_regression(20261008),precision_delayed,42,0.02710553352377143
+weather_on: random_forest_tuned - logistic_regression(20261008),precision_delayed,1,0.015414726461606132
+weather_on: random_forest_tuned - logistic_regression(20261008),precision_delayed,7,0.021745001026103883
+weather_on: random_forest_tuned - logistic_regression(20261008),recall_delayed,42,-0.0012891054865587503
+weather_on: random_forest_tuned - logistic_regression(20261008),recall_delayed,1,0.021034428548970308
+weather_on: random_forest_tuned - logistic_regression(20261008),recall_delayed,7,0.005533721113032519
+weather_on: random_forest_tuned - logistic_regression(20261008),f1_delayed,42,0.015030758656180587
+weather_on: random_forest_tuned - logistic_regression(20261008),f1_delayed,1,0.018083138174960933
+weather_on: random_forest_tuned - logistic_regression(20261008),f1_delayed,7,0.014285091149694451
+weather_on: random_forest_tuned - logistic_regression(20261008),f1_not_delayed,42,0.012000918170695929
+weather_on: random_forest_tuned - logistic_regression(20261008),f1_not_delayed,1,0.002807014223104254
+weather_on: random_forest_tuned - logistic_regression(20261008),f1_not_delayed,7,0.0077670990033572584
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),macro_f1_nested,42,0.0023264781017877656
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),macro_f1_nested,1,0.0007966972704214204
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),macro_f1_nested,7,0.00144386983840461
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),log_loss,42,-0.0008174726479663885
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),log_loss,1,-0.0006965278326255819
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),log_loss,7,-0.0006225275699240918
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),roc_auc,42,0.0022625945099803424
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),roc_auc,1,0.00213002653938843
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),roc_auc,7,0.00133605206502585
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),f1_at_050,42,0.0002332508176239867
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),f1_at_050,1,-0.001969209809517758
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),f1_at_050,7,0.002247879802528774
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),precision_delayed,42,0.00671670117853107
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),precision_delayed,1,0.00027382295699079906
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),precision_delayed,7,6.84207771541323e-05
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),recall_delayed,42,-0.004810564376670323
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),recall_delayed,1,0.004338940418173343
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),recall_delayed,7,0.008992296808677913
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),f1_delayed,42,0.0012921814945722754
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),f1_delayed,1,0.0021590298673568875
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),f1_delayed,7,0.004239487000473663
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),f1_not_delayed,42,0.0033607747090032003
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),f1_not_delayed,1,-0.0005656353265139913
+weather_on: lightgbm_tuned - lightgbm(20261008 fixed config),f1_not_delayed,7,-0.0013517473236642763
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),macro_f1_nested,42,0.00015303863239135573
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),macro_f1_nested,1,-0.0004993047383281546
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),macro_f1_nested,7,0.00010925242764658893
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),log_loss,42,2.347826587423274e-05
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),log_loss,1,8.016775711466861e-05
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),log_loss,7,6.256200701837411e-05
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),roc_auc,42,-0.00010678843077038813
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),roc_auc,1,-0.0004334413227840006
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),roc_auc,7,-0.0001571160071046629
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),f1_at_050,42,0.0005497441267626191
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),f1_at_050,1,0.001686794648933676
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),f1_at_050,7,0.0005713257534209482
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),precision_delayed,42,0.00015869717531225014
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),precision_delayed,1,-0.008382624109636694
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),precision_delayed,7,0.0021289630913136626
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),recall_delayed,42,0.0005030655557302088
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),recall_delayed,1,0.017827385631190074
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),recall_delayed,7,-0.005187863543468008
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),f1_delayed,42,0.0003140888859252122
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),f1_delayed,1,0.004392280721829622
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),f1_delayed,7,-0.001300784647847275
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),f1_not_delayed,42,-8.01162114261178e-06
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),f1_not_delayed,1,-0.005390890198485931
+weather_on: random_forest_tuned - random_forest(20261008 6-config grid),f1_not_delayed,7,0.0015192895031407305
+random_forest_tuned: weather_on - weather_off,macro_f1_nested,42,0.027746235388207974
+random_forest_tuned: weather_on - weather_off,macro_f1_nested,1,0.024308008073363974
+random_forest_tuned: weather_on - weather_off,macro_f1_nested,7,0.02646442283739725
+random_forest_tuned: weather_on - weather_off,log_loss,42,-0.011969871893616979
+random_forest_tuned: weather_on - weather_off,log_loss,1,-0.011406490540693426
+random_forest_tuned: weather_on - weather_off,log_loss,7,-0.011994618628768494
+random_forest_tuned: weather_on - weather_off,roc_auc,42,0.03297732652532914
+random_forest_tuned: weather_on - weather_off,roc_auc,1,0.03179412397261949
+random_forest_tuned: weather_on - weather_off,roc_auc,7,0.0336694274684598
+random_forest_tuned: weather_on - weather_off,f1_at_050,42,0.025949668220452082
+random_forest_tuned: weather_on - weather_off,f1_at_050,1,0.026769572294702337
+random_forest_tuned: weather_on - weather_off,f1_at_050,7,0.025055409672518014
+random_forest_tuned: weather_on - weather_off,precision_delayed,42,0.041780435169357144
+random_forest_tuned: weather_on - weather_off,precision_delayed,1,0.04517409151561175
+random_forest_tuned: weather_on - weather_off,precision_delayed,7,0.04358235871825089
+random_forest_tuned: weather_on - weather_off,recall_delayed,42,0.0521616098097783
+random_forest_tuned: weather_on - weather_off,recall_delayed,1,0.014305926741078445
+random_forest_tuned: weather_on - weather_off,recall_delayed,7,0.03983650369438768
+random_forest_tuned: weather_on - weather_off,f1_delayed,42,0.04658504368212685
+random_forest_tuned: weather_on - weather_off,f1_delayed,1,0.031537697877059956
+random_forest_tuned: weather_on - weather_off,f1_delayed,7,0.041865508684810704
+random_forest_tuned: weather_on - weather_off,f1_not_delayed,42,0.008907427094288822
+random_forest_tuned: weather_on - weather_off,f1_not_delayed,1,0.01707831826966788
+random_forest_tuned: weather_on - weather_off,f1_not_delayed,7,0.011063336989983852
+lightgbm(20260922 fixed config): weather_on - weather_off,macro_f1_nested,42,0.025323682269766667
+lightgbm(20260922 fixed config): weather_on - weather_off,macro_f1_nested,1,0.0244208085060188
+lightgbm(20260922 fixed config): weather_on - weather_off,macro_f1_nested,7,0.02536157153414509
+lightgbm(20260922 fixed config): weather_on - weather_off,log_loss,42,-0.011327211808278503
+lightgbm(20260922 fixed config): weather_on - weather_off,log_loss,1,-0.011462320892383582
+lightgbm(20260922 fixed config): weather_on - weather_off,log_loss,7,-0.011493119955630182
+lightgbm(20260922 fixed config): weather_on - weather_off,roc_auc,42,0.032010802507813074
+lightgbm(20260922 fixed config): weather_on - weather_off,roc_auc,1,0.03229058132499252
+lightgbm(20260922 fixed config): weather_on - weather_off,roc_auc,7,0.03265038647659191
+lightgbm(20260922 fixed config): weather_on - weather_off,f1_at_050,42,0.02348463292668973
+lightgbm(20260922 fixed config): weather_on - weather_off,f1_at_050,1,0.027208262947794437
+lightgbm(20260922 fixed config): weather_on - weather_off,f1_at_050,7,0.02468711756512526
+lightgbm(20260922 fixed config): weather_on - weather_off,precision_delayed,42,0.04742714198872289
+lightgbm(20260922 fixed config): weather_on - weather_off,precision_delayed,1,0.04266249594370258
+lightgbm(20260922 fixed config): weather_on - weather_off,precision_delayed,7,0.04886506711696703
+lightgbm(20260922 fixed config): weather_on - weather_off,recall_delayed,42,0.0030498349316145368
+lightgbm(20260922 fixed config): weather_on - weather_off,recall_delayed,1,0.023769847508253394
+lightgbm(20260922 fixed config): weather_on - weather_off,recall_delayed,7,0.0017921710422889592
+lightgbm(20260922 fixed config): weather_on - weather_off,f1_delayed,42,0.02862583716254613
+lightgbm(20260922 fixed config): weather_on - weather_off,f1_delayed,1,0.03426064312682858
+lightgbm(20260922 fixed config): weather_on - weather_off,f1_delayed,7,0.028453298924469683
+lightgbm(20260922 fixed config): weather_on - weather_off,f1_not_delayed,42,0.02202152737698726
+lightgbm(20260922 fixed config): weather_on - weather_off,f1_not_delayed,1,0.014580973885208959
+lightgbm(20260922 fixed config): weather_on - weather_off,f1_not_delayed,7,0.022269844143820494

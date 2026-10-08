@@ -365,3 +365,157 @@ def summarize(runs: pd.DataFrame, paired: pd.DataFrame,
 
 def compact_json(value: Any) -> str:
     return json.dumps(value, separators=(",", ":"), ensure_ascii=False, sort_keys=True)
+
+
+# =============================================================================
+# Follow-up: wider predeclared tuning grids (classifier tuning run, 20261008)
+# =============================================================================
+#
+# The constants above define the 20261008 comparison budget and are left
+# unchanged. The grids below are a separate, predeclared follow-up budget. Every
+# configuration is still selected only by inner-holdout LogLoss inside each
+# outer-train (no early stopping, no outer-valid labels).
+
+#: LightGBM core factorial: learning_rate x num_leaves x min_child_samples,
+#: without row bagging (subsample=0.8 is kept as in the repository params but is
+#: inactive because subsample_freq=0, i.e. identical to the 20261008 LightGBM).
+TUNE_LGBM_LEARNING_RATES: tuple[float, ...] = (0.03, 0.05, 0.1)
+TUNE_LGBM_NUM_LEAVES: tuple[int, ...] = (31, 63, 127)
+TUNE_LGBM_MIN_CHILD_SAMPLES: tuple[int, ...] = (20, 100)
+#: Row-bagging variant (subsample=0.8 active via subsample_freq=1), crossed with
+#: all learning rates and the two larger leaf counts at min_child_samples=20.
+TUNE_LGBM_BAGGING_NUM_LEAVES: tuple[int, ...] = (63, 127)
+TUNE_LGBM_BAGGING_MIN_CHILD_SAMPLES = 20
+TUNE_LGBM_SUBSAMPLE = 0.8
+#: Parameters that a tuning configuration may override in the base LightGBM params.
+TUNE_LGBM_KEYS = ("learning_rate", "num_leaves", "min_child_samples",
+                  "subsample", "subsample_freq")
+
+TUNE_RF_MIN_SAMPLES_LEAF_GRID: tuple[int, ...] = (10, 25, 50)
+TUNE_RF_MAX_FEATURES_GRID: tuple[float, ...] = (0.5, 0.7, 1.0)
+
+
+def lgbm_tuning_grid() -> list[dict[str, Any]]:
+    """Predeclared LightGBM configurations (24), in fixed declaration order.
+
+    The order matters only for exact ties of inner-holdout LogLoss (first wins).
+    """
+    grid: list[dict[str, Any]] = []
+    for lr in TUNE_LGBM_LEARNING_RATES:
+        for leaves in TUNE_LGBM_NUM_LEAVES:
+            for mcs in TUNE_LGBM_MIN_CHILD_SAMPLES:
+                grid.append({"learning_rate": float(lr), "num_leaves": int(leaves),
+                             "min_child_samples": int(mcs),
+                             "subsample": TUNE_LGBM_SUBSAMPLE, "subsample_freq": 0})
+    for lr in TUNE_LGBM_LEARNING_RATES:
+        for leaves in TUNE_LGBM_BAGGING_NUM_LEAVES:
+            grid.append({"learning_rate": float(lr), "num_leaves": int(leaves),
+                         "min_child_samples": int(TUNE_LGBM_BAGGING_MIN_CHILD_SAMPLES),
+                         "subsample": TUNE_LGBM_SUBSAMPLE, "subsample_freq": 1})
+    return grid
+
+
+def lgbm_config_params(base_params: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+    """Merge one tuning configuration into the base LightGBM parameters."""
+    require(set(config) == set(TUNE_LGBM_KEYS), f"unexpected LightGBM config keys: {sorted(config)}")
+    require("n_estimators" not in base_params, "n_estimators is selected by the nested grid")
+    params = dict(base_params)
+    params.update(config)
+    return params
+
+
+def rf_tuning_grid() -> list[dict[str, Any]]:
+    return [{"min_samples_leaf": int(leaf), "max_features": float(mf)}
+            for leaf in TUNE_RF_MIN_SAMPLES_LEAF_GRID for mf in TUNE_RF_MAX_FEATURES_GRID]
+
+
+def lgbm_tuning_axes(n_estimators_grid: Sequence[int]) -> dict[str, tuple]:
+    return {"learning_rate": TUNE_LGBM_LEARNING_RATES,
+            "num_leaves": TUNE_LGBM_NUM_LEAVES,
+            "min_child_samples": TUNE_LGBM_MIN_CHILD_SAMPLES,
+            "n_estimators": tuple(sorted(int(k) for k in n_estimators_grid))}
+
+
+def rf_tuning_axes() -> dict[str, tuple]:
+    return {"min_samples_leaf": TUNE_RF_MIN_SAMPLES_LEAF_GRID,
+            "max_features": TUNE_RF_MAX_FEATURES_GRID}
+
+
+def grid_edge_flags(selected: dict[str, Any], axes: dict[str, Sequence[Any]]) -> dict[str, str | None]:
+    """Per ordered axis: 'low'/'high' if the selected value is the axis min/max, else None.
+
+    Axes with fewer than three declared values cannot have an interior point; they
+    are still flagged so that a boundary choice is never silently reported.
+    """
+    flags: dict[str, str | None] = {}
+    for name, values in axes.items():
+        require(name in selected, f"selected config has no axis {name}")
+        vals = sorted(values)
+        require(selected[name] in vals, f"selected {name}={selected[name]} not in declared axis")
+        if selected[name] == vals[0]:
+            flags[name] = "low"
+        elif selected[name] == vals[-1]:
+            flags[name] = "high"
+        else:
+            flags[name] = None
+    return flags
+
+
+class ConfigSelection(NamedTuple):
+    best_index: int
+    best: dict[str, Any]
+    records: list[dict[str, Any]]
+
+
+def select_best_config(
+    configs: Sequence[dict[str, Any]],
+    evaluate: Callable[[dict[str, Any]], dict[str, Any]],
+) -> ConfigSelection:
+    """Evaluate each configuration and keep the minimal inner-holdout LogLoss.
+
+    ``evaluate`` must return a dict with ``inner_holdout_log_loss`` (selection
+    score, computed inside the outer-train boundary) plus anything the caller
+    needs from the winner (e.g. ``valid_probs``, ``threshold``). Only the
+    winner's full result is retained; the per-config records keep scalar,
+    JSON-serialisable fields. Ties keep the first configuration in order.
+    """
+    require(len(configs) > 0, "empty configuration grid")
+    best_index, best, best_score = -1, None, np.inf
+    records: list[dict[str, Any]] = []
+    for i, config in enumerate(configs):
+        result = evaluate(dict(config))
+        score = float(result["inner_holdout_log_loss"])
+        require(np.isfinite(score), f"non-finite inner-holdout LogLoss for {config}")
+        records.append({"config": dict(config), **{
+            k: v for k, v in result.items()
+            if k != "valid_probs" and not isinstance(v, np.ndarray)}})
+        if score < best_score:
+            best_index, best, best_score = i, result, score
+    assert best is not None
+    return ConfigSelection(best_index, best, records)
+
+
+def paired_seed_deltas(a: pd.DataFrame, b: pd.DataFrame, seeds: Sequence[int],
+                       metrics: Sequence[str], *, label: str) -> dict[str, Any]:
+    """Per-seed ``a - b`` deltas for two run tables indexed by seed.
+
+    Both tables must cover every seed and share the outer fold fingerprint and
+    the row count for each seed (paired design)."""
+    a = a.set_index("seed") if "seed" in a.columns else a
+    b = b.set_index("seed") if "seed" in b.columns else b
+    out: dict[str, Any] = {"comparison": label, "metrics": {}}
+    for seed in seeds:
+        require(seed in a.index and seed in b.index, f"{label}: seed {seed} missing")
+        require(str(a.loc[seed, "fold_fingerprint"]) == str(b.loc[seed, "fold_fingerprint"]),
+                f"{label}: different outer folds for seed {seed}")
+        require(int(a.loc[seed, "n_rows"]) == int(b.loc[seed, "n_rows"]),
+                f"{label}: different evaluation rows for seed {seed}")
+    for metric in metrics:
+        vals = np.array([float(a.loc[s, metric]) - float(b.loc[s, metric]) for s in seeds])
+        out["metrics"][metric] = {
+            "mean": float(vals.mean()),
+            "std": float(vals.std(ddof=1)) if len(vals) > 1 else None,
+            "values_by_seed": {str(int(s)): float(v) for s, v in zip(seeds, vals)},
+            "sign_consistent_across_seeds": bool((vals > 0).all() or (vals < 0).all()),
+        }
+    return out
