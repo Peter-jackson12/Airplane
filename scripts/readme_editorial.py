@@ -1,17 +1,10 @@
-"""Shared evidence-first F Korean Air homepage-inspired SVG primitives; stdlib only and no external assets."""
+"""Shared flight-magazine C sky-and-gold SVG primitives; stdlib only and no external assets."""
 from html import escape
 
-# Observed 2026-10-01 at https://www.koreanair.com/: navy, cyan, pale sky, white.
-# ACCENT is a darker cyan adaptation for small labels; not an official brand token.
-PAPER='#FFFFFF'; INK='#051766'; MUTED='#5E5E5E'; RULE='#D9D9D9'; ACCENT='#004766'
-CYAN='#57BBEB'; SKY='#DDF1FB'; HIGHLIGHT='#F7F7F7'
+PAPER='#FBF8F0'; INK='#304750'; MUTED='#61727A'; RULE='#D7DCD9'; ACCENT='#356A86'
+GOLD='#D5BD8F'; SKY='#E4F0F5'; HIGHLIGHT='#EAF2F4'
 SANS='Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif'
 HEADING=SANS
-# F evidence hierarchy: 1600-unit canvas, 80-unit inset, 8-unit spacing rhythm.
-# At 896px README width, a 28-unit annotation is 15.7px.
-TYPE = {'caption': 28, 'body': 32, 'section': 44, 'title': 64, 'result': 112}
-SPACE = {'unit': 8, 'inset': 80, 'row': 96}
-
 
 class SVG:
     def __init__(self,h,title,desc,header_band=True):
@@ -30,7 +23,7 @@ class SVG:
     def running(self,left,right):
         self.text(84,60,left,23,weight=500)
         self.text(1516,60,right,19,color=MUTED,anchor='end',spacing=1.8)
-        self.line(84,86,1516,86,CYAN,2)
+        self.line(84,86,1516,86,GOLD,2)
     def save(self,path):
         path.write_text('\n'.join(self.parts+['</svg>'])+'\n',encoding='utf-8')
 
