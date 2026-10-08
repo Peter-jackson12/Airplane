@@ -83,6 +83,24 @@ def phase_spec():
     return spec
 
 
+def protocol_description(cfg=None) -> dict:
+    """Truthful protocol label for this runner.
+
+    ``CVConfig.describe()`` hard-codes ``inner_early_stopping=True`` (it describes the
+    legacy early-stopping path). This runner trains with ``run_fold_nested_grid``: the
+    tree count is chosen from ``n_estimators_grid`` with no early-stopping callback, so
+    the recorded protocol must say so. Same overrides as
+    ``rerun_all_phases.protocol_description`` but built from the per-run ``cfg`` (seed).
+    """
+    cfg = runner.CFG if cfg is None else cfg
+    return {**cfg.describe(), "inner_early_stopping": False,
+            "tree_selection": "nested_grid",
+            "n_estimators_grid": list(runner.N_ESTIMATORS_GRID),
+            "threshold_selection": "outer_train_holdout",
+            "teacher_scope": "student_inner_train", "teacher_selection": "nested_grid",
+            "stopping_rounds_used": False}
+
+
 def evaluate_condition(X: pd.DataFrame, y: pd.Series, *, seed: int, spec) -> dict:
     """Fit one condition with exactly the repository's current nested protocol."""
     cfg = replace(runner.CFG, seed=int(seed))
@@ -149,8 +167,9 @@ def evaluate_condition(X: pd.DataFrame, y: pd.Series, *, seed: int, spec) -> dic
         "recall": float(score["recall"]),
         "fold_fingerprint": fingerprint,
         "elapsed_sec": float(time.perf_counter() - started),
-        "protocol": json.dumps(score["protocol"], sort_keys=True,
-                               separators=(",", ":"), ensure_ascii=False),
+        "protocol": json.dumps({**score["protocol"], **protocol_description(cfg)},
+                               sort_keys=True, separators=(",", ":"),
+                               ensure_ascii=False),
     }
 
 
@@ -229,7 +248,7 @@ def identity_payload(*, git_sha: str, manifest: dict, y: pd.Series,
         "positive_rows": int(y.sum()),
         "base_columns_sha256": stable_json_hash(list(X_off.columns)),
         "weather_columns_sha256": stable_json_hash(list(X_on.columns)),
-        "cfg": runner.CFG.describe(),
+        "cfg": protocol_description(),
         "n_estimators_grid": list(runner.N_ESTIMATORS_GRID),
         "te_smoothing_m": runner.TE_SMOOTHING_M,
         "lgbm_params": runner.LGBM_PARAMS,
