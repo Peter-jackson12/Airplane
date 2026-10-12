@@ -6,7 +6,7 @@
 
 **항공편 한 건의 지연 여부(`Delay`)를 LightGBM으로 예측하고, 학습·선택·채점의 경계를 나눈 교차검증으로 “전처리 수정”과 “출발·도착 공항 날씨 추가”가 성능을 바꾸는지 따로 검증한 머신러닝 프로젝트입니다.**
 
-[한눈에 보기](#overview) · [역할·AI 보조](#contribution) · [문제 해결 사례](#engineering) · [결과·대시보드](#results) · [한계와 다음 단계](#limits) · [재현 방법](#reproduce) · [문서·근거](#docs)
+[한눈에 보기](#overview) · [문제 해결 사례](#engineering) · [결과·대시보드](#results) · [한계와 다음 단계](#limits) · [재현 방법](#reproduce) · [문서·근거](#docs)
 
 <a id="overview"></a>
 ## 1. 프로젝트 한눈에
@@ -14,6 +14,7 @@
 | 항목 | 내용 |
 |---|---|
 | 문제 | CSV 한 행(항공편 한 건)의 `Delay` 이진 분류. `Not_Delayed=0`, `Delayed=1`. 타깃 결측은 **미라벨**이며 정상 정답으로 쓰지 않음 |
+| 진행 형태 | 개인 프로젝트 |
 | 데이터 규모 | 원본 **1,000,000행 × 19열**, 라벨 **255,001행**(정상 210,001 / 지연 45,000, 지연율 약 17.65%) |
 | 추가 데이터 | 미국 BTS 운항 자료로 누락된 연도를 대조해 **706,759행**의 날짜 귀속 → IEM ASOS 공항 관측으로 출발·도착 날씨 결합 |
 | 핵심 결과 | 동일 **180,332행**·동일 시드·동일 외부 폴드에서 날씨 14개 피처 추가 시 Macro F1 **0.574 → 0.599**, 세 시드(동일 행 재분할 3회) 모두 세 지표가 같은 방향으로 개선 |
@@ -25,15 +26,8 @@
 
 **원본과 라벨.** 로컬 열 구성과 100만 행 규모에 대응하는 배포 설명은 [DACON 항공편 지연 예측 대회](https://dacon.io/competitions/official/236094/data)입니다. 공개 설명은 `Delay`를 지연 여부로만 정의합니다. **출발/도착 지연 구분·지연 시간 기준·원천 생성 과정과 원자료 재배포 조건은 아직 확인하지 못했습니다.** BTS·IEM은 날짜 대조·날씨 확장의 출처이며 원본 라벨 정의의 근거로 대신 쓰지 않습니다. [확인 범위](docs/README_EXPLAINED_KO.md#data-source)
 
-<a id="contribution"></a>
-## 2. 담당 역할과 AI 보조 범위
-
-**개인 프로젝트입니다.** 데이터 품질 진단, 전처리 규칙과 평가 경계 정리, 외부 자료 결합, 결과 검증·해석을 프로젝트 범위로 진행했습니다. 작업 범위·실행 한도·기존 결과 보존 조건을 정하고, 분석과 구현 결과를 저장소의 근거와 연결해 관리했습니다.
-
-AI는 저장소 검토, 실행 절차 정리, 코드·테스트 작성과 문서 편집의 보조 도구로 활용했습니다. 아래 사례는 프로젝트에서 발견한 문제와 채택한 판단을 설명하며, 코드와 실행 근거를 함께 제시합니다.
-
 <a id="engineering"></a>
-## 3. 주요 문제 해결 사례
+## 2. 주요 문제 해결 사례
 
 ### A. 모호한 결측 대치를 중단해 행 순서 의존성을 없애기
 
@@ -66,7 +60,7 @@ AI는 저장소 검토, 실행 절차 정리, 코드·테스트 작성과 문서
 [수정 커밋 921b48f](https://github.com/Peter-jackson12/Airplane/commit/921b48f11417ef4fc3651b88fca92e8e369bb18b) · [원본 수집 기록](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_manifest.json) · [정정 감사](output/baseline_recovery_v2_weather_full_bulk_20260921_full_weather_fetch_audit.json) · [오류 분류·원본 불변성 테스트](tests/test_weather_full_finalize.py)
 
 <a id="results"></a>
-## 4. 결과 요약과 Tableau 대시보드
+## 3. 결과 요약과 Tableau 대시보드
 
 | 날씨 비교 지표 (3시드 평균) | 날씨 미사용 | 날씨 사용 | 변화(사용−미사용) |
 |---|---:|---:|---:|
@@ -109,7 +103,7 @@ AI는 저장소 검토, 실행 절차 정리, 코드·테스트 작성과 문서
 </details>
 
 <a id="limits"></a>
-## 5. 한계와 다음 검증
+## 4. 한계와 다음 검증
 
 ### 결과를 어디까지 말할 수 있는가
 
@@ -117,28 +111,6 @@ AI는 저장소 검토, 실행 절차 정리, 코드·테스트 작성과 문서
 - **선택 집단의 정적 교차검증입니다.** 날짜를 귀속한 행만 평가했으므로 원본 전체·미라벨·미래 항공편에서 같은 성능을 낸다는 뜻이 아닙니다. 독립 미래 테스트와 실시간 운영은 수행하지 않았습니다.
 - **전체 입력 묶음 가정이 남아 있습니다.** 노선 중앙값·코드 대응 사전·혼잡도(`Traffic`, 실제 공항 혼잡도가 아닌 표본 행 수) 등은 입력 묶음 전체의 비타깃 정보로 만듭니다. 전처리 비교는 원본 1,000,000행, 날씨 비교는 날짜 귀속 706,759행 묶음에서 다시 만들며, `Traffic` 집계 키에는 연도가 없습니다. 라벨 누수가 없다는 것과 미래 예측 시점에 그 입력을 확보할 수 있다는 것은 다릅니다. [데이터 사용 계약](output/pipeline_data_contract.md)
 - **취약 집단이 있습니다.** 원본 출발·도착 시각이 모두 결측인 라벨 3,031행(실제 지연 519행)에서 `P6_clean`의 지연 recall은 3시드 평균 10.02%였습니다. 이 집단은 날짜 귀속 키가 불완전해 날씨 평가 집단에 포함되지 않으므로, 날씨 개선을 이 집단의 개선 근거로 쓰지 않습니다. [OOF 그룹 CSV](output/baseline_recovery_v2_oof_20260916_v2_groups.csv) · [오분류 분석](output/baseline_recovery_v2_error_profile_20260917_report.md)
-
-### 튜터 피드백 반영 현황
-
-강의 튜터의 피드백 11개 항목은 모두 반영했습니다. 항목별 원 요청과 반영 위치는 [피드백 보존 문서](docs/TUTOR_FEEDBACK_HANDOFF_KO.md)의 0절 표에 정리했습니다.
-
-<details>
-<summary>완료된 튜터 피드백 11개 · 항목별 근거</summary>
-
-| 피드백 항목 | 현재 상태 |
-|---|---|
-| 1) Logistic Regression / Random Forest / LightGBM 비교 | **완료.** 같은 180,332행·폴드·시드와 모델별 내부 선택 후보로 비교했습니다([분류기 3종 비교](#classifier-comparison), [비교 요약](output/baseline_recovery_v2_classifier_compare_20261008_summary.json)). 탐색 예산을 넓힌 후속 확인과 Random Forest 날씨 사용/미사용 비교도 했습니다([후속 요약](output/baseline_recovery_v2_classifier_tuning_20261008_summary.json)). 이어서 후보를 끝값 너머로 넓힌 확대 탐색([확대 요약](output/baseline_recovery_v2_classifier_grid_ext_20261008_combined_summary.json))과 분류기별 확률 보정([보정 요약](output/baseline_recovery_v2_classifier_calibration_20261008_summary.json))도 했습니다. |
-| 2) 결측 대치 수치의 분모·전후 관계 | 완료. 같은 집단 기준 "원래 결측 = 복원 + 잔여" 표 — [전처리 피드백 문서 1절](docs/FEEDBACK_PREPROCESSING_KO.md#1-피드백-2-결측-대치의-분모와-전후) |
-| 3) 시각 복원 규칙 | 완료. 노선 키·0 처리·중앙값 순서·`% 1440`·양쪽 결측 — [같은 문서 2절](docs/FEEDBACK_PREPROCESSING_KO.md#2-피드백-3-시각-복원-규칙) |
-| 4) `Traffic`의 의미와 집계 경계 | 완료. 표본 레코드 수이며 연도 혼합·자기 행 포함 — [같은 문서 3절](docs/FEEDBACK_PREPROCESSING_KO.md#3-피드백-4-traffic의-의미와-집계-경계) |
-| 5) 날씨 피처의 단위·결측·미량 강수 표기 | 완료(원천에서 확인하지 못한 부분은 미확인으로 표시) — [모델·날씨 피드백 문서 2절](docs/FEEDBACK_MODEL_WEATHER_KO.md#weather) |
-| 6) LightGBM 고정/탐색 설정 | 완료. 설정표·버전·기록 라벨 정오표 — [같은 문서 3절](docs/FEEDBACK_MODEL_WEATHER_KO.md#lightgbm) |
-| 7) Macro F1과 Delayed F1 표기 | 완료 — [같은 문서 1절](docs/FEEDBACK_MODEL_WEATHER_KO.md#metrics) |
-| 8)·9) 날씨 비교의 클래스별 지표·혼동행렬·선택값 | 완료. 기존 CSV에서 도출 가능(재학습 불필요)했으며 결과 요약에 반영, 시드별 전체 표는 [피드백 보존 문서 3절](docs/TUTOR_FEEDBACK_HANDOFF_KO.md#3-기존-결과에서-확인-가능한-값-새-실험-아님) |
-| 10) 양쪽 시각 결측 3,031행 | 완료. 날씨 평가 집단 포함 0행 확인 — [전처리 피드백 문서 4절](docs/FEEDBACK_PREPROCESSING_KO.md#4-피드백-10-양쪽-시각-결측-3031행) |
-| 11) 가정한 가용성과 실제 수신 이력 | 이미 반영(유지). 실측 날씨 공개 지연 시간은 수신 이력이 없어 확인할 수 없으며 10분은 사전에 고정한 가정입니다 — [해설 6절](docs/README_EXPLAINED_KO.md#availability) |
-
-</details>
 
 ### 다음 단계 후보
 
@@ -150,7 +122,7 @@ AI는 저장소 검토, 실행 절차 정리, 코드·테스트 작성과 문서
 - **시간 순서 검증.** 날짜 귀속 행에서 앞 기간으로 학습하고 뒤 기간으로 평가해, 정적 교차검증의 결론이 시간 이동에도 유지되는지 확인합니다.
 
 <a id="reproduce"></a>
-## 6. 상세 실험·재현 방법·근거
+## 5. 상세 실험·재현 방법·근거
 
 <a id="weather-results-detail"></a>
 <details>
@@ -440,16 +412,16 @@ uv run --locked --offline python -u notebooks/run_classifier_calibration.py --na
 | 문서 | 내용 |
 |---|---|
 | [docs/README_EXPLAINED_KO.md](docs/README_EXPLAINED_KO.md) | 용어·평가 경계·날씨 결합 규칙을 풀어 쓴 한국어 심화 해설 |
-| [docs/TUTOR_FEEDBACK_HANDOFF_KO.md](docs/TUTOR_FEEDBACK_HANDOFF_KO.md) | 튜터 피드백 11개 항목, 반영 현황표(0절), 클래스별 지표 도출표 |
-| [docs/FEEDBACK_PREPROCESSING_KO.md](docs/FEEDBACK_PREPROCESSING_KO.md) | 피드백 2·3·4·10: 결측 복원의 집단·분모, 시각 복원 규칙, `Traffic` 집계 경계, 양쪽 시각 결측 3,031행 |
-| [docs/FEEDBACK_MODEL_WEATHER_KO.md](docs/FEEDBACK_MODEL_WEATHER_KO.md) | 피드백 5·6·7: 날씨 피처 계약, LightGBM 고정/탐색 설정과 정오표, Macro F1 정의 |
+| [검토 기록·클래스별 지표 도출](docs/TUTOR_FEEDBACK_HANDOFF_KO.md) | 기존 검토 기록과 클래스별 지표 계산 근거 |
+| [docs/FEEDBACK_PREPROCESSING_KO.md](docs/FEEDBACK_PREPROCESSING_KO.md) | 결측 복원의 집단·분모, 시각 복원 규칙, `Traffic` 집계 경계, 양쪽 시각 결측 3,031행 |
+| [docs/FEEDBACK_MODEL_WEATHER_KO.md](docs/FEEDBACK_MODEL_WEATHER_KO.md) | 날씨 피처 계약, LightGBM 고정/탐색 설정과 정오표, Macro F1 정의 |
 | [AGENTS.md](AGENTS.md) | 작업용 위키/문서 지도 — 저장소 작업 규칙과 문서 위치 |
 | [날씨 비교 요약](output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json) | 최종 날씨 유무 비교의 평균·SD·시드별 차이 |
 | [분류기 비교 요약](output/baseline_recovery_v2_classifier_compare_20261008_summary.json) | 분류기 3종 비교의 후보·평균·SD·LightGBM 대비 차이·재현 대조 |
 | [분류기 탐색 확장 요약](output/baseline_recovery_v2_classifier_tuning_20261008_summary.json) | LightGBM 24개·Random Forest 9개 설정 후속 비교, 폴드별 선택값의 후보 끝값 집계, Random Forest 날씨 사용/미사용 쌍비교 |
 | [분류기 탐색 확대 요약](output/baseline_recovery_v2_classifier_grid_ext_20261008_combined_summary.json) | LightGBM 18개·Random Forest 15개 설정 확대 후보의 쌍비교(부분별 요약은 `_lgbm_summary.json`·`_rf_summary.json`) |
 | [분류기별 확률 보정 요약](output/baseline_recovery_v2_classifier_calibration_20261008_summary.json) | 보정 없음/Platt/Isotonic × 교차적합/내부 검증 행 적합의 LogLoss·Brier·ECE·Macro F1과 보정 전후 차이 |
-| [결측 재집계 결과](output/feedback_missing_audit_20261008.json) | 피드백 2·4·10 수치의 원자료 읽기 전용 재집계 |
+| [결측 재집계 결과](output/feedback_missing_audit_20261008.json) | 원자료 읽기 전용 재집계 |
 | [전처리 10조건 보고서](output/preprocessing_full_evaluation.md) | 전처리 조건별 전체 결과 |
 | [라벨 분포 보고서](output/label_coverage_review.md) | 라벨·미라벨 집단의 분포 비교 |
 | [그림 출처 기록](assets/readme/sources.json) | README 그림의 입력 파일·필터·SHA-256 |

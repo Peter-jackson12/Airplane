@@ -28,23 +28,18 @@ def test_limits_distinguish_paired_result_from_causality_and_open_followups():
     limits = readme.split('<a id="limits"></a>', 1)[1].split('<a id="reproduce"></a>', 1)[0]
     assert "인과 효과의 증명이 아닙니다" in limits
     assert "선택 집단의 정적 교차검증" in limits
-    assert "docs/TUTOR_FEEDBACK_HANDOFF_KO.md" in limits
-    # The executed classifier comparison is recorded as done, with evidence,
-    # and nothing in the README still claims it was not run.
+    # Feedback bookkeeping belongs in the retained review document, not the
+    # portfolio reading path. Completed comparisons remain linked as evidence.
+    assert "튜터 피드백 반영 현황" not in readme
+    assert "담당 역할과 AI 보조 범위" not in readme
     assert "미실시" not in readme
-    rows = [line for line in limits.splitlines()
-            if line.startswith("| 1)") and "Random Forest" in line]
-    assert len(rows) == 1
-    assert "완료" in rows[0]
-    assert "(output/baseline_recovery_v2_classifier_compare_20261008_summary.json)" in rows[0]
-    assert "(#classifier-comparison)" in rows[0]
-    # Every tutor item 1-11 has a row, and items resolved by the feedback
-    # documents link to them.
+    assert "(docs/TUTOR_FEEDBACK_HANDOFF_KO.md)" in readme
+    assert "(output/baseline_recovery_v2_classifier_compare_20261008_summary.json)" in readme
+    review = (ROOT / "docs/TUTOR_FEEDBACK_HANDOFF_KO.md").read_text(encoding="utf-8")
     for item in ("1)", "2)", "3)", "4)", "5)", "6)", "7)", "8)", "9)", "10)", "11)"):
-        assert f"| {item}" in limits or f"·{item}" in limits, item
-    assert "docs/FEEDBACK_PREPROCESSING_KO.md" in limits
-    assert "docs/FEEDBACK_MODEL_WEATHER_KO.md" in limits
-    assert "기존 CSV에서 도출 가능(재학습 불필요)" in limits
+        assert item in review, item
+    assert "docs/FEEDBACK_PREPROCESSING_KO.md" in readme
+    assert "docs/FEEDBACK_MODEL_WEATHER_KO.md" in readme
     # Open next steps stay framed as candidates, not as completed work.
     nxt = limits.split("### 다음 단계 후보", 1)[1]
     # The executed tuning follow-up is recorded as done (with a link), not

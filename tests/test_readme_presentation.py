@@ -90,9 +90,9 @@ def test_portfolio_readme_keeps_sections_scope_and_figure_sources_explicit():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
     for anchor in PORTFOLIO_ANCHORS:
         assert text.count(f'<a id="{anchor}"></a>') == 1, anchor
-    for heading in ('## 1. 프로젝트 한눈에', '## 2. 담당 역할과 AI 보조 범위', '## 3. 주요 문제 해결 사례',
-                    '## 4. 결과 요약과 Tableau 대시보드', '## 5. 한계와 다음 검증',
-                    '## 6. 상세 실험·재현 방법·근거'):
+    for heading in ('## 1. 프로젝트 한눈에', '## 2. 주요 문제 해결 사례',
+                    '## 3. 결과 요약과 Tableau 대시보드', '## 4. 한계와 다음 검증',
+                    '## 5. 상세 실험·재현 방법·근거'):
         assert heading in text, heading
     for boundary in ('신뢰구간이 아닙니다', '날씨 모델의 성능이 아닙니다',
                      '10분은 실측 공개 지연 시간이 아닙니다', '인과 효과의 증명이 아닙니다',

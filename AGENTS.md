@@ -24,7 +24,7 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | 하고 싶은 일 | 읽거나 실행할 곳 |
 |---|---|
 | 현재 결론·파이프라인·한계 확인 | [README.md](README.md) |
-| 문제 해결 사례와 개인·AI 역할의 확인 범위 | [README 역할](README.md#contribution), [문제 해결 사례](README.md#engineering) |
+| 문제 해결 사례와 판단 근거 | [README 문제 해결 사례](README.md#engineering) |
 | 원본 배포 설명·라벨 정의·이용조건의 확인 범위 | [README 해설의 출처 확인](docs/README_EXPLAINED_KO.md#data-source) |
 | README를 쉬운 말로 깊게 읽기 | [docs/README_EXPLAINED_KO.md](docs/README_EXPLAINED_KO.md) |
 | 튜터 피드백 11개와 반영 현황 확인 | [docs/TUTOR_FEEDBACK_HANDOFF_KO.md](docs/TUTOR_FEEDBACK_HANDOFF_KO.md) (0절이 현재 반영 현황) |
