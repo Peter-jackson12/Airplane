@@ -77,8 +77,9 @@ def test_readme_relative_evidence_links_exist_in_git_checkout():
         assert path.exists(), f'Broken README link: {destination}'
         checked.append(destination)
     assert checked, 'No repository-relative evidence links were checked'
-    # The documentation guide links the deep-dive, tutor feedback and wiki hub.
-    for required in ('docs/README_EXPLAINED_KO.md', 'docs/TUTOR_FEEDBACK_HANDOFF_KO.md', 'AGENTS.md'):
+    # The documentation guide links the deep-dive and review record; the agent
+    # work rules (AGENTS.md) are not portfolio evidence and stay out of README.
+    for required in ('docs/README_EXPLAINED_KO.md', 'docs/TUTOR_FEEDBACK_HANDOFF_KO.md'):
         assert required in checked, required
 
 

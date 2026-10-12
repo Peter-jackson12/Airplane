@@ -35,15 +35,16 @@ def build():
     a.text(56,200,'AIRPLANE',122,weight=900,spacing=-3)
     a.text(64,270,'항공편 지연 예측과 날씨 정보 확장',42,weight=700)
     a.text(64,321,'데이터의 불확실성을 드러내고, 같은 조건에서 비교합니다.',28)
-    for x, label, title, subtitle in (
-        (64,'01 / 일관성','모호한 대치 중단','행 순서에 흔들리지 않는 처리'),
-        (576,'02 / 비교 가능성','날짜 확인 후 날씨 결합','같은 평가행에서 정보의 차이 확인'),
-        (1088,'03 / 추적 가능성','원본을 보존한 오류 정정','실행 기록과 정정 근거를 함께 보존'),
+    # Sub-captions repeated the README body and were unreadable at phone width,
+    # so each column keeps only a larger label and title.
+    for x, label, title in (
+        (64,'01 / 일관성','모호한 대치 중단'),
+        (576,'02 / 비교 가능성','날짜 확인 후 날씨 결합'),
+        (1088,'03 / 추적 가능성','원본을 보존한 오류 정정'),
     ):
-        a.text(x,419,label,23,ACCENT,700)
-        a.text(x,474,title,30,weight=700)
-        a.text(x,521,subtitle,23)
-    a.text(64,602,'선택 집단의 정적 교차검증 · 미래 성능과 인과 효과는 미검증',25,MUTED)
+        a.text(x,430,label,28,ACCENT,700)
+        a.text(x,496,title,38,weight=700)
+    a.text(64,592,'선택 집단의 정적 교차검증 · 미래 성능과 인과 효과는 미검증',32,MUTED)
     a.save(OUT/'presentation_cover.svg')
 
     a=SVG(1310,'두 평가 집단을 잇지 않는 탑승권','원본 1,000,000행. 전처리 평가 255,001행. 날짜 귀속 채택 706,759행 중 날짜와 라벨이 모두 있는 180,332행에서 날씨 14개 피처를 비교합니다. 같은 외부 폴드를 사용합니다. 인과 효과와 미래 운항 성능은 미검증. 도형 크기는 수량을 뜻하지 않습니다.',False)
