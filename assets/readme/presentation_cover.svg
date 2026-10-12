@@ -1,17 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="640" viewBox="0 0 1600 640" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
 <title id="title">Airplane · 항공편 지연 예측과 날씨 정보 확장</title><desc id="desc">데이터 품질 진단과 외부 자료 결합 포트폴리오. 모호한 대치 중단, 날짜 대조, 원본 기록을 보존한 오류 정정. 성능 비교는 선택 집단의 정적 교차검증입니다.</desc>
-<rect width="1600" height="640" fill="#FBF8F0"/>
-<rect x="0" y="0" width="1600" height="360" fill="#E4F0F5"/>
-<text x="64" y="65" fill="#304750" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="23" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums" letter-spacing="2">DATA &amp; ML PORTFOLIO</text>
-<text x="1536" y="65" fill="#304750" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="23" font-weight="400" text-anchor="end" style="font-variant-numeric:tabular-nums">Peter-jackson12</text>
-<text x="56" y="200" fill="#304750" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="122" font-weight="900" text-anchor="start" style="font-variant-numeric:tabular-nums" letter-spacing="-3">AIRPLANE</text>
-<text x="64" y="270" fill="#304750" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="42" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">항공편 지연 예측과 날씨 정보 확장</text>
-<text x="64" y="321" fill="#304750" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">데이터의 불확실성을 드러내고, 같은 조건에서 비교합니다.</text>
-<text x="64" y="430" fill="#356A86" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">01 / 일관성</text>
-<text x="64" y="496" fill="#304750" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="38" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">모호한 대치 중단</text>
-<text x="576" y="430" fill="#356A86" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">02 / 비교 가능성</text>
-<text x="576" y="496" fill="#304750" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="38" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">날짜 확인 후 날씨 결합</text>
-<text x="1088" y="430" fill="#356A86" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="28" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">03 / 추적 가능성</text>
-<text x="1088" y="496" fill="#304750" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="38" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">원본을 보존한 오류 정정</text>
-<text x="64" y="592" fill="#61727A" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="32" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">선택 집단의 정적 교차검증 · 미래 성능과 인과 효과는 미검증</text>
+<rect width="1600" height="1120" fill="#FBF8F0"/>
+<rect x="0" y="0" width="1600" height="440" fill="#E4F0F5"/>
+<text x="80" y="125" fill="#304750" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="80" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">DATA &amp; ML PORTFOLIO</text>
+<text x="72" y="285" fill="#304750" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="144" font-weight="900" text-anchor="start" style="font-variant-numeric:tabular-nums" letter-spacing="-3">AIRPLANE</text>
+<text x="80" y="390" fill="#304750" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="80" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">항공편 지연 예측과 날씨 정보 확장</text>
+<text x="80" y="570" fill="#304750" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="84" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">01  모호한 대치 중단</text>
+<text x="80" y="710" fill="#304750" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="84" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">02  날짜 확인 후 날씨 결합</text>
+<text x="80" y="850" fill="#304750" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="84" font-weight="700" text-anchor="start" style="font-variant-numeric:tabular-nums">03  원본을 보존한 오류 정정</text>
+<text x="80" y="990" fill="#61727A" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="80" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">선택 집단의 정적 교차검증</text>
+<text x="80" y="1090" fill="#61727A" font-family="Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif" font-size="80" font-weight="400" text-anchor="start" style="font-variant-numeric:tabular-nums">미래 성능·인과 효과는 미검증</text>
 </svg>

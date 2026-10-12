@@ -27,24 +27,22 @@ def build():
     weather=json.loads((ROOT/'output/baseline_recovery_v2_weather_model_compare_20260922_weather_model_summary.json').read_text())
     assert weather['evaluation_rows']==180332 and weather['weather_feature_count']==14
     OUT.mkdir(parents=True,exist_ok=True)
-    a=SVG(640,'Airplane · 항공편 지연 예측과 날씨 정보 확장',
+    a=SVG(1120,'Airplane · 항공편 지연 예측과 날씨 정보 확장',
           '데이터 품질 진단과 외부 자료 결합 포트폴리오. 모호한 대치 중단, 날짜 대조, 원본 기록을 보존한 오류 정정. 성능 비교는 선택 집단의 정적 교차검증입니다.',False)
-    a.rect(0,0,1600,360,SKY)
-    a.text(64,65,'DATA & ML PORTFOLIO',23,weight=700,spacing=2)
-    a.text(1536,65,'Peter-jackson12',23,anchor='end')
-    a.text(56,200,'AIRPLANE',122,weight=900,spacing=-3)
-    a.text(64,270,'항공편 지연 예측과 날씨 정보 확장',42,weight=700)
-    a.text(64,321,'데이터의 불확실성을 드러내고, 같은 조건에서 비교합니다.',28)
-    # Sub-captions repeated the README body and were unreadable at phone width,
-    # so each column keeps only a larger label and title.
-    for x, label, title in (
-        (64,'01 / 일관성','모호한 대치 중단'),
-        (576,'02 / 비교 가능성','날짜 확인 후 날씨 결합'),
-        (1088,'03 / 추적 가능성','원본을 보존한 오류 정정'),
+    a.rect(0,0,1600,440,SKY)
+    # GitHub renders this 1600-unit image at about 294 CSS px on a 375px
+    # viewport. Keep every visible line at least 80 units (~14.7 CSS px).
+    a.text(80,125,'DATA & ML PORTFOLIO',80,weight=700)
+    a.text(72,285,'AIRPLANE',144,weight=900,spacing=-3)
+    a.text(80,390,'항공편 지연 예측과 날씨 정보 확장',80,weight=700)
+    for y, title in (
+        (570,'01  모호한 대치 중단'),
+        (710,'02  날짜 확인 후 날씨 결합'),
+        (850,'03  원본을 보존한 오류 정정'),
     ):
-        a.text(x,430,label,28,ACCENT,700)
-        a.text(x,496,title,38,weight=700)
-    a.text(64,592,'선택 집단의 정적 교차검증 · 미래 성능과 인과 효과는 미검증',32,MUTED)
+        a.text(80,y,title,84,weight=700)
+    a.text(80,990,'선택 집단의 정적 교차검증',80,MUTED)
+    a.text(80,1090,'미래 성능·인과 효과는 미검증',80,MUTED)
     a.save(OUT/'presentation_cover.svg')
 
     a=SVG(1310,'두 평가 집단을 잇지 않는 탑승권','원본 1,000,000행. 전처리 평가 255,001행. 날짜 귀속 채택 706,759행 중 날짜와 라벨이 모두 있는 180,332행에서 날씨 14개 피처를 비교합니다. 같은 외부 폴드를 사용합니다. 인과 효과와 미래 운항 성능은 미검증. 도형 크기는 수량을 뜻하지 않습니다.',False)

@@ -356,7 +356,10 @@ def test_figure_receipt_rejects_changed_editorial_renderer(tmp_path, monkeypatch
 
 def test_portfolio_cover_is_compact_and_keeps_population_diagram():
     cover = ET.fromstring((ROOT / 'assets/readme/presentation_cover.svg').read_text(encoding='utf-8'))
-    assert cover.attrib['viewBox'] == '0 0 1600 640'
+    assert cover.attrib['viewBox'] == '0 0 1600 1120'
+    # At GitHub's ~294px image width in a 375px viewport, avoid microtext.
+    for node in cover.findall('{http://www.w3.org/2000/svg}text'):
+        assert float(node.attrib['font-size']) * 294 / 1600 >= 14
     text = ' '.join(cover.itertext())
     for obsolete in ('2026-09-22', '본문 16분', 'SPECIAL EDITION', 'LightGBM · 이진 분류'):
         assert obsolete not in text
