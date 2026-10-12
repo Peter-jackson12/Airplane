@@ -90,8 +90,9 @@ def test_portfolio_readme_keeps_sections_scope_and_figure_sources_explicit():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
     for anchor in PORTFOLIO_ANCHORS:
         assert text.count(f'<a id="{anchor}"></a>') == 1, anchor
-    for heading in ('## 1. 프로젝트 한눈에', '## 2. 핵심 결과', '## 3. 문제 해결 과정과 기술적 의사결정',
-                    '## 4. 한계와 다음 단계', '## 5. 재현 방법', '## 6. 문서·근거 안내'):
+    for heading in ('## 1. 프로젝트 한눈에', '## 2. 담당 역할과 AI 보조 범위', '## 3. 주요 문제 해결 사례',
+                    '## 4. 결과 요약과 Tableau 대시보드', '## 5. 한계와 다음 검증',
+                    '## 6. 상세 실험·재현 방법·근거'):
         assert heading in text, heading
     for boundary in ('신뢰구간이 아닙니다', '날씨 모델의 성능이 아닙니다',
                      '10분은 실측 공개 지연 시간이 아닙니다', '인과 효과의 증명이 아닙니다',
@@ -144,10 +145,14 @@ def test_headline_results_match_all_frozen_weather_levels_and_signed_deltas():
     assert 'Macro F1 향상을 확인하지 못했' in headline
     for row in builder.reviewed_data()['weather_model']:
         direction = '↑' if row['higher_is_better'] else '↓'
-        delta = f"{row['delta_mean']:+.6f}".replace('-', '−')
-        expected = (f"| {row['metric']} {direction} | {row['off_mean']:.6f} | "
-                    f"**{row['on_mean']:.6f}** | **{delta}** |")
+        delta = f"{row['delta_mean']:+.3f}".replace('-', '−')
+        expected = (f"| {row['metric']} {direction} | {row['off_mean']:.3f} | "
+                    f"**{row['on_mean']:.3f}** | **{delta}** |")
         assert expected in headline
+        precise = text.split('<a id="weather-results-detail"></a>', 1)[1]
+        delta = f"{row['delta_mean']:+.6f}".replace('-', '−')
+        assert (f"| {row['metric']} {direction} | {row['off_mean']:.6f} | "
+                f"**{row['on_mean']:.6f}** | **{delta}** |") in precise
     assert '10분은 실측 공개 지연 시간이 아닙니다' in headline
     assert '인과 효과나 미래 운항 성능으로 일반화하지 않습니다' in headline
     assert '신뢰구간이 아닙니다' in headline
@@ -168,6 +173,11 @@ def _weather_runs():
 def test_class_metrics_are_derived_from_tracked_confusion_matrices():
     text = (ROOT / 'README.md').read_text(encoding='utf-8')
     runs = _weather_runs()
+    off_by_seed = {r['seed']: r for r in runs['weather_off']}
+    for on in runs['weather_on']:
+        # Each seed reuses the same evaluation rows; never sum these as flights.
+        assert int(on['fp']) < int(off_by_seed[on['seed']]['fp'])
+    assert '시드별 건수를 합쳐 서로 다른 항공편 수로 세지 않습니다' in text
 
     def mean_metric(rows, metric):
         values = []
@@ -344,11 +354,16 @@ def test_figure_receipt_rejects_changed_editorial_renderer(tmp_path, monkeypatch
         builder.check_receipt()
 
 
-def test_magazine_c_uses_oversized_type_and_asymmetric_boarding_passes():
-    cover = ET.fromstring((ROOT / 'assets/readme/presentation_cover.svg').read_text())
-    assert max(float(n.attrib.get('font-size', 0)) for n in cover.iter()) >= 200
-    assert 'THE' in ''.join(cover.itertext()) and 'WEATHER' in ''.join(cover.itertext())
-    journey = ET.fromstring((ROOT / 'assets/readme/analysis_journey.svg').read_text())
+def test_portfolio_cover_is_compact_and_keeps_population_diagram():
+    cover = ET.fromstring((ROOT / 'assets/readme/presentation_cover.svg').read_text(encoding='utf-8'))
+    assert cover.attrib['viewBox'] == '0 0 1600 640'
+    text = ' '.join(cover.itertext())
+    for obsolete in ('2026-09-22', '본문 16분', 'SPECIAL EDITION', 'LightGBM · 이진 분류'):
+        assert obsolete not in text
+    for claim in ('모호한 대치 중단', '날짜 확인 후 날씨 결합', '원본을 보존한 오류 정정', '정적 교차검증'):
+        assert claim in text
+    assert 'DATA & ML PORTFOLIO' in text
+    journey = ET.fromstring((ROOT / 'assets/readme/analysis_journey.svg').read_text(encoding='utf-8'))
     rects = journey.findall('{http://www.w3.org/2000/svg}rect')
     assert any(r.attrib.get('x') == '60' and r.attrib.get('fill') == '#E4F0F5' for r in rects)
     assert any(r.attrib.get('x') == '159' and r.attrib.get('fill') == '#D5BD8F' for r in rects)
@@ -365,8 +380,18 @@ def test_portfolio_readme_drops_presentation_only_material():
     for design_branch in ('style/a-editorial', 'design/gigi-sky-gold',
                           'design/korean-air-palette-d', 'design/refined-evidence-f'):
         assert design_branch not in text, design_branch
-    # The README stays skimmable: substantially shorter than the presentation version.
-    assert len(text.splitlines()) <= 400
+    # Count the reading path, not folded evidence: details retain precise tables.
+    depth = 0
+    visible = []
+    for line in text.splitlines():
+        if '<details>' in line:
+            depth += 1
+        if depth == 0:
+            visible.append(line)
+        if '</details>' in line:
+            depth -= 1
+    assert len(visible) <= 220
+    assert text.index('### A. 모호한 결측') < text.index('<a id="results"></a>')
 
 
 def test_readme_code_blocks_reference_existing_entrypoints_and_locked_environment():
@@ -394,7 +419,7 @@ def test_readme_code_blocks_reference_existing_entrypoints_and_locked_environmen
 def test_magazine_c_quantitative_figures_use_distinct_chart_geometries():
     chart_types = set()
     for filename in builder.FIGURES.values():
-        svg = ET.fromstring((ROOT / 'assets/readme' / filename).read_text())
+        svg = ET.fromstring((ROOT / 'assets/readme' / filename).read_text(encoding='utf-8'))
         assert svg.attrib['data-design'] == 'flight-magazine-c'
         chart_types.add(svg.attrib['data-chart-type'])
     assert len(chart_types) == 5

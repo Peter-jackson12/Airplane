@@ -24,12 +24,14 @@ CLAUDE.md는 이 파일로 연결하는 진입점이며 별도 규칙을 중복 
 | 하고 싶은 일 | 읽거나 실행할 곳 |
 |---|---|
 | 현재 결론·파이프라인·한계 확인 | [README.md](README.md) |
+| 문제 해결 사례와 개인·AI 역할의 확인 범위 | [README 역할](README.md#contribution), [문제 해결 사례](README.md#engineering) |
+| 원본 배포 설명·라벨 정의·이용조건의 확인 범위 | [README 해설의 출처 확인](docs/README_EXPLAINED_KO.md#data-source) |
 | README를 쉬운 말로 깊게 읽기 | [docs/README_EXPLAINED_KO.md](docs/README_EXPLAINED_KO.md) |
 | 튜터 피드백 11개와 반영 현황 확인 | [docs/TUTOR_FEEDBACK_HANDOFF_KO.md](docs/TUTOR_FEEDBACK_HANDOFF_KO.md) (0절이 현재 반영 현황) |
 | 결측 복원의 집단·분모, 시각 복원 규칙, Traffic 집계 경계, 양쪽 시각 결측 집단 | [docs/FEEDBACK_PREPROCESSING_KO.md](docs/FEEDBACK_PREPROCESSING_KO.md), 재집계 [scripts/feedback_missing_audit.py](scripts/feedback_missing_audit.py) |
 | 날씨 피처 명세, LightGBM 고정/탐색 설정·정오표, Macro F1 정의 | [docs/FEEDBACK_MODEL_WEATHER_KO.md](docs/FEEDBACK_MODEL_WEATHER_KO.md) |
-| 분류기 3종(Logistic Regression / Random Forest / LightGBM) 동일조건 비교 | [src/classifier_compare.py](src/classifier_compare.py), [notebooks/run_classifier_comparison.py](notebooks/run_classifier_comparison.py), 결과는 README 2절 |
-| 분류기 탐색 예산 확장·Random Forest 날씨 사용/미사용 | [notebooks/run_classifier_tuning.py](notebooks/run_classifier_tuning.py), 결과는 [README 2절 후속 확인](README.md#classifier-tuning) |
+| 분류기 3종(Logistic Regression / Random Forest / LightGBM) 동일조건 비교 | [src/classifier_compare.py](src/classifier_compare.py), [notebooks/run_classifier_comparison.py](notebooks/run_classifier_comparison.py), 결과는 README 결과·상세 실험 |
+| 분류기 탐색 예산 확장·Random Forest 날씨 사용/미사용 | [notebooks/run_classifier_tuning.py](notebooks/run_classifier_tuning.py), 결과는 [README 탐색 후속 확인](README.md#classifier-tuning) |
 | 분류기 후보 끝값 너머 확대·Random Forest 동일 후보 날씨 비교 | [src/classifier_grid_extension.py](src/classifier_grid_extension.py), [notebooks/run_classifier_grid_extension.py](notebooks/run_classifier_grid_extension.py), 결과는 [README 탐색 확대 후속](README.md#classifier-grid-extension) |
 | 분류기별 확률 보정(Platt/Isotonic, 교차적합/내부 검증 행) | [src/classifier_calibration.py](src/classifier_calibration.py), [notebooks/run_classifier_calibration.py](notebooks/run_classifier_calibration.py), 결과는 [README 확률 보정](README.md#classifier-calibration) |
 | Tableau Public 대시보드 열기·유지관리 | [README 대시보드](README.md#dashboards), [제작·게시 기록](docs/TABLEAU_HANDOFF_KO.md), 집계 데이터 [output/tableau/README_DATA_KO.md](output/tableau/README_DATA_KO.md), 생성기 [scripts/build_tableau_extracts.py](scripts/build_tableau_extracts.py) |
@@ -201,27 +203,27 @@ README는 포트폴리오 README로 운영되며 강의 발표는 끝났다.
 
 | 항목 | 상태 | 반영 위치 |
 |---|---|---|
-| 1) Logistic Regression / Random Forest / LightGBM 비교 | 완료(새 실험) | [README 2절](README.md#classifier-comparison), 근거는 [실행 근거 지도](#evidence-map)의 분류기 비교 |
+| 1) Logistic Regression / Random Forest / LightGBM 비교 | 완료(새 실험) | [README 결과·상세 실험](README.md#classifier-comparison), 근거는 [실행 근거 지도](#evidence-map)의 분류기 비교 |
 | 2) 결측 대치의 분모와 전후 | 완료 | [docs/FEEDBACK_PREPROCESSING_KO.md](docs/FEEDBACK_PREPROCESSING_KO.md) 1절 |
 | 3) 시각 복원 규칙 | 완료 | 같은 문서 2절 |
 | 4) Traffic의 의미와 집계 경계 | 완료 | 같은 문서 3절, `src/features.py`의 `build_traffic_features` 설명 |
 | 5) 날씨 피처의 의미·단위·결측 계약 | 완료(미확인 부분은 미확인으로 표시) | [docs/FEEDBACK_MODEL_WEATHER_KO.md](docs/FEEDBACK_MODEL_WEATHER_KO.md) 2절 |
 | 6) LightGBM 고정/탐색 설정 | 완료 | 같은 문서 3절 |
 | 7) Macro F1과 Delayed F1 표기 | 완료 | 같은 문서 1절·4절 |
-| 8) 날씨 비교 클래스별 지표·혼동행렬 | 완료(기존 CSV) | [README 2절](README.md#results), 인계 문서 3절 |
-| 9) 날씨 조건별 선택 임계값·트리 수 | 완료(기존 CSV) | [README 2절](README.md#results), 인계 문서 3절 |
+| 8) 날씨 비교 클래스별 지표·혼동행렬 | 완료(기존 CSV) | [README 결과·상세 실험](README.md#results), 인계 문서 3절 |
+| 9) 날씨 조건별 선택 임계값·트리 수 | 완료(기존 CSV) | [README 결과·상세 실험](README.md#results), 인계 문서 3절 |
 | 10) 양쪽 시각 결측 집단과 날씨 평가 집단의 구분 | 완료 | [docs/FEEDBACK_PREPROCESSING_KO.md](docs/FEEDBACK_PREPROCESSING_KO.md) 4절 |
 | 11) 가정 가용성과 실제 수신 이력의 구분 | 유지(이미 반영) | [docs/README_EXPLAINED_KO.md 6절](docs/README_EXPLAINED_KO.md#availability) |
 
 ### 열린 후속 작업
 
-새 결과는 새 출력 이름으로 분리한다. 추가 모델 실험 네 항목은 2026-10-08 사용자 요청으로 보류했으며, 재개 요청이 있을 때 범위를 확인한 뒤 실행한다. 근거와 동기는 [README 4절](README.md#limits)을 따른다.
+새 결과는 새 출력 이름으로 분리한다. 추가 모델 실험 네 항목은 2026-10-08 사용자 요청으로 보류했으며, 재개 요청이 있을 때 범위를 확인한 뒤 실행한다. 근거와 동기는 [README 한계와 다음 검증](README.md#limits)을 따른다.
 
 **실험**
 
 | 항목 | 성격 | 상태 | 완료 시 함께 할 일 |
 |---|---|---|---|
-| `classifier_tuning_20261008` — LightGBM·Random Forest 탐색 예산 확장, `max_features` 후보 확장, Random Forest 날씨 사용/미사용 동일조건 비교 | 새 실험(같은 행·폴드·시드·내부 선택 경계 유지, 예산 사전 선언). 러너 [notebooks/run_classifier_tuning.py](notebooks/run_classifier_tuning.py) | 완료(`03fe25c`) | [README 2절 후속 확인](README.md#classifier-tuning), 근거는 [실행 근거 지도](#evidence-map)의 분류기 탐색 예산 확장 |
+| `classifier_tuning_20261008` — LightGBM·Random Forest 탐색 예산 확장, `max_features` 후보 확장, Random Forest 날씨 사용/미사용 동일조건 비교 | 새 실험(같은 행·폴드·시드·내부 선택 경계 유지, 예산 사전 선언). 러너 [notebooks/run_classifier_tuning.py](notebooks/run_classifier_tuning.py) | 완료(`03fe25c`) | [README 탐색 후속 확인](README.md#classifier-tuning), 근거는 [실행 근거 지도](#evidence-map)의 분류기 탐색 예산 확장 |
 | `classifier_grid_ext_20261008` — LightGBM 후보를 끝값 너머로 확장(학습률 0.03 미만, 잎 수 127 초과, 트리 수 상한 확대), Random Forest `min_samples_leaf` 50 초과 후보를 날씨 사용/미사용에 같은 후보로 적용 | 새 실험(같은 행·폴드·시드·내부 선택 경계). 러너 [notebooks/run_classifier_grid_extension.py](notebooks/run_classifier_grid_extension.py) | 완료([`de4b5cf`](https://github.com/Peter-jackson12/Airplane/commit/de4b5cf958f587f93976c9793ab9e8643737c22a)) | [README 탐색 확대 후속](README.md#classifier-grid-extension), 근거는 [실행 근거 지도](#evidence-map)의 분류기 후보 확대 |
 | `classifier_calibration_20261008` — 분류기별 확률 보정(Platt/Isotonic × 교차적합/내부 검증 행) | 새 실험(보정기는 외부 학습 데이터 내부에서만 적합, 임계값 재선택). 러너 [notebooks/run_classifier_calibration.py](notebooks/run_classifier_calibration.py) | 완료([`610a8d8`](https://github.com/Peter-jackson12/Airplane/commit/610a8d8e1031ae77da19bc782d93a95eaf145a25)) | [README 확률 보정](README.md#classifier-calibration), 근거는 [실행 근거 지도](#evidence-map)의 분류기별 확률 보정, Tableau 표 `model_comparison_all.csv`·`model_calibration_reliability.csv` |
 | LightGBM 고정 축 탐색(`max_depth` 상향, `colsample_bytree` 등) | 새 실험(확대 탐색에서 `max_depth=8`이 잎 수 축을 막음) | 보류/미실행(사용자 요청, 2026-10-08) | – |
@@ -234,7 +236,7 @@ README는 포트폴리오 README로 운영되며 강의 발표는 끝났다.
 
 | 항목 | 위치 | 상태 |
 |---|---|---|
-| (a) 분류기 비교 실행 이후 `src/features.py`는 문서 문자열만 바뀌었음(db117ed)을 기록(`code_sha256_lf` 불일치 설명) | [README 2절 기록 참고](README.md#classifier-tuning), [코드 해시 정오표](docs/FEEDBACK_MODEL_WEATHER_KO.md#code-hash-errata) | 완료(근거 파일 대신 문서에 기록) |
+| (a) 분류기 비교 실행 이후 `src/features.py`는 문서 문자열만 바뀌었음(db117ed)을 기록(`code_sha256_lf` 불일치 설명) | [README 실험 기록 참고](README.md#classifier-tuning), [코드 해시 정오표](docs/FEEDBACK_MODEL_WEATHER_KO.md#code-hash-errata) | 완료(근거 파일 대신 문서에 기록) |
 | (b) 체크포인트 identity에 `code_sha256_lf` 포함 | [notebooks/run_classifier_comparison.py](notebooks/run_classifier_comparison.py)(탐색 확장 러너는 이미 포함) | 완료 |
 | (c) Logistic Regression 후보별 `n_iter`·`converged`를 `grid_scores`에 기록 | [src/classifier_compare.py](src/classifier_compare.py) | 완료(이후 실행부터 기록, 선택·지표 불변) |
 | (d) 누수 테스트 보강: Random Forest·LightGBM 경로의 outer-valid 라벨 반전 불변, inner-holdout 라벨 변경 시 inner-train TE·전처리기 불변, OneHot 범주·infrequent 처리가 inner-train에서만 학습, fingerprint 불일치 실패 경로, Random Forest `n_jobs>1` 결정성 | [tests/test_classifier_comparison.py](tests/test_classifier_comparison.py) | 완료(`n_jobs>1`은 나무 동일, 확률 합은 수 ulp 차이 허용 — 정오표 3.6절) |
